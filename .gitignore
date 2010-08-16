@@ -20,5 +20,6 @@ gems/gems/*
 gems/specifications/*
 merb_profile_results
 
-# To preserver developers' custom environments:
+# To preserve developers' custom environments:
 config/database.yml
+vendor/cache
