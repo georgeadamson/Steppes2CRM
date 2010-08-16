@@ -5,11 +5,11 @@ development: &defaults
   # These are the settings for repository :default
 
   ## SELDB:
-  adapter: sqlserver
-  database: steppes2dev;
-  username: steppescrm
-  password: password
-  host: seldb
+  #adapter: sqlserver
+  #database: steppes2dev;
+  #username: steppescrm
+  #password: password
+  #host: seldb
   #encoding: utf8						# Causes error message at startup: Encoding utf8log_stream=STDOUTlog_level=0 is not a known Ruby encoding for SqlServer
   #SendStringParametersAsUnicode: false	# Has no effect (Is true by default)
 
@@ -32,12 +32,12 @@ development: &defaults
   #password: password
   #host: selsvr01
 
-  ## LOCAL:
-  #adapter: sqlserver
-  #database: steppes2;instance=SQLEXPRESS;
-  #username: george
-  #password: database
-  #host: localhost
+  #local:
+  adapter: sqlserver
+  database: steppes2dev;instance=SQLEXPRESS;
+  username: steppescrm
+  password: password
+  host: ALEX5AC5
 
   #adapter:  sqlite3
   #database: development.db
