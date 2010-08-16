@@ -24,3 +24,4 @@ merb_profile_results
 config/database.yml
 vendor/cache
 .bundle
+public/imageLibrary
