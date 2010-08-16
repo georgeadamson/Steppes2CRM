@@ -1,0 +1,19 @@
+<%
+
+	url_for_submit = resource(@client,@note)	#@client.nil? ? resource(@note) : resource(@client)
+	url_for_cancel = resource(@client,:notes)	#@client.nil? ? resource(@note) : resource(@client, :notes)
+	field_prefix ||= 'client' unless @client.nil?
+	ui_target    ||= "##{ nested_resource(@client,true) }notes"
+
+%>
+<%= form_for @note, :action => url_for_submit do %>
+
+	<div class="sectionBody">
+		<h4>Edit this note:</h4>
+		<%= partial 'notes/form', :note => @note %>
+	</div>
+
+	<!-- sectionFoot: -->
+	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => ui_target, :cancel_url => url_for_cancel, :save_caption => 'Save my new note' %>
+
+<% end =%>

@@ -1,0 +1,220 @@
+<%
+
+	companies_list = Company.all( :is_active => true, :order => [:name] )
+	
+	# Attempt to look up countries of interest:
+	country1 = Country.first( :name => @web_request.field(:CountryInterest) )
+	country2 = Country.first( :name => @web_request.field(:CountryInterestOther) )
+	countries_of_interest = []
+	countries_of_interest << country1.id unless country1.nil?
+	countries_of_interest << country2.id unless country2.nil?
+
+	# Attempt to choose default company:
+	default_company = @web_request.company
+	default_company ||= Company.first( :name.like => '%discovery%' ) if @web_request.name =~ /Discovery/
+	default_company ||= ( country1 && country1.companies.first ) || ( country2 && country2.companies.first )
+	
+	# Attempt to look up address country:
+	address_country = Country.first( :name => @web_request.field(:Country) ) || Country.first( :code => 'UK' ) || Country.new
+
+	# Attempt to look up source:
+	source					= ClientSource.first( :name => @web_request.field(:HowFindUs) ) || ClientSource.first( :name => 'Internet' )
+	source					= nil if source && source.name.blank?	# Just in case we managed to look up a blank ClientSource.
+	
+	# Extract client attributes from the WebRequest fields as best we can:
+	client_attributes = {
+	
+		:title								=> @web_request.field(:NameTitle),		
+		:forename							=> @web_request.field(:FirstName)	|| '(Forename blank)',		
+		:surname							=> @web_request.field(:Surname)		|| '(Surname blank)',
+		:email1								=> @web_request.field(:Email).downcase,
+		:source								=> source,
+		:original_source			=> source,
+		:interests_ids				=> countries_of_interest,
+		:addresses_attributes	=> [{
+			:address1						=> @web_request.field(:Address1),
+			:address2						=> @web_request.field(:Address2),
+			:address4						=> @web_request.field(:TownCity),
+			:address5						=> @web_request.field(:CountyState),
+			:postcode						=> @web_request.field(:Postcode).upcase,
+			:tel_home						=> @web_request.field(:Tel),
+			:country						=> address_country
+		}]
+		
+	}
+
+	# Prepare a new client object with the details from the web_request:
+	# Set up some restrictions to prevent stupid volume of matching clients:
+	@new_client		= Client.new(client_attributes)
+	clients				= Client.all( :limit => 100, :order => [:name,:forename] )
+	closest_match	= ''
+	
+	#@new_client.address = Address.new( client_attributes[:addresses_attributes].first )
+	@new_client.addresses.new( client_attributes[:addresses_attributes].first )
+	
+	# Search for existing clients who may be the same as the one we're about to add:
+	same_email = []
+	clients.all( :email1 => @new_client.email1 ).each{ |c| same_email << [c.id,c.match_name] } unless @new_client.email1.blank?
+	clients.all( :email2 => @new_client.email1 ).each{ |c| same_email << [c.id,c.match_name] } unless @new_client.email1.blank?
+	closest_match = same_email.first.first if closest_match.blank? && !same_email.empty?
+	
+	same_postcode = []
+	clients.all( Client.client_addresses.address.postcode.like => @new_client.postcode.strip.gsub(/\s/,'%') ).each{ |c| same_postcode << [c.id,c.match_name] } unless @new_client.postcode.blank?
+	closest_match = same_postcode.first.first if closest_match.blank? && !same_postcode.empty?
+	
+	same_surname = []
+	clients.all( :name => @new_client.name ).each{ |c| same_surname << [c.id,c.match_name] } unless @new_client.name.blank?
+		
+	matched_clients_list = {}
+	matched_clients_list['Add as a new client']					= [ ['', @new_client.match_name] ]
+	matched_clients_list['Clients with same email:']		= same_email		unless same_email.empty?
+	matched_clients_list['Clients with same postcode:']	= same_postcode	unless same_postcode.empty?
+	matched_clients_list['Clients with same surname:']	= same_surname	unless same_surname.empty?
+
+%>
+
+<div class="setionContainer web-requests-edit">
+
+	<div class="sectionHead">
+		<h2>
+			Web request 
+			<small>
+				<%= @web_request.status.name.downcase %> 
+				for <%= @web_request.client_name %>, 
+				requested <%= @web_request.requested_date.formatted(:uidisplay) %> <%= @web_request.requested_date.formatted(:uitime) %> 
+			</small>
+		</h2>
+	</div>
+
+	<div class="sectionBody formSurround indentSurround">
+
+		<div class="web-request fieldsets">
+
+			<fieldset class="web-request-details width2Fields">
+
+				<%= form_for @web_request, :action => nested_resource(@web_request) do %>
+
+					<%= text_field :name => :status,								:label => 'This Request is',:value => @web_request.status.name,							:readonly => true,	:class => 'width1Field ' %> 
+					<%= text_field :name => :client,								:label => 'Requested by',		:value => ( @web_request.client  ? @web_request.client.match_name : 'Client not processed yet' ),		:readonly => true,	:class => 'width2Fields' %> 
+					<%= text_field :name => :company,								:label => 'Allocated to',		:value => ( @web_request.company ? @web_request.company.name      : 'Company not allocated yet' ),	:readonly => true,	:class => 'width2Fields ' %> 
+					<%= text_field :name => :form_name,							:label => 'Web site',				:value => ( @web_request.type && @web_request.type.name || @web_request.name ),											:readonly => true,	:class => 'width2Fields ' %> 
+
+					<% if !@web_request.xml_text.blank? %>
+
+						<!-- web_request fields: -->
+						<%= text_field :name => :title,								:label => 'Title',				:value => @new_client.title,										:readonly => true,	:class => 'width1Field' 		unless @web_request.field(:NameTitle).blank? %> 
+						<%= text_field :name => :forename,						:label => 'Forename',			:value => @new_client.forename,									:readonly => true,	:class => 'width1Field'			unless @web_request.field(:FirstName).blank? %> 
+						<%= text_field :name => :surname,							:label => 'Surname',			:value => @new_client.surname,									:readonly => true,	:class => 'width1Field'			unless @web_request.field(:Surname).blank? %> 
+						<%= text_field :name => :address1,						:label => 'Address1',			:value => @new_client.address1,									:readonly => true,	:class => 'width2Fields'		unless @web_request.field(:Address1).blank? %> 
+						<%= text_field :name => :address2,						:label => 'Address2',			:value => @new_client.address2,									:readonly => true,	:class => 'width2Fields'		unless @web_request.field(:Address2).blank? %> 
+						<%= text_field :name => :address4,						:label => 'Town/city',		:value => @new_client.address4,									:readonly => true,	:class => 'width2Fields'		unless @web_request.field(:TownCity).blank? %> 
+						<%= text_field :name => :address5,						:label => 'County/State',	:value => @new_client.address5,									:readonly => true,	:class => 'width1Field'			unless @web_request.field(:CountyState).blank? %> 
+						<%= text_field :name => :postcode,						:label => 'Postcode',			:value => @new_client.postcode,									:readonly => true,	:class => 'width1Field'			unless @web_request.field(:Postcode).blank? %> 
+						<%= text_field :name => :address_country,			:label => 'Country',			:value => @web_request.field(:Country),					:readonly => true,	:class => 'width1Field'			unless @web_request.field(:Country).blank? %> 
+						<%= text_field :name => :travellers,					:label => 'Travellers',		:value => @web_request.field(:NumPeople),				:readonly => true,	:class => 'widthHalfField'	unless @web_request.field(:NumPeople).blank? %> 
+						<%= text_field :name => :budget,							:label => 'Budget',				:value => @web_request.field(:Budget),					:readonly => true,	:class => 'width1Field'			unless @web_request.field(:Budget).blank? %> 
+						<%= text_field :name => :country_of_interest,	:label => 'Country of interest',	:value => @web_request.field(:CountryInterest),				:readonly => true,	:class => 'width1Field '	unless @web_request.field(:CountryInterest).blank? %> 
+						<%= text_field :name => :country_of_interest2,:label => 'Other interest',				:value => @web_request.field(:CountryInterestOther),	:readonly => true,	:class => 'width1Field '	unless @web_request.field(:CountryInterestOther).blank? %> 
+						<%= text_field :name => :notes_seating,				:label => 'Comfort',			:value => @web_request.field(:TypeAirTravel),		:readonly => true,	:class => 'width1Field'			unless @web_request.field(:TypeAirTravel).blank? %> 
+						<%= text_field :name => :how_find_us,					:label => 'How found us',	:value => @web_request.field(:HowFindUs),				:readonly => true,	:class => 'width2Fields'		unless @web_request.field(:HowFindUs).blank? %> 
+						<%= text_field :name => :travel_date,					:label => 'Travelling',		:value => "#{ @web_request.field(:MonthTravelMonth) } #{ @web_request.field(:MonthTravelYear) }",					:readonly => true,	:class => 'width2Fields'	unless @web_request.field(:MonthTravelMonth).blank? && @web_request.field(:MonthTravelYear).blank? %> 
+						<%= text_field :name => :email,								:label => 'Email',				:value => @web_request.field(:Email).downcase,	:readonly => true,	:class => 'width2Fields'		unless @web_request.field(:Email).blank? %> 
+						<%= text_field :name => :tel_home,						:label => 'Telephone',		:value => @web_request.field(:Tel),							:readonly => true,	:class => 'width2Fields'		unless @web_request.field(:Tel).blank? %> 
+						<%= text_field :name => :brochures,						:label => 'Brochures',		:value => @web_request.field(:Brochures),				:readonly => true,	:class => 'width2Fields'		unless @web_request.field(:Brochures).blank? %> 
+						<%= text_area @web_request.field(:Comments),	:label => 'Comments',			:name => :comments, 														:readonly => true,	:class => 'width2Fields'		unless @web_request.field(:Comments).blank? %> 
+						<%#= text_area @web_request.xml_text,					:label => 'Raw data',			:name => :xml_text, 														:readonly => true,	:class => 'width2Fields'		unless @web_request.field(:Comments).blank? %> 
+
+					<% elsif !@web_request.email_text.blank? %>
+
+						<%= tag :h3, "Legacy 'email' Web Request from the old database:" %>
+						<%= tag :span, "Email text: #{ @web_request.email_text.gsub(/(\r\n?)+/,'<br/>') }" %>
+
+					<% else %>
+
+						<%= tag :span, (No more details available) %>
+
+					<% end %>
+
+				<% end =%>
+
+			</fieldset>
+
+
+			<% unless @web_request.imported? || @web_request.xml_text.blank? %>
+
+				<fieldset class="web-request-actions action-panel with-heading width1Field" style="text-align:right;">
+
+					<legend>Now you can...</legend>
+
+					<!-- PROCESS a new or existing client: -->
+					<%= form_for @web_request, :action => nested_resource(@web_request) do %>
+						
+						<%= select :client_id,	:label => 'Process it for', :name => 'web_request[client_attributes][id]', :collection => matched_clients_list, :selected => closest_match.to_s, :multiple => false, :class => 'width2Fields' %>
+						<%= select :company_id, :label => 'and allocate to', :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => '' %>
+						<%= hidden_field :status_id, :value => 2 %><!-- 2=Processed (Will be overriddedn with 3 (Imported) if a NEW client is chosen ) -->
+						<%= submit 'Process',		:name	 => 'process', :class => 'showClient ui-priority-secondary ui-state-default' %>
+
+						<%= fields_for @new_client do %>
+
+							<%= hidden_field :title_id,						:name	=> 'web_request[client_attributes][title_id]'		%>
+							<%= hidden_field :name,								:name	=> 'web_request[client_attributes][name]'				%>
+							<%= hidden_field :forename,						:name	=> 'web_request[client_attributes][forename]'		%>
+							<%= hidden_field :source_id,					:name	=> 'web_request[client_attributes][source_id]'	%>
+							<%= hidden_field :original_source_id, :name	=> 'web_request[client_attributes][original_source_id]' %>
+							<%= hidden_field :email1,							:name	=> 'web_request[client_attributes][email1]'			%>
+
+							<!-- 0, 1 or 2 client.interests: (AKA client.countries) -->
+							<% @new_client.interests.each_with_index do |country,i| %>
+								<%= hidden_field :name => "web_request[client_attributes][client_interests_attributes][#{ i }][country_id]", :value => country.id %>
+							<% end %>
+
+							<%= fields_for @new_client.address do %>
+								<%= hidden_field :address1,		:name	=> 'web_request[client_attributes][addresses_attributes][0][address1]' %>
+								<%= hidden_field :address2,		:name	=> 'web_request[client_attributes][addresses_attributes][0][address2]' %>
+								<%= hidden_field :address4,		:name	=> 'web_request[client_attributes][addresses_attributes][0][address4]' %>
+								<%= hidden_field :address5,		:name	=> 'web_request[client_attributes][addresses_attributes][0][address5]' %>
+								<%= hidden_field :postcode,		:name	=> 'web_request[client_attributes][addresses_attributes][0][postcode]' %>
+								<%= hidden_field :tel_home,		:name	=> 'web_request[client_attributes][addresses_attributes][0][tel_home]' %>
+								<%= hidden_field :country_id,	:name	=> 'web_request[client_attributes][addresses_attributes][0][country_id]' %>
+							<% end =%>
+
+						<% end =%>
+					
+					<% end =%>
+
+
+					<br/><br/><hr/><br/>
+
+					<!-- ALLOCATE to a company: -->
+					<%= form_for @web_request, :action => nested_resource(@web_request) do %>
+
+						<%= hidden_field :status_id, :value => 1 %>
+						<%= select :company_id, :label => 'Let someone else deal with it', :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => 'width2Fields' %>
+						<%= submit 'Allocate', :name => 'allocate', :class => 'ui-priority-secondary ui-state-default' %>
+
+					<% end =%>
+
+
+					<br/><br/><hr/><br/>
+
+					<!-- REJECT: -->
+					<%= form_for @web_request, :action => nested_resource(@web_request) do %>
+					
+						<%= hidden_field :status_id, :value => 4 %><!-- 4=Rejected -->
+						<div class="formField width2Fields"><label>Or simply reject it as spammy nonsense</label></div>
+						<%= submit 'Reject', :class => 'ui-priority-secondary ui-state-default' %>
+
+					<% end =%>
+			
+				</fieldsets>
+		
+			<% end %>
+		
+		</div>
+		
+	</div>
+
+	<!-- sectionFoot: -->
+	<%= partial 'shared/sectionFoot_with_buttons', :cancel_caption => 'Cancel and return to Web Requests', :cancel_tooltip => 'Cancel without making any changes', :cancel_url => resource(:web_requests), :ui_target => :auto, :save => false %>
+	
+</div>

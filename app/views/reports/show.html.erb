@@ -1,0 +1,81 @@
+<div class="sectionContainer noSectionHead noSectionFoot">
+
+	<div class="sectionBody report-results-table-container">
+
+		<%
+			@results = @report.run()
+		-%>
+	
+		<table class="report-results">
+			
+			<thead>
+				<tr>
+					<% @report.report_fields.each do |field| -%>
+						<%= tag :th, field.display_name -%>
+					<% end -%>
+				</tr>
+			</thead>
+
+			<tbody>
+
+				<% @results.each do |row| -%>
+
+					<tr>
+					<% @report.columns.each do |column| -%>
+
+						<td><%=
+
+										value = row[column.name]
+										
+										if value.nil?
+											'(not set)'
+										elsif value.to_s =~ /^true|false$/
+											value ? 'Yes' : 'No'
+										elsif value.is_a? Date
+											value.formatted(:uidate)
+										elsif value.is_a? DateTime
+											value.formatted(:uidatetime)
+										else
+											value
+										end
+										
+								-%>
+						</td>
+
+					<% end -%>
+					</tr>
+
+				<% end -%>		
+
+			</tbody>
+
+			<% unless @results.empty? %>
+			<tfoot>
+				<tr>
+					<% @report.columns.each do |field| -%>
+						<th>
+							<%= @report.run( :sum, field.name.split('.').pop ) if field.property_data_type == BigDecimal %>
+							<%#= field.property_data_type %>
+						</th>
+					<% end -%>
+				</tr>
+			</tfoot>
+			<% end %>
+			
+		</table>
+		
+		<%
+			number_of_rows = ( @results.length < @report.limit ) ? @results.length : @report.run(:count)
+		-%>
+
+		<p>
+			<br/>
+			Showing <%= @results.length %> of <%= number_of_rows %> results.
+			<br/>
+			<%= 'Try exporting to Excel if you need to see more.' if number_of_rows > @results.length %>
+		</p>
+		
+		
+		
+	</div>
+</div>

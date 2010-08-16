@@ -1,0 +1,46 @@
+<%
+
+	# The address could be provided explicitly or belong to a client or a supplier:
+	address				||= @address
+	client				||= @client
+	supplier			||= @supplier
+	address_id		||= ( address.nil? ? 0 : address.id )	# Assume NEW address if necessary.
+
+	# Derive country from whatever owns the address:
+	owner						= ( address || client || supplier )
+	country					= ( owner && owner.country ) || Country.first(:code=>'UK') || Country.first
+
+	field_prefix	||= 'address'	# Typical example: "client[addresses_attributes][#{index}]"		# For more info about field naming, see http://wonderfullyflawed.com/2009/02/17/rails-forms-microformat
+
+	#country_list	||= Country.all( :order => [:name] )
+	props = ( address || Address.new ).method(:properties).call		
+
+	# For more info about field naming, see http://wonderfullyflawed.com/2009/02/17/rails-forms-microformat
+	#if field_prefix
+	#	if index.nil?
+	#		field_prefix += "[addresses_attributes][#{address_id}]"
+	#	else
+	#		field_prefix += "[addresses_attributes][#{index}]"	# <-- This is the most common condition.
+	#	end
+	#else
+	#	field_prefix = 'address'
+	#end
+
+	# Ensure UK is in the countries picklist:
+	country_uk = Country.first( :code => 'UK' )
+	minimal_countries_list = []
+	minimal_countries_list << country_uk.id_and_name if country_uk
+		
+-%>
+
+<!-- Note: CSS Microformat classes are included where appropriate: -->
+<%= hidden_field :id, :name => ( field_prefix ? "#{field_prefix}[id]" : nil ) unless address.nil? %>
+<%= text_field :address1,		:label=>"Number/name <small>1.</small>",	:maxlength => props[:address1].length,	:class=>"street-address", :name => field_prefix ? "#{field_prefix}[address1]" : nil %>
+<%= text_field :address2,		:label=>"Locality <small>2.</small>",			:maxlength => props[:address2].length,	:class=>"locality", :name => field_prefix ? "#{field_prefix}[address2]" : nil %>
+<%= text_field :address3,		:label=>"Region <small>3.</small>",				:maxlength => props[:address3].length,	:class=>"region", :name => field_prefix ? "#{field_prefix}[address3]" : nil %>
+<%= text_field :address4,		:label=>"Town/city <small>4.</small>",		:maxlength => props[:address4].length,	:class=>"", :name => field_prefix ? "#{field_prefix}[address4]" : nil %>
+<%= text_field :address5,		:label=>"County/state <small>5.</small>", :maxlength => props[:address5].length,	:class=>"", :name => field_prefix ? "#{field_prefix}[address5]" : nil %>
+<%= text_field :postcode,		:label=>"Postcode/zip <small>6.</small>", :maxlength => props[:postcode].length,	:class=>"postal-code", :name => field_prefix ? "#{field_prefix}[postcode]" : nil %>
+<%= select		 :country_id, :label=>"Country <small>7.</small>",			:selected => country.id.to_s,						:class=>"country country-all", :collection => collection_for( address, :country, :list => minimal_countries_list ), :name => field_prefix ? "#{field_prefix}[country_id]" : nil %>
+<%= text_field :tel_home,		:label=>"Telephone",											:maxlength => props[:tel_home].length,	:class=>"tel", :name => field_prefix ? "#{field_prefix}[tel_home]" : nil %>
+<%= text_field :fax_home,		:label=>"Fax", :class=>"fax",							:maxlength => props[:fax_home].length,	:name => field_prefix ? "#{field_prefix}[fax_home]" : nil %>

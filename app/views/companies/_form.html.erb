@@ -1,0 +1,25 @@
+<%
+
+company ||= @company
+@properties = company.method(:properties).call
+
+@show_all_required_field_message = true
+
+-%>
+
+<%= text_field :name,						:label => 'Company name',			:maxlength => @properties[:name].length,						:class => 'width2Fields' %>
+<%= text_field :short_name,			:label => 'Short name',				:maxlength => @properties[:short_name].length,			:class => '' %>
+<%= text_field :initials,				:label => 'Initials',					:maxlength => @properties[:initials].length,				:class => 'widthHalfField' %>
+<%= text_field :invoice_prefix,	:label => 'Invoice prefix',		:maxlength => @properties[:invoice_prefix].length,	:class => 'widthHalfField' %>
+<%= text_field :logo_url,				:label => 'Logo image path',	:maxlength => @properties[:logo_url].length,				:class => 'width2Fields' %>
+<%= text_field :images_folder,	:label => 'Images folder',		:maxlength => @properties[:images_folder].length,		:class => 'width2Fields' %>
+<%= text_field :brochure_followup_days,	:label => 'Followup days', :maxlength => 2,																:class => 'widthHalfField numeric' %>
+<%= text_field :due_days,				:label => 'Due days',					:maxlength => 3,																		:class => 'widthHalfField numeric' %>
+<%= text_field :cc_sup,					:label => 'Credit card %',		:maxlength => 2,																		:class => 'widthHalfField numeric' %>
+<%= text_field :booking_fee,		:label => 'Booking fee',			:maxlength => 2,																		:class => 'widthHalfField numeric' %>
+<%= text_field :default_deposit,:label => 'Default deposit',	:maxlength => 3,																		:class => 'widthHalfField numeric' %>
+<%= check_box :is_active,				:label => 'Company is operating', :class => 'width3Fields' %>
+
+<br/>
+<p><span class="ui-icon ui-icon-info"></span> Note: Default deposit can be a fixed amount or a percentage, eg: 300 or 20%</p>
+<p><span class="ui-icon ui-icon-info"></span> Note: Changes you make here will not affect existing trip elements or invoices etc unless you make changes to them.</p>

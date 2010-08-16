@@ -1,0 +1,37 @@
+<%
+	element ||= @element
+	delete_button_id = "#{ nested_resource( element, true ) }Delete"
+%>
+<div class="sectionContainer is<%= element.element_type.code.capitalize %>" >
+
+<%= form_for element, :action => nested_resource(element) do %>
+
+	<!-- sectionHead and sectionBody: -->
+	<%= partial "trip_elements/form", :element => element, :edit => true %>
+
+	<div class="sectionFoot">
+		<div class="buttonBar ui-dialog-buttonpane ui-widget-content xui-widget-header ui-corner-all ui-helper-clearfix">
+
+			<%= submit "Save details", :rel => "##{ nested_resource( element.trip, true ) }Builder", :class => "save ajaxBlank ui-priority-primary ui-state-default" %>
+			<%#= link_to "Cancel without saving", nested_resource( element.trip, :trip_elements ), :class => "xcancel ajaxCancel ajaxBlank ui-priority-secondary ui-state-default" %>
+
+			<% if element.bound_to_pnr? %>
+				
+				<div class="left"> &nbsp; <%= icon :info %> This flight is defined by a PNR so some fields cannot be modified</div>
+
+			<% else %>
+
+				<!-- This cunning "Delete" label looks like a button but actually activates the delete button below: -->
+				<%= tag :label, 'Delete this element', :for => delete_button_id, :class => 'ui-priority-secondary ui-state-default left' %>
+				
+			<% end -%>
+
+		</div>
+	</div>
+		
+<% end =%>
+
+	<!-- This invisible delete form has to be outside the edit form. Button is "clicked" by the delete-label above! -->
+	<%= delete_button "#{ nested_resource(element) }", "Delete this element", :id => delete_button_id, :class => "hidden delete ajaxBlank", :rel => '.ajaxPanel' %>
+
+</div>

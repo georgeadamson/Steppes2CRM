@@ -1,0 +1,19 @@
+<div class="sectionContainer clientPage">
+	
+	<%= form_for @client, :action => resource(:clients) do %>
+		
+		<!-- sectionHead: -->
+		<%= partial 'shared/sectionHead_with_heading', :heading => "#{ icon(:client) } Add a new client to the database", :heading_tag => :h2 %>
+
+		<div class="sectionBody">
+			<div style="text-align:center;">
+				<%= partial 'clients/form', :client => @client %>
+			</div>
+		</div>
+				
+		<!-- sectionFoot: -->
+		<%= partial 'shared/sectionFoot_with_buttons', :ui_target => :auto, :save_caption => 'Save new client', :cancel => false, :save_class => 'createClient' %>
+
+	<% end =%>
+
+</div>

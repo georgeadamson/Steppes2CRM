@@ -1,0 +1,41 @@
+<!-- Trip edit.html: (wrap in sectionContainer) -->
+
+<%
+
+	delete_caption		||= @trip.is_first_version ? 'Delete all versions of this trip' : 'Delete this version'
+	delete_uid				||= "delete-btn#{ Time.new.to_i }"
+	label_for_delete	||= false
+	
+	url_params					= { :redirect_to => resource(@client,@trip.version_of_trip) }
+	
+-%>
+<%= form_for @trip, :action => nested_resource(@client,@trip) do %>
+
+	<div class="sectionBody">
+		<br/>
+		<%= partial "trips/form", :trip=>@trip %>		
+	</div>
+
+	<!-- sectionFoot: -->
+	<%= partial 'shared/sectionFoot_with_buttons', 
+
+		:ui_target				=> '#'+nested_resource(@trip,true), 
+		:cancel						=> false, 
+		:save_caption			=> 'Save changes', 
+		:save_class				=> 'updateTrip',			# Important: A class of 'createTrip' would cause javascript to add a new tab for the new trip.
+		:foot_class				=> 'formSurround',
+
+		# Define a special <label> element that can be clicked to activate the delete_button below:
+		:label_for_delete	=> label_for_delete,	# Specify that we want to render a <label> instead of a button.
+		:delete_id				=> delete_uid,				# This is used to associate the label with the button.
+		:delete_caption		=> delete_caption,
+		:delete_class			=> 'left',
+		:delete						=> false
+
+	%>
+
+<% end =%>
+
+		<!-- Important: This delete button is HIDDEN and exists in it's own little form.
+		     It has an associated <label> defined above that can be clicked in the preceeding sectionFoot! -->
+		<%= delete_button resource( @trip, url_params ), delete_caption, :class => "hidden", :id => delete_uid %>

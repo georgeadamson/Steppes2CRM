@@ -1,0 +1,33 @@
+<!-- New/Edit Exchange Rate form: -->
+<%
+
+	exchange_rate ||= @exchange_rate
+	@properties			= exchange_rate.method(:properties).call
+
+	# Show a sensible default for the new rate:
+	exchange_rate.new_rate = exchange_rate.rate
+	
+	selected				= Date.today
+	date_list				= [ [ Date.today, 'Immediately' ] ]
+
+	# TODO: Delayed change is disabled temporarily until a fix is found to imprement it
+	#	unless exchange_rate.new_record?
+	#
+	#		date_list << [ Date.today+1, 'Tomorrow' ]
+	#		date_list << [ Date.today+2, (Date.today+2).strftime('%A') ]
+	#
+	#		selected  = Date.today+1
+	#		
+	#	end
+
+	@show_all_required_field_message = true
+	
+-%>
+<%= text_field	:name,			:label => 'Currency name',	:maxlength => @properties[:name].length %>
+<%= text_field	:rate,			:label => 'Current rate',	:readonly	=> true %>
+<%= text_field	:new_rate,	:label => 'New rate', :class => 'spinbox spinboxStep0.01 spinboxMin0.1 spinboxMax1000' %>
+<%= select			:new_rate_on_date, :label => 'Apply new rate', :selected => selected.to_s, :collection => date_list %>
+
+<br/>
+<br/>
+<%#= tag :p, 'Note: The new rate will not apply immediately.' if exchange_rate.id.to_i > 0 %>

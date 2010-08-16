@@ -1,0 +1,202 @@
+<%
+	
+	building_rows_for_trip = 0
+
+	trip_ids   = []
+	user_ids   = []
+	client_ids = []				
+
+	# Prevent multiple queries by preloading related rows that we reference repeatedly as we generate the doc list:
+	# (Datamapper should prevent this for us but does not seem to!)
+	@documents.each{ |doc|
+		trip_ids   << doc.trip_id   if doc.trip_id
+		user_ids   << doc.user_id   if doc.user_id
+		client_ids << doc.client_id if doc.client_id
+	}
+	trips   = Trip.all(   :id => trip_ids   ).reload
+	users   = User.all(   :id => user_ids   ).reload
+	clients = Client.all( :id => client_ids ).reload
+
+	# Sort the documents ready for display...
+	@documents = @documents.
+	
+		# Sort by descending order of start_date:
+		# Notice how we cache the trips during this loop, to reduce sql calls later:
+		sort_by{ |doc|
+			doc.trip_id && (trip = trips.get(doc.trip_id)) && trip.start_date ? -trips.get(doc.trip_id).start_date.jd : 0
+		}.
+
+		# Then bring non-trip docs to the top without upsetting the previous sort:
+		sort_by{ |doc| doc.trip_id ? 1 : 0 }
+
+
+
+	def file_icon()
+		tag :span, :class => 'ui-icon ui-icon-document'
+	end
+
+	def word_icon()
+		tag :span, :class => 'ui-icon ui-icon-word'
+	end
+
+	def pdf_icon()
+		tag :span, :class => 'ui-icon ui-icon-pdf'
+	end
+
+	def error_icon()
+		tag :span, :class => 'ui-icon ui-icon-alert'
+	end
+
+	
+%>
+
+<div class="sectionContainer noSectionFoot">
+	
+	<div class="sectionHead">
+		<h3>
+			<span class="ui-icon ui-icon-document"></span>
+			Client's documents
+			<small style="float:right;">
+				<!-- Link to download patch for customising Firefox security: -->
+				<a href="/help/security/user.js" class="right-click" title="To make Firefox open links to documents on the network: Right-click and save this file to 'C:\Documents and Settings\YourUsername\Application Data\Mozilla\Firefox\Profiles\xyz.default\user.js' and then restart Firefox">(Download to change Firefox security)</span>
+			</small>
+		</h3>
+	</div>
+
+	<div class="sectionBody">
+	
+	<%#= /^[1-2][0-9]{3}[-\/][0-1][0-9][-\/][0-3][0-9]$/ =~ '1945-12-11' %>
+	
+<% if @documents.empty? %>
+		<p>Yawn, nothing to see here. This client has no documents</p>
+<% else %>
+
+	<table class="documents">
+
+		<thead>
+			<tr>
+				<th>Description</th>
+				<!--<th>Modify<br/>original</th>-->
+				<th>Produced for</th>
+				<th>Created</th>
+				<!--<th>Created on</th>-->
+				<th>Actions</th>
+				<th>Status</th>
+				<th>Download<br/>a copy as</th>
+			</tr>
+		</thead>
+
+		<tbody>
+
+		<% @documents.each do |doc|
+			
+			user					= users.get( doc.user_id )			|| doc.user
+			client				= clients.get( doc.client_id )	|| doc.client || ( params[:client_id] && Client.get(params[:client_id]) )
+
+			doc_type_name	= "#{ cached(:document_types_hash)[doc.document_type_id] }"
+			doc_is_recent	= ( doc.created_at && doc.created_at.to_time.to_date <=> Time.now.to_date ) == 0	# Created today?
+			
+			doc_date			= case 
+				when doc_is_recent	then doc.created_at.formatted(:uidatetime)
+				else                     doc.created_at.formatted(:uidate)
+			end
+			
+			doc_status		= case
+				when	doc.document_status_id == 1										then 'Creating now!'
+				when	doc.document_status_id == 2										then 'Failed'
+				when	doc.document_status_id == 3 && doc_is_recent	then 'NEW!'
+				else  nil
+			end
+			
+			doc_tooltip		= case
+				when doc.created_by_legacy_crm then 'Created on the old database'
+				else                                doc.doc_builder_output
+			end
+
+			
+			%>
+			<%= if doc.trip_id != building_rows_for_trip
+				
+				if doc.trip_id && doc.trip
+					group_heading = "Trip: #{ doc.trip.name } <small>#{ doc.trip.dateSummary }</small>"	#trip = doc.trip		#trips.get(doc.trip_id)
+				else
+					group_heading = 'General documents'
+				end
+				building_rows_for_trip = doc.trip_id
+				
+				# Return a header row for this trip:
+				tag :tr do
+					tag :th, group_heading, :colspan => 6
+				end
+				
+			end %>
+		
+			<tr>
+				<!-- IMPORTANT INFO about linking to edit files... -->
+				<!-- http://kb.mozillazine.org/Security.fileuri.strict_origin_policy -->
+				<!-- http://kb.mozillazine.org/Links_to_local_pages_do_not_work -->
+				<!-- Useful: http://stackoverflow.com/questions/192080/firefox-links-to-local-or-network-pages-do-not-work -->
+				<!--
+				
+					- To solve this, make a user.js file in this folder:
+						C:\Documents and Settings\George\Application Data\Mozilla\Firefox\Profiles\upuz6cfk.default
+
+					-	Copy these lines into the user.js file:
+						user_pref("capability.policy.policynames", "localfilelinks");
+						user_pref("capability.policy.localfilelinks.sites", "http://database http://databasedev http://databasetest http://database2 http://database2:81 http://database2dev http://database2test");
+						user_pref("capability.policy.localfilelinks.checkloaduri.enabled", "allAccess");
+
+					- Possible future requirement:
+						Add "file://" to network.automatic-ntlm-auth.trusted-uris in about:config
+
+				-->
+
+				<% if doc.file_exist? %>
+
+					<%= tag :td do
+						
+								#file_icon + link_to( doc.display_name, URI.escape( "file:///#{ doc.doc_path }" ) )
+								file_icon + link_to( doc.display_name, doc.doc_url )
+					
+							end
+					%>
+
+				<% else %>
+
+					<%= 
+						error_text = "#{ error_icon } <span class=\"strikethough muted\">#{ doc_type_name }: #{ doc.name }</span>"
+						tag :td, error_text + ' <small>This file does not exist!</small>', :title => doc.doc_path
+					%>
+
+				<% end %>
+
+
+				<%= tag :td, "#{ client.fullname unless client.nil? }" %>
+				<%= tag :td, link_to( "#{ doc_date }<br/>by #{ ( doc.user && user.preferred_name ) || doc.user_name }", resource(client, doc)), :title => h(doc_tooltip) %>
+				<%= tag :td do
+							# Show delete button unless document is still being created *today*
+							# Note: When documents are deleted they are actually moved to the '/documents/deleted/' folder, just in case!
+							link_to( 'Delete', resource(client, doc, :delete), :class => 'delete ui-priority-secondary ui-state-default' ) unless client.nil? || ( doc.document_status_id == 1 && doc_is_recent )
+						end
+				%>
+				<%= tag :td, doc_status %>
+
+				<%=
+					tag :td do
+						link_to( " doc", resource( client, doc, :format => :doc ), :class => 'noajax' ) + ' | ' +
+						link_to( " pdf", resource( client, doc, :format => :pdf ), :class => 'noajax' )
+					end if doc.file_exist?
+				%>
+
+			</tr>
+
+		<% end -%>
+
+		</tbody>
+
+	<table>
+
+<% end -%>
+
+	</div>
+</div>

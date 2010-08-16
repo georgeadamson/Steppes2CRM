@@ -1,0 +1,59 @@
+<%
+trip	       ||= @trip
+trip.id	     ||= 0
+field_prefix ||= nil
+
+selected_countries = '-1,' + trip.countries_ids.join(',')							# Comma separated list of the trip's current country selections.
+checkbox_id_prefix = "#{ nested_resource(trip,true) }country"	# Ensures each checkbox has a unique ID so it's label can be wired to it.
+
+# Params to add to each world-region tab url: (world_region_id will be added later for each link)
+link_options = {
+	:list							=> :checkbox, 
+	:selected					=> selected_countries, 
+	:field_prefix			=> 'trip', 
+	:id_prefix				=> checkbox_id_prefix
+}
+
+if field_prefix
+	field_prefix += '[countries_ids][]'
+else
+	field_prefix = 'country'
+end
+-%>
+
+<!-- Trip countries selection tabs: -->
+<div class="countryTabsContainer">
+
+		<ul class="countryTabs">
+
+			<!-- Show a tab for selected countries unless this is a new trip: -->
+			<%= tag :li do
+						link_to 'Chosen countries', "##{ nested_resource(trip,true) }countriesSelected"
+					end unless trip.id.to_i == 0
+			%>
+
+			<!-- One TAB for each world region: -->
+			<% $cached[:world_regions].each do |region| %>
+
+				<li><%= link_to region.name, resource( :countries, link_options.merge( :world_region_id => region.id ) ) %></li>
+
+			<% end %>
+
+		</ul>
+
+		<!-- countryTabs content will be loaded here: -->
+		<!-- For info about the field naming convention below see: http://wonderfullyflawed.com/2009/02/17/rails-forms-microformat and http://groups.google.com/group/merb/browse_thread/thread/284450882ba6822c -->
+
+		<!-- Populate SELECTED COUNTRIES TAB unless this is a new trip: (The 'countriesSelected' class is used by js to locate the summary of checked countries) -->
+		<%= unless trip.new?
+
+					tag :div, :id => "#{ nested_resource(trip,true) }countriesSelected", :class => 'countryTabsPanel countriesSelected' do
+						tag :ul, :class => 'checkboxList ellipsis columns' do
+							partial 'shared/list', :list_type => :checkbox, :ids => selected_countries, :selected => selected_countries, :collection => Country.all, :field_prefix => 'trip', :id_prefix => checkbox_id_prefix, :empty_message => '<p>Looks like we\'re not going anywhere!</p>'
+						end
+					end
+					
+				end
+		%>
+
+</div>

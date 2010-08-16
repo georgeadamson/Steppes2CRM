@@ -1,0 +1,10 @@
+<%
+	tooltip = "Created: #{ note.created_at.formatted(:uidatetime) }"
+	tooltip = "Last modified: #{ note.updated_at.formatted(:uidatetime) } #{ tooltip }" unless note.updated_at == note.created_at
+%>
+<p class="ui-widget">
+	<%= note.name %>
+	<br/>
+	<small title="<%= tooltip %>" class="note_updated_at">(<%= note.updated_at.formatted(:uidate) %>)</small>
+	<%= link_to 'Edit', nested_resource( note.client, note, :edit), :rel => '.ajaxPanel', :class => '' %>
+</p>

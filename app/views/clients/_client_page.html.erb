@@ -1,0 +1,78 @@
+<!-- _clientPage: -->
+<div class="sectionContainer noSectionFoot clientPage">
+
+	 <div class="sectionHead">
+
+			<!-- Client name and one-line-summary: -->
+			<h2>
+				<span class="ui-icon ui-icon-client"></span>
+				<span class="clientName"><%= client.fullname %></span>
+				<%= tag :small, client.postcode unless client.postcode.blank? %>
+				<small>
+					(<span class="clientTotalSpend" title="Total spent"><%= ( client.total_spend || 0 ).to_currency(:uk) %></span>)
+				</small>
+				<small>Trips: 
+					<%= client.trips_statement %>
+				</small>
+			</h2>
+
+			<%= hidden_field :name => :client_id,    :value => client.id %>
+			<%= hidden_field :name => :client_label, :value => client.shortname %>
+			
+	 </div><!-- End of _clientPage sectionHead -->
+
+
+	 <div class="sectionBody">
+
+			<!-- LHS TABS: -->
+			<div class="sectionContainer sectionContainerLeft noSectionHead noSectionFoot tabsContainer">
+
+				 <div class="sectionBody">
+
+						<!-- Client's LHS tabs: Details / Documents / Paymemts / Trips 1...n -->
+						<ul class="clientPageTabsNav ui-tabs-nav-vertical ellipsis">
+
+							<li class="client-details"						><span class="ui-icon ui-icon-client"></span><a href="<%= resource(client) %>/summary">Client details</a></li>
+							<li class="client-documents"					><span class="ui-icon ui-icon-document"></span><a href="<%= resource(client) %>/documents">Documents</a></li>
+							<li class="client-payments invisible"	><span class="ui-icon ui-icon-payment"></span><a href="#<%= nested_resource(client,true) %>payments">Payments</a></li>
+
+							<!-- List of tabs for each trip: -->
+							<% client.active_trips.all( :order => [ :status_id, :start_date.desc, :created_at.desc ] ).each do |trip| %>
+								<li class="trip trip-<%= trip.status.code %>" title="<%= "#{ trip.title } - #{ trip.status.name } - #{ trip.countries_names.join(', ') }" %>">
+									<%= link_to trip.title, resource(client,trip) %>
+								</li>
+							<% end %>
+
+							<!-- Extra tab for CREATE TRIP: -->
+							<li class="trip trip-create" title="Create a lovely new trip">
+								<%= link_to 'New trip', resource(client,:trips,:new), :class => 'new' %>
+							</li>
+ 
+						</ul>
+
+				 </div>
+
+			</div><!-- End of LHS Tabs. -->
+
+			
+			<!-- RHS CONTENT: -->
+			<div class="clientPageTabsContent ajaxPanel sectionContainer sectionContainerRight noSectionHead noSectionFoot">
+
+				<div id="<%= nested_resource(client,true) %>payments" class="sectionBody clientPayments">
+					<div class="sectionContainer noSectionFoot">
+						<div class="sectionHead">
+							<h3><span class="ui-icon ui-icon-payment"></span>Client Payments</h3>
+						</div>
+						<div class="sectionBody">
+							Client payments TBD
+						</div>
+					</div>
+				</div>
+
+				<!-- Trip pages are added here via ajax. -->
+
+			 </div><!-- End of RHS Content. -->
+
+	 </div><!-- end of _clientPage sectionBody -->
+
+</div>

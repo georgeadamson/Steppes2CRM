@@ -1,0 +1,8 @@
+<%
+	client		||= @client
+	birth_date	= client.birth_date.blank? ? '' : client.birth_date.formatted(:uidate)
+-%>
+<%= text_field :birth_date,  :label => "Date of birth",  :value => birth_date, :class=>"date" %>
+<%= text_field :birth_place, :label => "Place of birth" %>
+<%= text_field :occupation,  :label => "Occupation" %>
+<%= text_field :nationality, :label => "Nationality" %>

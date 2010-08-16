@@ -1,0 +1,13 @@
+<%
+
+	trip_element_misc_type ||= @trip_element_misc_type
+	@properties = trip_element_misc_type.method(:properties).call
+
+	@show_all_required_field_message = true
+	
+%>
+<%= text_field :name,						:label => 'Misc type',			:maxlength => @properties[:name].length, :class => 'width2Fields' %>
+<%#= text_field :default_margin,	:label => 'Default margin', :maxlength => 3, :class => 'widthHalfField numeric' %>
+
+<br/>
+<%#= tag :p, 'Note: Default margin must be a value or a percentage, eg: 100 or 24%' %>

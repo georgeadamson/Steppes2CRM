@@ -1,0 +1,11 @@
+<%
+
+	web_request_type ||= @web_request_type
+	@properties = web_request_type.method(:properties).call
+
+	@show_all_required_field_message = true
+	
+%>
+<%= text_field :name,       :label => 'Request type',	:class => 'width2Fields',	:maxlength => @properties[:name].length %>
+<%= text_field :form_name,  :label => 'Web form ID',	:class => 'width2Fields',	:maxlength => @properties[:form_name].length %>
+<%= check_box :is_active,		:label => 'Fetch web-requests from associated website form', :class => 'width3Fields' %>

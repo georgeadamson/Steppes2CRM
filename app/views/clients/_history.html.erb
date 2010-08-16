@@ -1,0 +1,53 @@
+<%
+	client ||= @client
+-%>
+
+<dl class="accordion clientHistory">
+
+		<dt>
+			Notes <small>(<%= client.notes.length %>)</small>
+		</dt>
+		<dd class="clientNotes">
+			<div id="<%= "#{ nested_resource(client,true) }notes" %>" class="ajaxPanel sectionContainer noSectionHead">
+				<%= partial 'notes/index', :notes => client.notes %>
+			</div>
+		</dd>
+
+		<dt>Followups</dt>
+		<dd class="">
+			Followups coming soon!
+		</dd>
+
+		<dt>
+			Brochure requests
+			<small>(<%= client.brochure_requests.length %>)</small>
+		</dt>
+		<dd class="">
+			<div id="<%= "#{ nested_resource(client,true) }brochure_requests" %>" class="ajaxPanel sectionContainer">
+				<%= partial 'brochure_requests/list', :brochure_requests => client.brochure_requests, :client_id => client.id %>
+			</div>
+		</dd>
+
+		<dt>
+			Web requests <small>(<%= client.web_requests.length %>)</small>
+		</dt>
+		<dd class="">
+				<%= partial 'web_requests/summary', :web_requests => client.web_requests %>
+		</dd>
+
+<!--		<dt>Fellow travellers <small>(<%= client.fellow_travellers.length %>)</small></dt>
+		<dd class="">
+
+			<ul>
+				<% client.fellow_travellers.each do |chum| %>
+					<li>
+						<span class="ui-icon ui-icon-client"></span>
+						<%= link_to "#{ chum.title } #{ chum.forename } #{ chum.name }", "#{ resource(chum) }?label=#{ chum.shortname }" %>
+					</li>
+				<% end %>
+			</ul>
+
+		</dd>
+-->
+
+</dl>

@@ -1,0 +1,45 @@
+<%
+
+	client ||= @client if @client
+	notes  ||= @notes					# Either provide a notes array or we derive it from client
+	notes  ||= client.notes if client	# client is required to generate link to notes/new
+	
+	add_note_label = notes.empty? ? 'Be the first to add a note' : 'Add another note'
+	
+	ui_target    ||= "##{ nested_resource(client,true) }notes"
+
+-%>
+
+<div class="sectionBody">
+
+	<% if notes.empty? %>
+		
+		<p>No one has made any notes about this client</p>
+	
+	<% else %>
+		
+		<table>
+
+			<% notes.each do |note| %>
+			<tr id="note<%= note.id %>">
+				<td>
+					<span class="ui-icon ui-icon-comment"></span>
+				</td>
+				<td>
+					<%= partial 'notes/show', :note => note %>
+					<br/><hr/><br/>
+				</td>
+			</tr>
+			<% end %>
+
+		</table>
+
+	<% end %>
+
+</div>
+
+<div class="sectionFoot ui-widget">
+	<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
+		<%= link_to add_note_label, resource(client, :notes, :new), :rel => ui_target, :class=>'ajax new ui-priority-secondary ui-state-default' %>
+	</div>
+</div>

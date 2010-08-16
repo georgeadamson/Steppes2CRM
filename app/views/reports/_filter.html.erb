@@ -1,0 +1,32 @@
+		
+	<!-- Warning: Be careful about changing this markup because client-side script expects this structure: -->
+
+	<div class="report-filter">
+
+		<!-- Html template for adding more filters: -->
+		<%= fields_for ( field ||= ReportField.new ) do %>
+
+			<%
+				name_prefix = "report[report_filters_attributes][#{ field.object_id }]"	# For building qualified field name.
+			-%>
+
+			<%= select				:name,            :name => "#{ name_prefix }[name]",						:collection => field_names			%>
+			<%= select				:filter_operator, :name => "#{ name_prefix }[filter_operator]",	:collection => operators_list		%>
+
+			<%# Note: CSS expects this to be the 3rd element inside report-filter: %>
+			<div class="filter-value-box">
+				<%= text_field	:filter_value,		:name => "#{ name_prefix }[filter_value][]",	:label => 'or', :class => 'filter-value'	%>
+				<%= link_to "#{ icon :delete }",	'#', :class => 'delete-filter-value noajax',	:title => 'Delete this filter value'			%>
+				<%= link_to "#{ icon :add }",			'#', :class => 'add-filter-value noajax',			:title => 'Or another value'							%>
+			</div>
+
+			<!-- The ID field identifies saved field and the _delete field remains disabled unless user 'deletes' filter client-side: -->
+			<%= hidden_field	:id,							:name => "#{ name_prefix }[id]"				unless field.id.nil?										%>
+			<%= hidden_field	:disabled => true,:name => "#{ name_prefix }[_delete]", :value => true													%>
+
+			<br/>
+			<p class="and">and</p>
+
+		<% end =%>
+
+	</div>

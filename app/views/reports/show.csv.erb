@@ -1,0 +1,15 @@
+<%=
+
+	@report.limit = 50000
+	
+	# Escape each quote " with two quotes "" inside each value.
+	# Wrap each value in "..." and separate them with commas.
+	# Separate each row with a new line \n character.
+	
+	@report.run.map do |row|
+		
+		'"' +  row.values.map{ |val| val.to_s.gsub('"','""') }.join('","') + '"'
+		
+	end.join("\n")
+	
+%>

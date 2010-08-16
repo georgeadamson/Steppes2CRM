@@ -1,0 +1,5 @@
+1,Flight,flight,Airline,0,1
+4,Accommodation,accomm,Accommodation,0,2
+5,Ground services,ground,Ground agent,0,3
+8,Miscellaneous,misc,Miscellaneous,0,4
+2,Flight agent,flightagent,Flight agent,1,5

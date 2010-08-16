@@ -1,0 +1,139 @@
+
+<!-- Trip form: (Shown on the Trip summary page) -->
+
+<%
+
+	@trip   ||= trip
+	@client ||= client || Client.get( params[:client_id] ) || Client.new
+	
+	name_field_label = @trip.is_first_version ? 'Trip title' : 'Version name'
+	
+-%>
+
+<%= hidden_field :version_of_trip_id,		:value => @trip.version_of_trip_id.to_i %>
+<%= hidden_field :name => 'client_id',	:value => @trip.context.id %>
+<%= hidden_field :name => 'group_id',		:value => @trip.context.id %><!-- TODO! -->
+
+
+<!-- Trip form fields: -->
+<table cellpadding="0" cellspacing="0">
+<tbody>
+
+	<tr>
+
+		<td colspan="3">
+			<!-- "Trip title" of first version or "Version name" of subsequent versions: -->
+			<%= text_field :name,  :label => name_field_label, :class => 'summary width2Fields' %>
+		</td>
+		
+		<!--<td rowspan="3">
+			<%#= select :pnrs_ids, :label => 'PNR Numbers', :multiple => true %>
+		</td>-->
+
+	</tr>
+
+	<tr>
+		<td><%= text_field	:start_date,	:label => 'Start date',		:value => @trip.start_date.formatted(:uidate), :class => 'date dtstart', :fieldClass => 'fieldFlowHoriz' %></td>
+		<td><%= select			:user_id,			:label => 'Handled by',	  :selected => @trip.user_id.to_s, :collection => User.all( :is_active => true, :order=>[:forename]), :value_method => :id, :text_method => :fullname %></td>
+		<td><%= text_field	:adults,			:label => 'Adults',				:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin1' %></td>
+
+		<!-- Total count of trip members: -->
+		<!--<td rowspan="4">
+			<div class="total-trip-travellers-box">
+				<div class="total trip-travellers"><%= @trip.travellers %></div>Travellers
+			</div>
+		</td>-->
+
+	</tr>
+
+	<tr>
+		<td><%= text_field	:end_date,		:label => 'End date',		:value => @trip.end_date.formatted(:uidate), :class => 'date dtend', :fieldClass => 'fieldFlowHoriz' %></td>
+		<td><%= select			:company_id,	:label => 'Invoice as', :collection => Company.all(:is_active=>true), :value_method => :id, :text_method => :name %></td>
+		<td><%= text_field	:children,		:label => 'Children',		:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
+	</tr>
+
+	<tr>
+		<td><%= text_field								:label => 'PNR numbers',	:name => 'trip[pnr_numbers]',	:value => @trip.pnr_numbers.join(', ').upcase , :title => 'Flights will be added and updated automatically when you provide PNR numbers here. Use a comma between each PNR number', :class => 'uppercase' unless @trip.new? %></td>
+		<td><%= select			:type_id,			:label => 'Type of trip',	:collection => TripType.all, :value_method => :id, :text_method => :name %></td>
+		<td><%= text_field	:infants,			:label => 'Infants',			:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
+	</tr>
+	
+	<tr>
+		<td colspan="3">
+			<br/><br/>
+		</td>
+	</tr>
+	
+	<tr>
+
+		<td colspan="2">
+			<!-- Trip countries: -->
+			<h4>
+				<span class="ui-icon ui-icon-trip"></span>
+				Visiting
+			</h4>
+			<%= partial 'trips/countries', :trip => @trip, :field_prefix => 'trip' %>
+		</td>
+
+		<!-- List of trip members: -->
+		<td colspan="2" style="padding-left:2em;">
+
+			<h4>
+				<span class="ui-icon ui-icon-group"></span>
+				Clients on this trip
+			</h4>
+
+			<div class="fieldset">
+
+				<table class="tripTravellers" cellspacing="0" cellpadding="0">
+
+					<thead>
+						<tr>
+							<th>
+								<% unless @trip.new? %>
+									<label class="xui-helper-hidden-accessible">Add another:</label>
+									<input type="text" class="trip-client-search" placeholder="Client search">
+								<% end -%>
+							</th>
+							<th title="Create a letter document" class=""><span class="vertical">Create letter</span></th>
+							<th title="Requires single room"		><span class="vertical">Single</span></th>
+							<th title="Who to send documents to (Primary contacts)"><span class="vertical">Primary</span></th>
+							<th title="Who to send invoices to"	><span class="vertical">Invoicable</span></th>
+							<th title="Who has confirmed"				><span class="vertical">Confirmed</span></th>
+							<th title="Remove from trip"				><span class="vertical">Remove</span></th>
+						</tr>
+						
+					</thead>
+	
+					<tbody>
+
+						<!-- Client-side HTML MICRO-TEMPLATE used when browser script adds clients to trip: -->
+						<script type="text/html" class="template" id="trip-traveller-row-template">
+
+							<%= partial 'trips/trip_clients', :trip => @trip, :html_template => true %>
+
+						</script>
+
+						<!-- One row for each client on the trip: -->
+						<% @trip.trip_clients.each_with_index do |trip_client,index| %>
+
+							<%= partial 'trips/trip_clients', :trip_client => trip_client, :index => index %>
+
+						<% end %>
+						
+					</tbody>
+						
+					<% if @trip.new? %>
+						<tfoot>
+							<tr><td colspan="6"><br/>You can add more clients after saving this new trip</td></tr>
+						</tfoot>
+					<% end %>
+
+				</table>
+
+				</div>
+		</td>
+	</tr>
+
+</tbody>
+</table>

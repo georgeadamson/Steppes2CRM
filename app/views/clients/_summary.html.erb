@@ -1,0 +1,113 @@
+
+<!-- Readonly summary of client contact details etc: -->
+<%
+  
+	client			||= @client
+  address				= client.address
+  mail_params   = '?subject=Your trip with Steppes travel&body=Dear ' + (client.salutation || client.addressee) + ',%0A%0A'
+
+	# Copy names of countries of interest to an array:
+	areas_of_interest = []
+	client.countries.each{ |country| areas_of_interest << country.name }
+	areas_of_interest << 'none' if areas_of_interest.empty?
+	
+	# Define and serialise parameters for generating client letter documents:
+	# Note: Because we are explicitly specifying document_template_file it will not need to be derived from document_type_id.
+	# Note: Letter templates are always in the /Templates/Letters subfolder.
+	# Eg: document[document_type_id]=8&document[client_id]=#{ client.id }&document[user_id]=#{ session.user.id }&document[generate_doc_after_create]=true&document[generate_doc_later]=true&document[document_template_file]=Letters/{value}&_method=post
+	letter_builder_parameters = {
+	
+		#'document[trip_id]'										=> trip.id,		# Not applicable on this page.
+		'document[user_id]'										=> session.user.id,
+		'document[client_id]'									=> client.id,
+		'document[document_type_id]'					=> 8,						# 8 = Letter template.
+		'document[document_template_file]'		=> 'Letters/{value}&_method=post',
+		'document[generate_doc_after_create]'	=> true,
+		'document[generate_doc_later]'				=> true,
+		:redirect_to													=> "#{ resource(client) }/summary"
+		
+	}.to_a.map{|pair| pair.map{ |part| h(part.to_s) }.join('=') }.join('&')
+	
+	
+-%>
+
+<!--<div class="xfieldsetRow">-->		
+
+    <div class="fieldset widthFifth withHeading">
+      <h4>
+				Client <%#= link_to "Edit", resource(client, :edit)+"#name" if client.id %>
+      </h4>
+			<dl class="fields ellipsis">
+				<dt>Name</dt><dd><%= client.title %> <%= client.forename %> <%= client.name %></dd>
+				<dt>Known as</dt><dd><%= client.known_as %></dd>
+				<dt>Salutation</dt><dd><%= client.salutation %></dd>
+				<dt>Addressee</dt><dd><%= client.salutation %></dd>
+				<dt>Date of birth</dt><dd><%= client.birth_date.formatted(:uidate) %> <%= "<small>(age #{ (Date.today - client.birth_date.to_date).to_i / 365 })</small>" if client.birth_date %></dd>
+				<dl>
+    </div>
+
+    <div class="fieldset widthFifth withHeading">
+		
+      <h4>Primary address 
+				<%= tag :small, "(1 of #{ client.addresses.length })" if client.addresses.length > 1 %>
+        <%#= link_to "Letter", resource(client, :edit) if client.id %>
+        <%#= link_to "Label", resource(client, :edit) if client.id %>
+				<%=
+					template_filenames = Document.doc_builder_letter_templates( :type => :general )
+					orig_select :name => 'generate_letter', :collection => template_filenames, :prompt => 'Create a general letter...', :class => 'create-letter arrow-only', :'data-action' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }"
+				%>
+      </h4>
+
+			<dl class="fields hideLabels ellipsis">
+        <% if !client.address1.empty? %><dt>Number/name</dt><dd><%= client.address1 %></dd><% end %>
+        <% if !client.address2.empty? %><dt>Locality</dt><dd><%= client.address2 %></dd><% end %>
+        <% if !client.address3.empty? %><dt>Region</dt><dd><%= client.address3 %></dd><% end %>
+        <% if !client.address4.empty? %><dt>Town/city</dt><dd><%= client.address4 %></dd><% end %>
+        <% if !client.address5.empty? %><dt>County</dt><dd><%= client.address5 %></dd><% end %>
+        <% if !client.postcode.empty? %><dt>Postcode</dt><dd class="postcode"><%= client.postcode %></dd><% end %>
+        <dt>Country</dt><dd><%= client.country && client.country.name %></dd>
+        <dt>Mailing zone</dt><dd>Zone: <%= client.country && client.country.mailing_zone && client.country.mailing_zone.name %></dd>
+      </dl>
+			
+    </div>
+
+    <div class="fieldset widthFifth withHeading">
+      <h4>Contact details <%#= link_to "Edit", resource(client, :edit)+"#contacts" if client.id %></h4>
+      <dl class="fields ellipsis">
+        <% if client.tel_home %><dt>Home</dt><dd><%= client.tel_home %></dd><% end %>
+        <% if !client.tel_work.empty? %><dt>Work</dt><dd><%= client.tel_work %></dd><% end %>
+        <% if !client.tel_mobile1.empty? %><dt>Mobile</dt><dd><%= client.tel_mobile1 %></dd><% end %>
+        <% if !client.tel_mobile2.empty? %><dt>Mobile</dt><dd><%= client.tel_mobile2 %></dd><% end %>
+        <% if !client.email1.empty? %><dt>Email</dt><dd><%= link_to client.email1, "mailto:#{ client.email1 + mail_params }", :title => client.email1 %></dd><% end %>
+        <% if !client.email2.empty? %><dt>Other email</dt><dd><%= link_to client.email2, "mailto:#{ client.email2 + mail_params }", :title => client.email2 %></dd><% end %>
+     </dl>
+    </div>
+
+    <div class="fieldset widthTwoFifths withHeading">
+      <h4>Marketing &amp; Preferences <%#= link_to "Edit", resource(client, :edit)+"#preferences" if client.id %></h4>
+      <dl class="fields ellipsis">
+        <dt>Areas</dt><dd><%= areas_of_interest.join(', ') %></dd>
+        <dt>Source</dt><dd><%= client.source && client.source.name %></dd>
+        <dt>Orig source</dt><dd><%= client.original_source && client.original_source.name %></dd>
+        <dt>Type</dt><dd><%= client.type && client.type.name %></dd>
+        <dt>Topic</dt><dd>(Unused)</dd>
+        <dt>Marketing</dt><dd class="xtextarea"><%= client.marketing && client.marketing.name %></dd>
+        <!--
+				<dt>Freq. flyer</dt><dd><%= client.notes_frequent_flyer %></dd>
+        <dt>Airline</dt><dd class="textarea"><%= client.notes_airline %></dd>
+        <dt>Seating</dt><dd class="textarea"><%= client.notes_seating %></dd>
+        <dt>Meals</dt><dd class="textarea"><%= client.notes_food %></dd>
+        <dt>Other</dt><dd class="textarea"><%= client.notes_general %></dd>
+				-->
+				<dt>Preferences</dt>
+				<dd>
+					<% unless client.notes_frequent_flyer.empty? %><em>Frequent flyer number:</em> <%= client.notes_frequent_flyer %>,<% end %>
+					<% unless client.notes_airline.empty? %><em>Airline:</em> <%= client.notes_airline %>, <% end %>
+					<% unless client.notes_seating.empty? %><em>Seating:</em> <%= client.notes_seating %>, <% end %>
+					<% unless client.notes_food.empty? %><em>Meals:</em> <%= client.notes_food %>, <% end %>
+					<% unless client.notes_general.empty? %><em>Other:</em> <%= client.notes_general %><% end %>
+				</dd>
+      </dl>
+    </div>
+  
+<!--</div>-->

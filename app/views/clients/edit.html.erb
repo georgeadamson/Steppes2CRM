@@ -1,0 +1,16 @@
+<div class="sectionContainer noSectionHead">
+
+<%= form_for @client, :action => resource(@client) do %>
+
+	<div class="sectionBody">
+
+			<%= partial 'clients/form', :client => @client %>
+
+	</div>
+
+	<!-- sectionFoot: -->
+	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => :auto, :cancel_url => nested_resource(@client) + "/summary", :save_caption => 'Save changes' %>
+
+<% end =%>
+
+</div>

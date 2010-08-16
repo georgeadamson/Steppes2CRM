@@ -1,0 +1,12 @@
+<%
+
+	@web_requests ||= web_requests
+
+%>
+<ul>
+<% @web_requests.each do |web_request| %>
+
+	<%= tag :li, "#{ icon :pencil } #{ web_request.name } #{ tag :small, web_request.requested_date.formatted(:uidisplay) }" %>
+		
+<% end %>
+</ul>

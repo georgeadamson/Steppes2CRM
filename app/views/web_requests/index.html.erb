@@ -1,0 +1,152 @@
+<%
+
+# Important: New web requests will be imported after page has loaded, see run_later below.
+
+status_id_filter  = params[:status_id] || 1
+company_id_filter = params[:company_id]
+company_id_filter = nil if company_id_filter.blank?
+
+# For future use: Allows for multiple company ids separated by commas:
+# company_id_filter = company_id_filter.split(',') unless company_id_filter.nil?
+
+# Fetch list of web requests mathing filters:
+@web_requests = WebRequest.all( :status_id => status_id_filter, :company_id => company_id_filter, :order => [ :requested_date.desc, :id.desc ], :limit => 200 )
+
+web_site_forms = []
+WebRequestType.all( :is_active => true ).each{ |type| web_site_forms << type.form_name unless type.form_name.blank? }
+
+-%>
+
+	<div class="sectionContainer noSectionFoot web-requests-index">
+	
+	<div class="sectionHead indentSurround">
+		<h2><%= icon :gear %> Web requests</h2>
+		</div>
+
+			<div class="sectionBody formSurround indentSurround">
+
+				<div class="sectionContainer noSectionFoot">
+
+					<div class="sectionHead formFieldsInline">
+
+						<%= form_for :web_requests, :method => :get, :action => resource(:web_requests) do %>
+						
+						<%= select :name => :status_id,	 :label => 'Request status',	:selected => status_id_filter.to_s,		:collection => WebRequestStatus.all,																:value_method => :id, :text_method => :name, :class => 'auto-submit' %>
+						<%= select :name => :company_id, :label => 'Company',					:selected => company_id_filter.to_s,	:collection => Company.all( :is_active => true, :order => :name ),	:value_method => :id, :text_method => :name, :class => 'auto-submit', :prompt => 'Unallocated' %>
+						<%= tag :div, :class => 'formField' do; submit( 'Refresh', :class => 'ui-priority-secondary ui-state-default xhidden-when-js-enabled' ); end %>
+						
+					<% end =%>
+
+			</div>
+
+			<div class="sectionBody">
+			
+		<!-- Special fields instructing client-side script to open a client tab when current page opens: -->
+		<%= open_client_tab( params[:open_client_id] ) %>
+
+		
+		<%# Web Service debugging info: %>
+		<!-- Web Service API calls: <%= WebRequest.recent_paths.inspect %> -->
+
+		<ul class="web-requests">
+
+			<% @web_requests.each do |web_request| %>
+
+				<li>
+
+					<% if !web_request.xml_text.blank? %>
+
+						<%= link_to 'Process', resource(web_request, :edit), :class => 'ui-priority-secondary ui-state-default' unless web_request.new? || web_request.processed? || web_request.imported? %> 
+						<%= icon :client %> 
+						<%= tag :span, web_request.client_name, :class => 'client-name' %>
+						<%= tag :small, web_request.status.name, :class => 'status' %>
+						<%= tag :span, web_request.field(:Email), :class => 'email' %>
+						<div class="form-name">
+							<%= tag :span, web_request.name %> 
+					<%= tag :small, web_request.requested_date.formatted(:uidisplay), :class => 'date' %>
+					</div> 
+					<%= tag :span, web_request.field(:CountryInterest), :class => 'interest' %> 
+					
+					<% elsif !web_request.email_text.blank? %>
+					
+					<%= link_to 'View details', resource(web_request, :edit), :class => 'ui-priority-secondary ui-state-default' %> 
+					<%= icon :client %> 
+					<%= tag :span, 'Legacy email web request', :class => 'client-name' %>
+					<%= tag :small, web_request.status.name, :class => 'status' %>
+						<div class="form-name">
+						<%= tag :span, web_request.name %> 
+							<%= tag :small, web_request.requested_date.formatted(:uidisplay), :class => 'date' %>
+						</div> 
+						<%= tag :span, "Email text: #{ web_request.email_text.slice(0,200) }...", :class => 'email-text' %>
+										
+					<% else %>
+
+						<%= icon :client %> 
+						<%= tag :span, web_request.status.name, :class => 'status' %>
+						<%= tag :span, (No more details available) %>
+
+						<% end %>
+						</li>
+						
+					<% end %>
+
+		</ul>
+
+		<!-- An alternative message is shown here when no WebRequests match the selected filters -->
+		<%
+			if @web_requests.empty?
+				company = cached(:companies_hash)[company_id_filter.to_i]
+					%>
+					<%= tag :p, "Nope, there are <strong>no #{ cached(:web_request_statuses_hash)[status_id_filter.to_i].downcase }</strong> web requests #{ company ? "for #{ company }" : 'that have yet to be allocated to a company.' }" %>
+					<br/>
+					<%= tag :p, 'Checking for new web requests right now... Click refresh to see if there are any new ones.' if status_id_filter.to_i == 1 %>
+				<%
+				end
+				%>
+				
+				
+		<!--
+			<%# NEW XML FORMAT: %>
+
+			<?xml version="1.0" encoding="utf-8"?>
+			<ArrayOfFormEntry xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.steppestravel.co.uk/">
+				<FormEntry>
+					<ID>341</ID>
+					<Type>0</Type>
+					<Name>Steppes Newsletter Signup</Name>
+					<Date>2009-12-07T14:07:13.953</Date>
+
+					<IP>93.152.69.209  </IP>
+					<FirstPage>http://www.steppestravel.co.uk/Default.aspx</FirstPage>
+					<Referrer>http://www.steppestravel.co.uk/</Referrer>
+					<Keywords />
+					<Paid>false</Paid>
+					<WhereFrom>Direct (bookmark, address)</WhereFrom>
+
+					<Fields>
+						<FormField>
+							<Field>Email</Field>
+							<Value>dan.clarke@searchpath.co.uk</Value>
+						</FormField>
+						<FormField>
+							<Field>FirstName</Field>
+
+							<Value>Dan</Value>
+						</FormField>
+						...
+		-->
+				
+		<%# LEGACY EMAIL FORMAT: %>
+		<%# Title: Mr  First name: Bruce  Last name: Gainger  House name/number: 37,Lowshoe Lane  Street name: Collier row  Locality:   Post town: Romford  County: Essex  Postcode: RM5 2AA  Country: UK  Telephone: 01708-781971  Email: brucergrainger@googlemail.com  e-newsletter: Selected  Brochure: Selected  Comments: In 1996,my wife and I traveled through N.E. pakistan across PRC from Kashgar to Beijing on a silk-road journey tailor-made by us and Steppes East.We chose not to travel in a group,preferring to preserve the special interest by travelling with  trusted local drivers and guides selected by Steppes East.  The special interest prevails and having read an excellent paperback by William Dalrymple concerning his search for the remains of the palace of Khubla Khan during his student days,I would,sometime in the not too distant future,like to travel to Inner-Mongolia to see this archelogical site and travel down to the mystical city mentioned by Marco Polo.  This,from an organizational point of would similarly to our 1996 journey require 'tailor-making'.  Can you,as you did in 1996,advise me in this respect.  I await your advices.  Regards     Last viewed:   Travellers: 2  Travelling: 2010--01  Type of travel: Premium Economy  How did you find us: Google  Budget: £4000 - £6000  Date: 24/05/2010 09:16:53  ID: 2080  Countries of interest: China  Referrer:   Keywords:   FirstPage: http://www.steppestravel.co.uk/contact/form/    Brochures:   %>
+
+			</div>
+		</div>
+	</div>
+</div>
+<%
+
+	run_later do
+		WebRequest.import_latest_web_requests()
+	end
+				
+%>

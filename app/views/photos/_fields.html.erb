@@ -1,0 +1,30 @@
+<!-- PHOTO file selector form: -->
+
+<div class="imgFileSelector">
+  <%= hidden_field :companyFolder, :class=>:companyFolder %>
+  <div class="imgFolderList">
+    <%= select :destinationFolder, :label=>"Country <small>(or topic)</small>", :selected=>@folder.name, :collection=>@folder.all, :class=>"imgFolder" %>
+    <%# partial 'photos/folders', :folder => @folder %>    <%# Could not partials to work inside partials: %>
+  </div>
+  <div class="imgCategoryFolderList">
+    <%= select :destinationFolder, :label=>"Category", :selected=>@folder.name, :collection=>@folder.all, :class=>"imgFolder" %>
+    <%# partial 'photos/folders', :folder => @folder %>    <%# Could not partials to work inside partials: %>
+  </div>
+  <div class="imgFilenameList">
+    <%= select :path, :label=>"Image file", :selected=>@folder.name, :collection=>@folder.files, :class=>"imgFilename" %>
+    <%# partial 'photos/files', :folder => @folder %>    <%# Could not partials to work inside partials: %>
+  </div>
+  <br/>
+  <div class="thumbnail">
+    <img class="imgThumbnail" src="#" alt="<%= @photo.name %>" title="<%= @photo.name %>" />
+    <label class="imgFileSize"><%= @photo.width %>x<%= @photo.height %>px</label>
+  </div>
+</div>
+
+<%= text_field :name, :label=>"Title <small>(image alt text)</small>", :divClass=>"test" %>
+<%= text_field :tags, :label=>"Tags <small>(comma,separated)</small>" %>
+<%#= text_field :countryIdlist, :value => @photo.countries.map{ |country| country.id }.join(",") %>
+
+<%= select :resolution, :label=>"For use in", :selected=>@photo.resolution, :collection=>[ ['L','Web pages (low-res)'], ['M','Documents (med-res)'], ['H','Marketing (hi-res)'] ], :class=>"imgResolution" %>
+
+<%= check_box :approved, :label=>"Approved", :class=>"test" %>

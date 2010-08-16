@@ -1,0 +1,66 @@
+<% @trip ||= trip %>
+
+<table class="detailedItinerary" cellpadding="0" cellspacing="0">
+
+	<caption>Detailed trip itinerary</caption>
+
+	<thead>
+		<tr>
+			<th style="width:10em">
+			&nbsp;
+			</th>
+		</tr>
+	</thead>
+	
+	<tbody>
+		<% @trip.days.each do |day| %>
+		<tr>
+		
+			<td>
+				Day	<%= day.number %><br/>
+				<%= day.date.strftime_ordinalized('%a %d %b') %>
+				<%= tag :img, :src => '/images/image.placeholder.jpg', :width => 100 %>
+			</td>
+
+
+			<td>
+				<ul>
+				<% day.elements.each do |element| 
+
+					description = element.description.blank? ? '' : tag( :p, "(#{ h(element.description) })" ) 
+					
+					%><%=
+
+					if element.element_type.code.to_sym == :flight
+
+						tag :li, "Depart #{ element.depart_airport.name if element.depart_airport } on #{ element.supplier.name } flight #{ 'to '+element.arrive_airport.name if element.arrive_airport }" + description
+
+					elsif element.element_type.code.to_sym == :accomm
+
+						tag :li, "Overnight at #{ element.supplier.name }" + description
+
+					elsif element.element_type.code.to_sym == :ground
+
+						tag :li, "#{ element.supplier.name }" + description
+
+					elsif element.element_type.code.to_sym == :misc
+
+						tag :li, "#{ element.supplier.name }" + description
+
+					end
+
+					%>
+
+				<% end %>
+				</ul>
+				<br/>
+			</td>
+			
+		</tr>
+
+		<!--<tr><td colspan="2"><hr/></td></tr>-->
+
+		<% end %>
+	</tbody>
+
+</table>

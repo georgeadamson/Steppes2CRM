@@ -1,0 +1,81 @@
+<%=
+
+	# @@postcodes variable contains any postcodes matching the search criteria.
+	# To reduce bloat we specify explicitly which fields to include in the json:
+
+	# Prepare an array of addresses with each line formatted to look nice.
+	# (Capitalise the first letter of each word in each address line)
+	
+	addresses = []
+
+	@postcodes.each do |postcode|
+		
+		address = {
+			:address1		=> postcode.address1.downcase.gsub(/\b\w/){$&.upcase},
+			:address2		=> postcode.address2.downcase.gsub(/\b\w/){$&.upcase},
+			:address2d	=> postcode.address2d.downcase.gsub(/\b\w/){$&.upcase},
+			:address3d	=> postcode.address3d.downcase.gsub(/\b\w/){$&.upcase},
+			:address3		=> postcode.address3.downcase.gsub(/\b\w/){$&.upcase},
+			:address4		=> postcode.address4.downcase.gsub(/\b\w/){$&.upcase},
+			:address5		=> postcode.address5.downcase.gsub(/\b\w/){$&.upcase},
+			:postcode		=> postcode.postcode.upcase
+		}
+		
+		premises = postcode.address1.split(';').delete_if{ |premise| premise.blank? }
+		
+		if premises.empty?
+			addresses << address
+		else
+			premises.each do |premise|
+				addresses << address.merge( :address1 => premise.downcase.gsub(/\b\w/){$&.upcase} )
+			end	
+		end
+		
+	end
+
+	addresses.sort{ |a,b| a[:address1] <=> b[:address1] }.to_json
+
+-%>
+<%#= 
+
+#	# This works but the postcode data is not formatted and can look ugly!
+#
+#	@postcodes.to_json({
+#
+#		:only => [
+#			:address1,
+#			:address2,
+#			:address3,
+#			:address4,
+#			:address5,
+#			:postcode
+#		]
+#		
+#	})
+
+%>
+<%#=
+
+#	# This was a failed experiment to try to to provide a data structure that can be used by the 
+#	# autocompleter directly, without having to reformat the data client-side before displaying it.
+#
+#	postcodes = []
+#
+#	@postcodes.each do |postcode|
+#		
+#		data = {
+#			:address1	=> postcode.address1,
+#			:address2	=> postcode.address2,
+#			:address3	=> postcode.address3,
+#			:address4	=> postcode.address4,
+#			:address5	=> postcode.address5,
+#			:postcode	=> postcode.postcode
+#		}
+#		
+#		postcodes << { :data => data, :value => postcode.postcode, :result => postcode.postcode }
+#		
+#	end
+#
+#	postcodes.to_json
+
+%>

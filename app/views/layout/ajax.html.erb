@@ -1,0 +1,22 @@
+<%= catch_content :for_layout %>
+
+<!--<MESSAGES>--><%
+
+
+	# IMPORTANT: The special <!--<CUSTOM>--> tags enclosing this markup are used by code in shared.js for locating the message elements in this response.
+	#            It extracts message elements using a regex because some responseText can be too big or complex for jQuery to parse.
+
+	# IMPORTANT: These <MESSAGES> tags must be rendered AFTER the content to ensure simple markup such as an <option> list is not considered invalid by the browser.
+
+	# Include any nortices or error messages in the ajax response:
+
+	if message[:notice] 
+		%><h2 class="noticeMessage ui-state-highlight ui-corner-all" style="display:none"><%= message[:notice].gsub(/\n/,'<br/>') %></h2><%
+	end
+
+	if message[:error]
+		%><h2 class="errorMessage ui-state-highlight ui-corner-all" style="display:none"><%=  message[:error].gsub(/\n/,'<br/>')  %></h2><%
+	end
+
+
+-%><!--</MESSAGES>-->

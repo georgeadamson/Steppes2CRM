@@ -1,0 +1,70 @@
+<%
+	
+	# A little helper for generating a frequently used <div class="sectionFoot> containing save and cancel buttons etc.
+
+	# REQUIRED params:
+	cancel_url			||= ''		# Href for the cancel button to link to.
+
+
+	# Optional params...
+
+	save_caption		||= 'Save'
+	save_tooltip		||= save_caption
+	save_class			||= ''
+
+	cancel_caption	||= 'Cancel'
+	cancel_tooltip	||= 'Cancel without saving'
+	cancel_class		||= ''
+
+	add_caption			||= 'Create new'
+	add_tooltip			||= add_caption
+	add_class				||= ''
+	
+	reset_caption		||= 'Discard changes'
+	reset_tooltip		||= reset_caption
+	reset_class			||= ''
+	
+	delete_caption	||= 'Delete'
+	delete_tooltip	||= delete_caption
+	delete_class		||= ''
+	( delete_url		||= '' ) << '?_method=DELETE'
+
+	ui_target				||= '.ajaxPanel'		# Specify empty string or :auto to skip this setting and leave the ui to decide for itself.
+	ui_target				  = nil if ui_target.blank? or ui_target == :auto
+
+	save							= true	if save.nil?							# Show save   button by default.
+	cancel						= true	if cancel.nil?						# Show cancel button by default.
+	add							  = false	if add.nil?							  # Hide add  button by default.
+	reset							= false	if reset.nil?							# Hide reset  button by default.
+	delete						= false	if delete.nil?						# Hide delete button by default.
+	label_for_delete	= false	if label_for_delete.nil?	# Hide label_for_delete by default. Requires delete_id parameter!
+
+	foot_class			||= ''
+	primary_class		||= 'ui-priority-primary ui-state-default'
+	secondary_class	||= 'ui-priority-secondary ui-state-default'
+
+	# These flags may have been passed as an argument or set earlier while rendering the form:
+	show_all_required_field_message ||= @show_all_required_field_message || false
+	show_required_field_message ||= @show_required_field_message || false
+	show_required_field_message = false if show_all_required_field_message
+
+-%>
+<div class="sectionFoot ui-widget <%= foot_class %>">
+	<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
+
+		<%= link_to				add_caption,    add_url,		:rel	=> ui_target,	:title => add_tooltip,		:class => "#{ add_class    } #{ secondary_class } ajaxNew"	if add	%>
+		<%= submit				save_caption,								:rel	=> ui_target,	:title => save_tooltip,		:class => "#{ save_class   } #{ primary_class }"						if save		%>
+		<%= tag :input,		reset_caption,							:type	=> 'reset',		:title => reset_tooltip,	:class => "#{ reset_class  } #{ secondary_class }"					if reset	%>
+		<%= link_to				cancel_caption, cancel_url, :rel	=> ui_target,	:title => cancel_tooltip,	:class => "#{ cancel_class } #{ secondary_class } ajaxCancel"	if cancel	%>
+		
+		<!-- Define a special <label> element that can be clicked to activate the hidden delete_button defined beneath the current form: -->
+		<%= tag :label,		delete_caption,							:for	=> delete_id,	:title => delete_tooltip,	:class => "#{ delete_class } #{ secondary_class }"					if label_for_delete %>
+
+		<%# Warning: delete_button will ender it's own little form so it cannot be nested inside another form: %>
+		<%= delete_button	delete_url,	delete_caption,	:rel	=> ui_target,	:title => delete_tooltip,	:class => "#{ delete_class } #{ secondary_class }"					if delete	%>
+
+		<%= tag :span, ' ( Required fields are marked * ) ', :class => 'left', :style => 'margin-left:1em' if show_required_field_message %>
+		<%= tag :span, ' <span class="ui-icon ui-icon-info"></span> All fields are required ', :class => 'left', :style => 'margin-left:1em' if show_all_required_field_message %>
+
+	</div>
+</div>

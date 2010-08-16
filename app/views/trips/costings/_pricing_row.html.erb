@@ -1,0 +1,58 @@
+<%
+trip											||= @trip
+person										||= :adult	# Eg: :adult, :child, :infant, :single
+do_totals									||= false
+
+if !do_totals %>
+	
+	<%
+	
+	price_method							||= "price_per_#{ person }".to_sym
+	price_per_person					||= trip.method(price_method).call
+	
+	biz_supp_price_method			||= "price_per_#{ person }_biz_supp".to_sym
+	price_per_person_biz_supp	||= trip.method(biz_supp_price_method).call
+	
+	net_per_person_biz_supp     = 
+	
+	-%>
+	
+	<!-- TRIP PRICING per adult/child/infant: -->
+	<!-- "Trip pricing per person  	Gross  	Set gross  	Net  	Profit  	Margin" -->
+	<% with_all_extras_except_biz_supp = { :with_taxes => true, :with_booking_fee => true, :to_currency => true } %>
+	<tr>
+		<%= tag :th, "Price per #{ person.to_s.capitalize }" %>
+		<%= tag :td, trip.calc( :daily, :actual, :net,            :per, person, :with_taxes => true, :with_booking_fee => true, :to_currency => true ) %>
+		<%= tag :td, trip.calc( :daily, :actual, :gross,          :per, person, :with_taxes => true, :with_booking_fee => true, :to_currency => true ), :class => 'muted' %>
+		<%= tag :td, text_field( price_method, :value => price_per_person.to_currency(:generic), :class => 'widthHalfField' ) %>
+		<%# trip.debug = true %>
+		<%= tag :td, trip.calc( :daily, :actual, :margin,         :per, person, :with_taxes => true, :with_booking_fee => true, :final_prices => true, :to_currency => true ) %>
+		<%# trip.debug = false %>
+		<%= tag :td, trip.calc( :daily, :actual, :percent_margin, :per, person, :with_taxes => true, :with_booking_fee => true, :final_prices => true, :decimal_places => 1 ) + '%' %>
+	</tr>
+
+	<!-- TRIP PRICING BIZ-SUPP per adult/child/infant: -->
+	<tr>
+		<%= tag :td, "&nbsp; #{ person.to_s.capitalize } biz-supp" %>
+		<%= tag :td, trip.calc( :total, :actual, :net,            :per, person, :biz_supp => true, :to_currency => true ) %>
+		<%= tag :td, trip.calc( :total, :actual, :gross,          :per, person, :biz_supp => true, :to_currency => true ), :class => 'muted' %>
+		<%= tag :td, text_field( biz_supp_price_method, :value => price_per_person_biz_supp.to_currency(:generic), :class => 'widthHalfField' ) %>
+		<%= tag :td, trip.calc( :total, :actual, :margin,         :per, person, :biz_supp => true, :final_prices => true, :to_currency => true ) %>
+		<%= tag :td, trip.calc( :total, :actual, :percent_margin, :per, person, :biz_supp => true, :final_prices => true, :decimal_places => 1 ) + '%' %>
+	</tr>
+
+	
+<% else -%>
+
+	<!-- TOTAL FINAL PRICES at foot of pricing table: -->
+	<!-- "Total final prices for entire trip  	   	Gross price  	Net  	Profit  	Margin" -->
+	<tr class="total">
+		<%= tag :th, "#{ trip.traveller_summary }:" %><!-- Eg: 2 adults, 2 children: -->
+		<%= tag :td, trip.calc( :total, :actual, :net,            :for_all, :travellers, :with_all_extras => true, :final_prices => true,  :to_currency => true ), :class => '' %>
+		<%= tag :td, trip.calc( :total, :actual, :gross,          :for_all, :travellers, :with_all_extras => true, :final_prices => false, :to_currency => true ), :class => 'muted' %>
+		<%= tag :td, trip.calc( :total, :actual, :gross,          :for_all, :travellers, :with_all_extras => true, :final_prices => true,  :to_currency => true ), :class => 'large' %>
+		<%= tag :td, trip.calc( :total, :actual, :margin,         :for_all, :travellers, :with_all_extras => true, :final_prices => true,  :to_currency => true ), :class => '' %>
+		<%= tag :td, trip.calc( :total, :actual, :percent_margin, :for_all, :travellers, :with_all_extras => true, :final_prices => true,  :decimal_places => 1 ) + '%', :class => 'large' %>
+	</tr>
+
+<% end -%>

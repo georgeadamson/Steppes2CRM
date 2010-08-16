@@ -1,0 +1,21 @@
+<div class="sectionContainer">
+
+	<%= form_for @trip, :action => nested_resource(@client, :trips) do %>
+
+		<div class="sectionHead">
+			<h3 class="tripHeading">
+				<span class="ui-icon ui-icon-trip"></span>
+				<span class="tripName">Create a new trip for <%= @client.shortname %></span>
+			</h3>
+		</div>
+
+		<div class="sectionBody tripPage formSurround">
+			<%= partial "trips/form", :trip => @trip, :client => @client, :client_id => @client.id %>
+		</div>
+
+		<!-- sectionFoot: -->
+		<%= partial 'shared/sectionFoot_with_buttons', :ui_target => '.clientSubPageContainer', :cancel => false, :save_caption => 'Save new trip', :save_class => 'createTrip', :foot_class => 'formSurround' %>
+
+	<% end =%>
+
+</div>

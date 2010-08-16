@@ -1,0 +1,20 @@
+<%
+	element ||= @element
+%>
+<div class="sectionContainer is<%= element.element_type.code.capitalize %>" >
+<%= form_for element, :action => nested_resource(:trip_elements) do %>
+
+	<!-- sectionHead and sectionBody: -->
+	<%= partial "trip_elements/form", :element => element %>
+
+	<div class="sectionFoot">
+		<div class="buttonBar ui-dialog-buttonpane ui-widget-content xui-widget-header ui-corner-all ui-helper-clearfix">
+
+			<%= submit "Add element to trip", :rel => "##{ nested_resource( element.trip, true ) }Builder", :class => "save ajaxBlank ui-priority-primary ui-state-default" %>
+			<%= link_to "Cancel without saving", nested_resource( element.trip, :trip_elements ), :class => "xcancel ajaxCancel ajaxBlank ajaxBlank ui-priority-secondary ui-state-default" %>
+
+		</div>
+	</div>
+		
+<% end =%>
+</div>

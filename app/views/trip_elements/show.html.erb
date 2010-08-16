@@ -1,0 +1,6 @@
+<%#
+	This just returns html for one trip_element.
+	Typically called via ajax to update one Element the timeline.
+%>
+
+<%= partial "trip_elements/show", :element => @element, :isOverview => @isOverview %>

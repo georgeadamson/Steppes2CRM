@@ -1,0 +1,7 @@
+<%
+
+	world_region ||= @world_region
+	@properties = world_region.method(:properties).call
+
+-%>
+<%= text_field :name, :label=>'Name *', :maxlength => @properties[:name].length %>

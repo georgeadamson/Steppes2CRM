@@ -1,0 +1,84 @@
+<%
+
+	elem = trip_element	||= nil
+	trip								||= nil
+	do_totals						||= !!trip || false
+
+
+	# Prepare a little summary of the number of days or nights:
+	if trip
+		duration      = "#{ trip.days } days"
+	else
+		duration      = "(#{ elem.days } #{ elem.is_accomm? ? 'nights' : 'days' })"
+		supplier_name = elem.supplier.display_name || '(Supplier not set)'
+	end
+
+	
+	unless elem.nil?
+
+		tax_info = "(incl. #{ elem.taxes } taxes pp)"
+		
+		elem_description = "#{ supplier_name } #{ tag :small, duration unless elem.is_flight? } #{ tag :small, tax_info unless elem.taxes.nil? || elem.taxes.zero? }"
+
+	end
+	
+	
+
+if !do_totals -%>
+
+	<!-- COSTINGS table row: -->
+	<tr>
+		<%# Description   %><%= tag :td, elem_description %>
+		<%# Margin        %><%= tag :td, tag( :small, "#{ elem.margin }#{ elem.margin_type }" ) %>
+		<%# Rate          %><%= tag :td, tag( :small, elem.exchange_rate )%>
+		<%# Adult local   %><%= tag :td, elem.calc( :daily, :local,  :net,  :per, :adult,  :with_taxes => true ) %>
+		<%# Adult net     %><%= tag :td, elem.calc( :daily, :actual, :net,  :per, :adult,  :with_taxes => true ) %>
+		<%# Adult Gross   %><%= tag :td, elem.calc( :daily, :actual, :gross, :per, :adult,  :with_taxes => true ) %>
+		<%# Child net     %><%= tag :td, elem.calc( :daily, :actual, :net,  :per, :child,  :with_taxes => true ) %>
+		<%# Child Gross   %><%= tag :td, elem.calc( :daily, :actual, :gross, :per, :child,  :with_taxes => true ) %>
+		<%# Infant net    %><%= tag :td, elem.calc( :daily, :actual, :net,  :per, :infant, :with_taxes => true ) %>
+		<%# Infant Gross  %><%= tag :td, elem.calc( :daily, :actual, :gross, :per, :infant, :with_taxes => true ) %>
+		<%# Single net    %><%= tag :td, elem.calc( :daily, :actual, :net,  :per, :single, :with_taxes => true ) %>
+		<%# Single Gross  %><%= tag :td, elem.calc( :daily, :actual, :gross, :per, :single, :with_taxes => true ) %>
+		<%# biz_supp      %><%#=tag :td, elem.calc( :daily, :actual, :net , :per, :adult,  :with_taxes => true,  :biz_supp => true  ) %>
+		<%# with_biz_supp %><%#=tag :td, elem.calc( :daily, :actual, :net , :per, :adult,  :with_taxes => true,  :with_biz_supp => true  ) %>
+	</tr>
+
+	<!-- COSTINGS table BIZ_SUPP row: -->
+	<%= if elem.is_flight? && ( elem.biz_supp_per_adult.to_i > 0 || elem.biz_supp_per_child.to_i > 0 || elem.biz_supp_per_infant.to_i > 0 )
+		partial 'trips/costings/costings_biz_supp_row', :trip_element => elem
+	end -%>
+
+
+<% else -%>
+
+	<!-- COSTINGS TOTALS at foot of costings table: -->
+	<tr>
+		<%= tag :td, "File booking fee &pound;#{ trip.calc( :daily, :actual, :net,  :per, :person, :booking_fee => true, :to_currency => true ) } per person" %>
+		<%= tag :td, '' %>
+		<%= tag :td, '' %>
+		<%= tag :td, '' %>
+		<%= tag :td, trip.calc( :daily, :actual, :net, :per, :traveller, :booking_fee => true ) %>
+		<%= tag :td, trip.calc( :daily, :actual, :net, :per, :traveller, :booking_fee => true ) %>
+		<%= tag :td, trip.calc( :daily, :actual, :net, :per, :traveller, :booking_fee => true ) %>
+		<%= tag :td, trip.calc( :daily, :actual, :net, :per, :traveller, :booking_fee => true ) %>
+		<%= tag :td, trip.calc( :daily, :actual, :net, :per, :traveller, :booking_fee => true ) %>
+		<%= tag :td, trip.calc( :daily, :actual, :net, :per, :traveller, :booking_fee => true ) %>
+	</tr>
+
+	<tr class="total">
+		<%# Description   %><%= tag :th, 'Per-person totals:'  %>
+		<%# Margin        %><%= tag :th, '' %>
+		<%# Rate          %><%= tag :th, '' %>
+		<%# Adult local   %><%= tag :th, '' %><!-- No point in summing local currencies. -->
+		<%# Adult net     %><%= tag :th, trip.calc( :daily, :actual, :net,   :per, :adult,  :with_all_extras => true ) %>
+		<%# Adult Gross   %><%= tag :th, trip.calc( :daily, :actual, :gross, :per, :adult,  :with_all_extras => true ) %>
+		<%# Child net     %><%= tag :th, trip.calc( :daily, :actual, :net,   :per, :child,  :with_all_extras => true ) %>
+		<%# Child Gross   %><%= tag :th, trip.calc( :daily, :actual, :gross, :per, :child,  :with_all_extras => true ) %>
+		<%# Infant net    %><%= tag :th, trip.calc( :daily, :actual, :net,   :per, :infant, :with_all_extras => true ) %>
+		<%# Infant Gross  %><%= tag :th, trip.calc( :daily, :actual, :gross, :per, :infant, :with_all_extras => true ) %>
+		<%# Single net    %><%= tag :th, trip.calc( :daily, :actual, :net,   :per, :single, :with_all_extras => true ) %>
+		<%# Single Gross  %><%= tag :th, trip.calc( :daily, :actual, :gross, :per, :single, :with_all_extras => true ) %>
+	</tr>
+
+<% end -%>

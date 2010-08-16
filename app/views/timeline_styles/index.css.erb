@@ -1,0 +1,48 @@
+<%
+	# This file dynamially generates repetitive css for styling the timeline elements.
+
+	number_of_days   = 365	# How many day styles to generate.
+	width_of_one_day = 5		# Width of one day on the timeline (in EMs)
+	left_offset      = 5		# Offset x-coordinate of elements on timeline (in same units as width_of_one_day).
+	width_offset     = 0		# Fine tune width of elements on timeline (in same units as width_of_one_day).
+	
+-%>
+
+/*
+	Set element's X-COORDINATE according to it's start_date day:
+	Negative numbers provide some allowance for elements that accidentally start before trip.start_date
+	The timelineElement.day class sets the x-coordinate for both elements on the timeline and those in the scale.
+	Eg: .timelineElement.day2 { left:10em }
+*/
+
+.timelineElement{left:<%= left_offset - 1 %>em;}	/* Default position is offset left a little to highlight when dates not in range */
+<%
+
+(1..number_of_days).each do |day|
+	
+	position = width_of_one_day * (day-1) + left_offset
+	
+-%>
+.timelineElement.day<%= day %>{left:<%= position %>em}
+<%
+end
+-%>
+
+
+
+/*
+	Set element's WIDTH according to it's duration in days:
+	The timelineElement.days class sets the width for both elements on the timeline only.
+	Eg: .tripBuilder .timelineElement.days3 { width:15em }
+*/
+
+.tripBuilder .timelineElement,		/* <-- This first line ensures default width is same as .timelineElement.days1. */
+<%
+
+(0..number_of_days).each do |number_of_days|
+	
+	width = width_of_one_day * number_of_days + width_offset
+
+-%>
+.tripBuilder .timelineElement.days<%= number_of_days %>{width:<%= width %>em}
+<% end -%>

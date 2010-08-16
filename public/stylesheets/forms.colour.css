@@ -1,0 +1,43 @@
+
+/* Stealth fields just look like text until they gain the focus */
+SELECT.stealth,
+TEXTAREA.stealth,
+INPUT[type=text].stealth {
+	background-color:transparent;
+	outline:none;
+}
+
+SELECT,
+TEXTAREA,
+INPUT[type=text],
+INPUT[type=password],
+SELECT.stealth:focus,
+TEXTAREA.stealth:focus,
+INPUT[type=text].stealth:focus {
+	background-color:#fff;
+	border:none;
+	outline:solid 1px #D9D9D9;
+}
+
+SELECT[readonly],
+TEXTAREA[readonly],
+INPUT[type=text][readonly] {
+	color:#000;
+	background-color:#ddd;
+	border-color:transparent;
+	xoutline-color:transparent;
+}
+
+DIV.total > LABEL {
+	font-weight:bolder;
+}
+INPUT[type=text].total {
+	font-weight:bolder;
+}
+
+H2 SELECT,
+H3 SELECT,
+H2 INPUT[type=text],
+H2 INPUT[type=text] {
+	font-weight:bold;
+}

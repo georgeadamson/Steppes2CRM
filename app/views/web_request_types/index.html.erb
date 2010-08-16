@@ -1,0 +1,7 @@
+<%
+
+	# When url parameter ?list=option is set then return custom list:
+	#return partial( 'web_request_types/list', :web_request_types => @web_request_types ) if params[:list]
+
+%>
+<%= partial 'system/index', :collection => @web_request_types %>

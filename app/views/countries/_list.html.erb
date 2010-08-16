@@ -1,0 +1,13 @@
+<%
+
+	# (The controller's index action will have already filterd by params[:world_region_id] if it was specified)
+
+	# Custom URL parameter options:
+	world_region_id	||= params[:world_region_id].split(',') if params[:world_region_id]				# Filter by comma-separated IDs.
+	company_id			||= params[:company_id].split(',')			if params[:company_id]						# TODO: Filter by comma-separated IDs.
+
+	# Prepare records and apply filters and options:
+	countries				||= collection || Country.all
+	countries					= countries.all( :world_region_id => world_region_id ) if world_region_id
+
+-%><%= partial( 'shared/list', :collection => countries ) -%>

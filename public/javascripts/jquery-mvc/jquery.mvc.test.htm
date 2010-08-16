@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<title>Untitled Page</title>
+<script type="text/javascript" src="jquery-1.3.2.js"></script>
+<script type="text/javascript" src="jquery-mvc.js"></script>
+<script type="text/javascript">
+
+	// Activate MVC plugin:
+	jQuery(function($){
+
+		$("FORM").MVC({
+
+			model	: {
+				controller	: "client",	// Name of server-side controller to post updates to etc.
+				listeners	: [
+					function(id,row,oldRow){  }
+				]
+			},
+
+			view	: {
+				id			: 1,
+				idField		: "client[id]",
+				// Each listener can be a function or an array of functions:
+				listeners	: {
+					"*"					: function(dataFld,newVal,oldVal){ console.log("*:",dataFld,newVal,oldVal) },
+					"clients[forename]"	: function(dataFld,newVal,oldVal){ console.log("clients/forename:",dataFld,newVal,oldVal) }
+				}
+			}
+		});
+
+	});
+
+</script>
+</head>
+<body>
+
+	<form>
+		<h3><span dataFld="client[name]"></span></h3>
+
+		<input type="text" value="Mr" dataFld="client[title]" />
+		<input type="text" value="George" dataFld="client[forename]" />
+		<input type="text" value="Adamson" dataFld="client[surname]" />
+		<input type="text" dataFld="client[address1]" />
+		<input type="text" dataFld="client[address2]" />
+		<textarea dataFld="client[known_as]"></textarea>
+		<select dataFld="client[title]" multiple="multiple">
+			<option value="Mr" selected="selected">Mr</option>
+			<option value="Mrs">Mrs</option>
+			<option value="Miss">Miss</option>
+			<option value="Master">Master</option>
+			<option value="Doctor">Doctor</option>
+		</select>
+		<input type="radio" name="test" value="Mr" checked="checked" dataFld="client[title]" />
+		<input type="radio" name="test" value="Mrs" dataFld="client[title]" />
+		<input type="checkbox" value="Mr" checked="checked" dataFld="client[title]" />
+<!--
+		<br />
+		<input type="text" value="Mr" dataFld="client[title]" />
+		<input type="text" value="George" dataFld="client[forename]" />
+		<input type="text" value="Adamson" dataFld="client[surname]" />
+		<input type="text" dataFld="client[address1]" />
+		<input type="text" dataFld="client[address2]" />
+		<textarea dataFld="client[known_as]"></textarea>
+		<select dataFld="client[title]" multiple="multiple">
+			<option value="Mr" selected="selected">Mr</option>
+			<option value="Mrs">Mrs</option>
+			<option value="Miss">Miss</option>
+			<option value="Master">Master</option>
+			<option value="Doctor">Doctor</option>
+		</select>
+		<input type="radio" name="test" value="Mr" dataFld="client[title]" />
+		<input type="radio" name="test" value="Mrs" dataFld="client[title]" />
+		<input type="checkbox" value="Mr" dataFld="client[title]" />-->
+		
+	</form>
+
+</body>
+</html>

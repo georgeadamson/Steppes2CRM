@@ -1,0 +1,4 @@
+<%
+	@users = @users.all( :order => [ :is_active.desc, :name ] )
+%>
+<%= partial 'system/index', :collection => @users %>

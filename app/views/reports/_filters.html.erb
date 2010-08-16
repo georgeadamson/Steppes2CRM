@@ -1,0 +1,68 @@
+<%
+
+	# Attempt to make the list of operators a little less techie:
+	operators_list = {
+	
+		'Text filters:' => [
+	
+			[ 'like',		'includes the word' ],
+			[ 'begins',	'begins with' ],
+			[ 'ends',		'ends with' ],
+			[ 'eql',		'is' ],
+			#[ 'not',		'is not equal to' ]
+			
+		],
+
+		'Number filters:' => [
+			
+			[ 'eql',	'is equal to' ],
+			#[ 'not',	'is not equal to' ],
+			[ 'gt',		'is more than' ],
+			[ 'lt',		'is less than' ],
+			[ 'gte',	'is at least' ],
+			[ 'lte',	'is at most' ]
+		
+		],
+		
+		'Date filters:' => [
+			
+			[ 'gt',		'from' ],
+			[ 'lt',		'to' ],
+			[ 'eql',	'is' ]
+			
+		],
+		
+		# These are applied as ".eql => 1" and ".eql => 0" respectively:
+		'Yes/No filters:' => [
+			
+			[ 'true',	'is yes' ],
+			[ 'false',	'is no' ]
+			
+		],
+		
+		# These are applied as ".eql => nil" and ".not.eql => nil" respectively:
+		'Geeky filters:' => [
+			
+			[ 'not.nil',	'has any value (not null)' ],
+			[ 'nil',			'has no value (null)' ]
+			
+		]
+	}
+	
+	field_names = @report.potential_filters.map{ |f| [ f.name, f.display_name ] }.sort
+
+%>
+	
+	<h3>Only show results where:</h3>
+	<br/>
+
+	<!-- Fields for each filter: -->
+	<% @report.filters.each do |field| %>
+		<%= partial 'reports/filter', :field => field, :field_names => field_names, :operators_list => operators_list %>
+	<% end %>
+
+	<%# Show one default blank filter if report has none defined: %>
+	<%= partial 'reports/filter', :field => ReportField.new, :field_names => field_names, :operators_list => operators_list if @report.filters.empty? %>
+
+	<!-- Link to add another filter: -->
+	<%= link_to "#{ icon :add } and a different filter", '#', :class => 'add-filter ui-priority-secondary ui-state-default noajax' %>
