@@ -1,77 +1,8 @@
-<%
 
-field_prefix								||= 'client'
-addresses_ids								||= "#{field_prefix}[addresses_ids][]"
-addresses_attributes				||= "#{field_prefix}[addresses_attributes]"					# Note we're using nested attributes!
-client_addresses_attributes	||= "#{field_prefix}[client_addresses_attributes]"	# Note we're using nested attributes!
-client											||= @client
-#client_addresses						||= client.client_addresses.all( :order => [ :is_active.desc, :id ])
-client_addresses						||= ClientAddress.all( :client_id => client.id, :order => [ :is_active.desc, :id ])
-
-new_blank_address						||= client.addresses.new( :address1 => 'Add another...' )
-
-#ids = ["111","444_delete",222,"333","44","222_delete","444_delete"]
-#ids = ids.select{ |id| !ids.include?("#{id}_delete") && !id.to_s.include?('_delete') }
-
--%>
-<!-- List the client's addresses and allow selection of one as the active address: -->
-<ul class="addresses">
-<% client_addresses.each_with_index do |client_address,i| %>
-
-		<li>
-
-			<%
-				radio_id    = "#{field_prefix}_#{client.id}_active_address_id_#{client_address.id}"
-				checkbox_id = "#{field_prefix}_#{client.id}_delete_address_id_#{client_address.id}"
-			-%>
-
-			<%= fields_for client do %>
-				<!-- Note: We use address.id here and not client_address.id: (Server sorts out client_address.is_active logic for us) -->
-				<%= radio_button :active_address_id, :label => (i==0 ? 'Primary address' : 'Use this as primary'), :value => client_address.address_id, :checked => client_address.is_active, :class => ( i>0 ? 'noemphasis' : '' ), :id => radio_id %>
-			<% end =%>
-
-			<%= fields_for client_address.address do %>
-				<%= partial 'addresses/form', :address => client_address.address, :field_prefix => "#{ addresses_attributes }[#{i}]", :index => i %>
-			<% end =%>
-
-			<%= fields_for client_address.address do %>
-
-				<!-- Note: This deletes the client-to-address relationship through client_addresses, not the address itself: -->
-
-				<%= check_box         :name => "#{ addresses_ids }", :value => "#{ client_address.address_id }_delete", :label => 'Delete this address', :class => "noemphasis invisible #{ "invisible" if i==0 }", :id => checkbox_id %>
-				<%= hidden_field :id, :name => "#{ addresses_ids }" %>
-
-				<!-- These cause "ClientAddress#update cannot be called on a dirty resource": -->
-				<%#= check_box         :name => "#{client_addresses_attributes}[#{i}][_delete]", :value => '1', :label => 'Delete this address', :class => "noemphasis #{ "invisible" if i==0 }", :id => checkbox_id %>
-				<%#= hidden_field :id, :name => "#{client_addresses_attributes}[#{i}][id]" %>
-
-			<% end =%>
-
-	</li>
-
-<% end %>
-
-
-<!-- Special markup for a new address: (Is only saved if more than just the first field is entered) -->
-<li>
-
-	<%
-		radio_id = "client_#{client.id}_active_address_id_NEW"
-	-%>
-
-	<%= fields_for client do %>
-		<!-- Note: address.id 0 is handled server side: -->
-		<%#= radio_button :active_address_id, :label => 'Use this as primary', :value => 0, :checked => client_addresses.empty?, :class => 'noemphasis' %>
-	<% end =%>
-
-	<!-- Important: New address is saved when any field contains text: (other than address1 and country_id) -->
-	<%= fields_for new_blank_address do |address| %>
-		<%= partial 'addresses/form', :address => address, :field_prefix => "#{ addresses_attributes }[new]", :index => 'new' %>
-	<% end =%>
-
-	<!-- Depricated: (by making it invisible) -->
-	<%= check_box :label => 'Add this address', :name => "ignore", :value => '_create', :class => 'invisible' %>
-
-</li>
-
-</ul>
+<%= text_field :address1, :label=>"Number/name <small>1.</small> " %>
+<%= text_field :address2, :label=>"Locality <small>2.</small> " %>
+<%= text_field :address3, :label=>"Region <small>3.</small> " %>
+<%= text_field :address4, :label=>"Town/city <small>4.</small> " %>
+<%= text_field :address5, :label=>"County <small>5.</small> " %>
+<%= text_field :postcode, :label=>"Postcode <small>6.</small> ", :class=>"postcode" %>
+<%= select :country_id, :label=>"Country <small>7.</small> ", :class=>"country-all", :collection => Country.all(:order=>[:name]), :selected=>( client.country || Country.first(:code=>"UK") ).id.to_s, :value_method=>:id, :text_method=>:name %>

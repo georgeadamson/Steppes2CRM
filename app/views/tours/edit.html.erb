@@ -1,0 +1,22 @@
+<div class="sectionContainer">
+
+	<div class="sectionHead">
+		<h3>
+			Tour details for <%= @tour.name %>
+		</h3>
+	</div>
+
+	<%= form_for @tour, :action => resource( @tour ) do %>
+
+		<div class="sectionBody formSurround">
+		
+			<%= partial 'tours/form', :tour => @tour %>
+		
+		</div>
+
+	<!-- sectionFoot: -->
+	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => '.tour', :save_caption => 'Save changes', :cancel => false, :foot_class => 'formSurround' %>
+
+	<% end =%>
+
+</div>

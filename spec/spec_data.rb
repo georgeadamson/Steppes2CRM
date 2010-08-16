@@ -77,6 +77,17 @@ def valid_address_attributes2
   }
 end
 
+
+
+def valid_tour_attributes
+  {
+    :name       => 'Test tour',
+    :notes      => 'Just some notes',
+    :company_id => 1
+  }
+end
+
+
 # @trip = Trip.new(:name=>'Test trip',:start_date=>Date.today,:end_date=>Date.today+10,:company_id=>1,:user_id=>1)
 def valid_trip_attributes
   {
@@ -91,7 +102,7 @@ def valid_trip_attributes
     :price_per_adult_biz_supp   => 100,
     :price_per_child_biz_supp   => 100,
     :price_per_infant_biz_supp  => 100
-    }
+  }
 end
 
 

@@ -17,8 +17,8 @@ class Trip
     PRIVATE_GROUP = TripType::PRIVATE_GROUP unless defined? PRIVATE_GROUP  # TODO: Depricate this because TAILOR_MADE trip can do the job.
     
     
-    property :id,                         Serial
-    property :name,                       String,   :length => 100, :required => true, :default => "A lovely new trip"
+    property :id,                         Serial    # Important: trip.id was migrated from ItineraryHeaderID in old database.
+    property :name,                       String,   :length => 100, :required => true, :default => lambda{ |trip,prop| trip.tour ? "New tour dates for #{ trip.tour.name }" : 'A lovely new trip' }
     property :version,                    Integer,  :default => 1
     #property :version_name,              String,   :default => "New version"
     #property :activeTripId,              Integer,  :required => true   # FK to trip.id. Only one version can be active per trip.
@@ -49,11 +49,12 @@ class Trip
     property :price_per_infant_biz_supp,	BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
     property :price_per_single_supp,		  BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
     
-    property :type_id,						        Integer,	:default => TAILOR_MADE
-    property :status_id,					        Integer,	:default => UNCONFIRMED	  # 1=Unconfirmed, 2=Confirmed, 3=Completed, 4=Abandonned, 5=Canceled
-    property :deleted,						        Boolean,	:default => false
+    property :type_id,						        Integer,	  :default => TAILOR_MADE, :required => true
+    property :status_id,					        Integer,	  :default => UNCONFIRMED	  # 1=Unconfirmed, 2=Confirmed, 3=Completed, 4=Abandonned, 5=Canceled
+    property :deleted,						        Boolean,	  :default => false
+    property :tour_id,						        Integer,	  :required => false        # Only required when type_id = FIXED_DEP
     
-    property :total_price,				        Integer,	:default => 0             # Rather important!
+    property :total_price,				        Integer,	:default => 0               # Rather important!
     
     # Helper for calculating total net including everything: (in sterling)
     def total_cost
@@ -86,15 +87,15 @@ class Trip
     has n, :trip_pnrs
     has n, :pnrs,       :through => :trip_pnrs
     
-    has n, :money_ins   # AKA Invoices
-    has n, :money_outs  # AKA SupplierPaymentRequests
+    has n, :money_ins         # AKA Invoices
+    has n, :money_outs        # AKA SupplierPaymentRequests
     
-    # Note :class_name depricated in favour of :model in DM v0.10
-    belongs_to :user 		    # Handled by / Prepared by.
-    belongs_to :company		# Handled by / Cost centre / Invoice to.
+    belongs_to :tour 		      # Only applies when this trip.type is FIXED_DEP.
+    belongs_to :user 		      # Handled by / Prepared by.
+    belongs_to :company		    # Handled by / Cost centre / Invoice to.
     belongs_to :type,   :model => "TripType",  :child_key => [:type_id]			# 1=Tailor made
     belongs_to :status, :model => "TripState", :child_key => [:status_id]   # 1=Unconfirmed, 2=Confirmed, 3=complete, 4=Canceled, 5=Abandonned.
-    #belongs_to :tripPackage	# Formerly known as Group Title etc .
+    #belongs_to :tripPackage	  # Formerly known as Group Title etc .
     
     property :created_at, Date
     property :created_by, String, :default => ''
@@ -106,7 +107,7 @@ class Trip
     #		return [ false, 'pants' ] if self.end_date < self.start_date
     #		true
     #	end
-    
+
     accepts_nested_attributes_for :countries  # See http://github.com/snusnu/dm-accepts_nested_attributes
     accepts_nested_attributes_for :trip_countries
     accepts_nested_attributes_for :trip_clients, :allow_destroy => true
@@ -129,6 +130,10 @@ class Trip
     #  def end_date;   get_datetime_property_of( self, :end_date   ); end
     
     
+    # TODO!
+    #validates_absence_of  :tour_id, :if => Proc.new{ |trip| trip.type_id != FIXED_DEP }
+    #validates_presence_of :tour_id, :if => Proc.new{ |trip| trip.type_id == FIXED_DEP }
+    
     
     
     before :create do
@@ -142,9 +147,10 @@ class Trip
     
     before :save do
       
-      self.name								||= "Untitled"
+      self.name								||= "Untitled trip"
       self.status_id					||= Trip::UNCONFIRMED
-      self.version_of_trip_id ||= 0	# Cannot be nil. If zero it will be set to it's own new id after save.
+      self.type_id              = TripType::FIXED_DEP if self.tour
+      self.version_of_trip_id ||= 0	# Cannot be nil. If zero, this will be set to the trip's own new id after save.
       
       # Swap start and end dates if start date is later than end date:
       # Beware! Setting start/end_date here is a workaround for when they've not been submitted as part of the form
@@ -152,7 +158,7 @@ class Trip
       #self.start_date = self.start_date || Date.today
       #self.end_date   = self.end_date   || Date.today + 10
       self.start_date, self.end_date = self.end_date, self.start_date if self.start_date > self.end_date
-
+      
       # Ensure all trip elements still have valid numbers of adults/children/infants
       # (Also see TripElement before :save)
       # TODO: Handle subgroups?
@@ -165,7 +171,7 @@ class Trip
         #elem.save!      if elem.dirty? #&& !elem.new? && !elem.destroyed? && elem.valid? && elem.supplier_id
         
       end
-        
+      
       # Recalculate and set price_per_xxx and total_price attributes:
       # This also calls calc_total_price() for us.
       # Only where price pp is currently zero because we must not override prices set manually in costing sheet!
@@ -175,85 +181,85 @@ class Trip
       # TODO: Make this work: (Intended to detect when pnr numbers have been changed so we can speed up trip save)
       @pnr_numbers_have_changed     ||= self.pnrs.dirty? || self.trip_pnrs.dirty?
       @orig_pnr_numbers_before_save   = self.pnr_numbers
-
+      
     end
     
     
     after :save do
       
       #unless ( @avoid_triggering_after_save_hook_recursively ||= false )
-
-        @avoid_triggering_after_save_hook_recursively = true
-
-        # Set version_of_trip_id to self if not already set: (Note we tried "self.activeTrip ||= self" but it caused recursive "stack level too deep" error)
-        # This does not seem to work as hoped so we rely on a sql trigger instead! (See comments at end of this class)
-        if self.version_of_trip_id.to_i == 0 && self.id
-          self.version_of_trip_id = self.id
-          self.save!
-        end
-        
-        
-        # Update the is_active_version flag on all versions of same trip:
-        self.become_active_version
-        
-        
-        # Moved to before:save
-        # Ensure all trip elements still have valid numbers of adults/children/infants
-        # (Also see TripElement before :save)
-        # TODO: Handle subgroups?
-        #  self.trip_elements.each do |elem|
-        #    
-        #    elem.adults   = self.adults
-        #    elem.children = self.children
-        #    elem.infants  = self.infants
-        #    elem.save!      if elem.dirty? && !elem.new? && !elem.destroyed? && elem.valid?
-        #    
-        #  end
-        
-        # Override flag because it is not reliable:
-        # TODO: Find a way to detect when pnr numbers have been changed
-        @pnr_numbers_have_changed ||= ( self.pnr_numbers.sort != @orig_pnr_numbers_before_save.sort )
-        
-        # Ensure the trip_elements include all the flights identified by this trip's PNRs:
-        # Create and/or delete flight elements if necessary!
-        if @pnr_numbers_have_changed
-          
-		      self.pnrs.each do |pnr|
-      			
-			      report = pnr.refresh_flight_elements_for(self)
-      			
-			      report[:errors].each_pair do |line_nos,err|
-			        self.errors.add :pnr_numbers, "#{ pnr.number } line #{ line_nos }: #{ err }"
-			      end
-      			
-		      end
-
-          
-          # As a catch all, DELETE any orphaned PNR flights that seem to be left behind by old PNRs!
-          # This should not be necessary but situation did occur occasionally in test system.
-          pnr_numbers = self.pnr_numbers
-          self.flights.each do |f|
-
-            unless f.pnr_number.blank? || pnr_numbers.include?(f.pnr_number) || f.new? || f.destroyed?
-
-              Pnr.logger.info "Also deleting flight element #{ f.id } that seems to reference PNR #{ f.pnr_number } that is is longer assiged to the trip!" 
-              f.destroy!
-
-            end
-
-          end
-
-
-          # Refresh our change-tracking flags:
-          @pnr_numbers_have_changed     = false
-          @orig_pnr_numbers_before_save = self.pnr_numbers
-        
-        end
       
-        @avoid_triggering_after_save_hook_recursively = false
+      @avoid_triggering_after_save_hook_recursively = true
+      
+      # Set version_of_trip_id to self if not already set: (Note we tried "self.activeTrip ||= self" but it caused recursive "stack level too deep" error)
+      # This does not seem to work as hoped so we rely on a sql trigger instead! (See comments at end of this class)
+      if self.version_of_trip_id.to_i == 0 && self.id
+        self.version_of_trip_id = self.id
+        self.save!
+      end
+      
+      
+      # Update the is_active_version flag on all versions of same trip:
+      self.become_active_version
+      
+      
+      # Moved to before:save
+      # Ensure all trip elements still have valid numbers of adults/children/infants
+      # (Also see TripElement before :save)
+      # TODO: Handle subgroups?
+      #  self.trip_elements.each do |elem|
+      #    
+      #    elem.adults   = self.adults
+      #    elem.children = self.children
+      #    elem.infants  = self.infants
+      #    elem.save!      if elem.dirty? && !elem.new? && !elem.destroyed? && elem.valid?
+      #    
+      #  end
+      
+      # Override flag because it is not reliable:
+      # TODO: Find a way to detect when pnr numbers have been changed
+      @pnr_numbers_have_changed ||= ( self.pnr_numbers.sort != @orig_pnr_numbers_before_save.sort )
+      
+      # Ensure the trip_elements include all the flights identified by this trip's PNRs:
+      # Create and/or delete flight elements if necessary!
+      if @pnr_numbers_have_changed
         
+        self.pnrs.each do |pnr|
+          
+          report = pnr.refresh_flight_elements_for(self)
+          
+          report[:errors].each_pair do |line_nos,err|
+            self.errors.add :pnr_numbers, "#{ pnr.number } line #{ line_nos }: #{ err }"
+          end
+          
+        end
+        
+        
+        # As a catch all, DELETE any orphaned PNR flights that seem to be left behind by old PNRs!
+        # This should not be necessary but situation did occur occasionally in test system.
+        pnr_numbers = self.pnr_numbers
+        self.flights.each do |f|
+          
+          unless f.pnr_number.blank? || pnr_numbers.include?(f.pnr_number) || f.new? || f.destroyed?
+            
+            Pnr.logger.info "Also deleting flight element #{ f.id } that seems to reference PNR #{ f.pnr_number } that is is longer assiged to the trip!" 
+            f.destroy!
+            
+          end
+          
+        end
+        
+        
+        # Refresh our change-tracking flags:
+        @pnr_numbers_have_changed     = false
+        @orig_pnr_numbers_before_save = self.pnr_numbers
+        
+      end
+      
+      @avoid_triggering_after_save_hook_recursively = false
+      
       #end
-
+      
     end
     
     
@@ -365,7 +371,7 @@ class Trip
     def children?;				return self.children.>(0); end
     def infants?;					return self.infants.>(0); end
     
-    def is_first_version; return self.version_of_trip_id == self.id; end  # AKA The ORIGINAL trip version.
+    def is_first_version; return self.version_of_trip_id == self.id || self.id.nil?; end  # AKA The ORIGINAL trip version.
     def version_name;		  return self.is_first_version ? "Original version: #{ self.name }" : self.name; end
     
     # Shortcut for get/setting name of the ORIGINAL trip version:
@@ -490,7 +496,11 @@ class Trip
     end
     alias travellerSummary traveller_summary	# Depricated
     
+    def summary
+      "#{ self.date_summary } - #{ self.status_name } - #{ self.traveller_summary }"
+    end
 
+    
     def country_names
       self.countries_names.join(', ')
     end
@@ -943,13 +953,13 @@ class Trip
       supplier_elements = self.trip_elements.all( :supplier => supplier )
       
       return  self.adults     * supplier_elements.sum( :cost_per_adult  ) +
-              self.children   * supplier_elements.sum( :cost_per_child  ) +
-              self.infants    * supplier_elements.sum( :cost_per_infant ) +
-              self.singles    * supplier_elements.sum( :single_supp ) +
-              self.adults     * supplier_elements.sum( :biz_supp_per_adult  ) +
-              self.children   * supplier_elements.sum( :biz_supp_per_child  ) +
-              self.infants    * supplier_elements.sum( :biz_supp_per_infant ) +
-              self.travellers * supplier_elements.sum( :taxes )
+      self.children   * supplier_elements.sum( :cost_per_child  ) +
+      self.infants    * supplier_elements.sum( :cost_per_infant ) +
+      self.singles    * supplier_elements.sum( :single_supp ) +
+      self.adults     * supplier_elements.sum( :biz_supp_per_adult  ) +
+      self.children   * supplier_elements.sum( :biz_supp_per_child  ) +
+      self.infants    * supplier_elements.sum( :biz_supp_per_infant ) +
+      self.travellers * supplier_elements.sum( :taxes )
       
     end
     
@@ -1145,63 +1155,75 @@ class Trip
     end
     
     
-  
-  
-	# Depricated because it causes all fields become nil when we call @trip = Trip.new(trip). Perhaps it is replacing the default initialize method?
-  def initialize(*)
-    super
-    self.type_id    = TripType::TAILOR_MADE
-    self.status_id  = TripState::UNCONFIRMED
-    self.debug      = false
-    @orig_pnr_numbers_before_save = self.pnr_numbers
-  end
-  
-  
-  
-  # DEPRICATED in favour of "after :save" hook
-	# Definition of sql trigger that ensures version_of_trip_id is set on first version of each trip:
-  
-	#	-- =============================================
-	#	-- Author:		George Adamson
-	#	-- Create date: 09 Feb 2010
-	#	-- Description:	Ensure the first version of a new trip has a self reference to it's own id.
-	#	-- =============================================
-	#	CREATE TRIGGER [dbo].[trg_trips_version_of_trip_id]
-	#		 ON  [dbo].[trips]
-	#		 AFTER INSERT
-	#	AS 
-	#	BEGIN
-	#
-	#		SET NOCOUNT ON;
-	#
-	#	-- Set version_of_trip_id to self reference it's id if it not already set:
-	#			-- (This only applies to first version of each trip. Subsequent versions refer to first version's id)
-	#			UPDATE		trips SET trips.version_of_trip_id = trips.id
-	#			FROM		trips
-	#			INNER JOIN	inserted ON inserted.id = trips.id
-	#			WHERE		inserted.version_of_trip_id = 0
-	#			OR			inserted.version_of_trip_id IS NULL
-	#
-	#	END
-  
+    
+    
+    # Depricated because it causes all fields become nil when we call @trip = Trip.new(trip). Perhaps it is replacing the default initialize method?
+    def initialize(*)
+      super
+      self.type_id    = TripType::TAILOR_MADE
+      self.status_id  = TripState::UNCONFIRMED
+      self.debug      = false
+      @orig_pnr_numbers_before_save = self.pnr_numbers
+    end
+    
+    
+    
+    # DEPRICATED in favour of "after :save" hook
+    # Definition of sql trigger that ensures version_of_trip_id is set on first version of each trip:
+    
+    #	-- =============================================
+    #	-- Author:		George Adamson
+    #	-- Create date: 09 Feb 2010
+    #	-- Description:	Ensure the first version of a new trip has a self reference to it's own id.
+    #	-- =============================================
+    #	CREATE TRIGGER [dbo].[trg_trips_version_of_trip_id]
+    #		 ON  [dbo].[trips]
+    #		 AFTER INSERT
+    #	AS 
+    #	BEGIN
+    #
+    #		SET NOCOUNT ON;
+    #
+    #	-- Set version_of_trip_id to self reference it's id if it not already set:
+    #			-- (This only applies to first version of each trip. Subsequent versions refer to first version's id)
+    #			UPDATE		trips SET trips.version_of_trip_id = trips.id
+    #			FROM		trips
+    #			INNER JOIN	inserted ON inserted.id = trips.id
+    #			WHERE		inserted.version_of_trip_id = 0
+    #			OR			inserted.version_of_trip_id IS NULL
+    #
+    #	END
+    
+    
+    alias trip_state status
 
-  alias trip_state status
+    # An accessor for trip.status.name that returns a cached value to reduce sql queries:
+    def status_name
+      @@cached_status_name ||= {}
+      @@cached_status_name[self.status_id] ||= self.status.name
+    end
 
+    # An accessor for trip.status.code that returns a cached value to reduce sql queries:
+    def status_code
+      @@cached_status_code ||= {}
+      @@cached_status_code[self.status_id] ||= self.status.code
+    end
 
-# Class methods:
-  
-  # Helper to provide a consistent 'friendly' name: (Used when users select content for reports etc)
-  def self.class_display_name
-    return 'Trip'
-  end
-  
-  
-  # Define which properties are available in reports  
-  def self.potential_report_fields
-    #return [ :name, :title, :trip_clients, :clients ]
-    return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names ]
-  end
-
+    
+    # Class methods:
+    
+    # Helper to provide a consistent 'friendly' name: (Used when users select content for reports etc)
+    def self.class_display_name
+      return 'Trip'
+    end
+    
+    
+    # Define which properties are available in reports  
+    def self.potential_report_fields
+      #return [ :name, :title, :trip_clients, :clients ]
+      return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names ]
+    end
+    
 end
 
 

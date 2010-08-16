@@ -1,0 +1,171 @@
+<style type="text/css">
+
+	.tours.sectionContainer > .sectionHead,
+	.tours.sectionContainer > .sectionBody,
+	.tours.sectionContainer > .sectionFoot {
+		left:1em;
+		right:1em;
+	}
+
+	.tour.sectionContainer > .sectionHead,
+	.tour.sectionContainer > .sectionBody,
+	.tour.sectionContainer > .sectionFoot {
+		left:1em;
+		right:1em;
+	}
+
+	.tour .ui-tabs-nav-vertical LI:first-child {
+		margin-bottom:1em;
+	}
+
+	.tour .ui-tabs-nav-vertical LI:last-child {
+		margin-top:1em;
+	}
+
+	.tours-list .tour {
+		margin:1.5em 0 0 0;
+	}
+
+	.tours-list .tour {
+		margin:1em 0 0 0;
+	}
+
+		.tours-list .tour .tour-name {
+			display:inline-block;
+			font-size:1.2em;
+			font-weight:bold;
+			width:20em;
+		}
+
+		.tours-list .tour .tour-notes {
+			display:block;
+			margin:0 0 0 2em;
+			width:40em;
+		}
+
+		.tours-list .no-trips {
+			color:#999;
+			margin:0 0 0 1.5em;
+		}
+
+
+	.tours-list .trips-list {
+		list-style:none;
+		margin:1em 0 0 2em;
+	}
+
+
+		/* This is applied when user un-ticks the "Show old trips" checkbox: */
+		.tours-list.hide-old-trips .trip-abandoned,
+		.tours-list.hide-old-trips .trip-canceled {
+			display:none;
+		}
+	
+		.tours-list .trips-list .trip {
+			margin:0.5em 0 0 0;
+		}
+
+		.tours-list .trips-list .trip .ui-icon {
+			margin:0 0.5em 0 0;
+		}
+
+		.tours-list .trips-list .trip .trip-name {
+			xfont-weight:bold;
+			font-size:1.1em
+		}
+
+		.tours-list .trips-list .trip .summary {
+			display:block;
+			margin:0.5em 0 0 2.2em;
+		}
+
+		.tours-list .trips-list .trip-abandoned .trip-name {
+			text-decoration:line-through;
+		}
+
+
+
+</style>
+
+<div class="sectionContainer tours">
+
+	 <div class="sectionHead">
+
+			<%= check_box :label => "Show old trips", :id => "tours_show_old_trips", :checked => false, :class => 'right widthAuto' %>
+
+			<h2>
+				<span class="ui-icon ui-icon-group"></span>
+				Fixed Departure Tours
+			</h2>
+
+	 </div>
+
+
+	 <div class="sectionBody formSurround">
+	 
+			<dl class="tours-list hide-old-trips">
+
+				<%
+					@tours				= @tours.all( :order => [ :id.desc ] )
+					@cached_trips = Trip.all( :id => @tours.map{|t|t.id}, :order => [ :tour_id.desc, :status_id, :start_date.desc, :created_at.desc ] )
+					# The @cached_trips collection was an attempt to speed up loading and prevent DM from querying trips for each tour one by one.
+					# It worked but actually turned out slower because ruby takes longer to find trips by tour_id than sql does.
+					# @cached_trips.map{|t|t.id}
+				%>
+			
+				<% @tours.each do |tour| %>
+
+					<%
+						#tour_trips = @cached_trips.all( :tour_id => tour.id )
+						tour_trips = tour.trips
+					%>
+					
+					<dt class="tour <%= 'tour-has-no-trips' if tour_trips.empty? %>">
+						<%= icon :group %>
+						<%= link_to tour.name, resource( tour ), :class => 'tour-name' %>
+						<%#= delete_button resource( tour, :delete ), "Delete tour", :class => 'ui-priority-secondary ui-state-default' %>
+						<small class = "tour-notes"><%= tour.notes %></small>
+						<%#= link_to "Add trip dates", resource( tour, :edit, :new_trip => true ), :class => 'ui-priority-secondary ui-state-default' %>
+					</dt>
+
+					<dd>
+
+						<% if tour_trips.empty? %>
+
+							<p class="no-trips">No trips have been created for this tour</p>
+
+						<% else %>
+
+						<ul class="trips-list">
+
+							<% tour_trips.each do |trip| -%>
+
+								<li class="trip trip-<%= trip.status_code %>">
+									<%= icon :trip %><span class="trip-name"><%= trip.title %></span>
+									<small class="summary">
+										<%= trip.summary %>
+									</small>
+								</li>
+
+							<% end -%>
+
+						</ul>
+
+						<% end %>
+						
+					</dd>
+			
+				<% end %>
+			
+			</dl>
+
+	 </div><!-- end of _clientPage sectionBody -->
+
+	 <div class="sectionFoot formSurround">
+		<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
+
+			<%= link_to "Add a new tour", resource( :tours, :new ), :class => 'ui-priority-secondary ui-state-default left' %>
+			
+		</div>
+	 </div>
+</div>

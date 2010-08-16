@@ -81,7 +81,7 @@
 
 
 
-.clientPage .sectionContainerLeft {
+.sectionContainerLeft.tabsContainer {
 	background-image:url(/images/tabs-lhs-nav-bg.png);
 	background-position:right top;
 	background-repeat:repeat-y;
@@ -133,7 +133,7 @@
 		}
 
 		UL.clientPageTabsNav LI.trip.trip-canceled A,
-		UL.clientPageTabsNav LI.trip.trip-abandonned A {
+		UL.clientPageTabsNav LI.trip.trip-abandoned A {
 			text-decoration:line-through;
 		}
 

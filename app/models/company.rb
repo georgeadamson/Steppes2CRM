@@ -16,7 +16,7 @@ class Company
   property :default_deposit,				String,		:required => true,	:length => 4,			:default => 300
   property :is_active,							Boolean,	:required => true,	:default => true
 
-  #has n, :airports
+  has n, :tours
   has n, :articles		# TBD
   has n, :trips				# Trip handler / cost-centre / invoice-to
   has n, :users				# Formerly known as Consultant.PrimaryCompanyId

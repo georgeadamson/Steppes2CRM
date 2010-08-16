@@ -1,0 +1,67 @@
+<%
+%>
+<!-- Tour page: -->
+<div class="sectionContainer noSectionFoot tour">
+
+	 <div class="sectionHead">
+
+			<h2>
+				<span class="ui-icon ui-icon-group"></span>
+				<span class="tour-name"><%= @tour.name %></span>
+				<small>(<%= @tour.trips.count %> tour dates)</small>
+			</h2>
+
+			<%= hidden_field :name => :tour_id,    :value => @tour.id %>
+			<%= hidden_field :name => :tour_label, :value => @tour.name %>
+			
+	 </div>
+
+
+	 <div class="sectionBody">
+
+			<!-- LHS TABS: -->
+			<div class="sectionContainer sectionContainerLeft noSectionHead noSectionFoot tabsContainer">
+
+				 <div class="sectionBody">
+
+						<!-- Tours's LHS tabs: Details / Trips 1...n -->
+						<ul class="clientPageTabsNav ui-tabs-nav-vertical ellipsis">
+
+							<li class="tour-details">
+								<a href="<%= resource(@tour,:edit) %>">Tour details</a>
+							</li>
+
+							<!-- List of left-hand-side tabs for each trip: -->
+							<%= partial 'trips/lhs_tabs', :trips => @tour.trips.all, :client_or_tour => @tour %>
+
+							<!-- Dummy hidden static tab to workaround jQueryUI tabs bug: -->
+							<!-- Important: To apply css to the add-new tab using :last-child, this must not be the last tab! -->
+							<li class="hidden">
+								<a href="#dummyTourTabContent"></a>
+							</li>
+
+							<!-- Extra tab for CREATE TRIP: -->
+							<li class="trip trip-create" title="Create a lovely new trip">
+								<%= link_to 'New dates', resource( @tour, :trips, :new ), :class => 'new' %>
+							</li>
+ 
+						</ul>
+
+				 </div>
+
+			</div><!-- End of LHS Tabs. -->
+
+			
+			<!-- RHS CONTENT: -->
+			<div class="clientPageTabsContent ajaxPanel sectionContainer sectionContainerRight noSectionHead noSectionFoot">
+
+				<!-- Dummy static tab to workaround jQueryUI tabs bug: -->
+				<div id="dummyTourTabContent">(Hidden content)</div>
+			
+				<!-- Trip pages are added here via ajax. -->
+
+			</div><!-- End of RHS Content. -->
+
+	 </div><!-- end of tour-page sectionBody -->
+
+</div>

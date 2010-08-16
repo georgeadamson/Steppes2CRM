@@ -1,10 +1,14 @@
 <%
 	@reports ||= Report.all
 %>
-<dl class="accordion">
+<!--<dl class="accordion">-->
 
-	<dt>All reports</dt>
-	<dd>
+	<br/>
+	<h3>Choose a saved report</h3>
+	<br/>
+
+	<!--<dt>Choose a saved report</dt>
+	<dd>-->
 		<ul>
 			<% @reports.each do |report| %>
 			
@@ -23,5 +27,6 @@
 			<%= tag :p, "#{ icon :script } #{ link_to 'Create the first report', resource(:reports) }" %>
 		<% end -%>
 
-	</dd>
-</dl>
+	<br/>
+	<!--</dd>
+</dl>-->

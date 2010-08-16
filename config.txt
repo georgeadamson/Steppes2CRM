@@ -1,0 +1,10 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	hideDotFiles = dotGitOnly
+[remote "github"]
+	url = git@github.com:georgeadamson/Steppes2CRM.git
+	fetch = +refs/heads/*:refs/remotes/github/*

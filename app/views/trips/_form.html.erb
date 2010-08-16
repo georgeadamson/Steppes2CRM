@@ -4,16 +4,23 @@
 <%
 
 	@trip   ||= trip
-	@client ||= client || Client.get( params[:client_id] ) || Client.new
 	
 	name_field_label = @trip.is_first_version ? 'Trip title' : 'Version name'
 	
+	if @trip.tour
+		trip_type_list = TripType.all( :id     => TripType::FIXED_DEP )
+	else
+		trip_type_list = TripType.all( :id.not => TripType::FIXED_DEP )
+	end
+	
 -%>
+<%= hidden_field :version_of_trip_id,		:value => @trip.version_of_trip_id.to_i     %>
+<%= hidden_field :tour_id,							:value => @trip.tour_id || params[:tour_id] %>
+<%#= hidden_field :name => 'client_id',	:value => @trip.context.id %>
 
-<%= hidden_field :version_of_trip_id,		:value => @trip.version_of_trip_id.to_i %>
-<%= hidden_field :name => 'client_id',	:value => @trip.context.id %>
-<%= hidden_field :name => 'group_id',		:value => @trip.context.id %><!-- TODO! -->
-
+<% if @trip.tour %>
+	<h4 style="margin:0 0 1em 9em;">This trip is a template for a <em><%= @trip.tour.name %></em> tour</h4>
+<% end %>
 
 <!-- Trip form fields: -->
 <table cellpadding="0" cellspacing="0">
@@ -22,13 +29,9 @@
 	<tr>
 
 		<td colspan="3">
-			<!-- "Trip title" of first version or "Version name" of subsequent versions: -->
+			<!-- "Trip title" when first version or "Version name" when subsequent versions: -->
 			<%= text_field :name,  :label => name_field_label, :class => 'summary width2Fields' %>
 		</td>
-		
-		<!--<td rowspan="3">
-			<%#= select :pnrs_ids, :label => 'PNR Numbers', :multiple => true %>
-		</td>-->
 
 	</tr>
 
@@ -53,14 +56,14 @@
 	</tr>
 
 	<tr>
-		<td><%= text_field								:label => 'PNR numbers',	:name => 'trip[pnr_numbers]',	:value => @trip.pnr_numbers.join(', ').upcase , :title => 'Flights will be added and updated automatically when you provide PNR numbers here. Use a comma between each PNR number', :class => 'uppercase' unless @trip.new? %></td>
-		<td><%= select			:type_id,			:label => 'Type of trip',	:collection => TripType.all, :value_method => :id, :text_method => :name %></td>
+		<td><%= text_field								:label => 'PNR numbers',	:name => 'trip[pnr_numbers]',	:value => @trip.pnr_numbers.join(', ').upcase , :title => 'Flights will be added and updated automatically when you provide PNR numbers here. Use a comma between each PNR number', :class => 'uppercase' unless @trip.new? || @trip.tour %></td>
+		<td><%= select			:type_id,			:label => 'Type of trip',	:collection => TripType.all, :value_method => :id, :text_method => :name, :disabled => !!@trip.tour %></td>
 		<td><%= text_field	:infants,			:label => 'Infants',			:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
 	</tr>
 	
 	<tr>
 		<td colspan="3">
-			<br/><br/>
+			<br/>
 		</td>
 	</tr>
 	
@@ -125,7 +128,7 @@
 						
 					<% if @trip.new? %>
 						<tfoot>
-							<tr><td colspan="6"><br/>You can add more clients after saving this new trip</td></tr>
+							<tr><td colspan="6"><br/>You can add clients here after saving this new trip</td></tr>
 						</tfoot>
 					<% end %>
 

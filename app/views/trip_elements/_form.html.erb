@@ -179,10 +179,10 @@
 			%>
 			<td><%= text_field :flight_code,			:label => 'Flight code',	:class => 'tableCell whenFlight uppercase', :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? %></td>
 			<td title="<%= element_pnr_tooltip %>">
-				<%= text_field :booking_code,				:label => 'PNR number',			:class => 'tableCell whenFlight', :readonly => true, :disabled => true, :value => element_pnr_value %>
+				<%= text_field :booking_code,				:label => 'PNR number',		:class => 'tableCell whenFlight', :readonly => true, :disabled => true, :value => element_pnr_value %>
 			</td>
-			<td><%#= text_field :booking_line_number,	:label => 'PNR line',				:class => 'tableCell whenFlight widthHalfField', :readonly => true, :disabled => true %></td>
-			<td><%#= text_field :booking_expiry,	:label => 'PNR expiry',    :value => element.booking_expiry.formatted(:uidate),   :class => 'tableCell whenFlight date', :readonly => true, :disabled => true %></td>
+			<td><%#= text_field :booking_line_number,	:label => 'PNR line',	:class => 'tableCell whenFlight widthHalfField', :readonly => true, :disabled => true %></td>
+			<td><%#= text_field :booking_expiry,	:label => 'PNR expiry',   :value => element.booking_expiry.formatted(:uidate),   :class => 'tableCell whenFlight date', :readonly => true, :disabled => true %></td>
 
 		</tr>
 	<% end %>

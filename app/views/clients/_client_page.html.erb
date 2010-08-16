@@ -32,16 +32,12 @@
 						<!-- Client's LHS tabs: Details / Documents / Paymemts / Trips 1...n -->
 						<ul class="clientPageTabsNav ui-tabs-nav-vertical ellipsis">
 
-							<li class="client-details"						><span class="ui-icon ui-icon-client"></span><a href="<%= resource(client) %>/summary">Client details</a></li>
+							<li class="client-details"						><span class="ui-icon ui-icon-client"  ></span><a href="<%= resource(client) %>/summary">Client details</a></li>
 							<li class="client-documents"					><span class="ui-icon ui-icon-document"></span><a href="<%= resource(client) %>/documents">Documents</a></li>
-							<li class="client-payments invisible"	><span class="ui-icon ui-icon-payment"></span><a href="#<%= nested_resource(client,true) %>payments">Payments</a></li>
+							<li class="client-payments invisible"	><span class="ui-icon ui-icon-payment" ></span><a href="#<%= nested_resource(client,true) %>payments">Payments</a></li>
 
-							<!-- List of tabs for each trip: -->
-							<% client.active_trips.all( :order => [ :status_id, :start_date.desc, :created_at.desc ] ).each do |trip| %>
-								<li class="trip trip-<%= trip.status.code %>" title="<%= "#{ trip.title } - #{ trip.status.name } - #{ trip.countries_names.join(', ') }" %>">
-									<%= link_to trip.title, resource(client,trip) %>
-								</li>
-							<% end %>
+							<!-- List of left-hand-side tabs for each trip: -->
+							<%= partial 'trips/lhs_tabs', :trips => client.active_trips.all, :client_or_tour => client %>
 
 							<!-- Extra tab for CREATE TRIP: -->
 							<li class="trip trip-create" title="Create a lovely new trip">

@@ -36,8 +36,7 @@ class Trips < Application
     
     # Belt and braces in case active_version is missing! Revert to the requested trip id:
     @trip = requested_version.become_active_version unless @trip
-    
-    @trip = requested_version
+    #@trip = requested_version  # What was this line for?
     
     display @trip
     
@@ -102,11 +101,20 @@ class Trips < Application
     @trip   = Trip.new
     @client = Client.get( params[:client_id] ) || session.user.most_recent_client
     
-    original_version    = Trip.get( params[:version_of_trip_id] )
-    is_new_version      = !original_version.nil?
+    original_version  = Trip.get( params[:version_of_trip_id] )
+    is_new_version    = !original_version.nil?
     
-    # Decide whether we're making a whole new trip or just a new version of an existing trip:
-    if is_new_version
+    # New fixed-departure for a Tour:
+    if params[:tour_id]
+
+      @trip.tour_id   = params[:tour_id]
+      @trip.type_id   = TripType::FIXED_DEP
+      @trip.user_id ||= session.user.id
+      
+      message[:notice]  = "Don't forget to save this new fixed-departure for #{ @trip.tour.name }"
+      
+    # A new version of an existing trip:
+    elsif is_new_version
       
       @trip.copy_attributes_from( original_version.active_version )
       @trip.user_id   ||= session.user.id
@@ -114,6 +122,7 @@ class Trips < Application
       
       message[:notice]  = "A new version of this trip has been created"
       
+    # A whole new trip:
     else
       
 		  # Ensure current client is on this new trip:
@@ -125,8 +134,10 @@ class Trips < Application
     end
     
 		# When client is the only one on the trip, make sure it is the primary contact etc:
-		@trip.trip_clients[0].is_primary		= true if @trip.trip_clients.length > 0 && @trip.primaries.empty?
-		@trip.trip_clients[0].is_invoicable	= true if @trip.trip_clients.length > 0 && @trip.invoicables.empty?
+    unless @trip.trip_clients.empty?
+		  @trip.trip_clients[0].is_primary		= true if @trip.trip_clients.length > 0 && @trip.primaries.empty?
+		  @trip.trip_clients[0].is_invoicable	= true if @trip.trip_clients.length > 0 && @trip.invoicables.empty?
+    end
 		
     if is_new_version
       render :show
@@ -146,8 +157,10 @@ class Trips < Application
     @trip.user_id ||= session.user.id
     
 		# When client is the only one on the trip, make sure it is the primary contact etc:
-		@trip.trip_clients.first.is_primary			= true if @trip.clients.length > 0 && @trip.primaries.empty?
-		@trip.trip_clients.first.is_invoicable	= true if @trip.clients.length > 0 && @trip.invoicables.empty?
+    unless @trip.clients.empty?
+		  @trip.trip_clients.first.is_primary			= true if @trip.primaries.empty?
+		  @trip.trip_clients.first.is_invoicable	= true if @trip.invoicables.empty?
+    end
     
     display @trip
   end
@@ -161,21 +174,19 @@ class Trips < Application
 		accept_valid_date_fields_for trip, [ :start_date, :end_date ]
     
 		# Make assumptions for missing dates:
-		trip[:start_date] ||= Date.today
-		trip[:end_date]   ||= trip[:start_date]
-    
-    @client = Client.get( params[:client_id] ) || Client.first
-    
+		trip[:start_date]         ||= Date.today
+		trip[:end_date]           ||= trip[:start_date]
     trip[:version_of_trip_id] ||= 0
     
     @trip		= Trip.new(trip)
+    @client = Client.get( params[:client_id] ) || Client.first
     
     # Workaround: For some reason these are not set by "Trip.new(trip)":
     #@trip.user_id						||= ( trip[:user_id]		|| 1 ).to_i
     #@trip.company_id					||= ( trip[:company_id] || 1 ).to_i
     
 		@trip.updated_by					||= session.user.fullname
-    @trip.clients							<<	@client
+    @trip.clients							<<	@client unless @trip.tour
 		
 		# Alas this does not seem to affect the row in the trip_clients table:
 		@trip.trip_clients.each{ |relationship| relationship.created_by = @trip.created_by }

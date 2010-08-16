@@ -1,0 +1,6 @@
+<%
+	companies_list = Company.all( :is_active => true, :order => [:name] )
+%>
+<%= text_field	:name,				:label => 'Tour name',	:class => 'width2Fields'	%>
+<%= text_area		:notes,				:label => 'Notes',			:class => 'width2Fields'	%>
+<%= select			:company_id,	:label => 'Company',		:selected => @tour.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :display_name %>

@@ -2,7 +2,8 @@ require File.join( File.dirname(__FILE__), '..', "spec_helper" )
 require File.join( File.dirname(__FILE__), '..', "spec_data" )
 
 # To run this: jruby -X-C -S rake spec SPEC=spec/models/trip_spec.rb
-# Important: If the trip_element_spec does not succeed then this one does not have a chance!
+
+# Note: If the trip_element_spec does not succeed then this one does not have a chance!
 
 describe Trip do
 
@@ -408,10 +409,10 @@ describe Trip do
     
     
     it "should calculate total TAXES per/for_all persons" do
-      puts @trip.adults
-      puts @trip.elements.all( :taxes.gt => 0 ).length
-      puts @trip.elements.all( :taxes.gt => 0 ).sum(:taxes)
-      puts sum_of( :taxes )
+      #puts @trip.adults
+      #puts @trip.elements.all( :taxes.gt => 0 ).length
+      #puts @trip.elements.all( :taxes.gt => 0 ).sum(:taxes)
+      #puts sum_of( :taxes )
 
       # Per person:
       adult_total  = sum_of( :taxes )
