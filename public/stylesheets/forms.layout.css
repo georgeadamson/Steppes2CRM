@@ -152,6 +152,14 @@ FORM {
 		padding-bottom:0.5em;
 	}
 	
+	/* Discard some formField styles when it is in a table: */
+	TABLE .formField,
+	TABLE .formField:last-child {
+		margin-bottom:0;
+		padding-bottom:0;
+	}
+	
+	
 	
 	.formField LABEL {
 		display:inline-block;

@@ -28,6 +28,8 @@
 Merb.logger.info("Compiling routes...")
 
 Merb::Router.prepare do
+  resources :trip_client_statuses
+  resources :tours
 
   resources :postcodes
   resources :money_statuses
@@ -50,16 +52,15 @@ Merb::Router.prepare do
   #		  match('/').to(:controller => 'clients', :action => 'index' )
   #	end
   
-  resources :notes
-  
-  resources :company_suppliers
-  
+  # For the dynamically generated trip_elements timeline css:
+  # TODO: Find out why merb reports an error during app boot "Could not find resource model TimelineStyle"
   resources :timeline_styles
-  resources :addresses
 
+  resources :notes
+  resources :company_suppliers
+  resources :addresses
   resources :touchdowns
   resources :country_users
-
   resources :client_types
   resources :client_sources
   resources :client_interests
@@ -73,6 +74,7 @@ Merb::Router.prepare do
     
   end
   
+  # /clients/
   resources :clients do |client|
     client.resources :notes
     client.resources :brochure_requests
@@ -88,6 +90,15 @@ Merb::Router.prepare do
   end
   #match('/clients/:client_id/trips/:trip_id/trip_elements/:id/delete').to(:controller => 'trip_elements', :action => 'destroy' )
 
+  
+  # /tours/
+  resources :tours do |tour|
+    tour.resources :documents         # TODO?
+    tour.resources :trips do |trip|
+      trip.resources :trip_elements
+    end
+  end
+ 
 
 	# Routes for deriving filter options for a report:
 	match('/reports/filters').to( :controller => 'reports', :action => 'filters' )

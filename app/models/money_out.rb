@@ -54,6 +54,23 @@ class MoneyOut
     self.amount_requested = self.amount_requested.to_f
   end
 
+
+
+
+
+# Class methods:
+  
+  # Helper to provide a consistent 'friendly' name: (Used when users select content for reports etc)
+  def self.class_display_name
+    return 'Supplier Payment'
+  end
+  
+  
+  # Define which properties are available in reports  
+  def self.potential_report_fields
+    return [ :name, :amount_requested, :requested_date, :notes, :supplier, :trip, :status, :currency, :user, :created_at ]
+  end
+
 end
 
 

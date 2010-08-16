@@ -80,7 +80,6 @@
 	}
 
 	
-	
 	.reportPage .formField																			{ display:inline-block; }
 	.report-filter .formField SELECT														{ width:13em; }
 	
@@ -92,7 +91,7 @@
 	.report-filter .filter-value-box:nth-child(3) INPUT[type="text"]	{ width:10em; }
 	
 	/* TODO: hide the "x" button when there is only one filter left: We'd need to adjust markup to do this through css: */
-	/* .report-filter:only-child .filter-value-box .delete-filter-value { opacity:0.5; } */
+	/* .reportPage .report-filter:only-child .filter-value-box .delete-filter-value { opacity:0.5; } */
 	
 	
 	.reportPage H3 {
@@ -119,6 +118,22 @@
 	.reportPage .ui-accordion-header,
 	.reportPage .ui-accordion-content {
 		border:none;
+	}
+	
+	/* Hide the green add-filter-value buttons for the time being: */
+	.reportPage .add-filter-value {
+		display:none;
+	}
+	
+	
+	TABLE.report-results TBODY TR:hover TD {
+		background-color:#EFEDDE;
+	}
+	
+	TABLE.report-results TFOOT TH {
+		border-color:#aaa;
+		border-style:solid;
+		border-width:1px 0 1px 0;
 	}
 	
 </style>

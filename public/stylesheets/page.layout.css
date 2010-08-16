@@ -218,6 +218,16 @@ BODY * {
 		width:auto;
 	}
 
+	.sectionContainerRight {
+		left:8em;				/* Left must match width of .sectionContainerLeft */
+	}
+
+		.sectionContainerRight > .sectionHead,
+		.sectionContainerRight > .sectionBody,
+		.sectionContainerRight > .sectionFoot {
+			left:1em;
+		}
+
 
 
 

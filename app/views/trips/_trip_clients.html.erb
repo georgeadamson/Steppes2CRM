@@ -1,6 +1,6 @@
 <%
 
-	# This code renders 1 row for a client on a trip *OR* a template row for use by client-side script to add rows.
+	# This code renders a CLIENT ROW on a trip summary page *OR* a template row for use by client-side script to add rows.
 
 	# This partial expects arguments:
 	trip_client			||= TripClient.new			# REQUIRED when editing existing records.
@@ -81,48 +81,53 @@
 				
 -%>
 
-						<tr title="<%= tooltip %>">
+	<tr title="<%= tooltip %>">
 
-							<%= fields_for trip_client do %>
+		<%= fields_for trip_client do %>
 
-								<td>
-									<div><%# <-- This div only exists to improve the animation when clients are added. %>
+			<td>
+				<div><%# <-- This div only exists to improve the animation when clients are added. %>
 
-										<span class="ui-icon ui-icon-client"></span>
+					<span class="ui-icon ui-icon-client"></span>
 
-										<%=
-											# No need to provide a link when client is currently open:
-											if client_is_open_in_ui
-												client_label
-											else
-												link_to client_name, "/clients/#{ client_id }/?label=#{ client_label }", :class => 'show clientName'
-											end
-										%>
+					<%=
+						# No need to provide a link when client is currently open:
+						if client_is_open_in_ui
+							client_label
+						else
+							link_to client_name, "/clients/#{ client_id }/?label=#{ client_label }", :class => 'show clientName'
+						end
+					%>
 
-										<!-- client_id is only used when adding clients and to prevent duplication: -->
-										<%= hidden_field		:name => "trip[trip_clients_attributes][#{ index }][client_id]",	:value => client_id %>
+					<!-- client_id is only used when adding clients and to prevent duplication: -->
+					<%= hidden_field		:name => "trip[trip_clients_attributes][#{ index }][client_id]",	:value => client_id %>
 
-										<!-- trip_client.id field is only needed when updating a trip: -->
-										<%=
-											unless trip.new? || html_template
-												hidden_field		:name => "trip[trip_clients_attributes][#{ index }][id]",					:value => trip_client.id
-											end
-										%>
+					<!-- trip_client.id field is only needed when updating a trip: -->
+					<%=
+						unless trip.new? || html_template
+							hidden_field		:name => "trip[trip_clients_attributes][#{ index }][id]",					:value => trip_client.id
+						end
+					%>
 
-									</div>
-								</td>
-								<td><%= orig_select :name => 'generate_letter', :collection => @template_filenames, :prompt => 'Create a trip letter...', :class => 'create-letter arrow-only', :'data-action' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }" if show_trip_letters_menu %></td>
-								<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_single]",						:checked => trip_client.is_single,			:boolean => true %></td>
-								<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_primary]",						:checked => trip_client.is_primary,			:boolean => true %></td>
-								<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_invoicable]",				:checked => trip_client.is_invoicable,	:boolean => true %></td>
-								<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][confirmation_status]",	:checked => trip_client.is_confirmed,	  :disabled => true, :readonly => true unless html_template %></td><!-- Disabled because this field is for info only and never needs to be submitted -->
-								<td><%= 
-										unless html_template	# Checkbox for Remove:
-											orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][_delete]",								:checked => false, :disabled => client_not_removable, :readonly => client_not_removable
-										end
-									%>
-								</td>
+				</div>
+			</td>
+			<td><%= orig_select :name => 'generate_letter', :collection => @template_filenames, :prompt => 'Create a trip letter...', :class => 'create-letter arrow-only', :'data-action' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }" if show_trip_letters_menu %></td>
+			<td>
+				<%#= orig_radio_button	:name => "selected_client", :checked => (index==0) if client_id && trip.tour_template? %>
+				
+				<%= link_to icon(:add), resource( client, :trips, :new, :copy_trip_id => trip.id ) if client && trip.tour_template? %>
+			</td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_single]",						:checked => trip_client.is_single,			:boolean => true %></td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_primary]",						:checked => trip_client.is_primary,			:boolean => true %></td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_invoicable]",				:checked => trip_client.is_invoicable,	:boolean => true %></td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][confirmation_status]",	:checked => trip_client.is_confirmed,	  :disabled => true, :readonly => true unless html_template %></td><!-- Disabled because this field is for info only and never needs to be submitted -->
+			<td><%= 
+					unless html_template	# Checkbox for Remove:
+						orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][_delete]",								:checked => false, :disabled => client_not_removable, :readonly => client_not_removable
+					end
+				%>
+			</td>
 
-							<% end =%>
+		<% end =%>
 
-						</tr>
+	</tr>

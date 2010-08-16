@@ -86,7 +86,7 @@
 				attrs = {
 					:value	=> item.id,
 					:type		=> 'checkbox',
-					:label	=> label,
+					#:label	=> label,
 					:name		=> field_name,
 					:id			=> id_prefix + item.id.to_s
 				}.merge!(custom_attrs)
@@ -95,7 +95,7 @@
 				attrs[:checked] = 'checked' if !selected.blank? && ( selected == :all || selected.include?( item.id.to_s ) )
 							
 				results << tag( :li, label, :title => label ) do
-					tag( :input, attrs ) +
+					self_closing_tag( :input, attrs ) +
 					tag( :label, label, :for => attrs[:id] )
 				end
 			

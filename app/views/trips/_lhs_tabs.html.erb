@@ -1,0 +1,19 @@
+<%
+	# List of left-hand-side tabs for each trip.
+	# Sample usage: partial( 'trips/lhs_tabs', :trips => client.active_trips.all, :client_or_tour => client )
+	
+	# Parameters:
+	# - client_or_tour
+	# - trips
+	
+	trips ||= client_or_tour.trips
+
+-%>
+
+<% trips.all( :order => [ :status_id, :start_date.desc, :created_at.desc ] ).each_with_index do |trip,i| -%>
+
+	<li class="trip trip-<%= trip.status.code %><%= ' ui-tabs-selected' if i==0 %>" title="<%= "#{ trip.title } - #{ trip.status.name } - #{ trip.countries_names.join(', ') }" %>">
+		<%= link_to trip.title, resource(client_or_tour,trip) %>
+	</li>
+
+<% end -%>

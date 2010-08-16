@@ -35,7 +35,7 @@ gem "merb-parts", "0.9.8" #merb_gems_version
 gem "uuidtools", "2.1.1"
 
 
-# Added by George to satisfy bundler:
+# Added to satisfy bundler: (By George 16 Jul 2010)
 gem "merb-cache",       merb_gems_version
 gem "merb-action-args", merb_gems_version
 gem "mongrel",			"1.1.5"

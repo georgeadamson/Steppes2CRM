@@ -9,7 +9,7 @@
 				<!-- This hidden field allows the server to know when the source has been changed: -->
 				<%= hidden_field  :name => :old_report_source, :value => @report.source %>
 				<%= select				:source, :label => 'New report based on',	:class => 'auto-submit widthAuto',	:collection => @report.sources_list, :rel => '#report-page' %>
-				<%= text_field		:name,																		:class => 'width2Fields', :title => 'The title of this report' %>
+				<%= text_field		:name,																		:class => 'width2Fields', :title => 'This is the name of the report that you will see in the list of "All reports" after saving it' %>
 			</h2>
 		</div>
 

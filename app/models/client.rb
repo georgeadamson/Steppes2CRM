@@ -273,6 +273,7 @@ class Client
   end
 
 
+
   # Simple string summarising the trips: (Eg: "1 unconfirmed, 1 confirmed, 2 completed, 1 canceled, 5 abandoned")
   # For speed, we loop through the trips counting the statuses, not the other way around.
   def trips_statement( trips_list = nil )
@@ -294,10 +295,22 @@ class Client
   end
 
 
-  # All the client's trips that are the current active version of each of the client's trips: (ie ignore "other" versions)
+  # All the client's trips that are the current active version of each of the client's trips:
+  # We ignore "other" versions and trips that are actually Tour templates.
   # Note how we cache @active_trips to prevent unecessary db trips as each trip is accessed:
   def active_trips
-    return @active_trips ||= trips.all( :is_active_version => true )
+    return @active_trips ||= self.trips.all( :is_active_version => true, :type_id.not => TripType::TOUR_TEMPLATE )
+  end
+
+  # Helper for listing trips that are TOUR TEMPLATES of which the client is a member:
+  def tours
+    return self.trips.all( :type_id => [ TripType::TOUR_TEMPLATE ] )
+  end
+ 
+  # Helper for listing trips that are FIXED DEPARTURES of which the client is a member:
+  def fixed_deps( tour_id = nil )
+    deps = self.trips.all( :type_id => TripType::FIXED_DEP )
+    return tour_id ? deps.all( :tour_id => tour_id ) : deps
   end
 
 

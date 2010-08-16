@@ -302,9 +302,9 @@ class Report
 
   # Class methods:
   
-  # Define list of models that reports can be based on: (Every reports must have one source)
+  # Define list of models that reports can be based on: (Every report must have one source)
   def self.sources
-    return [ :money_ins, :clients, :trips, :users, :suppliers ]
+    return [ :money_ins, :clients, :trips, :money_outs ]
   end
 
 

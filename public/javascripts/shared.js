@@ -572,50 +572,13 @@ jQuery(function($) {
 
 
 
-
-// React to any "add NEW TRIP" links:
-
-	$("A[href *= '/trips/new']").live('click', function() {
-
-		var url		= $(this).attr('href');
-		var newId	= '#' + url.replace('/', '');
-
-		var $lhsTabs = $('UL:visible.clientPageTabsNav').parents('.ui-tabs:first');
-		
-		// Open the "New trip" tab: (The last one on the left hand side)
-		if( $lhsTabs.length > 0 ){
-			var newTripTabIndex = $lhsTabs.tabs('length') - 1;
-			$lhsTabs.tabs( 'select', newTripTabIndex );
-		}
-
-		return false;
-	});
-
-
-
-// React to any "add NEW CLIENT" links:
-
-	$("A[href *= '/clients/new']").live('click', function() {
-
-		var url = $(this).attr('href');
-		var newId = '#' + url.replace('/', '');
-
-		$('#pageTabs').tabs('add', url, 'New client');
-
-		return false;
-	});
-
-
-
-// React to any "OPEN CLIENT" links: (Eg: <a href="/clients/1234">)
+// Respond to any "OPEN CLIENT" links: (Eg: <a href="/clients/1234">)
 
 	$("A:resource(/clients/[0-9]+), OPTION:resource(/clients/[0-9]+)").live('click', function() {
-	//$("A[href *= '/clients/'], OPTION[value *= '/clients/']").live("click", function() {
-	//$("A:regex(href,clients\\/[0-9]+$), OPTION:regex(value,clients\\/[0-9]+$)").live("click", function() {
 
-		var url = $(this).attr("href") || $(this).val(); //url = "/clients/2/trips/3/edit?label=Mrs+K+Adamson#bm"
-		var location = parseUrl(url);
-		var resource = location.resource;
+		var url			= $(this).attr("href") || $(this).val();
+		var location	= parseUrl(url);
+		var resource	= location.resource;
 
 		if (resource.client && resource.client === resource.last && !location.action) {
 
@@ -627,6 +590,73 @@ jQuery(function($) {
 		};
 
 	});
+
+
+
+// Respond to any "NEW CLIENT" or "NEW TOUR" links:
+
+	$("A[href *= '/clients/new'], A[href *= '/tours/new']").live('click', function() {
+
+		var url		= $(this).attr('href');
+		//var newId	= '#' + url.replace('/', '');
+		var label	= /tours/.test(url) ? 'New tour' : 'New client';
+
+		$('#pageTabs').tabs('add', url, label);
+
+		return false;
+	});
+
+
+
+
+// Respond to any "OPEN TOUR" links: (Eg: <a href="/tours/1234">)
+
+	$("A:resource(/tours/[0-9]+)").live('click', function() {
+
+		var url			= $(this).attr("href");
+		var location	= parseUrl(url);
+		var resource	= location.resource;
+
+		if (resource.tour && resource.tour === resource.last && !location.action) {
+
+			var id		= location.resource.tour;
+			var label	= location.params.label;
+
+			openTourTab(id, label);
+			return false;
+		};
+
+	});
+
+
+
+
+
+
+// React to any "add NEW TRIP" links:
+
+	$("A[href *= '/trips/new']").live('click', function() {
+
+		var url			= $(this).attr('href');
+		var $lhsTabs	= $('UL:visible.clientPageTabsNav').parents('.ui-tabs:first');
+		var location	= parseUrl(url)
+
+		if( location.resource.client && location.params.copy_trip_id ){
+		
+			openClientTab( location.resource.client );
+		
+		// Open the "New trip" tab: (The last one on the left hand side)
+		} else if( $lhsTabs.length > 0 ){
+
+			var newTripTabIndex = $lhsTabs.tabs('length') - 1;
+			$lhsTabs.tabs( 'select', newTripTabIndex );
+
+		}
+
+		return false;
+	});
+
+
 
 
 
@@ -1265,7 +1295,6 @@ jQuery(function($) {
 
 
 	// Apply <textarea> maxlength restrictor plugin:
-
 	$('TEXTAREA')
 		.textareaMaxlength({ maxlength:1000 })
 
@@ -1277,9 +1306,26 @@ jQuery(function($) {
 
 
 
-	// Set up rules for selections in checkbox lists:	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });
-	$(':checkbox').live('checkboxMinLimit', function(){ alert(1) })
-	
+	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	
+
+
+	// Checkbox to expand/collapse display of old trips on the TOURS page: */
+	$("#tours_show_old_trips").live('change', function(){
+		$(this).closest('.sectionContainer').find('.tours-list').toggleClass('hide-old-trips');
+	});
+
+
+
+	//	// For highlighting all table cells in the COLUMN the mouse is hovering over:
+	//	// The advantage of this technique is that it relies on css to apply style to all the cells in the column.
+	//	// Use with css: TABLE.highlightcol0..9 TD:nth-child(1..10) { background-color:#EFEDDE; }
+	//	// Also try    : TABLE.highlightcol0..9 COL.column { background-color:#EFEDDE; }
+	//	$("TD").live('mouseover', function(){
+	//		$(this).closest('TABLE').addClass(    'highlightcol' + this.cellIndex );
+	//	}).live('mouseout', function(){
+	//		$(this).closest('TABLE').removeClass( 'highlightcol' + this.cellIndex );
+	//	});
+
 
 
 
@@ -1373,11 +1419,45 @@ jQuery(function($) {
 		}else{
 			console.log( 'Unable to openClientTab(', id, COMMA, label, ')' );
 		}
+
 	}
 
 
 
-	// Helper for initialising the TOP-LEVEL TABS: (Dashboard and clients)
+	// Helper to OPEN TOUR TAB for a specified tour id: (Expects tour_id and tab_label as arguments)
+	function openTourTab(id, label) {
+
+		if( id && parseInt(id) > 0 ){
+
+			existingTabIdx = $("#pageTabs > .sectionHead LI:has( INPUT.tour-id[value='" + id + "'] )").prevAll("LI").length;
+
+			if (existingTabIdx) {
+
+				// There is already a tab displayed for this tour, so select it:
+				$("#pageTabs").tabs("select", existingTabIdx);
+
+			} else {
+
+				// Workaround when spaces have been escaped as '+' in a tour link:
+				label = ( label || 'Oops missing label!' ).replace( /\+/g, ' ' );
+
+				var url		= "/tours/" + id,
+					name	= label + '<input type="hidden" value="' + id + '" class="tour-id" />';
+
+				// Add a new tab for this client:
+				$("#pageTabs").tabs('add', url, name);
+
+			}
+			
+		}else{
+			console.log( 'Unable to openTourTab(', id, COMMA, label, ')' );
+		}
+
+	}
+
+
+
+	// Helper for initialising the TOP-LEVEL TABS: (Homepage-tab, Tours-tab and client-tabs)
 	function initLevel1Tabs_forPage(context) {
 
 		$( '#pageTabs', context ).tabs({
@@ -1392,10 +1472,21 @@ jQuery(function($) {
 				$(this).tabs('select', uiTab.index);
 			},
 
+			// Try to ensure loaded tab has a nice readable label:
+			load	: function(e,ui){
+
+				// Read hidden label element from the loaded client/tour tab panel:
+				// TODO: Depricate #client_label and #tour_label?
+				label = $(ui.panel).find('DIV.sectionHead:first').find('#tab_label, #client_label, #tour_label').val();
+
+				if(label){ $(ui.tab).text( label ) }
+
+			},
+
 			// Let the server know which client is in the foreground: (So it can be the default tab next time)
 			show	: function(e,uiTab){
 				var url = $.data(uiTab.tab, 'load.tabs');
-				if( url && url.indexOf('clients/') >= 0 ) $.get( url + '/select' );
+				if( url && url.indexOf('clients/') >= 0 ){ $.get( url + '/select' ) }
 			},
 
 			// When client tab is closed, let server know which client is no longer being worked on: (So it won't be reopened next time)
@@ -1429,9 +1520,8 @@ jQuery(function($) {
 
 			cache			: false,
 			fx				: { opacity: 'toggle', duration: 100 },
-			//tabTemplate		: '<div class="trip trip-unconfirmed"></div>',								// Only ever used when creating trips.
-			tabTemplate		: '<li class="trip trip-unconfirmed"><a href="#{href}">#{label}</a></li>',					// Only ever used when creating trips.
-			panelTemplate	: '<div class="sectionBody ajaxPanel clientSubPageContainer"></div>',		// Only ever used when creating trips.
+			tabTemplate		: '<li class="trip trip-unconfirmed"><a href="#{href}">#{label}</a></li>',	// Only ever used after creating trip.
+			panelTemplate	: '<div class="sectionBody ajaxPanel clientSubPageContainer"></div>',		// Only ever used after creating trip.
 			panelsSelector	: function() { return this.list.cousins('.clientPageTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
 
 

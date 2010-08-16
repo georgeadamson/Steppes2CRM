@@ -44,4 +44,9 @@ Merb::BootLoader.after_app_loads do
   DataObjects::Sqlserver.logger = DataObjects::Logger.new('log/dm.log', 0) 
 end
 
+#Merb::Cache.setup do
+#  register( MemcachedStore )
+#end
+
+
 Extlib::Inflection.plural_word 'status', 'statuses' # This does not seem to fix DataMapper "TripStatu" problem :(

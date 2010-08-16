@@ -57,14 +57,22 @@
 
 
 
+	
+	/* Convoluted way to get a line across the top of the RHS content of vertical tabs: */
+	.sectionContainerLeft.tabsContainer + .sectionContainerRight,
+	.sectionContainerLeft.tabsContainer + .sectionContainerRight > .sectionBody > .sectionContainer > .sectionHead {
+		background-image:url("/images/backgrounds/clientpage.head.bg.gif");
+		background-position:0 -1px;
+		background-repeat:no-repeat;
+	}
 
-	.clientPage > .sectionHead {
+	/*.clientPage > .sectionHead {
 		left:1em;
 		right:1em;
 		background-image:url(/images/backgrounds/clientpage.head.bg.gif);
 		background-repeat:no-repeat;
 		background-position:8em bottom;
-	}
+	}*/
 	.clientPage > .sectionBody {
 		left:1em;
 		right:1em;
@@ -145,8 +153,8 @@ A.clientPageTabsNav_AddNewTrip {
 
 
 
-
-.primaryTabs.ui-tabs-nav > LI:first-child {
+/* Make a space between the |Home page|Tours| tabs and subsequent |client| tabs: */
+.primaryTabs.ui-tabs-nav > LI:nth-child(2) {
 	margin-right:2em;
 }
 
