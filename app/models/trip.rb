@@ -28,7 +28,7 @@ class Trip
     # So trip.version_of_trip.name returns the original title of any trip (the first version).
     property    :version_of_trip_id,      Integer,  :default => 0 # Warning: This is also updated by an sql trigger! (trg_trips_version_of_trip_id)
     belongs_to  :version_of_trip,  :model => "Trip",:child_key => [:version_of_trip_id]
-    has n,      :version_of_trips, :model => "Trip",:child_key => [:version_of_trip_id], :via => :version_of_trip
+    has n,      :version_of_trips, :model => "Trip",:child_key => [:version_of_trip_id] #, :via => :version_of_trip
     
     property :is_active_version,	        Boolean,	:default => true      # Only one version can be active per trip.
     property :is_version_snapshot,        Boolean,	:default => false     # When true this version becomes read only.
@@ -91,7 +91,7 @@ class Trip
     has n, :money_ins         # AKA Invoices
     has n, :money_outs        # AKA SupplierPaymentRequests
     
-    belongs_to :tour 		      # Only applies when this trip.type is TOUR_TEMPLATE.
+    belongs_to :tour 		      # Only applies when this trip.type is TOUR_TEMPLATE or FIXED_DEP.
     belongs_to :user 		      # Handled by / Prepared by.
     belongs_to :company		    # Handled by / Cost centre / Invoice to.
     belongs_to :type,   :model => "TripType",  :child_key => [:type_id]			# 1=Tailor made
@@ -135,7 +135,23 @@ class Trip
     #validates_absence_of  :tour_id, :if => Proc.new{ |trip| trip.type_id != TOUR_TEMPLATE }
     #validates_presence_of :tour_id, :if => Proc.new{ |trip| trip.type_id == TOUR_TEMPLATE }
     
-    
+    before :valid? do
+      
+      self.name								||= "Untitled trip"
+      self.status_id					||= Trip::UNCONFIRMED
+      self.type_id              = TripType::TOUR_TEMPLATE if self.tour && !self.fixed_dep? && !self.tour_template?
+      self.version_of_trip_id ||= 0	# Cannot be nil. If zero, this will be set to the trip's own new id after save.
+      self.tour_id              = nil if self.tour_id.to_i == 0
+      
+      # Swap start and end dates if start date is later than end date:
+      # Beware! Setting start/end_date here is a workaround for when they've not been submitted as part of the form
+      # and the update methods decides to overwrite them with their defaulv values!
+      #self.start_date = self.start_date || Date.today
+      #self.end_date   = self.end_date   || Date.today + 10
+      self.start_date, self.end_date = self.end_date, self.start_date if self.start_date > self.end_date
+
+    end
+
     
     before :create do
       
@@ -147,18 +163,6 @@ class Trip
     
     
     before :save do
-      
-      self.name								||= "Untitled trip"
-      self.status_id					||= Trip::UNCONFIRMED
-      self.type_id              = TripType::TOUR_TEMPLATE if self.tour && !self.fixed_dep? && !self.tour_template?
-      self.version_of_trip_id ||= 0	# Cannot be nil. If zero, this will be set to the trip's own new id after save.
-      
-      # Swap start and end dates if start date is later than end date:
-      # Beware! Setting start/end_date here is a workaround for when they've not been submitted as part of the form
-      # and the update methods decides to overwrite them with their defaulv values!
-      #self.start_date = self.start_date || Date.today
-      #self.end_date   = self.end_date   || Date.today + 10
-      self.start_date, self.end_date = self.end_date, self.start_date if self.start_date > self.end_date
       
       # Ensure all trip elements still have valid numbers of adults/children/infants
       # (Also see TripElement before :save)
@@ -193,8 +197,8 @@ class Trip
       @avoid_triggering_after_save_hook_recursively = true
       
       # Set version_of_trip_id to self if not already set: (Note we tried "self.activeTrip ||= self" but it caused recursive "stack level too deep" error)
-      # This does not seem to work as hoped so we rely on a sql trigger instead! (See comments at end of this class)
-      if self.version_of_trip_id.to_i == 0 && self.id
+      # Aug 2010 GA: Retired the sqltrigger and rely on this instead: (See comments near end of this class)
+      if self.version_of_trip_id.to_i == 0 && self.id > 0
         self.version_of_trip_id = self.id
         self.save!
       end
@@ -412,7 +416,7 @@ class Trip
         end
         
         # Update the is_active_version flag on all versions of same trip:
-        Trip.all( :version_of_trip_id => self.version_of_trip_id, :is_active_version => false, :id.not => self.id ).each do |version|
+        Trip.all( :version_of_trip_id => self.version_of_trip_id, :is_active_version => true, :id.not => self.id ).each do |version|
           version.update!( :is_active_version => false )
         end
         
@@ -492,17 +496,41 @@ class Trip
     def traveller_summary
       # Eg: "4 adults, 2 children, 1 infant"
       if self.travellers?
-        return	(self.adults?   ?        "#{ self.adults.to_s   } adults"   : 'No adults!') +
-        (self.children? ? ", " + "#{ self.children.to_s } children" : '') +
-        (self.infants?  ? ", " + "#{ self.infants.to_s  } infants"  : '')
+        return	(self.adults?   ?        "#{ self.adults   } adults"   : 'No adults!') +
+                (self.children? ? ", " + "#{ self.children } children" : '') +
+                (self.infants?  ? ", " + "#{ self.infants  } infants"  : '')
       else
         return "No travellers!"
       end
     end
     alias travellerSummary traveller_summary	# Depricated
     
-    def summary
-      "#{ self.date_summary } - #{ self.status_name } - #{ self.traveller_summary }"
+
+    # Return a readable summary of the trip_clients' statuses: (Eg: 1 Unconfirmed, 2 Waitlisted, 3 Confirmed)
+    def client_status_summary
+
+      return @client_status_summary ||= lambda{
+
+        totals = {}
+        lookup = cached(:trip_client_statuses_hash)
+
+        # Count how many clients there are with each client_status:
+        self.trip_clients.each do |trip_client|
+          totals[trip_client.status_id] ||= 0
+          totals[trip_client.status_id] +=  1
+        end
+
+        return totals.map{ |id,count| "#{ count } #{ lookup[id] }" }.join(', ')
+
+      }.call
+
+    end
+
+
+    # Return a summary of the trip's dates, status and clients:
+    def summary( include_client_statuses = false )
+      client_statuses = ( include_client_statuses && !self.client_status_summary.blank? ) ? " (#{ self.client_status_summary })" : ''
+      return "#{ self.date_summary } - #{ self.status_name } - #{ self.traveller_summary }#{ client_statuses }"
     end
 
     

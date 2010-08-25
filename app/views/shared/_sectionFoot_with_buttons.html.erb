@@ -60,7 +60,7 @@
 		<!-- Define a special <label> element that can be clicked to activate the hidden delete_button defined beneath the current form: -->
 		<%= tag :label,		delete_caption,							:for	=> delete_id,	:title => delete_tooltip,	:class => "#{ delete_class } #{ secondary_class }"					if label_for_delete %>
 
-		<%# Warning: delete_button will ender it's own little form so it cannot be nested inside another form: %>
+		<%# Warning: delete_button will render it's own little form so it cannot be nested inside another form: %>
 		<%= delete_button	delete_url,	delete_caption,	:rel	=> ui_target,	:title => delete_tooltip,	:class => "#{ delete_class } #{ secondary_class }"					if delete	%>
 
 		<%= tag :span, ' ( Required fields are marked * ) ', :class => 'left', :style => 'margin-left:1em' if show_required_field_message %>

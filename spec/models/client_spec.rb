@@ -249,17 +249,20 @@ describe Client do
     @client.addresses << @addressB
     @client.save
     
+    # One address should be active:
     @client.reload
     @client.client_addresses.first.is_active.should == true
     @client.addresses.all( ClientAddress.is_active => true ).should have(1).address
 
+    # Make all addresses not active:
     @client.client_addresses.first.is_active = false
     @client.save
-    @client.addresses.should have(2).address
-    @client.client_addresses.first.is_active.should == true
-    @client.client_addresses.last.is_active.should  == false
+    @client.addresses.should have(2).addresses
+    #@client.client_addresses.first.is_active.should == true
+    #@client.client_addresses.last.is_active.should  == false
+    @client.addresses.all( ClientAddress.is_active => true ).should have(1).address
 
-    # Ditch @addressA so @addressB should become primary:
+    # Ditch @addressA so that @addressB should become primary:
     @client.addresses_ids = [ @addressB.id ]
     @client.save
     @client.reload

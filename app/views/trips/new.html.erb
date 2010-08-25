@@ -1,7 +1,10 @@
 <%
-	if @trip.tour
+	if @trip.type_id == TripType::TOUR_TEMPLATE
 		client_or_tour = @trip.tour
 		heading				 = "Create new tour dates for #{ client_or_tour.shortname }"
+	elsif @trip.type_id == TripType::FIXED_DEP
+		client_or_tour = @trip.tour
+		heading				 = "Create a client's custom copy of #{ client_or_tour.shortname }"
 	else
 		client_or_tour = @client
 		heading				 = "Create a new trip for #{ client_or_tour.shortname }"

@@ -1,4 +1,22 @@
-<h1>Tours controller, new action</h1>
+<div class="sectionContainer">
 
-<p>Edit this file in <tt>app/views/tours/new.html.erb</tt></p>
-<p>For more information and examples of CRUD views read <a href="http://wiki.merbivore.com/howto/crud_view_example_with_merb_using_erb"> this wiki page</a>
+	<div class="sectionHead">
+		<h3>
+			Tour details for <%= @tour.name %>
+		</h3>
+	</div>
+
+	<%= form_for @tour, :action => resource(:tours), :class => 'create-tour' do %>
+
+		<div class="sectionBody formSurround">
+		
+			<%= partial 'tours/form', :tour => @tour %>
+		
+		</div>
+
+	<!-- sectionFoot: -->
+	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => '.tour', :save_caption => 'Save changes', :cancel => false, :foot_class => 'formSurround' %>
+
+	<% end =%>
+
+</div>

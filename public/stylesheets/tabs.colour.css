@@ -78,7 +78,7 @@
 	/* Label text used occasionally in LHS tabs: (Eg: For "New Fixed Departure based on trip template..." ) */
 	.ui-tabs-nav.ui-tabs-nav-vertical > LI > SMALL {
 		display:inline-block;
-		margin:0.5em 0 0.5em 1em;
+		margin:0.5em 0.5em 0.5em 0.5em;
 	}
 
 
@@ -123,7 +123,7 @@
 
 
 	UL.clientPageTabsNav LI.client-payments {
-		margin-bottom:2em;	/* Gap before trip tabs */
+		xmargin-bottom:2em;	/* Gap before trip tabs */
 	}
 
 

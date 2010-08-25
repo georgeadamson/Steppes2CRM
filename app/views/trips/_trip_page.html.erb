@@ -53,6 +53,7 @@
 
     <ul class="tripPageTabsNav">
 			<%# TODO: Get resource(client,trip,:builder) etc to work instead of explicitly assembling urls here: %>
+      <li class="dummy hidden"><a href="#<%= nested_resource(trip,true) %>dummy"></a></li>
       <li class="ui-tabs-selected">
 				  <a href="<%= resource( client, trip, :edit ) %>"			>Trip summary</a></li>
       <li><a href="<%= resource( client, trip ) %>/builder"			>Trip builder</a></li>
@@ -60,7 +61,7 @@
       <li><a href="<%= resource( client, trip ) %>/costings"		>Costings</a></li>
       <li><a href="<%= resource( client, trip ) %>/money_ins/new" class="<%= 'hidden' if trip.tour %>">Invoice</a></li>
       <li><a href="<%= resource( client, trip ) %>/money_outs"	>Suppliers</a></li>
-      <li><a href="#<%= nested_resource(trip,true) %>charities"   class="hidden">Charities</a></li>
+      <li class="hidden"><a href="#<%= nested_resource(trip,true) %>charities"  >Charities</a></li>
 			<!-- TODO: Make tabs work without needing at least one non-ajax tab! -->
     </ul>
 
@@ -69,8 +70,11 @@
 
   <div class="tripPageTabsContent sectionBody">
  
+		<div id="<%= nested_resource(trip,true) %>dummy">
+		</div>
+ 
 		<div id="<%= nested_resource(trip,true) %>charities">
-			<!-- TODO! -->
+			TODO!
 		</div>
 
 		<!-- Tab contents loaded here via ajax: -->

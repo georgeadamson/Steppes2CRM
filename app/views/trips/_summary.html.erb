@@ -1,6 +1,6 @@
 
 <dl class="accordion clientSummaryTrips width2Fields">
-  <% trips.each do |trip| %>
+  <% trips.all( :order => [ :status_id, :start_date.desc, :created_at.desc ] ).each do |trip| %>
 
   <dt class="clientSummaryTrip">
     <a href="#">

@@ -273,7 +273,6 @@ class Client
   end
 
 
-
   # Simple string summarising the trips: (Eg: "1 unconfirmed, 1 confirmed, 2 completed, 1 canceled, 5 abandoned")
   # For speed, we loop through the trips counting the statuses, not the other way around.
   def trips_statement( trips_list = nil )
@@ -295,22 +294,15 @@ class Client
   end
 
 
-  # All the client's trips that are the current active version of each of the client's trips:
-  # We ignore "other" versions and trips that are actually Tour templates.
+  # All the client's trips that are the current active version of each of the client's trips: (ie ignore "other" versions)
   # Note how we cache @active_trips to prevent unecessary db trips as each trip is accessed:
   def active_trips
-    return @active_trips ||= self.trips.all( :is_active_version => true, :type_id.not => TripType::TOUR_TEMPLATE )
+    return @active_trips ||= trips.all( :is_active_version => true )
   end
 
-  # Helper for listing trips that are TOUR TEMPLATES of which the client is a member:
-  def tours
-    return self.trips.all( :type_id => [ TripType::TOUR_TEMPLATE ] )
-  end
- 
-  # Helper for listing trips that are FIXED DEPARTURES of which the client is a member:
   def fixed_deps( tour_id = nil )
-    deps = self.trips.all( :type_id => TripType::FIXED_DEP )
-    return tour_id ? deps.all( :tour_id => tour_id ) : deps
+    deps = self.active_trips.all( :type_id => TripType::FIXED_DEP )
+    return tour_id ? deps.all( :tour_id => deps ) : deps
   end
 
 
@@ -359,10 +351,10 @@ class Client
 
 
   # Helper to instruct database to rebuild search data for one or all clients:
-  # Warning: Takes longer when client_id not specified! (Usually less than 10 seconds)
+  # Warning: Takes longer when client_id not specified! (Though usually less than 10 seconds)
   def self.refresh_search_keywords(client_id = nil)
 
-    Merb.logger.info "Refreshing client_keywords table for #{ client_id || 'all clients'  }"
+    Merb.logger.info "Refreshing client_keywords table for client_id #{ client_id || 'all'  }"
 
 		sql_statement = "EXEC usp_client_keywords_refresh ?"
 		repository(:default).adapter.execute( sql_statement, client_id )
@@ -379,7 +371,7 @@ class Client
   # Define which properties are available in reports  
   def self.potential_report_fields
     #return [ :name, :title, :trip_clients, :trips ]
-    return [ :name, :title, :forename, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :client_type, :money_ins, :trips ]
+    return [ :name, :title, :forename, :addressee, :salutation, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :client_type, :money_ins, :trips ]
   end
 
 end

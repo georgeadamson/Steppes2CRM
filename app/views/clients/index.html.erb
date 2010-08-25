@@ -25,13 +25,16 @@
 <div id="pageTabs" class="sectionContainer noSectionFoot tabsContainer">
 
     <div class="sectionHead">
-      <ul id="pageTabsNav" class="primaryTabs">
+      <ul id="pageTabsNav" class="primaryTabs ellipsis">
 
         <!-- Dashboard tab: -->
         <li class="dashboard-tab"><a href="#tabDashboard">Home page</a></li>
 
         <!-- Tours tab: -->
         <li class="tours-tab"><%= link_to 'Tours', resource(:tours) %></li>
+
+        <!-- Add client tab: -->
+        <li class="client-create"><%= link_to icon(:add), "#{ resource( :clients, :new ) }", :title => "New client" %></li>
 
         <!-- One tab for each client: -->
         <% open_clients.each do |client| %>
@@ -43,9 +46,6 @@
             <input type="hidden" value="<%= client.id %>" class="client-id" />
           </li>
         <% end %>
-
-        <!-- Add client tab: -->
-        <li class="client-create"><%= link_to icon(:add), "#{ resource( :clients, :new ) }", :title => "New client" %></li>
 
       </ul>
     </div>

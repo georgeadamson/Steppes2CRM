@@ -20,9 +20,9 @@
 <%#= hidden_field :name => 'client_id',	:value => @trip.context.id %>
 
 <% case when @trip.type_id == TripType::TOUR_TEMPLATE %>
-	<h4 style="margin:0 0 1em 9em;">This trip is a template for a <em><%= @trip.tour.name %></em> tour</h4>
+	<h4 style="margin:0 0 1em 9em;">This trip is a template for the tour: <em><%= @trip.tour.name %></em></h4>
 <% when @trip.type_id == TripType::FIXED_DEP %>
-	<h4 style="margin:0 0 1em 9em;">This fixed departure was based on the tour template <em><%= @trip.tour.name %></em></h4>
+	<h4 style="margin:0 0 1em 9em;">This fixed departure was based on the tour template <em><%= link_to @trip.tour.name, resource(@trip.tour) %></em></h4>
 <% end %>
 
 <!-- Trip form fields: -->
@@ -101,9 +101,6 @@
 								<% end -%>
 							</th>
 							<th title="Create a letter document" class=""><span class="vertical">Create letter</span></th>
-							<% if trip.tour_template? -%>
-								<th title="Click to create a bespoke copy from this template trip"><span class="vertical">Custom copy</span></th>
-							<% end -%>
 							<th title="Requires single room"		><span class="vertical">Single</span></th>
 							<th title="Who to send documents to (Primary contacts)"><span class="vertical">Primary</span></th>
 							<th title="Who to send invoices to"	><span class="vertical">Invoicable</span></th>
@@ -123,12 +120,20 @@
 						</script>
 
 						<!-- One row for each client on the trip: -->
-						<% @trip.trip_clients.each_with_index do |trip_client,index| %>
+						<% if @trip.new? && @trip.clients.length > @trip.trip_clients.length %>
 
-							<%= partial 'trips/trip_clients', :trip_client => trip_client, :index => index %>
+							<% @trip.clients.each_with_index do |client,index| %>
+								<%= partial 'trips/trip_clients', :client => client, :trip => @trip, :index => index %>
+							<% end %>
+
+						<% else %>
+
+							<% @trip.trip_clients.each_with_index do |trip_client,index| %>
+								<%= partial 'trips/trip_clients', :trip_client => trip_client, :trip => @trip, :index => index %>
+							<% end %>
 
 						<% end %>
-						
+
 					</tbody>
 						
 					<% if @trip.new? %>

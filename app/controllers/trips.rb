@@ -119,7 +119,7 @@ class Trips < Application
         
       end
       
-      # New template-trip for a Tour:
+    # New template-trip for a Tour:
     elsif params[:tour_id]
       
       @trip.tour_id   = params[:tour_id]
@@ -128,7 +128,7 @@ class Trips < Application
       
       message[:notice]  = "Don't forget to save this new fixed-departure for #{ @trip.tour.name }"
       
-      # A new version of an existing trip:
+    # A new version of an existing trip:
     elsif is_new_version
       
       @trip.copy_attributes_from( original_version.active_version )
@@ -193,6 +193,10 @@ class Trips < Application
 		trip[:end_date]           ||= trip[:start_date]
     trip[:version_of_trip_id] ||= 0
     
+    # Skip any unwanted clients: (Those marked for delete)
+    # This typically only occurs when creating a new fixed dep that is a duplicate of a tour template.
+    trip[:trip_clients_attributes].delete_if{ |i,attributes| attributes[:_delete] }
+
     @trip		= Trip.new(trip)
     @client = Client.get( params[:client_id] ) || Client.first
     puts @trip.inspect
@@ -249,7 +253,7 @@ class Trips < Application
     
     next_page = params[:redirect_to] && params[:redirect_to].to_sym || nil
     
-    
+
 		if @trip.update(trip)
 			
 			message[:notice]	  = 'Trip was updated successfully.'
@@ -279,52 +283,6 @@ class Trips < Application
       end
       
       
-			#     associated_pnrs		  = @trip.pnr_numbers
-			#     dissociated_pnrs	  = []
-      #
-      #			# Search flight elements for PNR numbers that are not in the trip's list of pnr_numbers:
-      #			@trip.flights.all.each do |flight| 
-      #				unless flight.booking_code.strip.blank? || associated_pnrs.include?(flight.booking_code)
-      #					dissociated_pnrs << flight.booking_code
-      #				end
-      #			end
-      #			
-      #			# Delete any of the trip's flight elements that are tagged with dissociated_pnrs:	
-      #			if !dissociated_pnrs.empty? && @trip.flights.all( :booking_code => dissociated_pnrs.uniq ).destroy!
-      #				message[:notice] << "\n All flights in PNR #{ dissociated_pnrs.uniq.join(', ') } have been deleted from this trip"
-      #			end
-      
-      #			# Add flights from new PNRs:
-      #			@trip.pnrs.each do |pnr|
-      #				
-      #				if pnr.flights.empty?
-      #				
-      #					message[:notice] << "\n PNR #{ pnr.number } does not contain any flights"
-      #				
-      #				else
-      #					
-      #					# Import flights from PNR and add/update them on the trip:
-      #					how_many = pnr.refresh_flight_elements_for(@trip)
-      #					
-      #					# Report the number of successful/failed PNR imports:
-      #					message[:notice] << "\n The trip has been updated with #{ how_many[:succeeded] } flights from PNR #{ pnr.number }."	unless how_many[:succeeded].zero?
-      #					pnr_errors     << " #{ how_many[:failed] } flights could not be added from PNR #{ pnr.number } because:"					unless how_many[:failed].zero?
-      #
-      #					# Copy errors to the trip's validation errors collection: (So the trip's View can display them)
-      #					how_many[:errors].each_pair do |line_nos,err|
-      #						@trip.errors.add "PNR#{ pnr.number }-#{ line_nos }".to_sym, "PNR #{ pnr.number } line #{ line_nos }: #{ err }"
-      #					end
-      #
-      #					# Report details of failed PNR flight imports:
-      #					@trip.errors.each_value{ |err| pnr_errors << " - #{ err }" }
-      #					
-      #				end
-      #				
-      #			end
-      #
-			# message[:error] = pnr_errors.join(" \n ")
-      
-      
       # Warn about missing flight handlers:
       unless ( incomplete_elements = @trip.flights.all( :handler => nil ) ).empty?
         message[:notice] << "\n Warning: #{ incomplete_elements.count } flights have no handler. You'd better go and fix them"
@@ -348,9 +306,34 @@ class Trips < Application
       end
       
     else
-      collect_error_messages_for @trip, :pnrs
-      collect_error_messages_for @trip, :countries
-      collect_error_messages_for @trip, :trip_elements
+#      collect_error_messages_for @trip, :pnrs
+#      collect_error_messages_for @trip, :trip_pnrs
+#      collect_error_messages_for @trip, :countries
+#      collect_error_messages_for @trip, :trip_countries
+#      collect_error_messages_for @trip, :trip_elements
+#      collect_error_messages_for @trip, :trip_clients
+#      collect_error_messages_for @trip, :clients
+#      collect_error_messages_for @trip, :money_ins
+#      collect_error_messages_for @trip, :money_outs
+#
+      @trip.model.relationships.each do | name, association |
+
+        if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
+#puts name
+          #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
+          if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
+#puts rel.inspect
+puts "Calling collect_error_messages_for trip, #{name}"
+            collect_error_messages_for @trip, name.to_sym
+          elsif rel
+#puts "!!!"
+            collect_child_error_messages_for @trip, rel
+          end
+
+        end
+
+      end
+
 			message[:error] = "Oops, something odd happened. In all the excitement I kinda got lost. \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
       print "\n /trips/#{ id }/update FAILED !!!\n #{ message[:error] } #{ @trip.errors.inspect }\n"
       #display next_page.to_sym

@@ -1,4 +1,5 @@
 <%
+	trips = @tour.trips.all( :order => [ :status_id, :start_date.desc, :created_at.desc ] )
 %>
 <!-- Tour page: -->
 <div class="sectionContainer noSectionFoot tour">
@@ -28,18 +29,18 @@
 						<!-- Tours's LHS tabs: Details / Trips 1...n -->
 						<ul class="clientPageTabsNav ui-tabs-nav-vertical ellipsis">
 
-							<li class="tour-details">
+							<!-- Dummy hidden static tab to workaround jQueryUI tabs bug: -->
+							<!-- Important: To apply css to the add-new tab using :last-child, this must not be the last tab! -->
+							<li class="dummy hidden">
+								<a href="#dummyTourTabContent"></a>
+							</li>
+
+							<li class="tour-details #{ 'ui-tabs-selected' if trips.empty? }">
 								<a href="<%= resource(@tour,:edit) %>">Tour details</a>
 							</li>
 
 							<!-- List of left-hand-side tabs for each trip: -->
-							<%= partial 'trips/lhs_tabs', :trips => @tour.trips.all, :client_or_tour => @tour %>
-
-							<!-- Dummy hidden static tab to workaround jQueryUI tabs bug: -->
-							<!-- Important: To apply css to the add-new tab using :last-child, this must not be the last tab! -->
-							<li class="hidden">
-								<a href="#dummyTourTabContent"></a>
-							</li>
+							<%= partial 'trips/lhs_tabs', :trips => trips, :client_or_tour => @tour %>
 
 							<!-- Extra tab for CREATE TRIP: -->
 							<li class="trip trip-create" title="Create a lovely new trip">

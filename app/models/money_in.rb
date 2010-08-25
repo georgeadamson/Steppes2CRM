@@ -78,7 +78,7 @@ class MoneyIn
   
   
   validates_with_method :amount, :method => :validate_amount
-  validates_with_method :validate_generate_doc
+  validates_with_method :validate_generate_doc #, :when => :doc_gen
   
   def validate_amount
     
@@ -111,6 +111,7 @@ class MoneyIn
   def validate_generate_doc
     
     # Skip this validation for deposits:
+    # For other invoices etc, any doc-gen errors will be added to self.errors:
     if self.deposit? || self.generate_doc( dummy_run = true )
       
       return true
@@ -131,6 +132,7 @@ class MoneyIn
   before :valid? do
     
     self.name               = DEFAULT_NEW_MAIN_INVOICE_NAME if self.name.blank?
+    self.user             ||= self.trip && self.trip.user
     
     # Ensure submitted currency strings such as "123.00" are valid decimals:
     self.amount             = self.amount.to_f

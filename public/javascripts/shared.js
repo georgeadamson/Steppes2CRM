@@ -2,17 +2,15 @@
 
 // Tabs:
 // Level 1 tags are those accross the top of the page.
-// Level 2 tabs are those down the left hand side.
+// Level 2 tabs are those down the left hand side (LHS).
 // Level 3 tabs are those separating the facets of a trip.
 
+// Note: The check for FIREFOX happens in the parent html page. (So it can run even when this script is not compatible with browser)
 
-if( !window.console ) var console = {}; if( !console.log ) console.log = function(){};
+// Prevent debug messages from balking when firebug not installed:
+if( !window.console ){ var console = {} }
+if( !console.log    ){ console.log = function(){} };
 
-// test:
-//window.location.href = 'file:///%5C%5Cselsvr01%5Cdocuments/2010%5CSteppes%20East%5CLetter%5CLetter-de%20Lance-Holmes-Oman%20final.doc-Donna%20Baker.04.03.2010%2010.31.47.doc'
-
-
-// Note: The test for FIREFOX happens in the parent page. (So it can run even when this script is not compatible with browser)
 
 (function($){
 
@@ -44,9 +42,9 @@ jQuery(function($) {
 		undefined,											// Speeds up test for undefined variables.
 		spinnerTimeoutId,
 
-		UK_COUNTRY_ID					= 6,				// TODO: Find a data-drive way of settings this!
-
-		DOCUMENT_TYPE_ID_FOR_LETTERS	= 8,				// TODO: Find a data-drive way of settings this!
+		UK_COUNTRY_ID					= 6,				// TODO: Find a data-driven way of settings this!
+		FIXED_DEPARTURE					= 4,				// TODO: Find a data-driven way of settings this!
+		DOCUMENT_TYPE_ID_FOR_LETTERS	= 8,				// TODO: Find a data-driven way of settings this!
 
 		SYSTEM_ADMIN_LABEL				= 'System admin',
 		WEB_REQUESTS_ADMIN_LABEL		= 'Web requests',
@@ -131,6 +129,252 @@ jQuery(function($) {
 
 
 
+// ***** Experimental event-driven code. Work in progress, being introduced gradually:
+// ***** For more info, google for "building evented single page applications".
+
+	var Layout = {
+
+		init	: function(){
+
+			// Bind custom 'hashchange' event:
+			$(document).bind('hashchange', Layout.reload);
+		
+			Layout.initLinksHandler();
+			Layout.initFormsHandler();
+
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)$/,			Trip.initShow );
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,					Trip.initForm );
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/edit/,		Trip.initForm );
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/builder/,	Trip.initTimeline );
+			Layout.livePath('success', /tours\/([0-9]+)/,								Tour.initShow );
+			Layout.livePath('success', /tours\/([0-9]+)\/trips\/new/,					Trip.initForm );
+			Layout.livePath('success', /tours\/([0-9]+)\/trips\/([0-9]+)\/edit/,		Trip.initForm );
+
+			$('FORM.create-tour').live('form:success', Tour.onCreateSuccess)
+
+		},
+
+		// Trigger ajax and handlers for the specified path:
+		// Note: When triggered by tabs, the options will be a tabs.ui hash.
+		load	: function(path, options){
+
+			if(path){
+
+				path = path.replace(/^#/, '');
+
+				// Do ajax calls here (unless options.ui.tab)
+
+				// Notify url-specific event handlers:
+				console.log( 'path:loading...', path );
+				$(document).trigger('path:loading', [path]);
+				$(document).trigger('path:loading:' + path);
+
+			}
+
+		},
+
+		// Trigger for loading the url stored in the current hash:
+		reload	: function(e,options){
+			Layout.load(window.location.hash,options);
+		},
+
+		// Helper for registering the many url-specific live event handlers:
+		livePath: function(event, path, callback) {
+
+			if( typeof(path) === 'string' ){
+				$(document).bind('path:' + event + ':' + path, callback);
+			}else{
+				Layout.livePathRegex[event].push([path, callback]);
+			}
+
+		},
+
+		// Collection of regexes for parsing and triggering url-specific event handlers: (Populated by calls to Layout.livePath)
+		livePathRegex : { loading:[], success:[] },
+
+		// Generic handler for all successful ajax calls:
+		onSuccess: function(data,status,xhr,options,e){
+		
+			// TODO: Apply html/json here?
+
+			// Actual order of arguments will vary depending on how this was called!
+			// When called by a uiTabs event, the xhr argument will be undefined, options will be a ui object.
+			//if( typeof(xhr) == 'string'    ){ e   = xhr }
+			//if( options && options.options ){ xhr = options; options = undefined }
+			var ui = options = ( options || xhr.options || xhr );
+			if( xhr !== options ){ options.xhr = xhr };
+			if( ui.tab && !ui.url ){ ui.url = $.data(ui.tab, 'load.tabs'); }
+			var path = options.url;
+			console.log('onSuccess', path)
+
+			// Trigger all the custom livePath success handlers who's regex matches path:
+			if(path){
+
+				// Ensure location hash is up to date before triggering handlers: (but do not trigger the hashchange event)
+				Layout.setHash( path, options, false );
+				Layout.triggerLivePath( 'success', path, options, data, e );
+
+			}				
+			
+		},
+
+		// Helper for triggering all the livePath handlers that match path: (type expects 'success' or 'error')
+		triggerLivePath : function(type, path, options, data, e){
+
+			$.each( Layout.livePathRegex[type], function(i,handler){
+
+				var regex = handler[0], callback = handler[1];
+				var match = path.match(regex);
+
+				// Trigger the callback passing a pimped-up copy of the options hash or tabs ui object:
+				if( match && $.isFunction(callback) ){
+					console.log('Triggering:', path, regex, callback );
+					var args = $.extend( {}, options, { match:match, regex:regex, data:data, type:type, event:e } );
+					callback(args);
+				}
+
+			});
+
+		},
+
+		// Triggered when a tab loads successfully: (Just pass the arguments along to the generic Layout.onSuccess)
+		onTabSuccess : function(e,ui){
+			Layout.onSuccess( ui.panel, 'success', {}, ui, e ); // TODO: Derive xhr from tabs ui object?
+		},
+
+		// TODO: Triggered when a tab fails: (Just pass the arguments along to the generic Layout.onError)
+		onTabError : function(e,ui){
+			Layout.onError( ui.panel, 'error', {}, ui, e ); // TODO: Derive xhr from tabs ui object?
+		},
+
+
+		// Initialise LINK CLICK handlers:
+		initLinksHandler : function(){
+
+			// Trigger custom 'hashchange' event whenever a link is clicked:
+			$('A').live('click', function (event) {
+
+				var href = $(this).attr('href').replace(/^#\/?/,'');
+				window.location.hash = '#/' + href;
+				$(document).trigger('hashchange');
+				return false;
+
+			});
+
+		},
+
+
+		// Initialise FORM SUBMIT handlers:
+		initFormsHandler : function(){
+
+			$('FORM').live('submit', function(e){
+
+				var $form		= $(this),
+					url			= $form.attr('action').replace(/^#/, ''),
+					options		= { url: url },
+					dataType	= $form.attr('data-type') || 'html',
+					$button		= $(e.originalEvent.explicitOriginalTarget),
+					uiTarget	= $button.attr("rel");
+
+				if( $form.hasClass('noajax') ){ return true }
+
+				// When using live event the ajaxSubmit() method will not include name/value of submit button so add it:
+				var buttonNameAndValue = {};
+				buttonNameAndValue[ $button.attr('name') ] = $button.val();
+
+				// By setting up the ajaxSubmit here, each of the callbacks can refer to the $form using a closure:
+				$form.ajaxSubmit({
+
+					url       : url,
+					dataType  : dataType,
+					data      : buttonNameAndValue,
+					//closeKeepAlive: $.browser.safari ? '/admin/connection_close' : false,
+					
+					beforeSubmit: function(data, form, options) {
+						$form.trigger('form:beforeSubmit', [data, form, options]);
+					},
+
+					beforeSend: function(xhr) {
+						$form.trigger('form:beforeSend', [xhr]);
+					},
+
+					success: function(data, status, xhr) {
+
+						if ( Layout.getMessagesFrom(data).is('.errorMessage') ) {
+
+							// For the benefit of the next handler, ensure the xhr.responseText still contains the response:
+							if( !xhr.responseText && data ){ xhr.responseText = data }
+							$form.trigger('form:error', [xhr, status, 'custom']);
+
+						} else {
+							Layout.onSuccess(data, status, xhr, options, e);
+							$form.trigger('form:success', [data, status, xhr]);
+						}
+
+					},
+
+					error: function(xhr, status, error) {
+						$form.trigger('form:error', [xhr, status, error]);
+					},
+
+					complete: function(xhr, status) {
+					  $form.trigger('form:complete', [xhr, status]);
+					}
+
+				});
+
+				return false;
+
+			})
+
+			// Bind generic FORM SUCCESS handler:
+			.live('form:success', function(e, data, status, xhr) {
+				// Unused.
+			})
+
+			// Bind generic FORM ERROR handler:
+			.live('form:error', function(e, xhr, status, error) {
+				// Unused.
+			})
+
+			// Bind generic FORM COMPLETE handler:
+			.live('form:complete', function(e, xhr, status) {
+
+				// Display any error/notice messages found in the response:
+				showMessage( Layout.getMessagesFrom(xhr.responseText) );
+
+			});
+
+		},
+
+		// Read the current hash href:
+		getHash: function() {
+			return window.location.hash;
+		},
+
+		// Set the current location hash and optionally trigger hashchange event:
+		setHash: function(hash,options,triggerHashChange) {
+			window.location.hash = window.currentHash = '#' + hash.replace(/^#\/?/,'');
+			console.log('setHash', window.location.hash);
+			if( triggerHashChange !== false ){ $(document).trigger('hashchange',[options]) }
+		},
+
+		// Parse error & notice message elements from the xhr response:
+		// Test for messages in data eg: <!--<MESSAGES>--><h2 class="errorMessage">Oops, something odd happened. <br/> <div class='error'>The trip details could not be saved because:<ul><li>TripElement: (Flight) The Flight agent cannot be left blank</li></ul></div></h2><!--</MESSAGES>-->
+		getMessagesFrom: function(data){
+			var fragment = ( FIND_MESSAGE_CONTENT.exec(data) || [] )[1] || '';
+			return $('<div>').html(fragment).find(".noticeMessage,.errorMessage");
+		}
+
+	}
+
+
+	// Initialise url-specific live event handlers: See end of script.
+
+
+// *****
+
+
 
 
 	// Initialise global ajax settings:
@@ -146,6 +390,11 @@ jQuery(function($) {
 			}
 			//alert(xhr.options.url )
 		},
+
+		// Depricated because it does not give use info about the url etc:
+		//success : function(data,status,xhr){
+		//	console.log(data,status,xhr)
+		//},
 
 		// Initialise any new tabs etc in client or trip pages AFTER EVERY AJAX LOAD:
 		complete : onAjaxComplete,
@@ -305,6 +554,8 @@ jQuery(function($) {
 				var urlTemplate	= thisForm.url + '/{trip_id}';		// Eg: /clients/12345678/trips/{trip_id}
 				var trip_id		= 0;
 				var tabLabel	= 'Trip';
+				var tripTypeID	= $form.find("[name='trip[type_id]']").val();
+				var tabToDelete	= tripTypeID == FIXED_DEPARTURE ? $("UL:visible.clientPageTabsNav").parent().tabs('option', 'selected') : null;
 
 				// For some reason, the success-callback was being fired multiple times so instead we just
 				// use it to set a flag and then do the clever stuff in the complete-callback instead:
@@ -331,6 +582,12 @@ jQuery(function($) {
 
 						// Add new trip tab to the tabs on the left hand side:
 						$("UL:visible.clientPageTabsNav").parent().tabs( 'add', tabUrl, tabLabel, 3 );
+
+						// Neither delete not disabled seem to work as expected here:
+						// TODO: Better strategy for adding/removing tabs after ajax:
+						if(tabToDelete){
+							$("UL:visible.clientPageTabsNav").parent().tabs( 'option', 'disabled', [tabToDelete+1] );
+						}
 
 					};
 
@@ -402,14 +659,16 @@ jQuery(function($) {
 		var buttonNameAndValue = {};
 		buttonNameAndValue[ $button.attr('name') ] = $button.val();
 
-		$form.ajaxSubmit({
-			target		: uiTarget,
-			success		: success,
-			complete	: complete,
-			data		: buttonNameAndValue
-		});
+//		$form.ajaxSubmit({
+//			target		: uiTarget,
+//			success		: success,
+//			complete	: complete,
+//			data		: buttonNameAndValue
+//		});
 
-		return false;
+		//return false;
+		
+		// Pass responsibility over to the new Layout handlers!
 
 	});
 
@@ -461,11 +720,11 @@ jQuery(function($) {
 			if( target ){ $target = $(target) }
 
 			initLevel2Tabs_forClient($target);
-			initLevel3Tabs_forTrip($target);
+			//initLevel3Tabs_forTrip($target);
 			initLevel2Tabs_forSysAdmin($target);
 			initLevel2Tabs_forReports($target);
 			initFormAccordions($target);
-			initFormTabs($target);	// Eg: countriesTabs on Trip Summary page.
+			//initFormTabs($target);	// Eg: countriesTabs on Trip Summary page.
 			initSpinboxes($target);
 			initDatepickers($target);
 			initPostcodeSearch($target);
@@ -943,7 +1202,7 @@ jQuery(function($) {
 				// When content loads, set rel target on all links that don't already have a target:
 				$uiTarget.find('A, :submit').not('[rel]').attr({ rel: uiTarget }).addClass('ajax');
 
-				initLevel3Tabs_forTrip($uiTarget);
+				//initLevel3Tabs_forTrip($uiTarget);
 				initLevel2Tabs_forReports($uiTarget);
 				initFormAccordions($uiTarget);
 				initSpinboxes($uiTarget);
@@ -1426,7 +1685,7 @@ jQuery(function($) {
 
 	// Helper to OPEN TOUR TAB for a specified tour id: (Expects tour_id and tab_label as arguments)
 	function openTourTab(id, label) {
-
+alert(1)
 		if( id && parseInt(id) > 0 ){
 
 			existingTabIdx = $("#pageTabs > .sectionHead LI:has( INPUT.tour-id[value='" + id + "'] )").prevAll("LI").length;
@@ -1474,18 +1733,28 @@ jQuery(function($) {
 
 			// Try to ensure loaded tab has a nice readable label:
 			load	: function(e,ui){
-
+console.log('load')
 				// Read hidden label element from the loaded client/tour tab panel:
 				// TODO: Depricate #client_label and #tour_label?
 				label = $(ui.panel).find('DIV.sectionHead:first').find('#tab_label, #client_label, #tour_label').val();
 
-				if(label){ $(ui.tab).text( label ) }
+				// When replacing the label, ensure we don't accidentally overwrite any hidden child elements:
+				if(label){
+					var $childElems = $(ui.tab).children('INPUT');
+					$(ui.tab).text( label ).append( $childElems );
+				}
 
+				//var url = $.data(ui.tab, 'load.tabs');
+				//if( url ){ Layout.setHash(url,ui) }
+				//if( url ){ Layout.onSuccess('success',undefined,ui) }
+
+				Layout.onTabSuccess(e,ui);			
+			
 			},
 
 			// Let the server know which client is in the foreground: (So it can be the default tab next time)
-			show	: function(e,uiTab){
-				var url = $.data(uiTab.tab, 'load.tabs');
+			show	: function(e,ui){console.log('show')
+				var url = $.data(ui.tab, 'load.tabs');
 				if( url && url.indexOf('clients/') >= 0 ){ $.get( url + '/select' ) }
 			},
 
@@ -1532,62 +1801,66 @@ jQuery(function($) {
 
 			},
 
+			load	: Layout.onTabSuccess,
+
 			// When a tab is opened, initialise it's content:
-			show	: function(e, ui) {
+//			show	: function(e, ui) {
 
-				if( $(ui.tab).is('.new') ){
-					initFormTabs( ui.panel );
-				}
+//				if( $(ui.tab).is('.new') ){
+//					initFormTabs( ui.panel );
+//				}
 
-			}
+//			}
 
 		});
 	};
 
 
-	// Helper for initialiasing the TRIP'S TABS on each trip page: (Trip summary, builder, itinerary etc)
-	function initLevel3Tabs_forTrip(context) {
+//	// Helper for initialiasing the TRIP'S TABS on each trip page: (Trip summary, builder, itinerary etc)
+//	function initLevel3Tabs_forTrip(context) {
 
-		// TODO: Find out why we need eq(0) to work around multiple tab loads. Seems to be a recursive problem. 
-		$( 'UL.tripPageTabsNav', context ).parent().eq(0).tabs({	// (See http://jqueryui.com/demos/tabs)
+//		// TODO: Find out why we need eq(0) to work around multiple tab loads. Seems to be a recursive problem. 
+//		$( 'UL.tripPageTabsNav', context ).parent().eq(0).tabs({	// (See http://jqueryui.com/demos/tabs)
 
-			cache			: false,
-			panelTemplate	: '<div class="ajaxPanel sectionContainer noSectionHead"></div>',
-			panelsSelector	: function() { return this.list.cousins(".tripPageTabsContent > *") },	// This is a custom option. See modified ui.tabs.js script for details.
+//			cache			: false,
+//			panelTemplate	: '<div class="ajaxPanel sectionContainer noSectionHead"></div>',
+//			panelsSelector	: function() { return this.list.cousins(".tripPageTabsContent > *") },	// This is a custom option. See modified ui.tabs.js script for details.
+//			
+//			load	: Layout.onTabSuccess,
 
-			// Init content when Trip tabs are opened:
-			show	: function(e,ui) {
+//			// Init content when Trip tabs are opened:
+//			show	: function(e,ui) {
 
-				switch( ui.index ){
+//				switch( ui.index ){
 
-					case 0 :	// Trip summary tab
-					
-						$(ui.panel).find("UL.tripCountriesTabsNav").parent().tabs({
-							selected: 0
-						});
+//					case 0 :	// Trip summary tab
+//					
+//						$(ui.panel).find("UL.tripCountriesTabsNav").parent().tabs({
+//							selected: 0
+//						});
 
-						// Activate the trip_clients search box in this tab panel:
-						initTripClientSearch(ui.panel);
+//						// Activate the trip_clients search box in this tab panel:
+//						initTripClientSearch(ui.panel);
 
-						// Important: The trip_clients checkboxes in this tab panel are enhanced by the checkboxLimit() plugin.
-						break;
+//						// Important: The trip_clients checkboxes in this tab panel are enhanced by the checkboxLimit() plugin.
+//						break;
 
-					case 1 :	// Trip builder tab
+//					case 1 :	// Trip builder tab
 
-						// Build timeline overview (after allowing for some rendering delays!):
-						window.setTimeout(function() {
+//						// Build timeline overview (after allowing for some rendering delays!):
+//						window.setTimeout(function() {
 
-							$( 'DIV.timelineContent', ui.panel ).timelineOverview();
+//							$( 'DIV.timelineContent', ui.panel ).timelineOverview();
 
-						}, TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW);
+//						}, TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW);
 
-						break;
+//						break;
 
-				}
+//				}
 
-			}
-		});
-	};
+//			}
+//		});
+//	};
 
 
 	// Helper for initialiasing the SYSTEM ADMIN TABS on the sys-admin page:
@@ -1601,10 +1874,12 @@ jQuery(function($) {
 			panelsSelector	: function() { return $('#sysAdminTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
 
 			// When a new tab is added, open it immediately:
-			add : function(e, tab) {
+			add  : function(e, tab) {
 				$(this).tabs('select', '#'+tab.panel.id);
-			}
-			
+			},
+
+			load : Layout.onTabSuccess
+
 			//,show	: function(e,ui) {
 			//	$( 'SELECT[multiple]', ui.panel ).checkboxList();
 			//}
@@ -1619,8 +1894,10 @@ jQuery(function($) {
 
 			//selected		: 1,
 			//fx				: { opacity: 'toggle', duration: 200 },
-			panelTemplate	: '<div class="sectionBody ajaxPanel"></div>'
+			panelTemplate	: '<div class="sectionBody ajaxPanel"></div>',
 			//,panelsSelector	: function() { return $('#reportTabsContent > *') }	// This is a custom option. See modified ui.tabs.js script for details.
+
+			load : Layout.onTabSuccess
 
 		});
 	};
@@ -1685,24 +1962,24 @@ jQuery(function($) {
 	})
 
 
+//	// Moved to Trip.initShow()
+//	// Helper for initialiasing the MINOR TABS within some pages:
+//	function initFormTabs(context) {
 
-	// Helper for initialiasing the MINOR TABS within some pages:
-	function initFormTabs(context) {
+//		$( 'UL:visible.countryTabs', context ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
 
-		$( 'UL:visible.countryTabs', context ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
+//			// This is vital so ticked boxes are not discarded when user switches between country tabs!
+//			cache			: true,
 
-			// This is vital so ticked boxes are not discarded when user switches between country tabs!
-			cache			: true,
+//			panelTemplate	: '<div class="countryTabsPanel"></div>',
 
-			panelTemplate	: '<div class="countryTabsPanel"></div>',
+//			// Wrap all the loaded <li> tags in a <ul> element:
+//			load			: function(e,ui){
+//				$(ui.panel).children('LI').wrapAll('<ul class="checkboxList columns ellipsis"></ul>')
+//			}
 
-			// Wrap all the loaded <li> tags in a <ul> element:
-			load			: function(e,ui){
-				$(ui.panel).children('LI').wrapAll('<ul class="checkboxList columns ellipsis"></ul>')
-			}
-
-		});
-	};
+//		});
+//	};
 
 
 
@@ -1804,63 +2081,63 @@ function initSpinboxes() {
 
 
 	// Initialise AUTOCOMPLETE within trip summary tab for adding trip_clients to trip:
-	function initTripClientSearch(context){
+//	function initTripClientSearch(context){
 
-		$('INPUT.trip-client-search',context).autocomplete("/search", {
+//		$('INPUT.trip-client-search',context).autocomplete("/search", {
 
-			max					: CLIENT_SEARCH_MAX_ROWS,
-			delay				: CLIENT_SEARCH_DELAY_BEFORE_AJAX,
-			cacheLength			: 1,		// This simply allows the current results to stay in memory so double-click does not trigger re-search.
-			minChars			: 3,
-			matchContains		: false,
-			matchSubset			: false,
-			multiple			: false,
-			multipleSeparator	: ",",
-			dataType			: "json",
-			scrollHeight		: 200,
-			width				: 576,
+//			max					: CLIENT_SEARCH_MAX_ROWS,
+//			delay				: CLIENT_SEARCH_DELAY_BEFORE_AJAX,
+//			cacheLength			: 1,		// This simply allows the current results to stay in memory so double-click does not trigger re-search.
+//			minChars			: 3,
+//			matchContains		: false,
+//			matchSubset			: false,
+//			multiple			: false,
+//			multipleSeparator	: ",",
+//			dataType			: "json",
+//			scrollHeight		: 200,
+//			width				: 576,
 
-			// Parse json as soon as it loads, to rearrange results as array of objects each with {data, value, result} attributes for autocompleter. More info: http://blog.schuager.com/2008/09/jquery-autocomplete-json-apsnet-mvc.html
-			parse: autocomplete_helpers.parseItems,
+//			// Parse json as soon as it loads, to rearrange results as array of objects each with {data, value, result} attributes for autocompleter. More info: http://blog.schuager.com/2008/09/jquery-autocomplete-json-apsnet-mvc.html
+//			parse: autocomplete_helpers.parseItems,
 
-			// Generate html for each item in the json data: (json-object, row-index, number-of-rows, query-string)
-			formatItem: autocomplete_helpers.formatItem,
+//			// Generate html for each item in the json data: (json-object, row-index, number-of-rows, query-string)
+//			formatItem: autocomplete_helpers.formatItem,
 
-			// ???:
-			formatMatch: function(data, i, n, q) { // i=row index, n=number of rows, q=query string
-				return data.postcode;
+//			// ???:
+//			formatMatch: function(data, i, n, q) { // i=row index, n=number of rows, q=query string
+//				return data.postcode;
 
-			}
+//			}
 
-		})
+//		})
 
 
-		// Respond to user's choice by adding selected client to the list of travellers:
-		.result(function(e, client) {
+//		// Respond to user's choice by adding selected client to the list of travellers:
+//		.result(function(e, client) {
 
-			var $table   = $('TABLE:visible.tripTravellers > TBODY');
+//			var $table   = $('TABLE:visible.tripTravellers > TBODY');
 
-			if( $table.find("INPUT[value='" + client.id + "']").length === 0 ){
+//			if( $table.find("INPUT[value='" + client.id + "']").length === 0 ){
 
-				// Eg: <tr><td><a href="/clients/{id}?label={label}" class="show clientName">{name}</a></td>...</tr>
-				//var template = unescape( $table.find('>TR.template').clone().removeClass('hidden template').find(':disabled').removeAttr('disabled').end().outerHtml() );
-				var template	= $('#trip-traveller-row-template').html();
+//				// Eg: <tr><td><a href="/clients/{id}?label={label}" class="show clientName">{name}</a></td>...</tr>
+//				//var template = unescape( $table.find('>TR.template').clone().removeClass('hidden template').find(':disabled').removeAttr('disabled').end().outerHtml() );
+//				var template	= $('#trip-traveller-row-template').html();
 
-				var index	 = $table.children('TR').length;
+//				var index	 = $table.children('TR').length;
 
-				var html	 = interpolate( template, { id:client.id, name:client.shortname, label:client.shortname, index:index } );
+//				var html	 = interpolate( template, { id:client.id, name:client.shortname, label:client.shortname, index:index } );
 
-				// Append the row to the table using an animation: (Note we animate the contents because table cells do not animate as expected)
- 				$(html)
-					.find('> TD > *').hide().end()
-				.appendTo( $table )
-					.find('> TD > *').slideDown();
+//				// Append the row to the table using an animation: (Note we animate the contents because table cells do not animate as expected)
+// 				$(html)
+//					.find('> TD > *').hide().end()
+//				.appendTo( $table )
+//					.find('> TD > *').slideDown();
 
-			}
+//			}
 
-		});
-	
-	}
+//		});
+//	
+//	}
 
 
 
@@ -2355,7 +2632,143 @@ function initTripInvoiceFormTotals(){
 
 
 
+	var Trip = {
 
+		// Called when a TRIP is opened:
+		initShow : function(ui){
+
+			$( 'UL.tripPageTabsNav', ui.panel ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
+
+				cache			: false,
+				panelTemplate	: '<div class="ajaxPanel sectionContainer noSectionHead"></div>',
+				panelsSelector	: function() { return this.list.cousins(".tripPageTabsContent > *") },	// This is a custom option. See modified ui.tabs.js script for details.
+				load			: Layout.onTabSuccess
+
+			});
+
+		},
+
+		// Called when TRIP EDIT tab is opened:
+		initForm : function(ui){
+
+			// Activate the country-tabs and trip_clients search box in this tab panel:
+			Trip.initCountryTabs(ui.panel);
+			Trip.initClientSearch(ui.panel);
+
+		},
+
+		// Called when TRIP BUILDER tab is opened:
+		initTimeline : function(ui){
+
+			// Build timeline overview (after allowing browser to calm down a little!):
+			window.setTimeout(function() {
+
+				$( 'DIV.timelineContent', ui.panel ).timelineOverview();
+
+			}, TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW);
+
+
+		},
+
+		// Helper for initialising the country tabs on the trip form:
+		initCountryTabs : function(panel){
+
+			$( 'UL.countryTabs', panel ).parent().tabs({
+
+				cache			: true, // Ensure ticked boxes are not discarded when user switches between country tabs!
+				panelTemplate	: '<div class="countryTabsPanel"></div>',
+				load			: function(e,ui){
+					// Wrap all the loaded <li> tags in a <ul> element:
+					$(ui.panel).children('LI').wrapAll('<ul class="checkboxList columns ellipsis"></ul>')
+				}
+
+			});
+
+		},
+
+		// Helper for initialising the autocomplete for adding clients on the trip edit page:
+		initClientSearch : function(panel){
+
+			$('INPUT.trip-client-search', panel).autocomplete("/search", {
+
+				max					: CLIENT_SEARCH_MAX_ROWS,
+				delay				: CLIENT_SEARCH_DELAY_BEFORE_AJAX,
+				cacheLength			: 1,		// This simply allows the current results to stay in memory so double-click does not trigger re-search.
+				minChars			: 3,
+				matchContains		: false,
+				matchSubset			: false,
+				multiple			: false,
+				multipleSeparator	: ",",
+				dataType			: "json",
+				scrollHeight		: 200,
+				width				: 576,
+
+				// Parse json as soon as it loads, to rearrange results as array of objects each with {data, value, result} attributes for autocompleter. More info: http://blog.schuager.com/2008/09/jquery-autocomplete-json-apsnet-mvc.html
+				// Generate html for each item in the json data: (json-object, row-index, number-of-rows, query-string)
+				parse				: autocomplete_helpers.parseItems,
+				formatItem			: autocomplete_helpers.formatItem
+
+			})
+
+			// Respond to user's choice by adding selected client to the list of travellers:
+			.result(function(e, client) {
+
+				var $table = $('TABLE.tripTravellers > TBODY', panel);
+
+				if( $table.find("INPUT[value='" + client.id + "']").length === 0 ){
+
+					// Eg: <tr><td><a href="/clients/{id}?label={label}" class="show clientName">{name}</a></td>...</tr>
+					//var template = unescape( $table.find('>TR.template').clone().removeClass('hidden template').find(':disabled').removeAttr('disabled').end().outerHtml() );
+					// TODO: Try the templating plugin instead.
+					var template = $('#trip-traveller-row-template').html();
+					var index	 = $table.children('TR').length;
+					var html	 = interpolate( template, { id:client.id, name:client.shortname, label:client.shortname, index:index } );
+
+					// Append the row to the table using an animation: (Note we animate the contents because table cells do not animate as expected)
+ 					$(html)
+						.find('> TD > *').hide().end()
+					.appendTo( $table )
+						.find('> TD > *').slideDown();
+
+				}
+
+			});
+
+		}
+
+	} // End of Trip utilities.
+
+
+
+	var Tour = {
+	
+		onCreateSuccess : function(e,data){
+			
+			// Parse the tour id and name from the data, then trigger method to show the tab:
+			var ui = $('#pageTabs').tabs('url', /tours\/new/);
+			
+			var $data = $(data),
+				tour_id   = $data.find('#tour_id').val(),
+				tour_name = $data.find('#tour_label, #tour_name').val();
+				ui.url    = '/tours/' + tour_id + '/edit';
+			
+			Layout.onSuccess( data, 'success', undefined, ui, e )
+			
+		},
+
+		initShow : function(options){
+
+			var tour_id = options.match[1],	// Result of livePath regex.
+				url     = 'tours/' + tour_id,
+				ui      = $('#pageTabs').tabs('url',url);
+
+			if( !ui.tab ) {
+				$('#pageTabs').tabs('add',url,'label')
+			}
+		
+		}
+	
+	}
 
 
 
@@ -2476,4 +2889,7 @@ function numVal(selector, $fields, defaultAlternative) {
 };
 
 
-// QUnit testing://$.getScript('/javascripts/testing/qunit.js', function(){//	$.getScript('/javascripts/testing/test-specs.js')//});	// Intercept accidental attempts to use the BACK BUTTONS etc:	// Note: We only intercept page-unload when there are client tabs open. That way testing individual controller pages is not annoying!	// TODO: Allow use of back buttons by adding to the browser history while user navigates around the tabs.	window.onbeforeunload = function(e){		// Derive file extension of clicked link if applicable: (Eg 'doc', 'pdf')		var elem = e.target.activeElement;		var href = !!elem && elem.href || '';		var file_extension = href.split(/#|\?/).shift().split('.').pop();	// Get text between the last dot and the first # or ?, if any.		if( $('#pageTabsNav > LI').length > 1 && !ALLOW_DOWNLOAD_OF[file_extension] ){			return "- Tip: If you are simply trying to reload the page then press OK to continue.\n\n" +				"- More info:\n This site is more like an application than an ordinary web page, so " +				"using your browser's back and forward buttons will not navigate you around this application."		}	};});	// End of jQuery ready handler.
+// QUnit testing://$.getScript('/javascripts/testing/qunit.js', function(){//	$.getScript('/javascripts/testing/test-specs.js')//});
+	// Initialise all our custom Layout event handling:
+	Layout.init();
+	// Intercept accidental attempts to use the BACK BUTTONS etc:	// Note: We only intercept page-unload when there are client tabs open. That way testing individual controller pages is not annoying!	// TODO: Allow use of back buttons by adding to the browser history while user navigates around the tabs.	window.onbeforeunload = function(e){		// Derive file extension of clicked link if applicable: (Eg 'doc', 'pdf')		var elem = e.target.activeElement;		var href = !!elem && elem.href || '';		var file_extension = href.split(/#|\?/).shift().split('.').pop();	// Get text between the last dot and the first # or ?, if any.		if( $('#pageTabsNav > LI').length > 1 && !ALLOW_DOWNLOAD_OF[file_extension] ){			return "- Tip: If you are simply trying to reload the page then press OK to continue.\n\n" +				"- More info:\n This site is more like an application than an ordinary web page, so " +				"using your browser's back and forward buttons will not navigate you around this application."		}	};});	// End of jQuery ready handler.

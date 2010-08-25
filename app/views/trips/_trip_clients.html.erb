@@ -9,6 +9,9 @@
 	client					||= trip_client.client	# Optional when editing existing records because we can derive it from trip_client.
 	html_template		||= false
 	
+	# Allow for when new (unsaved) trip has trip.clients but no trip.trip_clients collection:
+	trip_client.client ||= client
+	
 	# Include the little menu of trip letters next to the client name: (unless we're creating a template row)
 	show_trip_letters_menu = !html_template
 
@@ -75,10 +78,12 @@
 
 		# Cache list of letter templates (filtered by company) so we don't keep rebuilding it for each client:
 		@template_filenames	  ||= Document.doc_builder_letter_templates( :type => :trip, :prefix => ( trip.company || session.user.company ).initials )
-		show_trip_letters_menu	= false if @template_filenames.empty?
+
+		# Skip the letter-generation menu on a new trip or when there are no letter templates:
+		show_trip_letters_menu	= false if trip.new? || @template_filenames.empty?
 		
 	end
-				
+
 -%>
 
 	<tr title="<%= tooltip %>">
@@ -112,11 +117,11 @@
 				</div>
 			</td>
 			<td><%= orig_select :name => 'generate_letter', :collection => @template_filenames, :prompt => 'Create a trip letter...', :class => 'create-letter arrow-only', :'data-action' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }" if show_trip_letters_menu %></td>
-			<td>
+			<!--<td>
 				<%#= orig_radio_button	:name => "selected_client", :checked => (index==0) if client_id && trip.tour_template? %>
 				
-				<%= link_to icon(:add), resource( client, :trips, :new, :copy_trip_id => trip.id ) if client && trip.tour_template? %>
-			</td>
+				<%#= link_to icon(:add), resource( client, :trips, :new, :copy_trip_id => trip.id ) if client && trip.tour_template? %>
+			</td>-->
 			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_single]",						:checked => trip_client.is_single,			:boolean => true %></td>
 			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_primary]",						:checked => trip_client.is_primary,			:boolean => true %></td>
 			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_invoicable]",				:checked => trip_client.is_invoicable,	:boolean => true %></td>

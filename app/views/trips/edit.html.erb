@@ -4,7 +4,7 @@
 
 	delete_caption		||= @trip.is_first_version ? 'Delete all versions of this trip' : 'Delete this version'
 	delete_uid				||= "delete-btn#{ Time.new.to_i }"
-	label_for_delete	||= false
+	label_for_delete	||= delete_caption
 	
 	url_params					= { :redirect_to => resource(@client,@trip.version_of_trip) }
 	
