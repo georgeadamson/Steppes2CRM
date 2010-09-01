@@ -3,7 +3,7 @@
 <div class="sectionContainer costingSheet">
 
 	<!-- Form submits to trips#update action so make sure it knows to return us to the costings page: -->
-	<%= form_for @trip, :action => resource( @client, @trip ) do %>
+	<%= form_for @trip, :action => resource( @client_or_tour, @trip ) do %>
 
 	<%= hidden_field :name => :redirect_to, :value => :costings %>
 		

@@ -60,6 +60,7 @@ class Reports < Application
 
     # Run report if the "run" submit button was pressed:
     elsif params[:run_report]
+      @report.report_fields << ReportField.new( :name => :name ) if @report.report_fields.empty?
       render :show
 
     # Save report if the "save" submit button was pressed:

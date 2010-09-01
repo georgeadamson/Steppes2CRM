@@ -36,7 +36,7 @@
 						<!-- Client's LHS tabs: Details / Documents / Paymemts / Trips 1...n -->
 						<ul class="clientPageTabsNav ui-tabs-nav-vertical ellipsis">
 
-							<li class="dummy hidden"	               ><span class="ui-icon ui-icon-payment" ></span><a href="#<%= nested_resource(client,true) %>dummy"></a></li>
+							<li class="dummy hidden"	                 ><span class="ui-icon ui-icon-payment" ></span><a href="#<%= nested_resource(client,true) %>dummy"></a></li>
 							<li class="client-details ui-tabs-selected"><span class="ui-icon ui-icon-client"  ></span><a href="<%= resource(client) %>/summary">Client details</a></li>
 							<li class="client-documents"					     ><span class="ui-icon ui-icon-document"></span><a href="<%= resource(client) %>/documents">Documents</a></li>
 							<li class="client-payments invisible"	     ><span class="ui-icon ui-icon-payment" ></span><a href="#<%= nested_resource(client,true) %>payments">Payments</a></li>

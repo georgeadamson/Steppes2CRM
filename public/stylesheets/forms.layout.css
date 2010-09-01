@@ -11,8 +11,6 @@ SELECT OPTGROUP {
 
 
 
-
-
 .ui-widget {
 	font-size:1em !important;
 }
@@ -25,7 +23,6 @@ SELECT OPTGROUP {
 .ui-datepicker table {
 	font-size:0.8em;
 }
-
 
 
 
@@ -63,6 +60,14 @@ FORM {
 				bottom:1em;
 			}
 
+
+
+/* Hide submit button in auto-submit forms: */
+
+	.js FORM.auto-submit INPUT[type=submit],
+	.js FORM INPUT[type=submit].auto-submit {
+		display:none;
+	}
 
 
 

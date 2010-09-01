@@ -148,10 +148,16 @@
 			<div class="sectionBody">
 
 				<ul class="reportTabsNav">
-					<li><a href="#reportIndex">All reports</a></li>
-					<li class="ui-tabs-selected"><a href="#reportFields">Fields</a></li>
-					<li><a href="#reportFilters">Filters</a></li>
+					<!-- Note: The "ui-state-default" class is not necessary but reduces the FOUC before tabs are initialised -->
+					<li class="ui-state-default"><a href="#reportIndex">All reports</a></li>
+					<li class="ui-state-default ui-tabs-selected"><a href="#reportFields">Fields</a></li>
+					<li class="ui-state-default"><a href="#reportFilters">Filters</a></li>
 				</ul>
+
+				<!-- INDEX: -->
+				<div id="reportIndex">
+					<%= partial 'reports/list', :report => @report %>
+				</div>
 
 				<!-- FIELDS: -->
 				<div id="reportFields">
@@ -161,11 +167,6 @@
 				<!-- FILTERS: -->
 				<div id="reportFilters">
 					<%= partial 'reports/filters', :report => @report %>
-				</div>
-
-				<!-- INDEX: -->
-				<div id="reportIndex">
-					<%= partial 'reports/list', :report => @report %>
 				</div>
 
 			</div>

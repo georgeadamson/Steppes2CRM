@@ -28,9 +28,11 @@ class Tours < Application
   def create(tour)
     @tour = Tour.new(tour)
     if @tour.save
-      redirect resource(@tour), :message => {:notice => "Tour was successfully created"}
+      message[:notice] = "Tour was created successfully"
+      #redirect resource(@tour), :message => message
+      render :show
     else
-      message[:error] = "Tour failed to be created"
+      message[:error] = error_messages_for @tour, :header => 'The tour could not be created because'
       render :new
     end
   end
@@ -39,8 +41,11 @@ class Tours < Application
     @tour = Tour.get(id)
     raise NotFound unless @tour
     if @tour.update(tour)
-       redirect resource(@tour)
+      message[:notice] = "Tour was updated successfully"
+      #redirect resource(@tour)
+      render :show
     else
+      message[:error] = error_messages_for @tour, :header => 'The tour could not be updated because'
       display @tour, :edit
     end
   end

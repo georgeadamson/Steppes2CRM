@@ -96,6 +96,7 @@ Merb::Router.prepare do
     tour.resources :documents         # TODO?
     tour.resources :trips do |trip|
       trip.resources :trip_elements
+      trip.resources :money_outs
     end
   end
  
@@ -155,16 +156,21 @@ Merb::Router.prepare do
   match('/clients/:id/close'      ).to(:controller => 'clients',   :action => 'close_tab' )
   match('/clients/:client_id/documents'  ).to(:controller => 'documents', :action => 'index' )	# action expects client_id in params.
   
-  # Route for trip summary and builder etc: (Could not get nested route to work. See above!)
+  # Route for CLIENT TRIP summary and builder etc: (Could not get nested route to work. See above!)
   match('/clients/:client_id/trips/:id/summary').to(:controller => 'trips', :action => 'summary' )
   match('/clients/:client_id/trips/:id/builder').to(:controller => 'trips', :action => 'builder' )
   match('/clients/:client_id/trips/:id/itinerary').to(:controller => 'trips', :action => 'itinerary' )
+  match('/clients/:client_id/trips/:id/costings').to(:controller => 'trips', :action => 'costings' )
   match('/clients/:client_id/trips/:id/documents').to(:controller => 'trips', :action => 'documents' )
   match('/clients/:client_id/trips/:id/accounting').to(:controller => 'trips', :action => 'accounting' )
-  match('/clients/:client_id/trips/:id/costings').to(:controller => 'trips', :action => 'costings' )
-  #match('/clients/:client_id/trips/:id/invoice').to(:controller => 'trips', :action => 'invoice' )
-  #match('/clients/:client_id/trips/:id/invoices').to(:controller => 'money_ins' )
-  #match('/clients/:client_id/trips/:id/money_ins').to(:controller => 'trips', :action => 'money_ins' ).name(:money_ins)
+  
+  # Route for TOUR TRIP summary and builder etc: (Could not get nested route to work. See above!)
+  match('/tours/:tour_id/trips/:id/summary').to(:controller => 'trips', :action => 'summary' )
+  match('/tours/:tour_id/trips/:id/builder').to(:controller => 'trips', :action => 'builder' )
+  match('/tours/:tour_id/trips/:id/itinerary').to(:controller => 'trips', :action => 'itinerary' )
+  match('/tours/:tour_id/trips/:id/costings').to(:controller => 'trips', :action => 'costings' )
+  match('/tours/:tour_id/trips/:id/documents').to(:controller => 'trips', :action => 'documents' )
+  match('/tours/:tour_id/trips/:id/accounting').to(:controller => 'trips', :action => 'accounting' )
   
   # Articles for a Country:
   match('/countries/:country_id/articles/:id/edit').to(:controller => 'articles', :action => 'edit' )

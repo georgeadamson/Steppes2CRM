@@ -122,7 +122,7 @@ $.fn.extend({
 
 
 
-	// Get/set element id: (Get will generate and set ids on elements that doe not have one yet)
+	// Get/set id of first element in collection: (Get will generate and set ids on elements that doe not have one yet)
 	id : function(id,prefix){
 	
 		if(id)

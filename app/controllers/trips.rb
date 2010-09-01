@@ -6,13 +6,16 @@ class Trips < Application
   
   def index
     
-    @client = Client.get( params[:client_id] ) if params[:client_id]
-    
-    if params[:client_id] && @client
-			@trips  = @client.trips
+    tour   = Tour.get( params[:tour_id] )
+    client = Client.get( params[:client_id] )
+    @client_or_tour = tour || client || session.user.most_recent_client
+
+    if params[:tour_id] && tour
+			@trips  = tour.trips
+		elsif params[:client_id] && client
+			@trips  = client.trips
 		else
 			@trips  = Trip.all
-			@client = session.user.most_recent_client
 		end
     
 		@trips = @trips.all( :is_active_version => true )
@@ -22,9 +25,10 @@ class Trips < Application
   
   def show(id)
     
-    @trip = requested_version = Trip.get(id)
-    @trips = Trip.all(:limit => 10)
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @trip   = requested_version = Trip.get(id)
+    #@tour   = Tour.get( params[:tour_id] )
+    #@client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     
     raise NotFound unless @trip
     
@@ -32,7 +36,7 @@ class Trips < Application
     @trip.become_active_version if params[:is_active_version] && !@trip.is_active_version
     
     # Important: Always assume we want to display the active version of the requested trip:
-    @trip = @trip.active_version
+    #@trip = @trip.active_version
     
     # Belt and braces in case active_version is missing! Revert to the requested trip id:
     @trip = requested_version.become_active_version unless @trip
@@ -54,28 +58,28 @@ class Trips < Application
   def builder(id)
     @trip = Trip.get(id)
     raise NotFound unless @trip
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     display @trip
   end
   
   def itinerary(id)
     @trip = Trip.get(id)
     raise NotFound unless @trip
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     display @trip
   end
   
   def documents(id)
     @trip = Trip.get(id)
     raise NotFound unless @trip
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     display @trip
   end
   
   def costings(id)
     @trip = Trip.get(id)
     raise NotFound unless @trip
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     display @trip
   end
   
@@ -83,7 +87,7 @@ class Trips < Application
   def accounting(id)
     @trip = Trip.get(id)
     raise NotFound unless @trip
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     display @trip
   end
   
@@ -91,7 +95,7 @@ class Trips < Application
     only_provides :html
     @trip = Trip.get(id)
     raise NotFound unless @trip
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     display @trip
   end
   
@@ -99,7 +103,7 @@ class Trips < Application
   def new
     
     @trip   = Trip.new
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     
     original_version  = Trip.get( params[:version_of_trip_id] )
     is_new_version    = !original_version.nil?
@@ -168,7 +172,7 @@ class Trips < Application
     @trip = Trip.get(id)
     raise NotFound unless @trip
     
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     @trip.user_id ||= session.user.id
     
 		# When client is the only one on the trip, make sure it is the primary contact etc:
@@ -195,10 +199,10 @@ class Trips < Application
     
     # Skip any unwanted clients: (Those marked for delete)
     # This typically only occurs when creating a new fixed dep that is a duplicate of a tour template.
-    trip[:trip_clients_attributes].delete_if{ |i,attributes| attributes[:_delete] }
+    trip[:trip_clients_attributes].delete_if{ |i,attributes| attributes[:_delete] } if trip[:trip_clients_attributes]
 
     @trip		= Trip.new(trip)
-    @client = Client.get( params[:client_id] ) || Client.first
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     puts @trip.inspect
     # Workaround: For some reason these are not set by "Trip.new(trip)":
     #@trip.user_id						||= ( trip[:user_id]		|| 1 ).to_i
@@ -235,7 +239,7 @@ class Trips < Application
     @trip = Trip.get(id)
     raise NotFound unless @trip
     
-    @client = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     
 		# Workaround for when no checkboxes are ticked: (Because posted params will not contain an array of ids)
     # This also fixes bug where saving the costing sheet caused country selections to be lost! http://www.bugtails.com/projects/299/tickets/209.html
@@ -338,7 +342,7 @@ puts "Calling collect_error_messages_for trip, #{name}"
       print "\n /trips/#{ id }/update FAILED !!!\n #{ message[:error] } #{ @trip.errors.inspect }\n"
       #display next_page.to_sym
       #display @trip
-      render(:show)
+      render :show
     end
     
   end
@@ -349,16 +353,27 @@ puts "Calling collect_error_messages_for trip, #{name}"
     @trip = Trip.get(id)
     raise NotFound unless @trip
     
-    original_trip = @trip.version_of_trip
+    original_version = @trip.version_of_trip
     
-    next_page = params[:redirect_to] || resource( @client, :trips )
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    next_page = params[:redirect_to] || resource( @client_or_tour, :trips )
     
     if @trip.destroy
-      
-      @trip = original_trip
-      @trip.become_active_version
-      render :show
-      #redirect next_page
+
+      if @trip == original_version
+        message[:notice] = "The trip has been deleted"
+        #display @client_or_tour.trips, :index
+        #redirect resource(@client_or_tour, :trips)
+      else
+        message[:notice] = "The trip-version has been deleted"
+        @trip = original_version
+        @trip.become_active_version
+        #display @trip
+        #render :show
+      end
+
+      redirect resource(@client_or_tour), :message => message
+      #display @client_or_tour
       
     else
       raise InternalServerError

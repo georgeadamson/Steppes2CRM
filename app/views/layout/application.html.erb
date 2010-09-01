@@ -36,15 +36,14 @@
 				<%= fields_for session.user do -%>
 					<small>
 						Logged in as <%= session.user.forename %>
-						<%= link_to 'Log out', '/logout', :id => "logout" %>
+						<%= link_to 'Log out', '/logout', :id => 'logout', :class => 'noajax' %>
 					</small>
-					<%#= select :user_id, :label => "Logged in as", :selected => session.user.id.to_s, :collection => User.all, :value_method => :id, :text_method => :shortname %>
 					<%= hidden_field :id %>
 				<% end =%>
 			</p>
 
 			<label for="mainSearchText">Search</label>
-			<input type="text" id="mainSearchText" class="text" accesskey="F" />
+			<input type="text" id="mainSearchText" class="text" accesskey="S" />
 
 		<% end %>
 

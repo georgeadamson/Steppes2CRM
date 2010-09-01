@@ -117,6 +117,8 @@ describe Trip do
     end
 
     it 'should have default version_of_trip equal to self' do
+      @trip = Trip.new( valid_trip_attributes )
+      @trip.version_of_trip_id = nil
       @trip.save.should be_true
       @trip.id.should be > 0
       @trip.version_of_trip_id.should == @trip.id

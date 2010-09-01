@@ -45,7 +45,7 @@
 
             <ul class="sysAdminTabsNav ui-tabs-nav-vertical">
 						
-							<li class="dummy hidden><a href="#dummyAdminTab"></a></li>
+							<li class="dummy hidden"><a href="#dummyAdminTab"></a></li>
 
               <% admin_pages.each do |page| %>
 								<%= tag :li, link_to( page[:label], page[:url] ) %>
@@ -59,17 +59,16 @@
          </div>
       </div>
 
-			
+
       <div id="sysAdminTabsContent" class="sysAdminTabsContent ajaxPanel sectionContainer sectionContainerRight noSectionHead noSectionFoot">
-				
+
 				<div id="dummyAdminTab"></div>
-				
+
 				<div id="sysAdminAboutTabContent" class="sectionBody">
 					<div class="sectionContainer">
 						<div class="sectionHead">
 							<h3>
-								<span class="ui-icon ui-icon-info"></span>
-								About this system
+								<span class="ui-icon ui-icon-info"></span> About this system
 							</h3>
 						</div>
 						<div class="sectionBody formSurround">

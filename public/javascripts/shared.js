@@ -142,15 +142,63 @@ jQuery(function($) {
 			Layout.initLinksHandler();
 			Layout.initFormsHandler();
 
+			// Top tip: Be wary of false positives, eg: 'clients/trips/trip_elements' would also trigger /clients\/trips/
+			// Regex preference? Is this syntax clearer? Using RegExp avoids the need to explicitly escape the slashes in the url.
+			// TODO: Refactor liveForm to alternate syntax: Layout.liveForm('update:success', 'clients', Client.initForm ) & maybe combine with livePath()
+
+			// Clients:
+			Layout.livePath('success', new RegExp('clients/([0-9]+)$'),					Client.initShow );
+			Layout.livePath('success', new RegExp('clients/new'),						Client.initForm );
+			Layout.livePath('success', new RegExp('clients/([0-9]+)/edit'),				Client.initForm );
+			Layout.livePath('success', new RegExp('clients/([0-9]+)/summary'),			Client.initForm );
+			Layout.livePath('success', new RegExp('clients/([0-9]+)/trips$'),			Client.initForm );	// When user clicks to see all trips on client summary page.
+			Layout.livePath('success', /[\?\&]open_client_id=([0-9]+)/,					Client.openShow );	// Eg: web_requests?open_client_id=2138587702
+			Layout.liveForm('success', 'clients:update',								Client.initForm );
+
+			// Tours:
+			Layout.livePath('click',   /tours\/([0-9]+)$/,								Tour.openShow );	//openTourTab
+			Layout.livePath('success', /tours\/([0-9]+)$/,								Tour.initShow );
+			Layout.livePath('success', /tours\/([0-9]+)\/trips\/([0-9]+)$/,				Trip.initShow );
+			Layout.livePath('success', /tours\/([0-9]+)\/trips\/new/,					Trip.initForm );
+			Layout.livePath('success', /tours\/([0-9]+)\/trips\/([0-9]+)\/edit/,		Trip.initForm );
+			Layout.liveForm('success', 'tours:create',									Tour.onCreateSuccess );
+			Layout.liveForm('success', 'tours:update',									Tour.onCreateSuccess );
+
+			// Trips:
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)$/,			Trip.initShow );
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,					Trip.initForm );
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/edit/,		Trip.initForm );
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/builder/,	Trip.initTimeline );
-			Layout.livePath('success', /tours\/([0-9]+)/,								Tour.initShow );
-			Layout.livePath('success', /tours\/([0-9]+)\/trips\/new/,					Trip.initForm );
-			Layout.livePath('success', /tours\/([0-9]+)\/trips\/([0-9]+)\/edit/,		Trip.initForm );
+			Layout.liveForm('success', 'trips:create',									Trip.onCreateSuccess );
+			Layout.liveForm('success', 'trips:update',									Trip.onUpdateSuccess );
+			Layout.liveForm('success', 'trips:destroy',									Trip.onDestroySuccess );
 
-			$('FORM.create-tour').live('form:success', Tour.onCreateSuccess)
+			// TripElements:
+			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.hideForm );
+			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.hideForm );
+			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.initForm );
+			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.initForm );
+			Layout.liveForm('success', 'trip_elements:create',										Trip.initTimeline );
+			Layout.liveForm('success', 'trip_elements:update',										Trip.initTimeline );
+			Layout.liveForm('success', 'trip_elements:destroy',										Trip.initTimeline );
+
+			// Reports:
+			Layout.livePath('success', new RegExp('reports$'),							Report.initForm );
+			Layout.livePath('success', new RegExp('reports/new'),						Report.initForm );
+			Layout.livePath('success', new RegExp('reports/([0-9]+)/edit'),				Report.initForm );
+			Layout.livePath('success', new RegExp('reports/([0-9]+)/delete'),			Report.initForm );
+			Layout.liveForm('success', 'reports:create',								Report.initForm );
+			Layout.liveForm('success', 'reports:update',								Report.initForm );
+
+			// WebRequests:
+			Layout.liveForm('success', 'web_requests:update',							Client.openShow ); // TODO!
+
+			// SysAdmin:
+			Layout.livePath('success', new RegExp('/system$'),					SysAdmin.initShow );
+
+			// Depricated in favour of Layout.liveForm:
+			//$('FORM.edit-client').live('form:success', Client.onEditSuccess)
+			//$('FORM.create-tour').live('form:success', Tour.onCreateSuccess)
 
 		},
 
@@ -160,14 +208,51 @@ jQuery(function($) {
 
 			if(path){
 
-				path = path.replace(/^#/, '');
-
-				// Do ajax calls here (unless options.ui.tab)
+				path    = path.replace(/^#/, '');
+				options = options || {};
 
 				// Notify url-specific event handlers:
 				console.log( 'path:loading...', path );
 				$(document).trigger('path:loading', [path]);
 				$(document).trigger('path:loading:' + path);
+
+				// Do ajax call: (unless options.ui.tab)
+				if( path && !( options.tab || options.ui && options.ui.tab ) ){
+
+					Layout.xhr = $.ajax({
+					
+						url		: path,
+						cache	: false,
+						dataType: options.dataType || 'html',
+						
+						success: function(data, status, xhr){
+
+							if ( Layout.getMessagesFrom(data).is('.errorMessage') ) {
+
+								// For the benefit of the error handler, ensure the xhr.responseText still contains the response:
+								if( !xhr.responseText && data ){ xhr.responseText = data }
+								$(document).trigger('path:error', [xhr, status, 'custom']);
+
+							} else {
+								
+								Layout.onSuccess(data, status, xhr, options);
+								$(document).trigger('path:success', [data, status, xhr]);
+
+							}
+
+						},
+
+						error: function(xhr, status, error) {
+							$(document).trigger('path:error', [xhr, status, error]);
+						},
+
+						complete: function(xhr, status) {
+						  $(document).trigger('path:complete', [xhr, status]);
+						}
+					
+					});
+
+				}
 
 			}
 
@@ -175,61 +260,74 @@ jQuery(function($) {
 
 		// Trigger for loading the url stored in the current hash:
 		reload	: function(e,options){
-			Layout.load(window.location.hash,options);
+			Layout.load(window.location.hash, options);
 		},
 
 		// Helper for registering the many url-specific live event handlers:
-		livePath: function(event, path, callback) {
+		livePath: function(type, path, callback) {
 
 			if( typeof(path) === 'string' ){
-				$(document).bind('path:' + event + ':' + path, callback);
+				$(document).bind('path:' + type + ':' + path, callback);
 			}else{
-				Layout.livePathRegex[event].push([path, callback]);
+				Layout.livePathPattern[type].push([path, callback]);
 			}
 
 		},
 
-		// Collection of regexes for parsing and triggering url-specific event handlers: (Populated by calls to Layout.livePath)
-		livePathRegex : { loading:[], success:[] },
+		// Helper for registering the many form-specific live event handlers:
+		// Expects controller_action formatted like "clients:create".
+		liveForm: function(type, controller_action, callback){
+
+			Layout.liveFormPattern[type].push([controller_action, callback]);
+
+		},
+
+		// Collection of regexes or patterns for parsing and triggering url-specific event handlers: (Populated by calls to Layout.livePath)
+		livePathPattern : { loading:[], success:[], click:[] },
+		liveFormPattern : { loading:[], success:[], submit:[] },
 
 		// Generic handler for all successful ajax calls:
 		onSuccess: function(data,status,xhr,options,e){
-		
-			// TODO: Apply html/json here?
 
 			// Actual order of arguments will vary depending on how this was called!
 			// When called by a uiTabs event, the xhr argument will be undefined, options will be a ui object.
-			//if( typeof(xhr) == 'string'    ){ e   = xhr }
-			//if( options && options.options ){ xhr = options; options = undefined }
 			var ui = options = ( options || xhr.options || xhr );
-			if( xhr !== options ){ options.xhr = xhr };
-			if( ui.tab && !ui.url ){ ui.url = $.data(ui.tab, 'load.tabs'); }
+			if( xhr && xhr !== options ){ options.xhr = xhr };
+			if( ui.tab && !ui.url ){ ui.url = $.data(ui.tab,'load.tabs'); }	// Derive url from ui.tab when apprioriate.
 			var path = options.url;
-			console.log('onSuccess', path)
+			options.event = e;
+			console.log('onSuccess', path);
 
-			// Trigger all the custom livePath success handlers who's regex matches path:
+			// Load the response into the target element unless options.success() callback explicitly prevents it:
+			// TODO: When would options.success ever be specified?
+			//if( !options.success || options.success() !== false ){
+				if( options.target && /^#/.test(options.target) ){
+					$(options.target).html(data)
+					.find('A,SELECT,INPUT,TEXTAREA').filter(':visible:first').focus();
+				}
+			//}
+
+			// Update the location hash and trigger matching livePath handlers: (but do not trigger the hashchange event)
 			if(path){
-
-				// Ensure location hash is up to date before triggering handlers: (but do not trigger the hashchange event)
 				Layout.setHash( path, options, false );
-				Layout.triggerLivePath( 'success', path, options, data, e );
-
+				Layout.triggerLivePath( 'success', path, options, data );
 			}				
-			
+
 		},
 
 		// Helper for triggering all the livePath handlers that match path: (type expects 'success' or 'error')
-		triggerLivePath : function(type, path, options, data, e){
+		triggerLivePath : function(type, path, options, data){
 
-			$.each( Layout.livePathRegex[type], function(i,handler){
+			options.data  = options.data  || data;
 
-				var regex = handler[0], callback = handler[1];
-				var match = path.match(regex);
+			$.each( Layout.livePathPattern[type], function(i,handler){
+
+				var regex = handler[0], callback = handler[1], m = path.match(regex);
 
 				// Trigger the callback passing a pimped-up copy of the options hash or tabs ui object:
-				if( match && $.isFunction(callback) ){
-					console.log('Triggering:', path, regex, callback );
-					var args = $.extend( {}, options, { match:match, regex:regex, data:data, type:type, event:e } );
+				if( m && $.isFunction(callback) ){
+					var args = $.extend( {}, options, { type:type, matches:m, pattern:regex } );
+					console.log('Triggering livePath:', args, type, path, regex, callback );
 					callback(args);
 				}
 
@@ -237,27 +335,64 @@ jQuery(function($) {
 
 		},
 
-		// Triggered when a tab loads successfully: (Just pass the arguments along to the generic Layout.onSuccess)
-		onTabSuccess : function(e,ui){
-			Layout.onSuccess( ui.panel, 'success', {}, ui, e ); // TODO: Derive xhr from tabs ui object?
-		},
+		// Helper for triggering all the liveForm handlers that match the form.controller and form.action:
+		triggerLiveForm : function(type, form, options, data, e){
 
-		// TODO: Triggered when a tab fails: (Just pass the arguments along to the generic Layout.onError)
-		onTabError : function(e,ui){
-			Layout.onError( ui.panel, 'error', {}, ui, e ); // TODO: Derive xhr from tabs ui object?
+			$.each( Layout.liveFormPattern[type], function(i,handler){
+
+				var pattern = handler[0], callback = handler[1], p = pattern.split(':'), controller = p[0], action = p[1];
+
+				// Trigger the callback passing a pimped-up copy of the options hash:
+				if( form.controller == controller && form.action == action && $.isFunction(callback) ){
+					console.log('Triggering liveForm:', type, form.path, pattern, callback );
+					var args = $.extend( {}, options, { form:form, pattern:pattern, data:data, type:type, event:e } );
+					callback(args);
+				}
+
+			});
+
 		},
 
 
 		// Initialise LINK CLICK handlers:
 		initLinksHandler : function(){
 
-			// Trigger custom 'hashchange' event whenever a link is clicked:
-			$('A').live('click', function (event) {
+			// Initialise handler for auto-linking picklists:
+			$('SELECT[data-href], SELECT:has(OPTION[data-href]:selected), SELECT[href]').live('change keydown', function(e){										// Note: "href" is depricated.
 
-				var href = $(this).attr('href').replace(/^#\/?/,'');
-				window.location.hash = '#/' + href;
-				$(document).trigger('hashchange');
-				return false;
+				// Ignore all key strokes except <Enter> key: (to select an item in the list)
+				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
+
+				var $list  = $(this), $item = $list.find('OPTION:selected'),
+				    target = Layout.getTargetOf($list),
+					href   = $item.attr('data-href') || $list.attr('data-href') || $list.attr('href') || $list.val();	// Note: "href" is depricated.
+					href   = href.replace( '{value}', $item.val() ).replace( '{text}', $item.text() );
+
+				$('<a>').attr({ href: href, 'data-target': target }).trigger('click',this);
+
+			});
+
+			// Trigger custom 'hashchange' event whenever a link is clicked:
+			$('A:not(.noajax,.scrollTo)').live('click', function(e, source){
+
+				var $link	= $(this),
+				    path	= $link.attr('href').replace(/^#\/?/,''),
+				    ext		= path.split('.')[1],	// Filename extension
+				    target	= Layout.getTargetOf($link),
+				    options	= { url:path, target:target, event:e },
+				    triggerHashChange = true;
+
+				// Bail out now if we've accidentally intercepted a click on a tab:
+				// If FILE DOWNLOAD, skip the clever stuff and let the browser do it's thing:
+				if( $link.parents('UL').is('.ui-tabs-nav') ){ return }
+				if( ALLOW_DOWNLOAD_OF[ext] || $link.is('.download') || $(this).is('.ajaxDownload') ){ return }
+
+				// Derive a {resource}_id property for each resource in the path: (Eg: "clients/1/trips/2" => {client_id:1, trip_id:2}
+				$.extend( options, Layout.getResourceIDsFrom(path) );
+
+				Layout.triggerLivePath('click', path, options, '');
+				Layout.setHash( path, options, !e.isImmediatePropagationStopped() );	// Allow for e.stopImmediatePropagation()
+				e.preventDefault();
 
 			});
 
@@ -267,29 +402,36 @@ jQuery(function($) {
 		// Initialise FORM SUBMIT handlers:
 		initFormsHandler : function(){
 
-			$('FORM').live('submit', function(e){
+			// Initialise handler for auto-submitting picklists:
+			$('SELECT.auto-submit, :checkbox.auto-submit, FORM.auto-submit SELECT, FORM.auto-submit :checkbox').live('change keydown', function(e){
+				// Ignore all key strokes except <Enter> key: (to select an item in the list)
+				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
+				$(this).closest('FORM').trigger('submit',this);
+			})
 
+			$('FORM:not(.noajax)').live('submit', function(e, source){
+
+				// The source argument will only be present when triggered by SELECT.auto-submit:
 				var $form		= $(this),
+					$button		= $(source || e.originalEvent && e.originalEvent.explicitOriginalTarget),
 					url			= $form.attr('action').replace(/^#/, ''),
-					options		= { url: url },
 					dataType	= $form.attr('data-type') || 'html',
-					$button		= $(e.originalEvent.explicitOriginalTarget),
-					uiTarget	= $button.attr("rel");
+					target		= Layout.getTargetOf($button),
+					options		= { url: url, target: target, form: Layout.getFormAction($form) },
+					buttonData	= {};
+					options.form.target = target;
+					options.form.button = $button.id();
 
-				if( $form.hasClass('noajax') ){ return true }
-
-				// When using live event the ajaxSubmit() method will not include name/value of submit button so add it:
-				var buttonNameAndValue = {};
-				buttonNameAndValue[ $button.attr('name') ] = $button.val();
+				// When using a live event the ajaxSubmit() method will not include name/value of the submit button so add it:
+				if( $button.is('SUBMIT') ){ buttonData[ $button.attr('name') ] = $button.val() }
 
 				// By setting up the ajaxSubmit here, each of the callbacks can refer to the $form using a closure:
 				$form.ajaxSubmit({
 
 					url       : url,
 					dataType  : dataType,
-					data      : buttonNameAndValue,
-					//closeKeepAlive: $.browser.safari ? '/admin/connection_close' : false,
-					
+					data      : buttonData,
+
 					beforeSubmit: function(data, form, options) {
 						$form.trigger('form:beforeSubmit', [data, form, options]);
 					},
@@ -298,16 +440,20 @@ jQuery(function($) {
 						$form.trigger('form:beforeSend', [xhr]);
 					},
 
-					success: function(data, status, xhr) {
+					success: function(data, status, xhr){
+
+						// For the benefit of the error handler, ensure the xhr.responseText still contains the response:
+						if( !xhr.responseText && data ){ xhr.responseText = data }
+
+						// After creating a new object we may be able to read it's new id from the response: (Eg: form.trip_id = 123)
+						var resource = options.form && options.form.resource, attr = resource+'_id';
+						if( resource && !options.form[attr] ){ options.form[attr] = $(data).find('#'+attr).val(); options.form.resource_id = options.form[attr] }
 
 						if ( Layout.getMessagesFrom(data).is('.errorMessage') ) {
-
-							// For the benefit of the next handler, ensure the xhr.responseText still contains the response:
-							if( !xhr.responseText && data ){ xhr.responseText = data }
 							$form.trigger('form:error', [xhr, status, 'custom']);
-
 						} else {
 							Layout.onSuccess(data, status, xhr, options, e);
+							Layout.triggerLiveForm('success', options.form, options, data, e);
 							$form.trigger('form:success', [data, status, xhr]);
 						}
 
@@ -323,7 +469,7 @@ jQuery(function($) {
 
 				});
 
-				return false;
+				e.preventDefault();
 
 			})
 
@@ -364,8 +510,104 @@ jQuery(function($) {
 		getMessagesFrom: function(data){
 			var fragment = ( FIND_MESSAGE_CONTENT.exec(data) || [] )[1] || '';
 			return $('<div>').html(fragment).find(".noticeMessage,.errorMessage");
-		}
+		},
 
+
+		// Helper for deriving the ui-target element of a link or button etc:
+		getTargetOf : function(elem){
+
+			// Allow for when a label is clicked to trigger a submit: (We have to use closest() because elem may be a text node inside a label)
+			var id, $elem = $(elem), label_for = $elem.closest('LABEL').attr('for');
+			if( label_for ){ $elem = $( '#' + label_for ) }
+
+			var target = $elem.find('OPTION:selected').attr('data-target')
+				|| $elem.attr('data-target') || $elem.attr('data-rel') || $elem.attr('rel')	// Note: "data-rel" is depricated. "rel" only applies to links and should be depricated.
+				|| ( $elem.is(':submit') && $elem.closest('FORM').attr('data-target') ) 
+				|| ( $elem.is('SELECT.auto-submit') && $elem.closest('FORM').find(':submit[data-target]').attr('data-target') ) 
+				|| ( $elem.is('SELECT.auto-submit') && $elem.closest('FORM').attr('data-target') ) 
+				|| '.ajaxPanel';
+
+			// Attempt to derive the #id selector syntax for the target element:
+			if( !/^#/.test(target) && ( id = $elem.closest(target).id() ) ){ target = '#' + id }
+
+			return target;
+
+		},
+
+
+		// Helper for parsing meta-data from a form: (Eg: the controller name and action, and the id of the object being edited etc)
+		getFormAction : function($form){
+
+			$form = $($form).closest('FORM');
+
+			//  regex:     path     /  controller  / id (if followed by edit, delete, ?, # or $END)      / action                             ?  params        # hash  $END
+			var regex  = /(.*?(?:^|\/)([a-z_]+)(?:\/([0-9]+)(?=(?:\/edit|\/delete|\/?\?|\/?#|\/?$)))?(?:\/(index|new|edit|delete))?)\/?(?:(?:\?)([^#]*))?(?:(?:#)(.*))?$/i,	// Test on http://rubular.com/r/7pWDd4CNyb
+			    method = $form.find("INPUT[name='_method']").val() || $form.attr('method') || 'post',
+			    href   = $form.attr('action') || '',
+			    match  = href.match(regex) || [],
+
+			    form   = {
+					path		: match[1] || '',		// AKA pathname. The url as far as the "?" or "#" or end of string.
+					controller	: match[2] || '',		// The name of the controller, just in front of the id or action. Eg "trips"
+					id			: match[3] || '',		// But expect blank when handling "new" forms.
+					action		: match[4] || '',		// Controller action name: index|new|edit|delete.
+					param		: match[5] || '',		// AKA Query or search string. Everything after the "?" until the hash or end of string.
+					hash		: match[6] || '',		// Everything after the "#".
+					resource	: Layout.singularize(match[2]),	// The name of the controller, just in front of the id or action. Eg "trip"
+					params		: {},					// Hash of url parameters. Will be populated from form.param string.
+					method		: method.toLowerCase(),	// The restful method name: get|post|put|delete.
+					href		: href,					// The entire path including any query string and hash etc.
+					uid			: $form.id()			// Pass the html id of the form element too.
+				}
+
+			// Populate params hash with all the name=value pairs in the url?parameters:
+			$.each( form.param.split('&'), function(i,pair){ var p = pair.split('='); if(p[0]) form.params[p[0]] = p[1] } );
+
+			// Derive {name}_id property for each resource in the path: (And attempt to read the id of the resource being edited)
+			$.extend( form, Layout.getResourceIDsFrom(form.path) );
+			if(form.resource){ form.resource_id = form.id };
+
+			// Derive controller action from the method or regex-parsed action:
+			switch(true){
+				case !!form.action : break;												    // Assume regex-parsed action is valid. (index|new|edit|delete)
+				case form.method == 'post'   &&  !form.id : form.action = 'create' ; break;	// clients/    (submit "new" form to create)
+				case form.method == 'put'    && !!form.id : form.action = 'update' ; break;	// clients/123 (submit "edit" form to update)
+				case form.method == 'delete' && !!form.id : form.action = 'destroy'; break;	// clients/123 (submit "delete" form to destroy)
+				case form.method == 'get'    && !!form.id : form.action = 'show'   ; break;	// clients/123 ("show" & "index" are irrelevant for a form!)
+				case form.method == 'get'    &&  !form.id : form.action = 'index'  ; break;	// clients/ or clients/index
+				default                                   : form.action = '';
+			}
+
+			console.log( 'getFormAction =>', form );
+			return form;
+
+		},
+
+		// Derive hash of item_id properties for each item in the path: (Split path using positive lookahead to get each 'name/id')
+		getResourceIDsFrom : function(path){
+
+			var resources = {};
+
+			$.each( path.split(/\/(?=[^\/]+\/[0-9]+)/), function(i,pair){
+
+				var name  = pair.split('/')[0] || '', id = pair.split('/')[1],
+				    model = Layout.singularize(name);
+
+				if( model && id ){ resources[model+'_id'] = id }	// Eg: trip_id
+
+			});
+
+			return resources;
+		},
+		
+		// Helper for singularising plural words such as controller names:
+		singularize : function(word){
+
+			word = word || '';
+			var lookup = { children:'child', people:'person' };
+			return lookup[word] || word.replace(/ies$/,'y').replace(/s$/,'').replace(/statuse$/,'status');
+
+		}
 	}
 
 
@@ -373,6 +615,29 @@ jQuery(function($) {
 
 
 // *****
+
+
+
+	// Generic helpers for ui-tabs:
+	var Tabs = {
+
+		// Ensure tab is selected:
+		select : function(e,ui){
+			$(this).tabs('select',ui.index);
+		},
+
+		// Triggered when a tab loads successfully: (Just passes the arguments along to the generic Layout.onSuccess)
+		onTabSuccess : function(e,ui){
+			Layout.onSuccess( ui.panel, 'success', {}, ui, e ); // TODO: Derive xhr from tabs ui object?
+		},
+
+		// TODO: Triggered when a tab fails: (Just passes the arguments along to the generic Layout.onError)
+		onTabError : function(e,ui){
+			Layout.onError( ui.panel, 'error', {}, ui, e ); // TODO: Derive xhr from tabs ui object?
+		}
+	
+	};
+
 
 
 
@@ -397,7 +662,7 @@ jQuery(function($) {
 		//},
 
 		// Initialise any new tabs etc in client or trip pages AFTER EVERY AJAX LOAD:
-		complete : onAjaxComplete,
+		//complete : onAjaxComplete,
 
 		error : function( xhr, status, error ){
 
@@ -511,8 +776,9 @@ jQuery(function($) {
 	// Automagically hijax all AJAX FORM SUBMITs: (Even those that will be loaded later via ajax)
 	// Note: The value of the submit button may not be submitted if we used "click". I think this may be because of the live event.
 
+	// TODO: Depricate this!
 	$(":submit.ajax, .ajaxPanel :submit").live("click", function(e) {
-
+return
 		// Skip the clever stuff and bail out if the response will be a file to download:
 		if( $(this).is('.download') || $(this).is('.ajaxDownload') ){ return }
 
@@ -656,14 +922,14 @@ jQuery(function($) {
 		}
 
 		// When using live event the ajaxSubmit() method will not include name/value of submit button so add it:
-		var buttonNameAndValue = {};
-		buttonNameAndValue[ $button.attr('name') ] = $button.val();
+		var buttonData = {};
+		buttonData[ $button.attr('name') ] = $button.val();
 
 //		$form.ajaxSubmit({
 //			target		: uiTarget,
 //			success		: success,
 //			complete	: complete,
-//			data		: buttonNameAndValue
+//			data		: buttonData
 //		});
 
 		//return false;
@@ -674,11 +940,12 @@ jQuery(function($) {
 
 
 
+
 	// AUTO-SUBMIT is used submit the form when user selects a new item in a pick list:
 	$('SELECT.auto-submit').live('change', function(){
-
+return
 		var $list		= $(this);
-		var $form		= $list.parents("FORM").eq(0);
+		var $form		= $list.closest('FORM');
 		var $submit		= $form.find('INPUT:submit').eq(0);
 		var uiTarget	= $list.attr('rel') || $list.attr('data-rel') || $list.attr('data-target') || $submit.attr("rel");
 		var ajaxBlank	= $submit.is(".ajaxBlank");				// Optional flag to clear form container element after submit.
@@ -719,10 +986,10 @@ jQuery(function($) {
 			
 			if( target ){ $target = $(target) }
 
-			initLevel2Tabs_forClient($target);
+			//initLevel2Tabs_forClient($target);
 			//initLevel3Tabs_forTrip($target);
-			initLevel2Tabs_forSysAdmin($target);
-			initLevel2Tabs_forReports($target);
+			//initLevel2Tabs_forSysAdmin($target);
+			//initLevel2Tabs_forReports($target);
 			initFormAccordions($target);
 			//initFormTabs($target);	// Eg: countriesTabs on Trip Summary page.
 			initSpinboxes($target);
@@ -783,8 +1050,8 @@ jQuery(function($) {
 	// Initialise tabs:
 
 		initLevel1Tabs_forPage();		// In turn this triggers initLevel2Tabs_forClient();
-		initLevel2Tabs_forSysAdmin();
-		initLevel2Tabs_forReports();	// Typically this is no use here but helpful when testing reports page in isolation.
+		//initLevel2Tabs_forSysAdmin();
+		//initLevel2Tabs_forReports();	// Typically this is no use here but helpful when testing reports page in isolation.
 
 		$('#recentClients.tabs').tabs();
 
@@ -870,22 +1137,22 @@ jQuery(function($) {
 
 // Respond to any "OPEN TOUR" links: (Eg: <a href="/tours/1234">)
 
-	$("A:resource(/tours/[0-9]+)").live('click', function() {
+//	$("A:resource(/tours/[0-9]+)").live('click', function() {
 
-		var url			= $(this).attr("href");
-		var location	= parseUrl(url);
-		var resource	= location.resource;
+//		var url			= $(this).attr("href");
+//		var location	= parseUrl(url);
+//		var resource	= location.resource;
 
-		if (resource.tour && resource.tour === resource.last && !location.action) {
+//		if (resource.tour && resource.tour === resource.last && !location.action) {
 
-			var id		= location.resource.tour;
-			var label	= location.params.label;
+//			var id		= location.resource.tour;
+//			var label	= location.params.label;
 
-			openTourTab(id, label);
-			return false;
-		};
+//			openTourTab(id, label);
+//			return false;
+//		};
 
-	});
+//	});
 
 
 
@@ -1061,8 +1328,10 @@ jQuery(function($) {
 // Initialise AJAX form links: (For hijaxing "Add new" and "Edit" links that have rel="#someElementID")
 // TODO: Handle keyboard access on lists!
 // TODO: Depricate our custom href attribute in favour of more compliant data-href attribute.
-
+/*
 	$('A.ajax, .ajaxPanel A, SELECT[data-href] OPTION, SELECT[href] OPTION').live('click', function(e) {
+
+		return // !!!
 
 		var $link	= $(this);
 		var $list	= undefined;
@@ -1203,7 +1472,7 @@ jQuery(function($) {
 				$uiTarget.find('A, :submit').not('[rel]').attr({ rel: uiTarget }).addClass('ajax');
 
 				//initLevel3Tabs_forTrip($uiTarget);
-				initLevel2Tabs_forReports($uiTarget);
+				//initLevel2Tabs_forReports($uiTarget);
 				initFormAccordions($uiTarget);
 				initSpinboxes($uiTarget);
 				initDatepickers($uiTarget);
@@ -1235,7 +1504,7 @@ jQuery(function($) {
 
 		return false;
 	});
-
+*/
 
 
 
@@ -1268,7 +1537,7 @@ jQuery(function($) {
 
 
 
-
+/*
 	// ???
 	function onAjaxFormLoaded() {
 		$("#bannerTarget").callout({
@@ -1280,7 +1549,7 @@ jQuery(function($) {
 			content: "#imageEditor"
 		});
 	};
-
+*/
 
 
 
@@ -1387,14 +1656,11 @@ jQuery(function($) {
 		// ???:
 		formatMatch: function(data, i, n, q) { // i=row index, n=number of rows, q=query string
 			return data.postcode;
-
 		},
 
 		// Formats the value displayed in the textbox:
 		formatResult: function(data, i, n, q) { // i=row index, n=number of rows, q=query string
-
 			return data.postcode;
-
 		}
 	})
 
@@ -1409,16 +1675,16 @@ jQuery(function($) {
 
 
 
-	// General: Highlight textboxes when they receive FOCUS. Highlight first on page by default:
+	// HIGHLIGHT TEXTBOXES when they receive FOCUS. Highlight first on page by default:
 	// (We use Event Capture or Event Delegation so we don't have to re-bind after every ajax call)
-
 	if (window.addEventListener) {
 
 		// Use Event Capture in MOZILLA: (Because it has no focus or focusin event that bubbles)
 		window.addEventListener('focus', function(e) {  //window.captureEvents(Event.FOCUS)
-			$(e.target).filter("INPUT:text,INPUT:password,TEXTAREA").not('[readonly]').each(function() { this.select() });
+			$(e.target).filter("INPUT:text,TEXTAREA").not('[readonly],[disabled]').each(function() { this.select() });
 		}, true);   // <-- This flag ensures we use Event Capture.
 
+		// Select first field on page when the page loads:
 		$("A,SELECT,INPUT,TEXTAREA", "#pageContent").filter(":visible:first").focus();
 
 	} else {
@@ -1430,24 +1696,6 @@ jQuery(function($) {
 		.filter(":visible:first").focus();
 
 	};
-
-
-
-
-
-
-
-	// React to scrolling on timelineContent area: TODO:
-
-	$("DIV.timelineContent").bind("scroll", function(e) {
-		var pos = $(this).attr("scrollLeft");
-		var range = $(this).attr("scrollWidth") - $(this).width();
-		var percent = round(100 * pos / range, 2);
-		//console.log( percent, $(this).attr("scrollLeft"), $(this).width(), $(this).attr("scrollWidth"), $(this).attr("scrollLeft") + $(this).width() )
-	});
-
-
-
 
 
 
@@ -1535,9 +1783,7 @@ jQuery(function($) {
 		.live("click", onTripElementTypeChange)
 		.live("keyup", onTripElementTypeChange);
 
-
-
-	// Respond to click on tripElement is_subgroup checkbox: (AKA: "Not for everyone" or "Not all travellers")
+	// Respond to click on tripElement is_subgroup checkbox:
 	$(".tripElementForm INPUT:checkbox[name='trip_element[is_subgroup]']")
 		.live("click", function() {
 			$(this).parents(".tripElementForm")
@@ -1557,8 +1803,7 @@ jQuery(function($) {
 	$('TEXTAREA')
 		.textareaMaxlength({ maxlength:1000 })
 
-
-		// Apply textareaResizer plugin: (Work in progress!)
+	// Apply textareaResizer plugin: (Work in progress!)
 		.filter('.resizable')
 			.textareaResizer();
 
@@ -1568,7 +1813,7 @@ jQuery(function($) {
 	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	
 
 
-	// Checkbox to expand/collapse display of old trips on the TOURS page: */
+	// Checkbox to expand/collapse display of OLD trips on the TOURS page: */
 	$("#tours_show_old_trips").live('change', function(){
 		$(this).closest('.sectionContainer').find('.tours-list').toggleClass('hide-old-trips');
 	});
@@ -1685,7 +1930,7 @@ jQuery(function($) {
 
 	// Helper to OPEN TOUR TAB for a specified tour id: (Expects tour_id and tab_label as arguments)
 	function openTourTab(id, label) {
-alert(1)
+
 		if( id && parseInt(id) > 0 ){
 
 			existingTabIdx = $("#pageTabs > .sectionHead LI:has( INPUT.tour-id[value='" + id + "'] )").prevAll("LI").length;
@@ -1726,14 +1971,15 @@ alert(1)
 			panelTemplate	: '<div class="sectionBody ajaxPanel clientPageContainer"></div>',
 			tabsSelector	: '>UL:first, >DIV:first>UL:first',	// This is a custom option. See modified ui.tabs.js script for details.
 
-			// When a new tab is added, open it immediately: (The server will track every client opened by a user)
-			add		: function(e,uiTab) {
-				$(this).tabs('select', uiTab.index);
+			// When a new tab is added, open it immediately: (The server will track every client opened recently by a user)
+			add		: function(e,ui) {
+				$(this).tabs('select',ui.index);
 			},
 
 			// Try to ensure loaded tab has a nice readable label:
 			load	: function(e,ui){
-console.log('load')
+
+				console.log('load')
 				// Read hidden label element from the loaded client/tour tab panel:
 				// TODO: Depricate #client_label and #tour_label?
 				label = $(ui.panel).find('DIV.sectionHead:first').find('#tab_label, #client_label, #tour_label').val();
@@ -1748,21 +1994,24 @@ console.log('load')
 				//if( url ){ Layout.setHash(url,ui) }
 				//if( url ){ Layout.onSuccess('success',undefined,ui) }
 
-				Layout.onTabSuccess(e,ui);			
+				Tabs.onTabSuccess(e,ui);			
 			
 			},
 
 			// Let the server know which client is in the foreground: (So it can be the default tab next time)
-			show	: function(e,ui){console.log('show')
+			show	: function(e,ui){
+				//if(ui.index==1){ $(ui.panel).html('<p>Fetching tours...</p>') }
 				var url = $.data(ui.tab, 'load.tabs');
-				if( url && url.indexOf('clients/') >= 0 ){ $.get( url + '/select' ) }
+				//if( url && url.indexOf('clients/') >= 0 ){ $.get( url + '/select' ) }
+				if( url && /clients\/[0-9]+/.test(url) ){ $.get( url + '/select' ) }
 			},
 
 			// When client tab is closed, let server know which client is no longer being worked on: (So it won't be reopened next time)
 			// Note: The click on the CLOSE link in each tab is handled by a live('click') handler set up below.
 			remove	: function(e,uiTab){
 				var url = $(uiTab.tab).siblings('A.close-tab').attr('href');
-				if( url && url.indexOf('clients/') >= 0 ){ $.get(url) }
+				//if( url && url.indexOf('clients/') >= 0 ){ $.get(url) }
+				if( url && /clients\/[0-9]+/.test(url) ){ $.get(url) }
 			}
 		})
 
@@ -1782,9 +2031,12 @@ console.log('load')
 
 
 
-	// Helper for initialiasing the LEFT-HAND TABS on each client page: (Client details, documents, payments and trips)
+	// DEPRICATED
+	// Helper for initialising the LEFT-HAND TABS on each client page: (Client details, documents, payments and trips)
 	function initLevel2Tabs_forClient(context) {
-
+		
+		alert('initLevel2Tabs_forClient')
+		
 		$( 'UL:visible.clientPageTabsNav', context ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
 
 			cache			: false,
@@ -1795,13 +2047,11 @@ console.log('load')
 
 
 			// When a new tab is added, open it immediately:
-			add		: function(e, uiTab) {
-
-				$(this).tabs('select', uiTab.index);
-
+			add		: function(e,ui) {
+				$(this).tabs('select',ui.index);		// TODO: This is being called but is not selecting the tab.
 			},
 
-			load	: Layout.onTabSuccess,
+			load	: Tabs.onTabSuccess
 
 			// When a tab is opened, initialise it's content:
 //			show	: function(e, ui) {
@@ -1826,7 +2076,7 @@ console.log('load')
 //			panelTemplate	: '<div class="ajaxPanel sectionContainer noSectionHead"></div>',
 //			panelsSelector	: function() { return this.list.cousins(".tripPageTabsContent > *") },	// This is a custom option. See modified ui.tabs.js script for details.
 //			
-//			load	: Layout.onTabSuccess,
+//			load	: Tabs.onTabSuccess,
 
 //			// Init content when Trip tabs are opened:
 //			show	: function(e,ui) {
@@ -1863,28 +2113,30 @@ console.log('load')
 //	};
 
 
-	// Helper for initialiasing the SYSTEM ADMIN TABS on the sys-admin page:
-	function initLevel2Tabs_forSysAdmin(context) {
 
-		$( 'UL:visible.sysAdminTabsNav', context ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
+//	// DEPRICATED
+//	// Helper for initialiasing the SYSTEM ADMIN TABS on the sys-admin page:
+//	function initLevel2Tabs_forSysAdmin(context) {
 
-			//selected		: 0,
-			fx				: { opacity: 'toggle', duration: 200 },
-			panelTemplate	: '<div class="sectionBody ajaxPanel"></div>',
-			panelsSelector	: function() { return $('#sysAdminTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
+//		$( 'UL:visible.sysAdminTabsNav', context ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
 
-			// When a new tab is added, open it immediately:
-			add  : function(e, tab) {
-				$(this).tabs('select', '#'+tab.panel.id);
-			},
+//			//selected		: 0,
+//			fx				: { opacity: 'toggle', duration: 200 },
+//			panelTemplate	: '<div class="sectionBody ajaxPanel"></div>',
+//			panelsSelector	: function() { return $('#sysAdminTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
 
-			load : Layout.onTabSuccess
+//			// Do we need this on the sysadmin tabs?
+//			add  : function(e, tab) {
+//				$(this).tabs('select', '#'+tab.panel.id);
+//			},
 
-			//,show	: function(e,ui) {
-			//	$( 'SELECT[multiple]', ui.panel ).checkboxList();
-			//}
-		});
-	};
+//			load : Tabs.onTabSuccess
+
+//			//,show	: function(e,ui) {
+//			//	$( 'SELECT[multiple]', ui.panel ).checkboxList();
+//			//}
+//		});
+//	};
 
 
 	// Helper for initialiasing the REPORT TABS on the reports page:
@@ -1897,7 +2149,7 @@ console.log('load')
 			panelTemplate	: '<div class="sectionBody ajaxPanel"></div>',
 			//,panelsSelector	: function() { return $('#reportTabsContent > *') }	// This is a custom option. See modified ui.tabs.js script for details.
 
-			load : Layout.onTabSuccess
+			load : Tabs.onTabSuccess
 
 		});
 	};
@@ -2632,17 +2884,99 @@ function initTripInvoiceFormTotals(){
 
 
 
+
+
+
+
+
+
+
+	var Client = {
+
+		initForm : function(options){
+			
+			if( options && options.target ){
+				$('DL.accordion', options.target).accordion({ autoHeight: false });
+			}
+
+		},
+
+		// Helper to open a client tab:
+		openShow : function(options){
+
+			var id   = options && options.matches[1],							// Result of livePath regex.
+			    name = options && options.matches[2] || 'Oops missing label!',	// Result of livePath regex.
+				url  = 'clients/' + id,
+				ui   = $('#pageTabs').tabs('url',url);
+
+			// Select existing tab if already open:
+			if( id && ui.tab ) {
+				$('#pageTabs').tabs('select',ui.index);
+
+			// Otherwise add a fresh tab:
+			}else if(id){
+
+				// Workaround when spaces have been escaped as '+' in a link:
+				name = name.replace( /\+/g,' ');
+				var label = name + '<input type="hidden" value="{id}" class="tour-id"/>'.replace('{id}',id);
+				$("#pageTabs").tabs('add', url, label);
+
+			}else{
+				console.log( 'Unable to open client tab(', id, COMMA, name, ')' );
+			}
+
+		},
+
+		// Called when a client is opened:
+		initShow : function(ui){
+
+			// Derive tabs ui object if necessary:
+			if( !ui.tab ){
+				var options = ui,
+					id  = options.form && options.form.client_id || options.matches[1],	// Result of livePath regex.
+					url = 'clients/' + id;
+					ui  = $('#pageTabs').tabs('url',url);
+			}
+
+			var context = ui.panel;
+
+			// Init LHS tabs:
+			$( 'UL:visible.clientPageTabsNav', context ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
+
+				cache			: false,
+				fx				: { opacity: 'toggle', duration: 100 },
+				tabTemplate		: '<li class="trip trip-unconfirmed"><a href="#{href}">#{label}</a></li>',	// Only ever used after creating trip.
+				panelTemplate	: '<div class="sectionBody ajaxPanel clientSubPageContainer"></div>',		// Only ever used after creating trip.
+				panelsSelector	: function() { debugger; return this.list.cousins('.clientPageTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
+
+				// When a new tab is added, open it immediately:
+				add		: function(e,ui) {
+					$(this).tabs('select',ui.index);		// TODO: This is being called but is not selecting the tab.
+				},
+
+				load	: Tabs.onTabSuccess
+
+			});
+
+		}
+
+
+	} // End of Client utilities.
+
+
 	var Trip = {
 
 		// Called when a TRIP is opened:
 		initShow : function(ui){
 
+			// Initialise the trip's tabs:
 			$( 'UL.tripPageTabsNav', ui.panel ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
 
 				cache			: false,
 				panelTemplate	: '<div class="ajaxPanel sectionContainer noSectionHead"></div>',
+				//panelTemplate	: '<div class="sectionBody ajaxPanel"></div>',	// This is the desired markup but will require changes to each tab-panel's sections and the css!
 				panelsSelector	: function() { return this.list.cousins(".tripPageTabsContent > *") },	// This is a custom option. See modified ui.tabs.js script for details.
-				load			: Layout.onTabSuccess
+				load			: Tabs.onTabSuccess
 
 			});
 
@@ -2734,41 +3068,207 @@ function initTripInvoiceFormTotals(){
 
 			});
 
+		},
+
+		onCreateSuccess : function(options){
+
+			if(options && options.form && options.form.target){
+
+				var $panel    = $(options.form.target);
+				var $tabs     = $panel.parents('.clientPage, .tour').find('.ui-tabs:first');
+				var trip_id   = options.form.trip_id || $panel.find('INPUT[name=trip_id]').val()
+				var trip_name = $panel.find('INPUT[name=trip_name]').val() || 'New trip';
+				var url       = options.form.path + '/' + trip_id;		// Eg: /clients/12345678/trips/{trip_id}
+
+				$tabs.tabs('add', url, trip_name, 2);
+
+			}
+
+		},
+
+		onUpdateSuccess : function(options){
+
+			if(options && options.form && options.form.id && options.form.target){
+
+				var $panel   = $(options.form.target);
+				var tripName = $panel.find("INPUT[name='trip[name]']").val();
+
+				if(tripName){
+					var $tabs = $panel.parents('.clientPage').find('.ui-tabs:first');
+					var regex = new RegExp('/trips/' + options.form.trip_id);	// Eg: /\/trips\/1234/
+					var ui    = $tabs.tabs('url',regex);
+					$(ui.tab).text(tripName);	// TODO: This seems correct but UI is not changing!
+				}
+
+			}
+		},
+
+		onDestroySuccess : function(options){
+
+			if(options){
+
+				if( options.form && options.form.tour_id ){
+					Tour.initShow(options)
+				}else{
+					Client.initShow(options)
+				}
+
+			}
 		}
 
 	} // End of Trip utilities.
 
 
 
-	var Tour = {
+	var TripElement = {
+
+		hideForm : function(options){
+
+			var selector  = ".tripPage[id $= trips{id}]".replace('{id}', options.trip_id);
+			var $tripPage = $(selector);
+			var $target   = $tripPage.find('.tripElementFormContainer');
+
+			$target.animate({ height: 'hide', opacity: 0 }, 'fast');
+
+		},
+
+		initForm : function(options){
+
+			var selector  = ".tripPage[id $= trips{id}]".replace('{id}', options.trip_id);
+			var $tripPage = $(selector);
+			var $target   = $tripPage.find('.tripElementFormContainer');
+
+			$target.hide().html(options.data);
+			initSpinboxes($target);
+			initDatepickers($target);
+			$target.animate({ height: 'show', opacity: 1 }, 'fast');
+
+		}
 	
-		onCreateSuccess : function(e,data){
-			
-			// Parse the tour id and name from the data, then trigger method to show the tab:
+	} // End of TripElement utilities.
+	
+
+
+
+	var Tour = {
+
+		// Parse the tour id and name from the data, then trigger method to show the tab:
+		onCreateSuccess : function(options,data){
+
+			data = data || options.data;
 			var ui = $('#pageTabs').tabs('url', /tours\/new/);
-			
 			var $data = $(data),
 				tour_id   = $data.find('#tour_id').val(),
 				tour_name = $data.find('#tour_label, #tour_name').val();
-				ui.url    = '/tours/' + tour_id + '/edit';
-			
-			Layout.onSuccess( data, 'success', undefined, ui, e )
-			
+				ui.url    = '/tours/' + tour_id;
+
+			Layout.onSuccess( data, 'success', undefined, ui, options.event )
+
+		},
+
+		// Helper to open a tour tab:
+		openShow : function(options){
+
+			// We're intercepting a link so prevent the default ajax handler from loading it:
+			if(options && options.event){ options.event.stopImmediatePropagation() }	// isImmediatePropagationStopped()
+
+			var id   = options.matches[1],							// Result of livePath regex.
+			    name = options.matches[2] || 'Oops missing label!',	// Result of livePath regex.
+				url  = 'tours/' + id,
+				ui   = $('#pageTabs').tabs('url',url);
+
+			// Select existing tab if already open:
+			if( id && ui.tab ) {
+				$('#pageTabs').tabs('select',ui.index);
+
+			// Otherwise add a fresh tab:
+			}else if(id){
+
+				// Workaround when spaces have been escaped as '+' in a link:
+				name = name.replace( /\+/g,' ');
+				var label = name + '<input type="hidden" value="{id}" class="tour-id"/>'.replace('{id}',id);
+				$("#pageTabs").tabs('add', url, label);
+
+			}else{
+				console.log( 'Unable to open tour tab(', id, COMMA, name, ')' );
+			}
+
 		},
 
 		initShow : function(options){
 
-			var tour_id = options.match[1],	// Result of livePath regex.
-				url     = 'tours/' + tour_id,
-				ui      = $('#pageTabs').tabs('url',url);
+			var id  = options.form && options.form.tour_id || options.matches[1],	// Result of livePath regex.
+				url = 'tours/' + id,
+				ui  = $('#pageTabs').tabs('url',url);
 
-			if( !ui.tab ) {
+			if( ui.tab ) {
+
+				var context = ui.panel;
+
+				$( 'UL.ui-tabs-nav-vertical', context ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
+
+					selected		: 2,	// Default to open the latest tour-dates.
+					cache			: false,
+					fx				: { opacity: 'toggle', duration: 100 },
+					tabTemplate		: '<li class="trip trip-unconfirmed"><a href="#{href}">#{label}</a></li>',	// Only ever used after creating trip.
+					panelTemplate	: '<div class="sectionBody ajaxPanel clientSubPageContainer"></div>',		// Only ever used after creating trip.
+					panelsSelector	: function() { debugger; return this.list.cousins('.clientPageTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
+
+					//show	: function(e,ui){ $(ui.panel).html('Loading...') },
+
+					// When a new tab is added, open it immediately:
+					// TODO: This is being called but is not selecting the tab.
+					add		: Tabs.select,
+					load	: Tabs.onTabSuccess
+
+				});
+
+			}else{
 				$('#pageTabs').tabs('add',url,'label')
 			}
-		
+
+		}
+	
+	} // End of Tour utilities.
+
+
+
+	var Report = {
+
+		initForm : function(options){
+
+			$( 'UL:visible.reportTabsNav', options.target ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
+
+				selected		: 1,
+				panelTemplate	: '<div class="sectionBody ajaxPanel"></div>',
+				load			: Tabs.onTabSuccess
+
+			});
+
+		}
+
+	} // End of Report utilities.
+
+
+
+	var SysAdmin = {
+	
+		initShow : function(ui){
+
+			$( 'UL.sysAdminTabsNav', ui.panel ).parent().tabs({
+
+				fx				: { opacity: 'toggle', duration: 200 },
+				panelTemplate	: '<div class="sectionBody ajaxPanel"></div>',
+				panelsSelector	: function() { return $('#sysAdminTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
+
+				load : Tabs.onTabSuccess
+
+			});
+
 		}
 	
 	}
+
 
 
 

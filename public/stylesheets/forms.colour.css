@@ -15,6 +15,9 @@
 	TEXTAREA,
 	INPUT[type=text],
 	INPUT[type=password],
+	SELECT.stealth:hover,
+	TEXTAREA.stealth:hover,
+	INPUT[type=text].stealth:hover,
 	SELECT.stealth:focus,
 	TEXTAREA.stealth:focus,
 	INPUT[type=text].stealth:focus {

@@ -32,7 +32,7 @@
 							<!-- Dummy hidden static tab to workaround jQueryUI tabs bug: -->
 							<!-- Important: To apply css to the add-new tab using :last-child, this must not be the last tab! -->
 							<li class="dummy hidden">
-								<a href="#dummyTourTabContent"></a>
+								<a href="#<%= nested_resource(@tour,true) %>dummy"></a>
 							</li>
 
 							<li class="tour-details #{ 'ui-tabs-selected' if trips.empty? }">
@@ -58,7 +58,7 @@
 			<div class="clientPageTabsContent ajaxPanel sectionContainer sectionContainerRight noSectionHead noSectionFoot">
 
 				<!-- Dummy static tab to workaround jQueryUI tabs bug: -->
-				<div id="dummyTourTabContent">(Hidden content)</div>
+				<div id="<%= nested_resource(@tour,true) %>dummy" class="sectionBody hidden">(Hidden content)</div>
 			
 				<!-- Trip pages are added here via ajax. -->
 

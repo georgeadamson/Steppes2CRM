@@ -1,9 +1,11 @@
 
-<!-- where is this used?! -->
+<!-- WHERE IS THIS USED?! -->
 
 <!-- Trip summary.html: (wrap in sectionContainer) -->
 
-<%= form_for @trip, :action => resource(@trip) do %>
+<!--<div class="sectionContainer noSectionHead">-->
+	
+	<%= form_for @trip, :action => resource(@trip) do %>
 
     <div class="sectionBody">
         <%= partial "trips/form", :trip=>@trip %>
@@ -16,4 +18,6 @@
 			</div>
 		</div>
 
-<% end =%>
+	<% end =%>
+
+<!--</div>-->

@@ -27,8 +27,6 @@ class Trip
     # Self-referencing FK for activeTrip:
     # So trip.version_of_trip.name returns the original title of any trip (the first version).
     property    :version_of_trip_id,      Integer,  :default => 0 # Warning: This is also updated by an sql trigger! (trg_trips_version_of_trip_id)
-    belongs_to  :version_of_trip,  :model => "Trip",:child_key => [:version_of_trip_id]
-    has n,      :version_of_trips, :model => "Trip",:child_key => [:version_of_trip_id] #, :via => :version_of_trip
     
     property :is_active_version,	        Boolean,	:default => true      # Only one version can be active per trip.
     property :is_version_snapshot,        Boolean,	:default => false     # When true this version becomes read only.
@@ -90,6 +88,11 @@ class Trip
     
     has n, :money_ins         # AKA Invoices
     has n, :money_outs        # AKA SupplierPaymentRequests
+
+    belongs_to  :version_of_trip,  :model => "Trip",:child_key => [:version_of_trip_id]
+    has n,      :version_of_trips, :model => "Trip",:child_key => [:version_of_trip_id] #, :via => :version_of_trip
+    alias orig_version_of_trip version_of_trip
+    def version_of_trip; return self.orig_version_of_trip || self; end  # Allow for trips with missing version_of_trip
     
     belongs_to :tour 		      # Only applies when this trip.type is TOUR_TEMPLATE or FIXED_DEP.
     belongs_to :user 		      # Handled by / Prepared by.
@@ -164,6 +167,9 @@ class Trip
     
     before :save do
       
+      # Ensure existing trip refers to itself if missing version_of_trip:
+      self.version_of_trip_id = self.id if self.version_of_trip_id.to_i == 0 && self.id.to_i > 0
+
       # Ensure all trip elements still have valid numbers of adults/children/infants
       # (Also see TripElement before :save)
       # TODO: Handle subgroups?
@@ -188,20 +194,37 @@ class Trip
       @orig_pnr_numbers_before_save   = self.pnr_numbers
       
     end
-    
+
+
+    # OVERRIDE standard save method to workaround a bug where save! has no effect inside the "after :save" hook
+    # Call super to run save as normal then ensure the version_of_trip_ is set to to self:
+    def save
+
+      saved_as_normal = super
+      
+      if saved_as_normal && self.version_of_trip_id.to_i == 0 && self.id.to_i > 0
+        self.version_of_trip_id = self.id
+        return self.save!
+      end
+
+      return saved_as_normal
+
+    end
+
     
     after :save do
       
       #unless ( @avoid_triggering_after_save_hook_recursively ||= false )
-      
       @avoid_triggering_after_save_hook_recursively = true
       
+
+      # Workaround: See overidden save method above. We should be able to call save! here but it has does nothing. :(
       # Set version_of_trip_id to self if not already set: (Note we tried "self.activeTrip ||= self" but it caused recursive "stack level too deep" error)
       # Aug 2010 GA: Retired the sqltrigger and rely on this instead: (See comments near end of this class)
-      if self.version_of_trip_id.to_i == 0 && self.id > 0
-        self.version_of_trip_id = self.id
-        self.save!
-      end
+      #  if self.version_of_trip_id.to_i == 0 && self.id.to_i > 0
+      #    self.version_of_trip_id = self.id
+      #    self.save!
+      #  end
       
       
       # Update the is_active_version flag on all versions of same trip:
@@ -1195,7 +1218,6 @@ class Trip
     
     
     
-    # Depricated because it causes all fields become nil when we call @trip = Trip.new(trip). Perhaps it is replacing the default initialize method?
     def initialize(*)
       super
       self.type_id    ||= TripType::TAILOR_MADE

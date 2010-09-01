@@ -31,14 +31,14 @@
         <li class="dashboard-tab"><a href="#tabDashboard">Home page</a></li>
 
         <!-- Tours tab: -->
-        <li class="tours-tab"><%= link_to 'Tours', resource(:tours) %></li>
+        <li class="tours-tab"><%= link_to tag(:span,'Tours'), resource(:tours) %></li>
 
         <!-- Add client tab: -->
-        <li class="client-create"><%= link_to icon(:add), "#{ resource( :clients, :new ) }", :title => "New client" %></li>
+        <li class="client-create"><%= link_to icon(:add), "#{ resource( :clients, :new ) }", :title => 'New client' %></li>
 
-        <!-- One tab for each client: -->
+        <!-- One tab for each open client: -->
         <% open_clients.each do |client| %>
-          <li class="<%= client.id == select_id ? 'ui-tabs-selected' : '' %>">
+          <li class="<%= 'ui-tabs-selected' if client.id == select_id %>">
 						<%= link_to client.shortname, resource(client) %>
 						<%= link_to "x", "#{resource(client)}/close", :class => "close-tab", :title => "Close this client tab" %>
 						<%# Note: The close-tab html must also be defined in the tabTemplate for #pageTabs in shared.js 
@@ -145,8 +145,8 @@
 
 		</div>
 
-	</div>
+    <!-- One DIV.sectionBody will be inserted here for each client tab page: -->
 
-      <!-- One DIV.sectionBody will be inserted here for each client's tab page: -->
+	</div>
 
 </div>
