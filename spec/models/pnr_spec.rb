@@ -202,7 +202,30 @@ describe Pnr do
 			}
 
 		end
-		
+				
+		it "should assume flight date is next year when flight month is earlier than booking month" do
+
+      # Parse the pnr data and read the booking date and first flight date:
+			raw_pnr_data     = valid_pnr_attributes[:data]
+			parsed_pnr_data  = Pnr.parse_amadeus_record(raw_pnr_data)
+      old_booking_date = parsed_pnr_data[:pnr_booking_date]
+      flight_date      = parsed_pnr_data[:pnr_first_flight_date]
+
+      # Derive a booking month that is AFTER the flight:
+      new_booking_date = Date::civil( flight_date.year, flight_date.month + 1, old_booking_date.day )
+      old_booking_date_string = old_booking_date.strftime('%y%m%d')  # Eg: "100315"
+      new_booking_date_string = new_booking_date.strftime('%y%m%d')  # Eg: "100615"
+      
+      # Create new raw pnr data (with later booking month) and parse it:
+      new_raw_pnr_data = raw_pnr_data.gsub(old_booking_date_string, new_booking_date_string)
+			new_parsed_pnr_data = Pnr.parse_amadeus_record(new_raw_pnr_data)
+      
+      # Original data should assume same year but new data should assume next year:
+      parsed_pnr_data[:pnr_first_flight_date].year.should == old_booking_date.year
+      new_parsed_pnr_data[:pnr_first_flight_date].year.should == old_booking_date.year + 1
+
+		end
+
 	end
 
 	

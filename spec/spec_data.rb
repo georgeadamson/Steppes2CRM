@@ -151,7 +151,9 @@ def valid_pnr_attributes
     :file_name					=> 'MOCK_PNR_FOR_AUTO_TESTS.txt',
     :flight_count				=> 2,																		# Must match number of valid U- lines in the raw data.
     :client_count				=> 1,																		# Must match number of valid I- lines line in the raw data.
-			:data								=> "AIR-BLK207;IM;;233;1500012976;1A1203214;001001
+
+    # The attributes above must correspond to this data:
+		:data								=> "AIR-BLK207;IM;;233;1500012976;1A1203214;001001
 AMD 1500000001;1/1;              
 GW4464979;1A1203214
 MUC1A ABCDEF002;0101;LONU12102;91497221;LONU12102;91497221;LONU12102;91497221;LONU12102;91497221;;;;;;;;;;;;;;;;;;;;;;BA NOSYNC
@@ -187,7 +189,9 @@ def updated_pnr_attributes
     :file_name					=> 'MOCK_PNR_FOR_AUTO_TESTS2.txt',
     :flight_count				=> 3,																		# Must match number of valid U- lines in the raw data.
     :client_count				=> 1,																		# Must match number of valid I- lines line in the raw data.
-			:data								=> "AIR-BLK207;IM;;233;1500012976;1A1203214;001001
+
+    # The attributes above must correspond to this data:
+		:data								=> "AIR-BLK207;IM;;233;1500012976;1A1203214;001001
 AMD 1500000001;1/1;              
 GW4464979;1A1203214
 MUC1A ABCDEF002;0101;LONU12102;91497221;LONU12102;91497221;LONU12102;91497221;LONU12102;91497221;;;;;;;;;;;;;;;;;;;;;;BA NOSYNC
