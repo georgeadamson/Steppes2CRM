@@ -1,7 +1,7 @@
 <!-- _clientPage: -->
 <%
-	active_trips = client.active_trips.all( :order => [ :status_id, :start_date.desc, :created_at.desc ] )
-%>
+	active_trips = client.active_trips.all( :type_id.not => TripType::TOUR_TEMPLATE, :order => [ :status_id, :start_date.desc, :created_at.desc ] )
+-%>
 <div class="sectionContainer noSectionFoot clientPage">
 
 	 <div class="sectionHead">
@@ -14,8 +14,8 @@
 				<small>
 					(<span class="clientTotalSpend" title="Total spent"><%= ( client.total_spend || 0 ).to_currency(:uk) %></span>)
 				</small>
-				<small>Trips: 
-					<%= client.trips_statement %>
+				<small>
+					Trips: <%= client.trips_statement %>
 				</small>
 			</h2>
 

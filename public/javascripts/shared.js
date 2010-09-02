@@ -423,7 +423,7 @@ jQuery(function($) {
 					options.form.button = $button.id();
 
 				// When using a live event the ajaxSubmit() method will not include name/value of the submit button so add it:
-				if( $button.is('SUBMIT') ){ buttonData[ $button.attr('name') ] = $button.val() }
+				if( $button.is(':submit') ){ buttonData[ $button.attr('name') ] = $button.val() }
 
 				// By setting up the ajaxSubmit here, each of the callbacks can refer to the $form using a closure:
 				$form.ajaxSubmit({
@@ -2969,13 +2969,16 @@ function initTripInvoiceFormTotals(){
 		// Called when a TRIP is opened:
 		initShow : function(ui){
 
+			// Ensure the new tripPageTabsContent element has an indentifier:
+			var tabPanelContainerID = $( '.tripPageTabsContent', ui.panel ).id();
+
 			// Initialise the trip's tabs:
 			$( 'UL.tripPageTabsNav', ui.panel ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
 
 				cache			: false,
 				panelTemplate	: '<div class="ajaxPanel sectionContainer noSectionHead"></div>',
 				//panelTemplate	: '<div class="sectionBody ajaxPanel"></div>',	// This is the desired markup but will require changes to each tab-panel's sections and the css!
-				panelsSelector	: function() { return this.list.cousins(".tripPageTabsContent > *") },	// This is a custom option. See modified ui.tabs.js script for details.
+				panelsSelector	: function() { return this.list.cousins('#' + tabPanelContainerID + ' > *') },	// This is a custom option. See modified ui.tabs.js script for details.
 				load			: Tabs.onTabSuccess
 
 			});

@@ -296,13 +296,14 @@ class Client
 
   # All the client's trips that are the current active version of each of the client's trips: (ie ignore "other" versions)
   # Note how we cache @active_trips to prevent unecessary db trips as each trip is accessed:
+  # Added :type_id filter 01-Sep-2010 GA.
   def active_trips
-    return @active_trips ||= trips.all( :is_active_version => true )
+    return @active_trips ||= trips.all( :is_active_version => true, :type_id.not => TripType::TOUR_TEMPLATE )
   end
 
   def fixed_deps( tour_id = nil )
     deps = self.active_trips.all( :type_id => TripType::FIXED_DEP )
-    return tour_id ? deps.all( :tour_id => deps ) : deps
+    return tour_id ? deps.all( :tour_id => tour_id ) : deps
   end
 
 
