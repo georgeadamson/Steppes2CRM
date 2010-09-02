@@ -679,6 +679,25 @@ describe Pnr do
 
       end
 
+      it "should allow PNR flight element handler to be modified" do
+        
+        @trip.pnr_numbers = [@pnr.number]
+        @trip.save.should be_true
+        @trip.reload
+
+        flights_from_pnr = @trip.flights.all( :booking_code => @pnr.number )
+        flights_from_pnr.should have(2).trip_elements
+
+        flight = flights_from_pnr.first
+        flight.attributes = { :cost_per_adult => 1234.56 }
+        flight.handler = flight.supplier
+        flight.save.should be_true
+        flight.reload
+
+        flight.handler.should == flight.supplier
+        
+      end
+
     end
     
 
