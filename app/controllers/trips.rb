@@ -126,9 +126,10 @@ class Trips < Application
     # New template-trip for a Tour:
     elsif params[:tour_id]
       
-      @trip.tour_id   = params[:tour_id]
-      @trip.type_id   = TripType::TOUR_TEMPLATE
-      @trip.user_id ||= session.user.id
+      @trip.type_id     = TripType::TOUR_TEMPLATE
+      @trip.tour_id     = @client_or_tour.id
+      @trip.company_id  = @client_or_tour.company_id
+      @trip.user_id   ||= session.user.id
       
       message[:notice]  = "Don't forget to save this new fixed-departure for #{ @trip.tour.name }"
       
@@ -226,8 +227,27 @@ class Trips < Application
       end
       
     else
+      collect_error_messages_for @trip, :clients
+      collect_error_messages_for @trip, :trip_clients
       collect_error_messages_for @trip, :countries
-			message[:error] = error_messages_for( @trip, :header => 'The trip details could not be created because:' )
+
+      @trip.model.relationships.each do | name, association |
+        
+        if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
+          
+          #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
+          if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
+            collect_error_messages_for @trip, name.to_sym
+          elsif rel
+            collect_child_error_messages_for @trip, rel
+          end
+          
+        end
+        
+      end
+
+message[:error] = error_messages_for( @trip, :header => 'The trip details could not be created because:' )
+			message[:notice] = 'aarrh'
       render :new
     end
     
@@ -319,18 +339,15 @@ class Trips < Application
 #      collect_error_messages_for @trip, :clients
 #      collect_error_messages_for @trip, :money_ins
 #      collect_error_messages_for @trip, :money_outs
-#
+
       @trip.model.relationships.each do | name, association |
 
         if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
-#puts name
+
           #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
           if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
-#puts rel.inspect
-puts "Calling collect_error_messages_for trip, #{name}"
             collect_error_messages_for @trip, name.to_sym
           elsif rel
-#puts "!!!"
             collect_child_error_messages_for @trip, rel
           end
 

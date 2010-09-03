@@ -1,6 +1,7 @@
 <%
 
-	companies_list				= Company.all( :is_active => true, :order => [:name] )
+	companies_list				= Company.all( :order => [:is_active.desc, :name] )
+	companies_list				= companies_list.all( :is_active => true ) unless params[:show_old]
 	selected_company_id		= params[:company_id] || session.user.company_id
 	number_of_tours_shown	= 0
 	
@@ -19,11 +20,12 @@
 
 		<div class="sectionHead">
 
-			<% check_box :label => "Show old trips", :id => "tours_show_old_trips", :checked => false, :class => 'right widthAuto' %>
+			<%# check_box :label => "Show old trips", :id => "tours_show_old_trips", :checked => false, :class => 'right widthAuto' 
+			%>
 
 			<h2>
 				<span class="ui-icon ui-icon-group"></span>
-				Fixed Departure Tours
+				Groups &amp; Tours
 			</h2>
 
 		</div>
@@ -37,8 +39,8 @@
 
 					<%= form :action => resource(:tours), :method => :get, :class => 'auto-submit' do %>
 
-						<%= select		:name => :company_id, :label => 'Prepared by',		:collection => companies_list, :selected => selected_company_id.to_s, :value_method => :id, :text_method => :display_name %>
-						<%= check_box :name => :show_old,		:label => 'Show old tours', :checked => params[:show_old], :value => true %>
+						<%= select		:name => :company_id, :label => 'Filter by',       :collection => companies_list, :selected => selected_company_id.to_s, :value_method => :id, :text_method => :display_name %>
+						<%= check_box :name => :show_old,		:label => 'Show old groups', :checked => params[:show_old], :value => true %>
 						<%= submit		'Refresh' %><!-- Submit button is hidden automatically when in an auto-submit form. -->
 
 					<% end =%>
@@ -126,7 +128,7 @@
 	 <div class="sectionFoot formSurround">
 		<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
 
-			<%= link_to "Add a new tour", resource( :tours, :new ), :class => 'ui-priority-secondary ui-state-default left' %>
+			<%= link_to "Add a new group name...", resource( :tours, :new ), :class => 'ui-priority-secondary ui-state-default left' %>
 
 		</div>
 	 </div>

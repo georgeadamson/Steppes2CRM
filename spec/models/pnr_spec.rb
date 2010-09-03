@@ -689,7 +689,6 @@ describe Pnr do
         flights_from_pnr.should have(2).trip_elements
 
         flight = flights_from_pnr.first
-        flight.attributes = { :cost_per_adult => 1234.56 }
         flight.handler = flight.supplier
         flight.save.should be_true
         flight.reload

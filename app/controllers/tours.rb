@@ -28,11 +28,11 @@ class Tours < Application
   def create(tour)
     @tour = Tour.new(tour)
     if @tour.save
-      message[:notice] = "Tour was created successfully"
+      message[:notice] = "Group was created successfully"
       #redirect resource(@tour), :message => message
       render :show
     else
-      message[:error] = error_messages_for @tour, :header => 'The tour could not be created because'
+      message[:error] = error_messages_for @tour, :header => 'The Group could not be created because'
       render :new
     end
   end
@@ -41,11 +41,11 @@ class Tours < Application
     @tour = Tour.get(id)
     raise NotFound unless @tour
     if @tour.update(tour)
-      message[:notice] = "Tour was updated successfully"
+      message[:notice] = "Group was updated successfully"
       #redirect resource(@tour)
       render :show
     else
-      message[:error] = error_messages_for @tour, :header => 'The tour could not be updated because'
+      message[:error] = error_messages_for @tour, :header => 'The Group could not be updated because'
       display @tour, :edit
     end
   end
@@ -53,9 +53,14 @@ class Tours < Application
   def destroy(id)
     @tour = Tour.get(id)
     raise NotFound unless @tour
-    if @tour.destroy
-      redirect resource(:tours)
+    if @tour.trips.count > 0
+      message[:error] = 'Ah, now, the thing is, this Group cannot be deleted because it has trips associated with it'
+      display @tour, :show
+    elsif @tour.destroy
+      message[:notice] = "The Group has been deleted"
+      redirect resource(:tours), :message => message
     else
+      message[:error] = error_messages_for @tour, :header => 'The Group could not be created because'
       raise InternalServerError
     end
   end

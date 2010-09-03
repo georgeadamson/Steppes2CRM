@@ -20,9 +20,9 @@
 <%#= hidden_field :name => 'client_id',	:value => @trip.context.id %>
 
 <% case when @trip.type_id == TripType::TOUR_TEMPLATE %>
-	<h4 style="margin:0 0 1em 9em;">This trip is a template for the tour: <em><%= @trip.tour.name %></em></h4>
+	<h4 style="margin:0 0 1em 9em;">This trip is a template for the group: <em><%= @trip.tour.name %></em></h4>
 <% when @trip.type_id == TripType::FIXED_DEP %>
-	<h4 style="margin:0 0 1em 9em;">This fixed departure was based on the tour template <em><%= link_to @trip.tour.name, resource(@trip.tour) %></em></h4>
+	<h4 style="margin:0 0 1em 9em;">This fixed departure was based on the group template <em><%= link_to @trip.tour.name, resource(@trip.tour) %></em></h4>
 <% end %>
 
 <!-- Trip form fields: -->

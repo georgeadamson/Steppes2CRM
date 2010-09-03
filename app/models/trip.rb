@@ -19,7 +19,7 @@ class Trip
     
     
     property :id,                         Serial    # Important: trip.id was migrated from ItineraryHeaderID in old database.
-    property :name,                       String,   :length => 100, :required => true, :default => lambda{ |trip,prop| trip.tour ? "New tour dates for #{ trip.tour.name }" : 'A lovely new trip' }
+    property :name,                       String,   :length => 100, :required => true, :default => lambda{ |trip,prop| trip.tour ? "New dates for #{ trip.tour.name }" : 'A lovely new trip' }
     property :version,                    Integer,  :default => 1
     #property :version_name,              String,   :default => "New version"
     #property :activeTripId,              Integer,  :required => true   # FK to trip.id. Only one version can be active per trip.
@@ -138,13 +138,30 @@ class Trip
     #validates_absence_of  :tour_id, :if => Proc.new{ |trip| trip.type_id != TOUR_TEMPLATE }
     #validates_presence_of :tour_id, :if => Proc.new{ |trip| trip.type_id == TOUR_TEMPLATE }
     
+    
+    # OVERRIDE standard save method to workaround a bug where save! has no effect inside the "after :save" hook
+    # Call super to run save as normal then ensure the version_of_trip_ is set to to self:
+    def save
+      
+      saved_as_normal = super
+      
+      if saved_as_normal && self.version_of_trip_id.to_i == 0 && self.id.to_i > 0
+        self.version_of_trip_id = self.id
+        return self.save!
+      end
+      
+      return saved_as_normal
+      
+    end
+    
+
     before :valid? do
       
       self.name								||= "Untitled trip"
       self.status_id					||= Trip::UNCONFIRMED
+      self.tour_id              = nil if self.tour_id.to_i == 0
       self.type_id              = TripType::TOUR_TEMPLATE if self.tour && !self.fixed_dep? && !self.tour_template?
       self.version_of_trip_id ||= 0	# Cannot be nil. If zero, this will be set to the trip's own new id after save.
-      self.tour_id              = nil if self.tour_id.to_i == 0
       
       # Swap start and end dates if start date is later than end date:
       # Beware! Setting start/end_date here is a workaround for when they've not been submitted as part of the form
@@ -193,22 +210,6 @@ class Trip
       @pnr_numbers_have_changed     ||= self.pnrs.dirty? || self.trip_pnrs.dirty?
       @orig_pnr_numbers_before_save   = self.pnr_numbers
       
-    end
-
-
-    # OVERRIDE standard save method to workaround a bug where save! has no effect inside the "after :save" hook
-    # Call super to run save as normal then ensure the version_of_trip_ is set to to self:
-    def save
-
-      saved_as_normal = super
-      
-      if saved_as_normal && self.version_of_trip_id.to_i == 0 && self.id.to_i > 0
-        self.version_of_trip_id = self.id
-        return self.save!
-      end
-
-      return saved_as_normal
-
     end
 
     

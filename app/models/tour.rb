@@ -2,7 +2,7 @@ class Tour
   include DataMapper::Resource
   
   property :id,         Serial
-  property :name,       String,   :required => true,  :default => 'New tour', :length => 100
+  property :name,       String,   :required => true,  :default => 'New group tour', :unique => true, :length => 100
   property :notes,      Text,     :required => false, :default => '', :lazy => false
   property :company_id, Integer,  :required => true
 

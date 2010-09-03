@@ -161,8 +161,9 @@ jQuery(function($) {
 			Layout.livePath('success', /tours\/([0-9]+)\/trips\/([0-9]+)$/,				Trip.initShow );
 			Layout.livePath('success', /tours\/([0-9]+)\/trips\/new/,					Trip.initForm );
 			Layout.livePath('success', /tours\/([0-9]+)\/trips\/([0-9]+)\/edit/,		Trip.initForm );
-			Layout.liveForm('success', 'tours:create',									Tour.onCreateSuccess );
+			Layout.liveForm('success', 'tours:create',									Tour.closeNew, Tour.onCreateSuccess );
 			Layout.liveForm('success', 'tours:update',									Tour.onCreateSuccess );
+			Layout.liveForm('success', 'tours:destroy',									Tour.closeShow, Tour.openIndex );
 
 			// Trips:
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)$/,			Trip.initShow );
@@ -242,7 +243,7 @@ jQuery(function($) {
 
 						},
 
-						error: function(xhr, status, error) {
+						error: function(xhr, status, error) {console.log(xhr, status, error);alert(status)
 							$(document).trigger('path:error', [xhr, status, error]);
 						},
 
@@ -266,6 +267,9 @@ jQuery(function($) {
 		// Helper for registering the many url-specific live event handlers:
 		livePath: function(type, path, callback) {
 
+			// Handle multiple callbacks by creating a function to run each in turn:
+			callback = Layout.wrapCallbacks( Array.prototype.slice.call(arguments,2) );
+
 			if( typeof(path) === 'string' ){
 				$(document).bind('path:' + type + ':' + path, callback);
 			}else{
@@ -276,9 +280,12 @@ jQuery(function($) {
 
 		// Helper for registering the many form-specific live event handlers:
 		// Expects controller_action formatted like "clients:create".
-		liveForm: function(type, controller_action, callback){
+		liveForm: function(type, action, callback){
 
-			Layout.liveFormPattern[type].push([controller_action, callback]);
+			// Handle multiple callbacks by creating a function to run each in turn:
+			callback = Layout.wrapCallbacks( Array.prototype.slice.call(arguments,2) );
+
+			Layout.liveFormPattern[type].push([action, callback]);
 
 		},
 
@@ -505,11 +512,31 @@ jQuery(function($) {
 			if( triggerHashChange !== false ){ $(document).trigger('hashchange',[options]) }
 		},
 
+
 		// Parse error & notice message elements from the xhr response:
 		// Test for messages in data eg: <!--<MESSAGES>--><h2 class="errorMessage">Oops, something odd happened. <br/> <div class='error'>The trip details could not be saved because:<ul><li>TripElement: (Flight) The Flight agent cannot be left blank</li></ul></div></h2><!--</MESSAGES>-->
 		getMessagesFrom: function(data){
 			var fragment = ( FIND_MESSAGE_CONTENT.exec(data) || [] )[1] || '';
 			return $('<div>').html(fragment).find(".noticeMessage,.errorMessage");
+		},
+
+
+		// Prepare multiple callbacks by creating an anonymous function to run each in turn:
+		// Important: This returns one function that accepts arguments and passes them to each callback function.
+		wrapCallbacks : function( callbacks, evenWhenOnlyOne ){
+
+			// Ensure we really are dealing with an array of functions: (Saves time later)
+			callbacks = $.grep( $.makeArray(callbacks), function(fn){ return $.isFunction(fn) } );
+
+			if( callbacks.length > 1 || evenWhenOnlyOne ){
+				return function(args){
+					var self = this; args = Array.prototype.slice.call(arguments);
+					$.each(callbacks, function(i,fn){ fn.apply(self,args) });
+				}
+			}else{
+				return callbacks[0];
+			}
+
 		},
 
 
@@ -628,12 +655,14 @@ jQuery(function($) {
 
 		// Triggered when a tab loads successfully: (Just passes the arguments along to the generic Layout.onSuccess)
 		onTabSuccess : function(e,ui){
-			Layout.onSuccess( ui.panel, 'success', {}, ui, e ); // TODO: Derive xhr from tabs ui object?
+			var xhr = ui.tabs && ui.tabs.xhr || {};
+			Layout.onSuccess( ui.panel, 'success', xhr, ui, e );
 		},
 
 		// TODO: Triggered when a tab fails: (Just passes the arguments along to the generic Layout.onError)
 		onTabError : function(e,ui){
-			Layout.onError( ui.panel, 'error', {}, ui, e ); // TODO: Derive xhr from tabs ui object?
+			var xhr = ui.tabs && ui.tabs.xhr || {};
+			Layout.onError( ui.panel, 'error', xhr, ui, e );
 		}
 	
 	};
@@ -2894,9 +2923,9 @@ function initTripInvoiceFormTotals(){
 	var Client = {
 
 		initForm : function(options){
-			
-			if( options && options.target ){
-				$('DL.accordion', options.target).accordion({ autoHeight: false });
+
+			if( options && options.panel ){
+				$('DL.accordion', options.panel).accordion({ autoHeight: false });
 			}
 
 		},
@@ -2947,7 +2976,7 @@ function initTripInvoiceFormTotals(){
 				fx				: { opacity: 'toggle', duration: 100 },
 				tabTemplate		: '<li class="trip trip-unconfirmed"><a href="#{href}">#{label}</a></li>',	// Only ever used after creating trip.
 				panelTemplate	: '<div class="sectionBody ajaxPanel clientSubPageContainer"></div>',		// Only ever used after creating trip.
-				panelsSelector	: function() { debugger; return this.list.cousins('.clientPageTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
+				panelsSelector	: function() { return this.list.cousins('.clientPageTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
 
 				// When a new tab is added, open it immediately:
 				add		: function(e,ui) {
@@ -3084,6 +3113,7 @@ function initTripInvoiceFormTotals(){
 				var url       = options.form.path + '/' + trip_id;		// Eg: /clients/12345678/trips/{trip_id}
 
 				$tabs.tabs('add', url, trip_name, 2);
+				$tabs.tabs('select', 2);
 
 			}
 
@@ -3152,7 +3182,7 @@ function initTripInvoiceFormTotals(){
 	
 
 
-
+	// Note: Tours are known as Groups in the UI.
 	var Tour = {
 
 		// Parse the tour id and name from the data, then trigger method to show the tab:
@@ -3215,7 +3245,7 @@ function initTripInvoiceFormTotals(){
 					fx				: { opacity: 'toggle', duration: 100 },
 					tabTemplate		: '<li class="trip trip-unconfirmed"><a href="#{href}">#{label}</a></li>',	// Only ever used after creating trip.
 					panelTemplate	: '<div class="sectionBody ajaxPanel clientSubPageContainer"></div>',		// Only ever used after creating trip.
-					panelsSelector	: function() { debugger; return this.list.cousins('.clientPageTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
+					panelsSelector	: function() { return this.list.cousins('.clientPageTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
 
 					//show	: function(e,ui){ $(ui.panel).html('Loading...') },
 
@@ -3230,8 +3260,27 @@ function initTripInvoiceFormTotals(){
 				$('#pageTabs').tabs('add',url,'label')
 			}
 
+		},
+
+		// Simply close a Tour tab:
+		closeShow : function(options){
+
+			var id  = options.form && options.form.tour_id || options.matches[1];	// Result of livePath regex.
+
+			if(id){ $('#pageTabs').tabs('remove', '/tours/'+id) }
+
+		},
+
+		// Open the Tours list tab: (Groups)
+		openIndex : function(options){
+			$('#pageTabs').tabs('select', '/tours');
+		},
+
+		// Close the New Tour tab:
+		closeNew : function(options){
+			$('#pageTabs').tabs('remove', '/tours/new');
 		}
-	
+
 	} // End of Tour utilities.
 
 
