@@ -20,8 +20,8 @@
 		#'document[trip_id]'										=> trip.id,		# Not applicable on this page.
 		'document[user_id]'										=> session.user.id,
 		'document[client_id]'									=> client.id,
-		'document[document_type_id]'					=> 8,						# 8 = Letter template.
-		'document[document_template_file]'		=> 'Letters/{value}&_method=post',
+		'document[document_type_id]'					=> DocumentType::LETTER,						# 8 = Letter template.
+		'document[document_template_file]'		=> 'Letters/{value}',
 		'document[generate_doc_after_create]'	=> true,
 		'document[generate_doc_later]'				=> true,
 		:redirect_to													=> "#{ resource(client) }/summary"
@@ -54,7 +54,7 @@
         <%#= link_to "Label", resource(client, :edit) if client.id %>
 				<%=
 					template_filenames = Document.doc_builder_letter_templates( :type => :general )
-					orig_select :name => 'generate_letter', :collection => template_filenames, :prompt => 'Create a general letter...', :class => 'create-letter arrow-only', :'data-action' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }"
+					orig_select :name => 'generate_letter', :collection => template_filenames, :prompt => 'Create a general letter...', :class => 'create-letter arrow-only', :'data-method' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }"
 				%>
       </h4>
 

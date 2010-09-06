@@ -372,12 +372,15 @@ jQuery(function($) {
 				// Ignore all key strokes except <Enter> key: (to select an item in the list)
 				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
 
+				// Ignore event if the list is expected to submit it's value using form post:
+				if( $(this).is('SELECT[data-method]') ){ return }	// See initFormsHandler instead.
+
 				var $list  = $(this), $item = $list.find('OPTION:selected'),
 				    target = Layout.getTargetOf($list),
 					href   = $item.attr('data-href') || $list.attr('data-href') || $list.attr('href') || $list.val();	// Note: "href" is depricated.
 					href   = href.replace( '{value}', $item.val() ).replace( '{text}', $item.text() );
 
-				// TODO: Trigger the handler directly on the list instead of this dodgy on-the-fly link element:
+				// TODO: Trigger the handler directly on the list instead of this dodgy on-the-fly element:
 				$('<a>').attr({ href: href, 'data-target': target }).trigger('click',this);
 
 			});
@@ -420,34 +423,59 @@ jQuery(function($) {
 				$(this).closest('FORM').trigger('submit',this);
 			})
 
+			// Initialise handler for auto-linking picklists that need to be posted like a form:
+			$('SELECT[data-method]').live('change keydown', function(e){
+
+				// Ignore all key strokes except <Enter> key: (to select an item in the list)
+				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
+
+				// Bail out if selected list item has no value: (It's probably just a prompt)
+				if( !$(this).val() ){ return }
+
+				var $list  = $(this), $item = $list.find('OPTION:selected'),
+					method = $list.attr('data-method'),
+				    target = Layout.getTargetOf($list),
+					href   = $item.attr('data-href') || $list.attr('data-href') || $list.val();			// Read custom url from item or list element.
+					href   = href.replace( '{value}', $item.val() ).replace( '{text}', $item.text() ),	// Interpolate {placeholders} with values.
+					http_method = {'post':'post','get':'get'}[method.toLowerCase()] || 'post',			// Ensure we use an http-friendly method.
+					rest_method = $('<input type="text" name="_method"/>').val(method);					// Allow for get|post|put|delete.
+
+				// TODO: Trigger the handler directly on the list instead of this dodgy on-the-fly element:
+				$('<form>').attr({ action:href, method:http_method, 'data-target':target })
+					.append(rest_method)
+					.trigger('submit',this);
+
+			})
+
 			$('FORM:not(.noajax)').live('submit', function(e, source){
 
 				// The source argument will only be present when triggered by SELECT.auto-submit:
 				var $form		= $(this),
 					$button		= $(source || e.originalEvent && e.originalEvent.explicitOriginalTarget),
 					url			= $form.attr('action').replace(/^#/, ''),
-					dataType	= $form.attr('data-type') || 'html',
-					target		= Layout.getTargetOf($button),
-					options		= { url: url, target: target, form: Layout.getFormAction($form) },
+					dataType	= $form.attr('data-type')   || 'html',
+					target		= $form.attr('data-target') || Layout.getTargetOf($button),
+					form		= Layout.getActionOf($form),
+					options		= { url:url, target:target, form:form },
 					buttonData	= {};
 					options.form.target = target;
 					options.form.button = $button.id();
 
 				// When using a live event the ajaxSubmit() method will not include name/value of the submit button so add it:
-				if( $button.is(':submit') ){ buttonData[ $button.attr('name') ] = $button.val() }
+				if( $button.is(':submit') && $button.attr('name') ){ buttonData[ $button.attr('name') ] = $button.val() }
 
 				// By setting up the ajaxSubmit here, each of the callbacks can refer to the $form using a closure:
 				$form.ajaxSubmit({
 
 					url       : url,
 					dataType  : dataType,
-					data      : buttonData,
+					data      : $.extend( {}, form.params, buttonData ),	// Also submit url params as fields.
 
-					beforeSubmit: function(data, form, options) {
+					beforeSubmit: function(data, form, options){
 						$form.trigger('form:beforeSubmit', [data, form, options]);
 					},
 
-					beforeSend: function(xhr) {
+					beforeSend: function(xhr){
 						$form.trigger('form:beforeSend', [xhr]);
 					},
 
@@ -550,12 +578,14 @@ jQuery(function($) {
 			// Allow for when a label is clicked to trigger a submit: (We have to use closest() because elem may be a text node inside a label)
 			var id, $elem = $(elem), label_for = $elem.closest('LABEL').attr('for');
 			if( label_for ){ $elem = $( '#' + label_for ) }
-
+			
+			var $form  = $elem.closest('FORM');
 			var target = $elem.find('OPTION:selected').attr('data-target')
-				|| $elem.attr('data-target') || $elem.attr('data-rel') || $elem.attr('rel')	// Note: "data-rel" is depricated. "rel" only applies to links and should be depricated.
-				|| ( $elem.is(':submit') && $elem.closest('FORM').attr('data-target') ) 
-				|| ( $elem.is('SELECT.auto-submit') && $elem.closest('FORM').find(':submit[data-target]').attr('data-target') ) 
-				|| ( $elem.is('SELECT.auto-submit') && $elem.closest('FORM').attr('data-target') ) 
+				|| $elem.attr('data-target') || $elem.attr('rel') || $elem.attr('data-rel')	// Note: "data-rel" is depricated. "rel" only applies to links and should be depricated.
+				|| ( $elem.is(':submit') && $form.attr('data-target') )
+				|| ( $elem.is('SELECT.auto-submit') && $form.find(':submit[data-target]').attr('data-target') ) 
+				|| ( $elem.is('SELECT.auto-submit') && $form.attr('data-target') ) 
+				|| ( $elem.is('OPTION') && $elem.closest('SELECT').attr('data-target') )	// Applies on SELECT[data-method] 
 				|| '.ajaxPanel';
 
 			// Attempt to derive the #id selector syntax for the target element:
@@ -567,7 +597,7 @@ jQuery(function($) {
 
 
 		// Helper for parsing meta-data from a form: (Eg: the controller name and action, and the id of the object being edited etc)
-		getFormAction : function($form){
+		getActionOf : function($form){
 
 			$form = $($form).closest('FORM');
 
@@ -592,7 +622,7 @@ jQuery(function($) {
 				}
 
 			// Populate params hash with all the name=value pairs in the url?parameters:
-			$.each( form.param.split('&'), function(i,pair){ var p = pair.split('='); if(p[0]) form.params[p[0]] = p[1] } );
+			$.each( form.param.split('&'), function(i,pair){ var p = pair.split('='); if(p[0]){ form.params[p[0]] = p[1] } } );
 
 			// Derive {name}_id property for each resource in the path: (And attempt to read the id of the resource being edited)
 			$.extend( form, Layout.getResourceIDsFrom(form.path) );
@@ -609,7 +639,7 @@ jQuery(function($) {
 				default                                   : form.action = '';
 			}
 
-			console.log( 'getFormAction =>', form );
+			console.log( 'getActionOf =>', form );
 			return form;
 
 		},
