@@ -567,15 +567,30 @@ end
       
 		  # Helper to call collect_child_error_messages_for() on each child association:
       # Usage: collect_error_messages_for( @supplier, :companies )
-		  def collect_error_messages_for( obj, association_name, context = :default )
-  			
-			  errors = {}
-  			
-			  obj.send(association_name).each{ |a|
-          collect_child_error_messages_for( obj, a, context )
-        } if obj.respond_to? association_name
+		  def collect_error_messages_for( obj, association_name = :all, context = :default )
+
+        if association_name == :all
+          
+          @trip.model.relationships.each do | name, association |
+            if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
+              #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
+              if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
+                collect_error_messages_for @trip, name.to_sym
+              elsif rel
+                collect_child_error_messages_for @trip, rel
+              end
+            end
+          end
+          
+        else
+
+			    obj.send(association_name).each{ |a|
+            collect_child_error_messages_for( obj, a, context )
+          } if obj.respond_to? association_name
         
-			  return errors
+        end
+
+			  return obj.errors
         
 		  end
   

@@ -26,20 +26,18 @@ class Trips < Application
   def show(id)
     
     @trip   = requested_version = Trip.get(id)
-    #@tour   = Tour.get( params[:tour_id] )
-    #@client = Client.get( params[:client_id] ) || session.user.most_recent_client
     @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     
     raise NotFound unless @trip
     
     # Make this the active trip version if required:
-    @trip.become_active_version if params[:is_active_version] && !@trip.is_active_version
+    @trip.become_active_version! if params[:is_active_version] && !@trip.is_active_version
     
     # Important: Always assume we want to display the active version of the requested trip:
     #@trip = @trip.active_version
     
     # Belt and braces in case active_version is missing! Revert to the requested trip id:
-    @trip = requested_version.become_active_version unless @trip
+    @trip = requested_version.become_active_version! unless @trip
     #@trip = requested_version  # What was this line for?
     
     display @trip
@@ -103,7 +101,9 @@ class Trips < Application
   def new
     
     @trip   = Trip.new
-    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    tour    = Tour.get( params[:tour_id] )
+    client  = Client.get( params[:client_id] ) || session.user.most_recent_client
+    @client_or_tour = tour || client
     
     original_version  = Trip.get( params[:version_of_trip_id] )
     is_new_version    = !original_version.nil?
@@ -114,9 +114,9 @@ class Trips < Application
       if master = Trip.get( params[:copy_trip_id] )
         
         @trip.copy_attributes_from master
-        
+          
   		  # Ensure current client is on this new trip:
-        @trip.trip_clients.new( :client_id => @client.id ) if @client.id && @trip.trip_clients.all( :client_id => @client.id ).empty?
+        @trip.trip_clients.new( :client_id => client.id ) if client.id && @trip.trip_clients.all( :client_id => client.id ).empty?
         @trip.user_id ||= session.user.id
         
         message[:notice]  = "Voila! A copy of #{ master.title } to do with as you please...\n(Don't forget to save it!)"
@@ -132,21 +132,26 @@ class Trips < Application
       @trip.user_id   ||= session.user.id
       
       message[:notice]  = "Don't forget to save this new fixed-departure for #{ @trip.tour.name }"
+
+    # This functionality moved to trips#update
+    #  # A new version of an existing trip:
+    #  elsif is_new_version
+    #    
+    #    @trip.copy_attributes_from( original_version.active_version )
+    #    #@trip.version_of_trip = original_version.active_version
+    #    @trip.user_id   ||= session.user.id
+    #
+    #    if @trip.save && @trip.update( :version_of_trip_id => original_version.active_version.id )
+    #      message[:notice] = "A new version of this trip has been created"
+    #    else
+    #      message[:error]  = error_messages_for( @trip, :header => 'Could not create a new version of this trip because:' )
+    #    end
       
-    # A new version of an existing trip:
-    elsif is_new_version
-      
-      @trip.copy_attributes_from( original_version.active_version )
-      @trip.user_id   ||= session.user.id
-      @trip.save
-      
-      message[:notice]  = "A new version of this trip has been created"
-      
-      # A whole new trip:
+    # A whole new trip:
     else
       
 		  # Ensure current client is on this new trip:
-      @trip.trip_clients.new( :client_id => @client.id )
+      @trip.trip_clients.new( :client_id => client.id )
       @trip.user_id   ||= session.user.id
       
       message[:notice]  = "This new trip will be added to the database when you save it"
@@ -210,20 +215,20 @@ class Trips < Application
     #@trip.company_id					||= ( trip[:company_id] || 1 ).to_i
     
 		@trip.updated_by					||= session.user.fullname
-    @trip.clients							<<	@client unless @trip.tour
+    @trip.clients							<<	@client_or_tour unless @trip.tour
 		
 		# Alas this does not seem to affect the row in the trip_clients table:
 		@trip.trip_clients.each{ |relationship| relationship.created_by = @trip.created_by }
-    
+
 		if @trip.save
       
       message[:notice] = "Trip was created successfully"
       
       if request.ajax?
         display @trip, :show
-        #redirect resource( @client, :show ), :message => message, :layout => :ajax
+        #redirect resource( @client_or_tour, :show ), :message => message, :layout => :ajax
       else
-        redirect nested_resource( @trip, :edit ), :message => message
+        redirect resource( @client_or_tour, @trip, :edit ), :message => message
       end
       
     else
@@ -246,8 +251,8 @@ class Trips < Application
         
       end
 
-message[:error] = error_messages_for( @trip, :header => 'The trip details could not be created because:' )
 			message[:notice] = 'aarrh'
+      message[:error] = error_messages_for( @trip, :header => 'The trip details could not be created because:' )
       render :new
     end
     
@@ -258,15 +263,18 @@ message[:error] = error_messages_for( @trip, :header => 'The trip details could 
     
     @trip = Trip.get(id)
     raise NotFound unless @trip
-    
+
     @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     
 		# Workaround for when no checkboxes are ticked: (Because posted params will not contain an array of ids)
     # This also fixes bug where saving the costing sheet caused country selections to be lost! http://www.bugtails.com/projects/299/tickets/209.html
 		trip[:countries_ids] ||= @trip.countries_ids
     
-		# Convert from UK date formats and
-    # Make assumptions for missing dates:
+    if trip[:active_version_id].to_i != @trip.id && ( new_active_version = @trip.versions.get(trip[:active_version_id]) )
+      @trip = new_active_version
+    end
+
+		# Convert from UK date formats and make assumptions for missing dates:
 		accept_valid_date_fields_for trip, [ :start_date, :end_date ]
     trip[:start_date] ||= @trip.start_date || Date.today
     trip[:end_date]   ||= @trip.end_date   || trip[:start_date]
@@ -276,11 +284,32 @@ message[:error] = error_messages_for( @trip, :header => 'The trip details could 
     flight_count_before = @trip.flights.length
     
     next_page = params[:redirect_to] && params[:redirect_to].to_sym || nil
-    
 
-		if @trip.update(trip)
-			
-			message[:notice]	  = 'Trip was updated successfully.'
+      
+    # Special case: Make a new version of this trip if requested!
+    if trip[:active_version_id] == 'new'
+      
+      puts "Creating new version_of_trip #{ @trip.version_of_trip_id } from #{ @trip.id }"
+      trip.delete(:active_version_id)
+      new_version = Trip.new
+      new_version.copy_attributes_from @trip, :is_active_version => true
+      new_version.user_id ||= session.user.id
+      
+      if new_version.save
+        @trip = new_version
+        message[:notice] = "A new version has been created and is now the active version of this trip."
+      else
+        collect_error_messages_for @trip
+        message[:error]  = error_messages_for( @trip, :header => 'Could not create a new version of this trip because:' )
+      end
+      
+      return render :show
+
+    # Otherwise apply the changes in the normal way:
+		elsif @trip.update(trip)
+      
+			message[:notice]	  = 'Trip was updated successfully. '
+      message[:notice]   += 'The active version has been changed.' if new_active_version
       
       # Prepare to apply specified PNR numbers:
 			pnr_errors				  = []
@@ -330,36 +359,13 @@ message[:error] = error_messages_for( @trip, :header => 'The trip details could 
       end
       
     else
-#      collect_error_messages_for @trip, :pnrs
-#      collect_error_messages_for @trip, :trip_pnrs
-#      collect_error_messages_for @trip, :countries
-#      collect_error_messages_for @trip, :trip_countries
-#      collect_error_messages_for @trip, :trip_elements
-#      collect_error_messages_for @trip, :trip_clients
-#      collect_error_messages_for @trip, :clients
-#      collect_error_messages_for @trip, :money_ins
-#      collect_error_messages_for @trip, :money_outs
 
-      @trip.model.relationships.each do | name, association |
-
-        if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
-
-          #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
-          if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
-            collect_error_messages_for @trip, name.to_sym
-          elsif rel
-            collect_child_error_messages_for @trip, rel
-          end
-
-        end
-
-      end
+      collect_error_messages_for @trip
 
 			message[:error] = "Oops, something odd happened. In all the excitement I kinda got lost. \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
       print "\n /trips/#{ id }/update FAILED !!!\n #{ message[:error] } #{ @trip.errors.inspect }\n"
-      #display next_page.to_sym
-      #display @trip
       render :show
+
     end
     
   end
@@ -384,7 +390,7 @@ message[:error] = error_messages_for( @trip, :header => 'The trip details could 
       else
         message[:notice] = "The trip-version has been deleted"
         @trip = original_version
-        @trip.become_active_version
+        #@trip.become_active_version!
         #display @trip
         #render :show
       end

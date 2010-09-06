@@ -186,7 +186,10 @@ class Trip
       
       # Ensure existing trip refers to itself if missing version_of_trip:
       self.version_of_trip_id = self.id if self.version_of_trip_id.to_i == 0 && self.id.to_i > 0
-
+      
+      # 
+      self.is_active_version = true if @new_active_version_id && @new_active_version_id == self.id
+      
       # Ensure all trip elements still have valid numbers of adults/children/infants
       # (Also see TripElement before :save)
       # TODO: Handle subgroups?
@@ -227,10 +230,19 @@ class Trip
       #    self.save!
       #  end
       
+      # If necessary, update the "is_active_version" flag on all other versions of same trip:
+      if self.is_active_version || ( (@new_active_version_id ||= nil) && @new_active_version_id == self.id )
       
-      # Update the is_active_version flag on all versions of same trip:
-      self.become_active_version
-      
+        self.be_the_only_active_version!
+
+      elsif @new_active_version_id && ( active_version = self.versions.get(@new_active_version_id) )
+
+        # Ensure the chosen active_version is updated:
+        active_version.update!( :is_active_version => true )
+        active_version.be_the_only_active_version!
+
+      end
+      @new_active_version_id = nil
       
       # Moved to before:save
       # Ensure all trip elements still have valid numbers of adults/children/infants
@@ -291,7 +303,24 @@ class Trip
       
     end
     
-    
+
+    after :destroy do
+
+      if self == self.version_of_trip
+
+        # TODO: Also delete all versions of this trip!
+
+      elsif self.is_active_version
+
+        # Make the original version the active version:
+        self.version_of_trip.update!( :is_active_version => true )
+        self.version_of_trip.be_the_only_active_version!
+
+      end
+
+    end
+
+
     
     # Derived properties and helpers...
     
@@ -428,28 +457,48 @@ class Trip
       return self.versions.first( :is_active_version => true )
     end
     
+    # Helper to set the active version amongst all trips that have the same version_of_trip_id:
+    # Warning: This may run update! on self and all other versions:
+    def active_version_id=(trip_id)
+      if( @new_active_version_id = trip_id )
+        self.is_active_version = ( @new_active_version_id == self.id ) 
+      end
+      #return ( version = self.versions.get(trip_id) ) && !version.is_active_version && version.become_active_version!
+    end
+    
     
     # Helper to set is_active_version on this trip, and unset is_active_version on the other versions:
-    def become_active_version
+    # Warning: This may run update! on self and all versions:
+    def become_active_version!
+
+      self.is_active_version = true
+      self.be_the_only_active_version!
       
-      unless self.new? || self.version_of_trip_id.to_i == 0
-        
-        unless self.is_active_version
-          self.is_active_version = true
-          self.save!
-        end
-        
-        # Update the is_active_version flag on all versions of same trip:
-        Trip.all( :version_of_trip_id => self.version_of_trip_id, :is_active_version => true, :id.not => self.id ).each do |version|
-          version.update!( :is_active_version => false )
-        end
-        
-      end
-      
-      return self
+      #  unless self.new? || self.version_of_trip_id.to_i == 0
+      #    
+      #    unless self.is_active_version
+      #      self.is_active_version = true
+      #      self.save!
+      #    end
+      #    
+      #    # Update the is_active_version flag on all versions of same trip:
+      #    Trip.all( :version_of_trip_id => self.version_of_trip_id, :is_active_version => true, :id.not => self.id ).each do |version|
+      #      version.update!( :is_active_version => false )
+      #    end
+      #    
+      #  end
+      #  
+      #  return self
       
     end
     
+    # Helper to unset the "is_active_version" flag on all other trips sharing the same version_of_trip_id:
+    # Warning: This has does nothing if self has not been saved yet.
+    def be_the_only_active_version!
+      if self.is_active_version && self.version_of_trip_id && self.id
+        return self.versions.all( :id.not => self.id ).each{ |version| version.is_active_version = false }.save!
+      end 
+    end
     
     # Friendly DSL method to fetch collection of specific types of money_in records:
     def invoices( invoice_type = :all )
@@ -1185,15 +1234,14 @@ class Trip
       if master
         
         clone    = self
-        new_name = master.tour_template? ? "Tour: #{ master.name }" : "Copy of #{ master.name }"
+        new_name = master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }"
+        type_id  = master.tour_template? ? TripType::FIXED_DEP       : master.type_id # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
         
         clone.attributes = master.attributes.merge(
-          :id   => nil,
-          :name => new_name
+          :id       => nil,
+          :name     => new_name,
+          :type_id  => type_id
         )
-        
-        # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
-        clone.type_id = TripType::FIXED_DEP if master.tour_template?
         
         # Copy trip clients and countries:
         master.clients.each{ |client| clone.clients << client }
@@ -1201,18 +1249,16 @@ class Trip
         
         # Clone the trip elements:
         master.trip_elements.each do |master_elem|
-          
           attrs =  master_elem.attributes.merge( :id => nil )
           clone.trip_elements << TripElement.new(attrs)
-          
         end
         
-        # Override defaults with any explicitly specified attributes:
+        # Override defaults with any attributes explicitly specified in this method's arguments:
         clone.attributes = custom_attributes || {}
+      
+        return clone.attributes
         
       end
-      
-      return !!master
       
     end
     

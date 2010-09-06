@@ -166,13 +166,15 @@ jQuery(function($) {
 			Layout.liveForm('success', 'tours:destroy',									Tour.closeShow, Tour.openIndex );
 
 			// Trips:
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)$/,			Trip.initShow );
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,					Trip.initForm );
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/edit/,		Trip.initForm );
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/builder/,	Trip.initTimeline );
-			Layout.liveForm('success', 'trips:create',									Trip.onCreateSuccess );
-			Layout.liveForm('success', 'trips:update',									Trip.onUpdateSuccess );
-			Layout.liveForm('success', 'trips:destroy',									Trip.onDestroySuccess );
+			Layout.livePath('click',   /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.openShow );	// Create new version.
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.initShow );	// Created new version.
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,									Trip.initForm );
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)$/,							Trip.initShow );
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/edit/,						Trip.initForm );
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/builder/,					Trip.initTimeline );
+			Layout.liveForm('success', 'trips:create',													Trip.onCreateSuccess );
+			Layout.liveForm('success', 'trips:update',													Trip.onUpdateSuccess );
+			Layout.liveForm('success', 'trips:destroy',													Trip.onDestroySuccess );
 
 			// TripElements:
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.hideForm );
@@ -298,7 +300,7 @@ jQuery(function($) {
 
 			// Actual order of arguments will vary depending on how this was called!
 			// When called by a uiTabs event, the xhr argument will be undefined, options will be a ui object.
-			var ui = options = ( options || xhr.options || xhr );
+			var ui = options = ( options || xhr );
 			if( xhr && xhr !== options ){ options.xhr = xhr };
 			if( ui.tab && !ui.url ){ ui.url = $.data(ui.tab,'load.tabs'); }	// Derive url from ui.tab when apprioriate.
 			var path = options.url;
@@ -334,7 +336,7 @@ jQuery(function($) {
 				// Trigger the callback passing a pimped-up copy of the options hash or tabs ui object:
 				if( m && $.isFunction(callback) ){
 					var args = $.extend( {}, options, { type:type, matches:m, pattern:regex } );
-					console.log('Triggering livePath:', args, type, path, regex, callback );
+					console.log('Triggering livePath:', type, args, path, regex, callback );
 					callback(args);
 				}
 
@@ -375,6 +377,7 @@ jQuery(function($) {
 					href   = $item.attr('data-href') || $list.attr('data-href') || $list.attr('href') || $list.val();	// Note: "href" is depricated.
 					href   = href.replace( '{value}', $item.val() ).replace( '{text}', $item.text() );
 
+				// TODO: Trigger the handler directly on the list instead of this dodgy on-the-fly link element:
 				$('<a>').attr({ href: href, 'data-target': target }).trigger('click',this);
 
 			});
@@ -382,7 +385,7 @@ jQuery(function($) {
 			// Trigger custom 'hashchange' event whenever a link is clicked:
 			$('A:not(.noajax,.scrollTo)').live('click', function(e, source){
 
-				var $link	= $(this),
+				var $link	= $(this),	// TODO: $link = $(source || this) to handle auto-linking lists.
 				    path	= $link.attr('href').replace(/^#\/?/,''),
 				    ext		= path.split('.')[1],	// Filename extension
 				    target	= Layout.getTargetOf($link),
@@ -411,6 +414,7 @@ jQuery(function($) {
 
 			// Initialise handler for auto-submitting picklists:
 			$('SELECT.auto-submit, :checkbox.auto-submit, FORM.auto-submit SELECT, FORM.auto-submit :checkbox').live('change keydown', function(e){
+
 				// Ignore all key strokes except <Enter> key: (to select an item in the list)
 				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
 				$(this).closest('FORM').trigger('submit',this);
@@ -675,15 +679,16 @@ jQuery(function($) {
 
 	$.ajaxSetup({
 
-		// Custom callback that fires just before ajax complete: (See customised ajax method in helpers.js)
-		beforeComplete : function(xhr, status, options) {
+// DEPRICATED
+//		// Custom callback that fires just before ajax complete: (See customised ajax method in helpers.js)
+//		beforeComplete : function(xhr, status, options) {
 
-			// Set a custom 'data-ajax-url' attribute on the target element if we have the necessary details:
-			if( xhr && xhr.options && xhr.options.target && xhr.options.url ) {
-				$(xhr.options.target).attr( ELEMENT_URL_ATTR, xhr.options.url );
-			}
-			//alert(xhr.options.url )
-		},
+//			// Set a custom 'data-ajax-url' attribute on the target element if we have the necessary details:
+//			if( xhr && xhr.options && xhr.options.target && xhr.options.url ) {
+//				$(xhr.options.target).attr( ELEMENT_URL_ATTR, xhr.options.url );
+//			}
+//			//alert(xhr.options.url )
+//		},
 
 		// Depricated because it does not give use info about the url etc:
 		//success : function(data,status,xhr){
@@ -997,80 +1002,81 @@ return
 
 
 
-	// Called when any ajax calls complete:
-	function onAjaxComplete(xhr, status, options) {
+	// DEPRICATED
+//	// Called when any ajax calls complete:
+//	function onAjaxComplete(xhr, status, options) {
 
-		var isHtml		= /^\s*\</;				// var isJson = /^\s*[\[\{]/;
-		var findFormUrl	= / action="([^"]*)"/;
+//		var isHtml		= /^\s*\</;				// var isJson = /^\s*[\[\{]/;
+//		var findFormUrl	= / action="([^"]*)"/;
 
-		// Only update UI elements if response is html:
-		if( xhr && xhr.responseText && isHtml.test(xhr.responseText) ){
+//		// Only update UI elements if response is html:
+//		if( xhr && xhr.responseText && isHtml.test(xhr.responseText) ){
 
-			// Derive a handy hash of url info kinda like window.location on steroids:
-			// (Extract <form action="url"> using a regex because some responseText can be too big or complex for jQuery to parse)
-			var formAction	= ( findFormUrl.exec(xhr.responseText) || [] )[1];
-			var url			= parseUrl( formAction );
-			var target		= xhr && xhr.options && xhr.options.target;
-			var $target		= undefined;
-			
-			if( target ){ $target = $(target) }
+//			// Derive a handy hash of url info kinda like window.location on steroids:
+//			// (Extract <form action="url"> using a regex because some responseText can be too big or complex for jQuery to parse)
+//			var formAction	= ( findFormUrl.exec(xhr.responseText) || [] )[1];
+//			var url			= parseUrl( formAction );
+//			var target		= xhr && xhr.options && xhr.options.target;
+//			var $target		= undefined;
+//			
+//			if( target ){ $target = $(target) }
 
-			//initLevel2Tabs_forClient($target);
-			//initLevel3Tabs_forTrip($target);
-			//initLevel2Tabs_forSysAdmin($target);
-			//initLevel2Tabs_forReports($target);
-			initFormAccordions($target);
-			//initFormTabs($target);	// Eg: countriesTabs on Trip Summary page.
-			initSpinboxes($target);
-			initDatepickers($target);
-			initPostcodeSearch($target);
-			initMVC($target);
-			triggerTripInvoiceFormChange();
+//			//initLevel2Tabs_forClient($target);
+//			//initLevel3Tabs_forTrip($target);
+//			//initLevel2Tabs_forSysAdmin($target);
+//			//initLevel2Tabs_forReports($target);
+//			initFormAccordions($target);
+//			//initFormTabs($target);	// Eg: countriesTabs on Trip Summary page.
+//			initSpinboxes($target);
+//			initDatepickers($target);
+//			initPostcodeSearch($target);
+//			initMVC($target);
+//			triggerTripInvoiceFormChange();
 
-			// Display any user-feedback messages found in the response:
-			// (Extract message elements using a regex because some responseText can be too big or complex for jQuery to parse)
-			var messagesFragment = ( FIND_MESSAGE_CONTENT.exec(xhr.responseText) || [] )[1];
-			if( messagesFragment ){
-				var $newMessages	 = $(messagesFragment).closest(".noticeMessage, .errorMessage");
-				showMessage( $newMessages );
-			}
+//			// Display any user-feedback messages found in the response:
+//			// (Extract message elements using a regex because some responseText can be too big or complex for jQuery to parse)
+//			var messagesFragment = ( FIND_MESSAGE_CONTENT.exec(xhr.responseText) || [] )[1];
+//			if( messagesFragment ){
+//				var $newMessages	 = $(messagesFragment).closest(".noticeMessage, .errorMessage");
+//				showMessage( $newMessages );
+//			}
 
-			// TRIP ELEMENTs: Derive trip_element.id from the form url and refresh the element in the timeline:
-			if( url.resource.trip_element ) {
+//			// TRIP ELEMENTs: Derive trip_element.id from the form url and refresh the element in the timeline:
+//			if( url.resource.trip_element ) {
 
-//				var elemId			= url.resource.trip_element;
-//				var elemIdFieldName = "trip_element[id]";
-//				//var elemClass	 = elemIdFieldName + "=" + elemId;   // Eg: class="trip_element[id]=123456"
-//				//	elemClass	 = elemClass.replace(/([\[\]\=])/g,"\\$1")
-//				//var $timelineElem = $("LI." + elemClass);
-//				var $timelineElem = $("INPUT:hidden[value='" + elemId + "'][name='trip_element[id]']").parents("LI.tripElement:first");
+////				var elemId			= url.resource.trip_element;
+////				var elemIdFieldName = "trip_element[id]";
+////				//var elemClass	 = elemIdFieldName + "=" + elemId;   // Eg: class="trip_element[id]=123456"
+////				//	elemClass	 = elemClass.replace(/([\[\]\=])/g,"\\$1")
+////				//var $timelineElem = $("LI." + elemClass);
+////				var $timelineElem = $("INPUT:hidden[value='" + elemId + "'][name='trip_element[id]']").parents("LI.tripElement:first");
 
-//				$timelineElem.reload(function() {
-//					// Refresh timeline overview after ajax reload:
-//					//$('DIV.timelineContent:visible').timelineOverview();
-//				}, true);
+////				$timelineElem.reload(function() {
+////					// Refresh timeline overview after ajax reload:
+////					//$('DIV.timelineContent:visible').timelineOverview();
+////				}, true);
 
-			}
+//			}
 
 
-			// Check for a message from the server telling us to OPEN A CLIENT TAB for the specified client:
-			if( $target && $target.length ){
-			
-				// Look for <input name="client_id" class="showClient" value="123456">
-				$target.find('INPUT[name=client_id][value].showClient').each(function(){
+//			// Check for a message from the server telling us to OPEN A CLIENT TAB for the specified client:
+//			if( $target && $target.length ){
+//			
+//				// Look for <input name="client_id" class="showClient" value="123456">
+//				$target.find('INPUT[name=client_id][value].showClient').each(function(){
 
-					var client_id	 = $(this).val();									  // This extra search simple allows for when the field has been carelessly rendered in a <div class="formField">
-					var client_label = $(this).siblings('INPUT[name=client_label]').val() || $(this).parent().siblings().children('INPUT[name=client_label]').val();
+//					var client_id	 = $(this).val();									  // This extra search simple allows for when the field has been carelessly rendered in a <div class="formField">
+//					var client_label = $(this).siblings('INPUT[name=client_label]').val() || $(this).parent().siblings().children('INPUT[name=client_label]').val();
 
-					openClientTab( client_id, client_label );
+//					openClientTab( client_id, client_label );
 
-				});
-			
-			}
-			
-		}
+//				});
+//			
+//			}
+//			
+//		}
 
-	};
+//	};
 
 
 
@@ -1187,29 +1193,29 @@ return
 
 
 
-
+// DEPRICATED
 // React to any "add NEW TRIP" links:
 
-	$("A[href *= '/trips/new']").live('click', function() {
+//	$("A[href *= '/trips/new']").live('click', function() {
 
-		var url			= $(this).attr('href');
-		var $lhsTabs	= $('UL:visible.clientPageTabsNav').parents('.ui-tabs:first');
-		var location	= parseUrl(url)
+//		var url			= $(this).attr('href');
+//		var $lhsTabs	= $('UL:visible.clientPageTabsNav').parents('.ui-tabs:first');
+//		var location	= parseUrl(url)
 
-		if( location.resource.client && location.params.copy_trip_id ){
-		
-			openClientTab( location.resource.client );
-		
-		// Open the "New trip" tab: (The last one on the left hand side)
-		} else if( $lhsTabs.length > 0 ){
+//		if( location.resource.client && location.params.copy_trip_id ){
+//		
+//			openClientTab( location.resource.client );
+//		
+//		// Open the "New trip" tab: (The last one on the left hand side)
+//		} else if( $lhsTabs.length > 0 ){
 
-			var newTripTabIndex = $lhsTabs.tabs('length') - 1;
-			$lhsTabs.tabs( 'select', newTripTabIndex );
+//			var newTripTabIndex = $lhsTabs.tabs('length') - 1;
+//			$lhsTabs.tabs( 'select', newTripTabIndex );
 
-		}
+//		}
 
-		return false;
-	});
+//		return false;
+//	});
 
 
 
@@ -2978,11 +2984,7 @@ function initTripInvoiceFormTotals(){
 				panelTemplate	: '<div class="sectionBody ajaxPanel clientSubPageContainer"></div>',		// Only ever used after creating trip.
 				panelsSelector	: function() { return this.list.cousins('.clientPageTabsContent > *') },	// This is a custom option. See modified ui.tabs.js script for details.
 
-				// When a new tab is added, open it immediately:
-				add		: function(e,ui) {
-					$(this).tabs('select',ui.index);		// TODO: This is being called but is not selecting the tab.
-				},
-
+				add		: Tabs.select,		// When a new tab is added, open it immediately.
 				load	: Tabs.onTabSuccess
 
 			});
@@ -2994,6 +2996,13 @@ function initTripInvoiceFormTotals(){
 
 
 	var Trip = {
+
+		openShow : function(options){
+		
+			console.log(options)
+			//alert(options)
+		
+		},
 
 		// Called when a TRIP is opened:
 		initShow : function(ui){
@@ -3107,13 +3116,14 @@ function initTripInvoiceFormTotals(){
 			if(options && options.form && options.form.target){
 
 				var $panel    = $(options.form.target);
-				var $tabs     = $panel.parents('.clientPage, .tour').find('.ui-tabs:first');
-				var trip_id   = options.form.trip_id || $panel.find('INPUT[name=trip_id]').val()
+				var $tabs     = $panel.parents('.clientPage, .tour').find('.ui-tabs:first');	// Context is a Tour or a Client.
+				var trip_id   = options.form.trip_id || $panel.find('INPUT[name=trip_id]').val();
 				var trip_name = $panel.find('INPUT[name=trip_name]').val() || 'New trip';
-				var url       = options.form.path + '/' + trip_id;		// Eg: /clients/12345678/trips/{trip_id}
+				var url       = options.form.path + '/' + trip_id;			// Eg: /clients/123/trips/{trip_id} or /tours/456/trips/{trip_id}
+				var index     = options.form.tour_id ? 2 : 4;				// Choose tab position depending on whether trip is for Client or Tour.
 
-				$tabs.tabs('add', url, trip_name, 2);
-				$tabs.tabs('select', 2);
+				$tabs.tabs('add', url, trip_name, index);
+				//$tabs.tabs('select', index);
 
 			}
 

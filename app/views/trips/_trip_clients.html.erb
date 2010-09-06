@@ -44,10 +44,10 @@
 	case when html_template
 		tooltip = "Client added but not saved yet!"
 			
-	when client_is_open_in_ui
+	when client && client_is_open_in_ui
 		tooltip = "You are working on a trip for #{ client.shortname } so you won't be able to remove them!"
 		
-	when trip_client.is_primary
+	when client && trip_client.is_primary
 		tooltip = "You won't be able to remove #{ client.shortname } while they are a primary contact."
 		
 	else
@@ -61,7 +61,7 @@
 	# Note: Because we are explicitly specifying document_template_file it will not need to be derived from document_type_id.
 	# Note: Letter templates are always in the /Templates/Letters subfolder.
 	# Eg: document[document_type_id]=8&document[client_id]=#{ client.id }&document[user_id]=#{ session.user.id }&document[generate_doc_after_create]=true&document[generate_doc_later]=true&document[document_template_file]=Letters/{value}&_method=post
-	if show_trip_letters_menu
+	if client && show_trip_letters_menu
 		
 		letter_builder_parameters = {
 			
@@ -116,7 +116,7 @@
 
 				</div>
 			</td>
-			<td><%= orig_select :name => 'generate_letter', :collection => @template_filenames, :prompt => 'Create a trip letter...', :class => 'create-letter arrow-only', :'data-action' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }" if show_trip_letters_menu %></td>
+			<td><%= orig_select :name => 'generate_letter', :collection => @template_filenames, :prompt => 'Create a trip letter...', :class => 'create-letter arrow-only', :'data-action' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }" if client && show_trip_letters_menu %></td>
 			<!--<td>
 				<%#= orig_radio_button	:name => "selected_client", :checked => (index==0) if client_id && trip.tour_template? %>
 				
