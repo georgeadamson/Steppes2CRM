@@ -54,7 +54,7 @@
         <%#= link_to "Label", resource(client, :edit) if client.id %>
 				<%=
 					template_filenames = Document.doc_builder_letter_templates( :type => :general )
-					orig_select :name => 'generate_letter', :collection => template_filenames, :prompt => 'Create a general letter...', :class => 'create-letter arrow-only', :'data-method' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }"
+					orig_select :name => 'generate_letter', :collection => template_filenames, :prompt => 'Create a general letter...', :class => 'create-letter arrow-only', :'data-method' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }", :'data-target' => '#no-target'
 				%>
       </h4>
 

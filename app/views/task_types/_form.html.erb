@@ -1,0 +1,10 @@
+<%
+
+	task_type ||= @task_type
+	@properties = task_type.method(:properties).call
+
+	@show_required_field_message = true
+	
+%>
+<%= text_field :name, :label => 'Task type', :maxlength => @properties[:name].length, :class => 'width2Fields' %>
+

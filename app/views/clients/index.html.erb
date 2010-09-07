@@ -68,17 +68,17 @@
 					
 					<div id="recentClients" class="tabs" style="width:35em;">
 
-						<ul>
+						<!--<ul>
 							<li><a href="#myRecentClients">My recent clients</a></li>
-							<!--<li><a href="#allRecentClients">Everyone's recent clients</a></li>-->
-						</ul>
+							<li><a href="#allRecentClients">Everyone's recent clients</a></li>
+						</ul>-->
 
-						<div id="myRecentClients">
+						<!--<div id="myRecentClients">
 							<ul class="clients">
-								<% clients = session.user.clients.all( :limit => 10 ) %>
-								<%= partial( 'shared/list', :collection => clients, :list_type => :li_link, :link_params => {:label=>:shortname} ) %>
+								<%# clients = session.user.clients.all( :limit => 10 ) %>
+								<%#= partial( 'shared/list', :collection => clients, :list_type => :li_link, :link_params => {:label=>:shortname} ) %>
 							</ul>
-						</div>
+						</div>-->
 
 						<!--<div id="allRecentClients">
 							<ul class="clients">
@@ -86,6 +86,13 @@
 								<%#= partial( 'shared/list', :collection => clients, :list_type => :li_link, :link_params => {:label=>:shortname} ) %>
 							</ul>
 						</div>-->
+						
+						<!-- Autotext experiments: -->
+						<%#= select :name => 'autotext_company', :multiple => :multiple, :collection => Company.all(:order=>[:name],:is_active=>true), :'data-href' => '/countries?autotext&company_id={value}&list=option', :'data-target' => "#autotext_country", :value_method => :id, :text_method => :name %>
+						<%#= select :name => 'autotext_country', :multiple => :multiple, :collection => Country.all(:order=>[:name]), :value_method => :id, :text_method => :name %>
+						
+						<%#= link_to 'HTA test', 'file://C:\Documents and Settings\George\Desktop\Autotext.hta' 
+						%>
 						
 					</div>
 

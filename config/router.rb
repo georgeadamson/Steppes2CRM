@@ -28,6 +28,8 @@
 Merb.logger.info("Compiling routes...")
 
 Merb::Router.prepare do
+  resources :task_types
+  resources :tasks
   resources :trip_client_statuses
   resources :tours
 

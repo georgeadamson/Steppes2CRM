@@ -27,6 +27,9 @@ class User
   
   # userGroup / privelages?
 
+  has n, :tasks         # AKA Followups
+  has n, :closed_tasks, :model => "Task", :child_key => [:closed_by_user_id]
+
   has n, :trips         # Trip handler / Prepared by
   has n, :documents
   has n, :money_ins     # AKA Client Invoices

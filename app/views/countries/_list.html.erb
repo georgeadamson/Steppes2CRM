@@ -8,6 +8,7 @@
 
 	# Prepare records and apply filters and options:
 	countries				||= collection || Country.all
+	countries					= countries.all( Country.companies.id => company_id )  if company_id
 	countries					= countries.all( :world_region_id => world_region_id ) if world_region_id
 
 -%><%= partial( 'shared/list', :collection => countries ) -%>

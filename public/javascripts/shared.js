@@ -197,7 +197,11 @@ jQuery(function($) {
 			Layout.liveForm('success', 'web_requests:update',							Client.openShow ); // TODO!
 
 			// SysAdmin:
-			Layout.livePath('success', new RegExp('/system$'),					SysAdmin.initShow );
+			Layout.livePath('success', new RegExp('/system$'),							SysAdmin.initShow );
+
+			// AutoText:
+			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
+			Layout.livePath('success', /\/autotexts\?autotext/,							Autotext.showAutotexts );	// Eg: '/autotexts?autotext&country_id={value}&list=option'
 
 			// Depricated in favour of Layout.liveForm:
 			//$('FORM.edit-client').live('form:success', Client.onEditSuccess)
@@ -3359,11 +3363,23 @@ function initTripInvoiceFormTotals(){
 
 		}
 	
+	} // End of SysAdmin methods.
+
+
+
+	var Autotext = {
+
+		// Populate the list of countries from the ajax response filtered by company:
+		showCountries : function(options){
+			$(options.target).html(options.data)
+		},
+
+		showAutotexts : function(options){
+		
+		
+		}
+
 	}
-
-
-
-
 
 
 // Helper to parse details from a url and return an object hash similar to the window.location object:

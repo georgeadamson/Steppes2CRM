@@ -67,6 +67,7 @@ class Client
   belongs_to :address_client,  :model => "Client", :child_key => [:address_client_id]
   has 1,     :address_clients, :model => "Client", :child_key => [:address_client_id]
 
+  has n, :tasks       # AKA Followups
   has n, :notes
   has n, :documents
   has n, :money_ins   # AKA Invoices
