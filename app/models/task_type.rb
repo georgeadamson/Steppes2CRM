@@ -11,4 +11,6 @@ class TaskType
 
 end
 
+# changed
+
 # TaskType.auto_migrate!		# Warning: Running this will clear the table!
