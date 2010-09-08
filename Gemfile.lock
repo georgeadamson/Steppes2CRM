@@ -1,5 +1,5 @@
 --- 
-hash: 393b23685da6c44585cb7871bd4d96e4dc9838a5
+hash: d774c073afa4684ac55b67395587f27f2b14e68e
 sources: 
   - Rubygems: 
       uri: http://rubygems.org
@@ -17,7 +17,7 @@ specs:
   - abstract: 
       version: 1.0.0
   - addressable: 
-      version: 2.1.1
+      version: 2.2.0
   - data_objects: 
       version: 0.10.1
   - extlib: 
@@ -29,9 +29,9 @@ specs:
   - dm-migrations: 
       version: 0.10.2
   - fastercsv: 
-      version: 1.5.0
+      version: 1.5.3
   - json_pure: 
-      version: 1.2.0
+      version: 1.2.4
   - dm-serializer: 
       version: 0.10.2
   - dm-timestamps: 
@@ -51,7 +51,7 @@ specs:
   - do_sqlserver: 
       version: 0.10.1
   - erubis: 
-      version: 2.6.5
+      version: 2.6.6
   - gem_plugin: 
       version: 0.2.3
   - mime-types: 
@@ -59,7 +59,7 @@ specs:
   - mailfactory: 
       version: 1.4.0
   - rack: 
-      version: 1.0.1
+      version: 1.2.1
   - rspec: 
       version: 1.3.0
   - thor: 
