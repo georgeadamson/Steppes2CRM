@@ -1,5 +1,5 @@
 --- 
-hash: 15a12f033e6436983b3e7d76dadfd964898b8bac
+hash: 393b23685da6c44585cb7871bd4d96e4dc9838a5
 sources: 
   - Rubygems: 
       uri: http://rubygems.org
@@ -7,13 +7,13 @@ specs:
   - rake: 
       version: 0.8.7
   - ZenTest: 
-      version: 4.3.3
+      version: 4.4.0
   - RubyInline: 
-      version: 3.8.4
+      version: 3.8.6
   - sexp_processor: 
-      version: 3.0.4
-  - ParseTree: 
       version: 3.0.5
+  - ParseTree: 
+      version: 3.0.6
   - abstract: 
       version: 1.0.0
   - addressable: 
@@ -67,9 +67,9 @@ specs:
   - merb-core: 
       version: 1.0.15
   - ruby_parser: 
-      version: 2.0.4
+      version: 2.0.5
   - ruby2ruby: 
-      version: 1.2.4
+      version: 1.2.5
   - merb-action-args: 
       version: 1.0.15
   - merb-assets: 
