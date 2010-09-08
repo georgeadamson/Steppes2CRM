@@ -2,7 +2,8 @@ require File.join( File.dirname(__FILE__), '..', "spec_helper" )
 require File.join( File.dirname(__FILE__), '..', "spec_data" )
 
 # To run this: jruby -X-C -S rake spec SPEC=spec/models/trip_spec.rb
-# Important: If the trip_element_spec does not succeed then this one does not have a chance!
+
+# Note: If the trip_element_spec does not succeed then this one does not have a chance!
 
 describe Trip do
 
@@ -58,9 +59,9 @@ describe Trip do
   
 
   after :each do
-    @trip.trip_clients.destroy
-    @trip.trip_countries.destroy
-    @trip.destroy
+    TripClient.all.destroy
+    TripCountry.all.destroy
+    Trip.all.destroy
   end
   
 
@@ -115,6 +116,16 @@ describe Trip do
       @trip.status_id.should == Trip::UNCONFIRMED
     end
 
+    it 'should have default version_of_trip equal to self' do
+      @trip = Trip.new( valid_trip_attributes )
+      @trip.version_of_trip_id = nil
+      @trip.save.should be_true
+      @trip.id.should be > 0
+      @trip.version_of_trip_id.should == @trip.id
+      @trip.reload
+      @trip.version_of_trip_id.should == @trip.id
+    end
+
     it 'should use booking fee of trip.company' do
 
       # booking_fee:
@@ -123,7 +134,7 @@ describe Trip do
       @trip.booking_fee.should == @trip.company.booking_fee
 
       # booking_fees:
-      @trip.booking_fees.should              == @trip.company.booking_fee * @trip.travellers
+      @trip.booking_fees.             should == @trip.company.booking_fee * @trip.travellers
       @trip.booking_fees(:all       ).should == @trip.company.booking_fee * @trip.travellers
       @trip.booking_fees(:people    ).should == @trip.company.booking_fee * @trip.travellers
       @trip.booking_fees(:persons   ).should == @trip.company.booking_fee * @trip.travellers
@@ -314,6 +325,66 @@ describe Trip do
       @trip.clients.should have(3).clients
       @trip.clients_names.should have(3).items
     end
+  	
+    
+    it "should add clients via nested-attributes" do
+
+      @trip.save
+      @trip.clients.should have(0).clients
+      
+		  @trip.attributes = {
+        :trip_clients_attributes => {
+          :"0" => {:client_id => @client1.id, :is_single => "0", :is_primary => "1", :is_invoicable => "1"},
+          :"1" => {:client_id => @client2.id, :is_single => "0", :is_primary => "0", :is_invoicable => "0"}
+        }
+      }
+      @trip.trip_clients.should have(2).trip_clients
+      @trip.save.should be_true
+      @trip.reload
+      @trip.clients.should have(2).clients
+      @trip.clients_names.should have(2).items
+
+    end
+  	
+    
+    it "should update clients via nested-attributes" do
+
+      # First set up 2 clients, same as the previous test:
+		  @trip.attributes = {
+        :trip_clients_attributes => {
+          :"0" => {:client_id => @client1.id, :is_single => "0", :is_primary => "1", :is_invoicable => "1"},
+          :"1" => {:client_id => @client2.id, :is_single => "0", :is_primary => "0", :is_invoicable => "0"}
+        }
+      }
+      @trip.trip_clients.should have(2).trip_clients
+      @trip.save.should be_true
+      @trip.reload
+
+      id1 = @trip.trip_clients[0].id
+      id2 = @trip.trip_clients[1].id
+
+      # Now apply more nested attributes to delete one client and add another:
+		  @trip.attributes = {
+        :trip_clients_attributes => {
+          :"0" => { :id => id1, :client_id => @client1.id, :_delete => true },
+          :"1" => { :id => id2, :client_id => @client2.id, :is_single => "0", :is_primary => "0", :is_invoicable => "0"},
+          :"2" => {             :client_id => @client3.id, :is_single => "0", :is_primary => "0", :is_invoicable => "0"}
+        }
+      }
+
+      # One item should be removed and one added:
+      @trip.trip_clients.should have(3).trip_clients  # Before save, one item will be flagged 'destroy'
+      @trip.save.should be_true
+      @trip.reload
+      @trip.clients.should have(2).clients
+      @trip.clients_names.should have(2).items
+      @trip.clients[0].id.should == @client2.id
+      @trip.clients[1].id.should == @client3.id
+
+      # Bonus test: After removing the primary client, another should become primary:
+      # @trip.trip_clients.all( :is_primary => true ).should have(1).item
+
+    end
     	
       
     it "should save and retrieve valid trip with PNRs" do
@@ -408,10 +479,10 @@ describe Trip do
     
     
     it "should calculate total TAXES per/for_all persons" do
-      puts @trip.adults
-      puts @trip.elements.all( :taxes.gt => 0 ).length
-      puts @trip.elements.all( :taxes.gt => 0 ).sum(:taxes)
-      puts sum_of( :taxes )
+      #puts @trip.adults
+      #puts @trip.elements.all( :taxes.gt => 0 ).length
+      #puts @trip.elements.all( :taxes.gt => 0 ).sum(:taxes)
+      #puts sum_of( :taxes )
 
       # Per person:
       adult_total  = sum_of( :taxes )

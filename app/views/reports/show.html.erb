@@ -5,9 +5,9 @@
 		<%
 			@results = @report.run()
 		-%>
-	
+
 		<table class="report-results">
-			
+
 			<thead>
 				<tr>
 					<% @report.report_fields.each do |field| -%>
@@ -23,7 +23,7 @@
 					<tr>
 					<% @report.columns.each do |column| -%>
 
-						<td><%=
+						<td scope="col"><%=
 
 										value = row[column.name]
 										

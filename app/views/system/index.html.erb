@@ -18,6 +18,7 @@
 		{ :label => 'Misc suppliers',	:url => resource(:suppliers, :type_id => 8) },
 		{ :label => 'Misc types',			:url => resource(:trip_element_misc_types) },
 		{ :label => 'PNRs',						:url => resource(:pnrs) },
+		{ :label => 'Task types',			:url => resource(:task_types) },
 		{ :label => 'Titles',					:url => resource(:titles) },
 		{ :label => 'Users',					:url => resource(:users) },
 		{ :label => 'Web Requests',		:url => resource(:web_request_types) },
@@ -44,6 +45,8 @@
          <div class="sectionBody">
 
             <ul class="sysAdminTabsNav ui-tabs-nav-vertical">
+						
+							<li class="dummy hidden"><a href="#dummyAdminTab"></a></li>
 
               <% admin_pages.each do |page| %>
 								<%= tag :li, link_to( page[:label], page[:url] ) %>
@@ -57,15 +60,16 @@
          </div>
       </div>
 
-			
+
       <div id="sysAdminTabsContent" class="sysAdminTabsContent ajaxPanel sectionContainer sectionContainerRight noSectionHead noSectionFoot">
-				
+
+				<div id="dummyAdminTab"></div>
+
 				<div id="sysAdminAboutTabContent" class="sectionBody">
 					<div class="sectionContainer">
 						<div class="sectionHead">
 							<h3>
-								<span class="ui-icon ui-icon-info"></span>
-								About this system
+								<span class="ui-icon ui-icon-info"></span> About this system
 							</h3>
 						</div>
 						<div class="sectionBody formSurround">

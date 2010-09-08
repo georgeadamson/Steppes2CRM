@@ -25,23 +25,27 @@
 <div id="pageTabs" class="sectionContainer noSectionFoot tabsContainer">
 
     <div class="sectionHead">
-      <ul id="pageTabsNav" class="primaryTabs">
+      <ul id="pageTabsNav" class="primaryTabs ellipsis">
 
         <!-- Dashboard tab: -->
-        <li class=""><a href="#tabDashboard">Home page</a></li>
+        <li class="dashboard-tab"><a href="#tabDashboard">Home page</a></li>
 
-        <!-- One tab for each client: -->
+        <!-- Tours tab: -->
+        <li class="tours-tab"><%= link_to tag(:span,'Groups'), resource(:tours) %></li>
+
+        <!-- Add client tab: -->
+        <li class="client-create"><%= link_to icon(:add), "#{ resource( :clients, :new ) }", :title => 'New client' %></li>
+
+        <!-- One tab for each open client: -->
         <% open_clients.each do |client| %>
-          <li class="<%= client.id == select_id ? 'ui-tabs-selected' : '' %>">
+          <li class="<%= 'ui-tabs-selected' if client.id == select_id %>">
 						<%= link_to client.shortname, resource(client) %>
 						<%= link_to "x", "#{resource(client)}/close", :class => "close-tab", :title => "Close this client tab" %>
-						<%# Note: The close-tab html must also be defined in the tabTemplate for #pageTabs in shared.js -%>
+						<%# Note: The close-tab html must also be defined in the tabTemplate for #pageTabs in shared.js 
+						%>
             <input type="hidden" value="<%= client.id %>" class="client-id" />
           </li>
         <% end %>
-
-        <!-- Add client tab: -->
-        <li class="client-create"><%= link_to icon(:add), "#{ resource( :clients, :new ) }", :title => "New client" %></li>
 
       </ul>
     </div>
@@ -64,17 +68,17 @@
 					
 					<div id="recentClients" class="tabs" style="width:35em;">
 
-						<ul>
+						<!--<ul>
 							<li><a href="#myRecentClients">My recent clients</a></li>
-							<!--<li><a href="#allRecentClients">Everyone's recent clients</a></li>-->
-						</ul>
+							<li><a href="#allRecentClients">Everyone's recent clients</a></li>
+						</ul>-->
 
-						<div id="myRecentClients">
+						<!--<div id="myRecentClients">
 							<ul class="clients">
-								<% clients = session.user.clients.all( :limit => 10 ) %>
-								<%= partial( 'shared/list', :collection => clients, :list_type => :li_link, :link_params => {:label=>:shortname} ) %>
+								<%# clients = session.user.clients.all( :limit => 10 ) %>
+								<%#= partial( 'shared/list', :collection => clients, :list_type => :li_link, :link_params => {:label=>:shortname} ) %>
 							</ul>
-						</div>
+						</div>-->
 
 						<!--<div id="allRecentClients">
 							<ul class="clients">
@@ -82,6 +86,13 @@
 								<%#= partial( 'shared/list', :collection => clients, :list_type => :li_link, :link_params => {:label=>:shortname} ) %>
 							</ul>
 						</div>-->
+						
+						<!-- Autotext experiments: -->
+						<%#= select :name => 'autotext_company', :multiple => :multiple, :collection => Company.all(:order=>[:name],:is_active=>true), :'data-href' => '/countries?autotext&company_id={value}&list=option', :'data-target' => "#autotext_country", :value_method => :id, :text_method => :name %>
+						<%#= select :name => 'autotext_country', :multiple => :multiple, :collection => Country.all(:order=>[:name]), :value_method => :id, :text_method => :name %>
+						
+						<%#= link_to 'HTA test', 'file://C:\Documents and Settings\George\Desktop\Autotext.hta' 
+						%>
 						
 					</div>
 
@@ -141,8 +152,8 @@
 
 		</div>
 
-	</div>
+    <!-- One DIV.sectionBody will be inserted here for each client tab page: -->
 
-      <!-- One DIV.sectionBody will be inserted here for each client's tab page: -->
+	</div>
 
 </div>

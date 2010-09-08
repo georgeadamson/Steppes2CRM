@@ -36,15 +36,14 @@
 				<%= fields_for session.user do -%>
 					<small>
 						Logged in as <%= session.user.forename %>
-						<%= link_to 'Log out', '/logout', :id => "logout" %>
+						<%= link_to 'Log out', '/logout', :id => 'logout', :class => 'noajax' %>
 					</small>
-					<%#= select :user_id, :label => "Logged in as", :selected => session.user.id.to_s, :collection => User.all, :value_method => :id, :text_method => :shortname %>
 					<%= hidden_field :id %>
 				<% end =%>
 			</p>
 
 			<label for="mainSearchText">Search</label>
-			<input type="text" id="mainSearchText" class="text" accesskey="F" />
+			<input type="text" id="mainSearchText" class="text" accesskey="S" />
 
 		<% end %>
 
@@ -68,15 +67,19 @@
 	</div>
 
 
-	<script type="text/javascript" src="/javascripts/jquery/jquery-1.3.2.js"></script><!-- MODIFIED version of jquery! -->
+	<!--<script type="text/javascript" src="/javascripts/jquery/jquery-1.3.2.js"></script>--><!-- MODIFIED version of jquery! -->
 	<!--<script type="text/javascript" src="/javascripts/jquery/jquery-1.4.1.js"></script>--><!-- v1.4.1 bugs on trip tabs! -->
+	<script type="text/javascript" src="/javascripts/jquery/jquery-1.4.2.js"></script>
 
 	<script type="text/javascript">		// Silly check to remind people to use FIREFOX!		if( !jQuery.browser.mozilla ){			alert("Lovely to see you, though I do think we could be so much happier together in Firefox ;o)")		}
 	</script>
 
 	<script type="text/javascript" src="/javascripts/helpers.js"></script>
-	<script type="text/javascript" src="/javascripts/jquery-ui/js/jquery-ui-1.7.2.custom.min.js"></script>
-	<script type="text/javascript" src="/javascripts/jquery-ui/development-bundle/ui/ui.tabs.js"></script>
+	<!--<script type="text/javascript" src="/javascripts/jquery-ui/js/jquery-ui-1.7.2.custom.min.js"></script>-->
+	<!--<script type="text/javascript" src="/javascripts/jquery-ui/development-bundle/ui/ui.tabs.js"></script>-->
+	<script type="text/javascript" src="/javascripts/jquery-ui-1.8.4/js/jquery-ui-1.8.4.custom.min.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery-ui-1.8.4/development-bundle/ui/jquery.ui.tabs.js"></script>
+	<script type="text/javascript" src="/javascripts/helpers.ui.js"></script><!-- Custom extensions for jquery-ui -->
 	<!--<script type="text/javascript" src="/javascripts/jquery-ui/jquery-ui-1-8rc1/ui/minified/jquery.ui.core.min.js"></script>-->
 	<!--<script type="text/javascript" src="/javascripts/jquery-ui/jquery-ui-1-8rc1/ui/minified/jquery.ui.widget.min.js"></script>-->
 	<!--<script type="text/javascript" src="/javascripts/jquery-ui/jquery-ui-1-8rc1/ui/minified/jquery-ui.min.js></script>-->

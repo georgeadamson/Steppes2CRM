@@ -15,7 +15,7 @@
 
 
 	// Swap every placeholder {name} in a string with it's corresponding value:
-	// Eg: interpolate( 'The {speed} brown {animal} jumped...', { speed:'quick', animal:{fox} } ) => 'The quick brown fox jumped...'
+	// Eg: interpolate( 'The {speed} brown {animal} jumped...', { speed:'quick', animal:'fox' } ) => 'The quick brown fox jumped...'
 	window.interpolate = function(template, data){
 		$.each( data||{}, function(key,val){
 			template = template.replace( '{'+key+'}', val, 'g' );
@@ -122,7 +122,7 @@ $.fn.extend({
 
 
 
-	// Get/set element id: (Get will generate and set ids on elements that doe not have one yet)
+	// Get/set id of first element in collection: (Get will generate and set ids on elements that doe not have one yet)
 	id : function(id,prefix){
 	
 		if(id)
@@ -314,7 +314,7 @@ $.fn.extend({
 	
 
 
-
+	// DEPRICATED
 	// Custom method for reloading elements via ajax. Rather like jQuery's load method.
 	// The params and callback arguments are both optional.
 	// Specify self=true to reload the actual element, not it's contents!
@@ -368,55 +368,56 @@ $.fn.extend({
 
 
 
-  // Keep a copy of jQuery's original ajax method before we override it:
-  __load : $.fn.load,
+//  // Keep a copy of jQuery's original ajax method before we override it:
+//  __load : $.fn.load,
 
 
-  // This new version uses beforeComplete to ensure the options hash and target are available to the callback:
-  // Warning: This will always use HTTP GET. (The native load method uses POST if params is a hash)
-  load : function(url,params,callback){
+//  // DEPRICATED
+//  // This new version uses beforeComplete to ensure the options hash and target are available to the callback:
+//  // Warning: This will always use HTTP GET. (The native load method uses POST if params is a hash)
+//  load : function(url,params,callback){
 
-	var target = this;
-	if( $.isFunction(params) ){ callback = params; params = null };
+//	var target = this;
+//	if( $.isFunction(params) ){ callback = params; params = null };
 
-	// Note the original beforeComplete callback so we can restore it at the end of this function:
-	origBeforeComplete = $.ajaxSettings.beforeComplete;
+//	// Note the original beforeComplete callback so we can restore it at the end of this function:
+//	origBeforeComplete = $.ajaxSettings.beforeComplete;
 
-	// Wrap the original beforeComplete callback in a new one that is aware of the extra arguments:
-	$.ajaxSetup({
-	  beforeComplete : function(xhr, status, options){
+//	// Wrap the original beforeComplete callback in a new one that is aware of the extra arguments:
+//	$.ajaxSetup({
+//	  beforeComplete : function(xhr, status, options){
 
-		xhr.options		= xhr.options || options || {};
-		xhr.options.target = target;
-		xhr.options.url	= options.url || url;
+//		xhr.options		= xhr.options || options || {};
+//		xhr.options.target = target;
+//		xhr.options.url	= options.url || url;
 
-		// Call the original beforeComplete callback:
-		// Important: this receives the same arguments as the normal "complete" callback.
-		if(origBeforeComplete)
-		  origBeforeComplete.apply( target, arguments );
-	  }
-	});
+//		// Call the original beforeComplete callback:
+//		// Important: this receives the same arguments as the normal "complete" callback.
+//		if(origBeforeComplete)
+//		  origBeforeComplete.apply( target, arguments );
+//	  }
+//	});
 
-	// Define a new ajax "complete" callback:
-	// Important: this receives the same arguments as the normal "load" callback.
-	var newCallback = function(text, status, xhr, options){
+//	// Define a new ajax "complete" callback:
+//	// Important: this receives the same arguments as the normal "load" callback.
+//	var newCallback = function(text, status, xhr, options){
 
-	  // Thanks to the enhanced (hacked!) ajax method we can also pass the options hash to the callback:
-	  // Unfortunately the load method wraps the callback with it's own function so it loses the options argument.
-	  // Hence we rely on the new ajax method to smuggle it through as a custom property of the xhr:
-	  if( callback )
-		return callback.apply( target, arguments );	// Call original "load" callback.
+//	  // Thanks to the enhanced (hacked!) ajax method we can also pass the options hash to the callback:
+//	  // Unfortunately the load method wraps the callback with it's own function so it loses the options argument.
+//	  // Hence we rely on the new ajax method to smuggle it through as a custom property of the xhr:
+//	  if( callback )
+//		return callback.apply( target, arguments );	// Call original "load" callback.
 
-	};
+//	};
 
-	// Call jQuery's native load method with our customised callback:
-	// We serialise the params to a string to prevent native method from assuming HTTP POST.
-	var result = this.__load(url, $.param(params||'') ,newCallback);
+//	// Call jQuery's native load method with our customised callback:
+//	// We serialise the params to a string to prevent native method from assuming HTTP POST.
+//	var result = this.__load(url, $.param(params||'') ,newCallback);
 
-	// Restore the original beforeComplete callback to the way it was:
-	$.ajaxSetup({ beforeComplete: origBeforeComplete });
-	return result;
-  },
+//	// Restore the original beforeComplete callback to the way it was:
+//	$.ajaxSetup({ beforeComplete: origBeforeComplete });
+//	return result;
+//  },
 
 
 
@@ -537,57 +538,58 @@ $.fn.extend({
 
 // Customise jQuert core methods: (Not the same as $.fn.extend!)
 
-$.extend({
+//$.extend({
 
-  // Keep a copy of jQuery's original ajax method before we override it:
-  __ajax : $.ajax,
+//  // Keep a copy of jQuery's original ajax method before we override it:
+//  __ajax : $.ajax,
 
-  // Wrap the original ajax method with our own enhanced version:
-  // This new version handles beforeSuccess and beforeComplete callbacks and passes the options hash to them too:
-  ajax : function(options) {
+//  // DEPRICATED
+//  // Wrap the original ajax method with our own enhanced version:
+//  // This new version handles beforeSuccess and beforeComplete callbacks and passes the options hash to them too:
+//  ajax : function(options) {
 
-	  var effectiveOptions = $.extend( {}, $.ajaxSettings, options );
+//	  var effectiveOptions = $.extend( {}, $.ajaxSettings, options );
 
-	  // Set up new beforeSuccess and beforeComplete callbacks then call jQuery's native ajax method:
-	  $.each( "success,complete".split(","), function(i,ajaxEvent){
+//	  // Set up new beforeSuccess and beforeComplete callbacks then call jQuery's native ajax method:
+//	  $.each( "success,complete".split(","), function(i,ajaxEvent){
 
-		// Keep a reference to the original callback functions:
-		var beforeName	 = "before" + ajaxEvent.replace( /^([a-z])/, function(m,$1){ return $1.toUpperCase() } ),
-			beforeCallback = options[beforeName] || $.ajaxSettings[beforeName],
-			origCallback   = options[ajaxEvent]  || $.ajaxSettings[ajaxEvent];
+//		// Keep a reference to the original callback functions:
+//		var beforeName	 = "before" + ajaxEvent.replace( /^([a-z])/, function(m,$1){ return $1.toUpperCase() } ),
+//			beforeCallback = options[beforeName] || $.ajaxSettings[beforeName],
+//			origCallback   = options[ajaxEvent]  || $.ajaxSettings[ajaxEvent];
 
-		if( origCallback || beforeCallback ){
+//		if( origCallback || beforeCallback ){
 
-			// Replace the normal callback with a new one that calls both the before and after callbacks:
-			options[ajaxEvent] = function(args){
+//			// Replace the normal callback with a new one that calls both the before and after callbacks:
+//			options[ajaxEvent] = function(args){
 
-			// Because jQuery's callbacks (success, error and complete) receive different arguments (groan!)
-			// we must ensure we pass them through in the order we receive them. We also want to pass the
-			// ajax options hash so we add it to the arguments. We'll also smuggle it through
-			// as a custom property of the XMLHttpRequest object to help the load method: (see $.fn.load)
-			// Gets around most issues but still required change to lines 570 & 580 of ui.tabs.js.
-			var xhr, args = $.makeArray(arguments);
-			$.each(args, function(i,arg){ if(arg && arg.readyState !== undefined){
-			  // Fails in IE!
-			  arg.options = $.extend( effectiveOptions, arg.options ); // Ensure we don't override xhr.options.target
-			}});
-			args.push(effectiveOptions);
+//			// Because jQuery's callbacks (success, error and complete) receive different arguments (groan!)
+//			// we must ensure we pass them through in the order we receive them. We also want to pass the
+//			// ajax options hash so we add it to the arguments. We'll also smuggle it through
+//			// as a custom property of the XMLHttpRequest object to help the load method: (see $.fn.load)
+//			// Gets around most issues but still required change to lines 570 & 580 of ui.tabs.js.
+//			var xhr, args = $.makeArray(arguments);
+//			$.each(args, function(i,arg){ if(arg && arg.readyState !== undefined){
+//			  // Fails in IE!
+//			  arg.options = $.extend( effectiveOptions, arg.options ); // Ensure we don't override xhr.options.target
+//			}});
+//			args.push(effectiveOptions);
 
 
-			if( !beforeCallback || beforeCallback.apply( this, args ) !== false )
-			  if( origCallback )
-				return origCallback.apply( this, args );
+//			if( !beforeCallback || beforeCallback.apply( this, args ) !== false )
+//			  if( origCallback )
+//				return origCallback.apply( this, args );
 
-		  };
-		};
-	  });
+//		  };
+//		};
+//	  });
 
-	  // Call the original ajax method with our enhanced callbacks:
-	  return $.__ajax(options);
+//	  // Call the original ajax method with our enhanced callbacks:
+//	  return $.__ajax(options);
 
-  }
+//  }
 
-});
+//});
 
 
 //window.setTimeout( function(){ alert( $('TD').attrMax('colSpan') ) }, 10000 )

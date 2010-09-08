@@ -1,0 +1,44 @@
+<%
+	delete_uid			= "tour#{ @tour.id }delete#{ Time.new.to_i }"
+	delete_caption	= 'Delete this Group'
+%>
+<div class="sectionContainer">
+
+	<div class="sectionHead">
+		<h3>
+			Details of <%= @tour.name %>
+		</h3>
+	</div>
+
+	<%= form_for @tour, :action => resource( @tour ) do %>
+
+		<div class="sectionBody formSurround">
+			<%= partial 'tours/form', :tour => @tour %>
+		</div>
+
+		<!-- sectionFoot: -->
+		<%= partial 'shared/sectionFoot_with_buttons',
+	
+			:ui_target => '.tour', 
+			:save_caption => 'Save my changes', 
+			:cancel => false, 
+			:foot_class => 'formSurround',
+
+			# Define a special <label> element that can be clicked to activate the delete_button below:
+			:delete_id				=> delete_uid,			# This is used to associate the label with the button.
+			:label_for_delete	=> delete_caption,	# Specify that we want to render a <label> instead of a button.
+			:delete_caption		=> delete_caption,
+			:delete_class			=> 'left',
+			:delete						=> false						# Don't render a delete button here. (See hidden button below)
+
+		%>
+
+	<% end =%>
+
+	<!-- Important: This delete button is HIDDEN and exists in it's own little form.
+	     It has an associated <label> defined above that can be clicked in the preceeding sectionFoot! -->
+	<%= delete_button @tour, delete_caption, :class => "hidden ui-priority-secondary ui-state-default", :id => delete_uid, :'data-target' => '.tour', :style => 'position:absolute;bottom:1em;display:none;' %>
+
+	<!-- TODO: Continue experiments with absolute-positioning the delete-button instead of resorting to a label instead. -->
+	
+</div>

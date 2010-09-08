@@ -1,0 +1,12 @@
+<%
+
+	# Custom URL parameter options:
+	country_id			||= params[:country_id].split(',') if params[:country_id]
+	company_id			||= params[:company_id].split(',') if params[:company_id]
+
+	# Prepare records and apply filters and options:
+	airports				||= collection ||= Airport.all
+	airports					= airports.all( :country_id => country_id ) if country_id
+	airports					= airports.all( :company_id => company_id ) if company_id
+
+-%><%= partial( 'shared/list', :collection => airports ) -%>

@@ -80,7 +80,6 @@
 	}
 
 	
-	
 	.reportPage .formField																			{ display:inline-block; }
 	.report-filter .formField SELECT														{ width:13em; }
 	
@@ -92,7 +91,7 @@
 	.report-filter .filter-value-box:nth-child(3) INPUT[type="text"]	{ width:10em; }
 	
 	/* TODO: hide the "x" button when there is only one filter left: We'd need to adjust markup to do this through css: */
-	/* .report-filter:only-child .filter-value-box .delete-filter-value { opacity:0.5; } */
+	/* .reportPage .report-filter:only-child .filter-value-box .delete-filter-value { opacity:0.5; } */
 	
 	
 	.reportPage H3 {
@@ -121,6 +120,22 @@
 		border:none;
 	}
 	
+	/* Hide the green add-filter-value buttons for the time being: */
+	.reportPage .add-filter-value {
+		display:none;
+	}
+	
+	
+	TABLE.report-results TBODY TR:hover TD {
+		background-color:#EFEDDE;
+	}
+	
+	TABLE.report-results TFOOT TH {
+		border-color:#aaa;
+		border-style:solid;
+		border-width:1px 0 1px 0;
+	}
+	
 </style>
 
 	<div class="sectionBody" style="top:5em;">
@@ -133,10 +148,16 @@
 			<div class="sectionBody">
 
 				<ul class="reportTabsNav">
-					<li><a href="#reportIndex">All reports</a></li>
-					<li class="ui-tabs-selected"><a href="#reportFields">Fields</a></li>
-					<li><a href="#reportFilters">Filters</a></li>
+					<!-- Note: The "ui-state-default" class is not necessary but reduces the FOUC before tabs are initialised -->
+					<li class="ui-state-default"><a href="#reportIndex">All reports</a></li>
+					<li class="ui-state-default ui-tabs-selected"><a href="#reportFields">Fields</a></li>
+					<li class="ui-state-default"><a href="#reportFilters">Filters</a></li>
 				</ul>
+
+				<!-- INDEX: -->
+				<div id="reportIndex">
+					<%= partial 'reports/list', :report => @report %>
+				</div>
 
 				<!-- FIELDS: -->
 				<div id="reportFields">
@@ -146,11 +167,6 @@
 				<!-- FILTERS: -->
 				<div id="reportFilters">
 					<%= partial 'reports/filters', :report => @report %>
-				</div>
-
-				<!-- INDEX: -->
-				<div id="reportIndex">
-					<%= partial 'reports/list', :report => @report %>
 				</div>
 
 			</div>

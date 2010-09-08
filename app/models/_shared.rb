@@ -22,46 +22,70 @@ module Merb
 
       # Prepare to exclude slashes from resulting url when last param in args is a boolean true:
       # (This makes the resulting string safe for use in ui element IDs)
-      noSlashes = args.delete_at(-1) if args.last == true
+      noSlashes = args.delete_at(-1) if args.last === true
 
-      if !args.empty?
+      unless args.empty?
 
         # Prepare to exclude slashes from resulting url when last param in args is true:
         #noSlashes = args.delete_at(-1) if args.last == true
 
         if args.first.is_a? Symbol
           
-          args.unshift( Trip.get(params[:trip_id]) ) if params[:trip_id]
-          args.unshift( Client.get(params[:client_id]) ) if params[:client_id]
-  
+          args.unshift( trip = Trip.get(params[:trip_id]) ) if params[:trip_id]
+
+          if trip && trip.respond_to?(:tour) && trip.tour
+            args.unshift trip.tour 
+          elsif trip && params[:tour_id]
+            args.unshift Tour.get(params[:tour_id])
+          elsif params[:client_id]
+            args.unshift Client.get(params[:client_id]) 
+          end  
+
         else
   
           # When first argument is a TripElement, insert it's trip object before it:
-          if args.first.respond_to?("trip")
-            if args.first.trip && !args.first.trip.id.nil?
-              args.unshift(args.first.trip)
+          if args.first.is_a? TripElement
+            if args.first.trip && args.first.trip.id
+              args.unshift args.first.trip
             elsif params[:trip_id]
-              args.unshift( Trip.get(params[:trip_id]) )
+              args.unshift Trip.get(params[:trip_id])
             end
           end
-  
-          # Now if first argument is a Trip, insert it's parent context object (eg client) before it:
-          if args.first.respond_to?("context")
+
+          # Now if first argument is a Trip, insert it's parent context object (tour or client) before it:
+          if args.first.is_a?(Trip) && args.first.respond_to?(:tour) && args.first.tour
+            args.unshift args.first.tour
+
+          elsif args.first.is_a?(Trip) && params[:tour_id]
+            args.unshift Tour.get(params[:tour_id])
+
+          elsif args.first.respond_to?(:context)
+
             if args.first.context && !args.first.context.id.nil?
-              args.unshift(args.first.context)
+              args.unshift args.first.context
             elsif params[:client_id]
-              args.unshift( Client.get(params[:client_id]) )
+              args.unshift Client.get(params[:client_id])
             end
+
           end
 
         end
   
+        # When last argument is a NEW object, swap it for symbols:
+        # Eg: [ trip, new_trip_element ] => [ trip, :trip_elements, :new ]
+        if args.last.respond_to?(:new?) && args.last.new?
+
+          obj   = args.pop
+          args << obj.model.name.snake_case.pluralize.to_sym
+          args << :new
+
         # Special allowance for nil TripElement object at end of args array:
-        #if args.last.is_a?(Object) && args.last.respond_to?(:id) && args.last.id.nil?
-        if args.last.nil?
-          args.pop()
+        elsif args.last.nil?
+
+          args.pop
           args << :trip_elements
           args << :new
+
         end
   
       end
@@ -70,7 +94,7 @@ module Merb
       args.compact!
       args.uniq!
 
-      #print "!!!!! nested_resource(" + args.to_s + ") " + args[0].id.to_s + ", " + args[1].id.to_s + " \n"
+      #puts "!!! nested_resource(" + args.inspect + ") " + args[0].inspect + ", " + args[1].inspect + " \n"
       return noSlashes ? resource(*args).gsub("/","") : resource(*args)
 
     end
@@ -438,26 +462,33 @@ module DataMapper
           # Overwrite the attribute with our own caching version:
           define_method attr do |*reload|
             
-            reload                = *reload.first || false;
-            @@cached_attributes ||= {}
-            
-            # Don't even try to use cached values when dealing with a new instance:
+            # Skip the whole caching malarkey when dealing with a new instance:
             if self.new? || self.id.nil?
               
               return self.method(orig_attr).call
               
             else
               
+              #self.model.class_variable_set( :@@cached_attributes, {} ) unless self.model.class_variable_defined? :@@cached_attributes
+              for_model = self.model.name
+              $cached_attributes ||= {}
+              $cached_attributes[for_model] ||= {}
+              reload = *reload.first || false;
+
               # Initialise a cache for values associated with the current id:
-              @@cached_attributes[self.id] ||= {}
+              # TODO: This could be where the problem lies. Maybe getting muddled between models.
+              #self.model.class_variable_get(:@@cached_attributes)[self.id] ||= {}
+              $cached_attributes[for_model][self.id] ||= {}
               
               # The first time the attribute is called, the value will be fetched and cached:
               if reload
-                return @@cached_attributes[self.id][attr]   = self.method(orig_attr).call 
+                #return self.model.class_variable_get(:@@cached_attributes)[self.id][attr]   = self.method(orig_attr).call 
+                return $cached_attributes[for_model][self.id][attr] = self.method(orig_attr).call 
               else
-                cached_value = @@cached_attributes[self.id][attr]
+                cached_value = $cached_attributes[for_model][self.id][attr]
                 puts " !!!!! Using cached_attribute #{attr} #{ cached_value }" if cached_value
-                return @@cached_attributes[self.id][attr] ||= self.method(orig_attr).call
+                #return self.model.class_variable_get(:@@cached_attributes)[self.id][attr] ||= self.method(orig_attr).call
+                return $cached_attributes[for_model][self.id][attr] ||= self.method(orig_attr).call 
               end
               
             end
@@ -536,15 +567,30 @@ end
       
 		  # Helper to call collect_child_error_messages_for() on each child association:
       # Usage: collect_error_messages_for( @supplier, :companies )
-		  def collect_error_messages_for( obj, association_name, context = :default )
-  			
-			  errors = {}
-  			
-			  obj.send(association_name).each{ |a|
-          collect_child_error_messages_for( obj, a, context )
-        } if obj.respond_to? association_name
+		  def collect_error_messages_for( obj, association_name = :all, context = :default )
+
+        if association_name == :all
+          
+          @trip.model.relationships.each do | name, association |
+            if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
+              #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
+              if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
+                collect_error_messages_for @trip, name.to_sym
+              elsif rel
+                collect_child_error_messages_for @trip, rel
+              end
+            end
+          end
+          
+        else
+
+			    obj.send(association_name).each{ |a|
+            collect_child_error_messages_for( obj, a, context )
+          } if obj.respond_to? association_name
         
-			  return errors
+        end
+
+			  return obj.errors
         
 		  end
   

@@ -1,28 +1,31 @@
 class TripClient
   include DataMapper::Resource
   
-  property :id, Serial
+  property :id,             Serial
+	property :trip_id,				Integer, :required => true #:unique => true, :scope => :client_id
+	property :client_id,			Integer, :required => true #:unique => true, :scope => :trip_id
 
-	property :client_id,						Integer, :required => true #:unique => true, :scope => :trip_id
-	property :trip_id,							Integer, :required => true #:unique => true, :scope => :client_id
-		
-  belongs_to :client
-  belongs_to :trip
-  #belongs_to :tripElement				# TODO: Handle trip sub group?
-
-  property :is_leader,						Boolean, :required => true, :default => false
-  property :is_primary,						Boolean, :required => true, :default => false
-  property :is_single,						Boolean, :required => true, :default => false
-  property :is_invoicable,				Boolean, :required => true, :default => false
-  property :confirmation_status,	Integer, :required => true, :default => 0     # 0=Unconfirmed, 1=Confirmed, Allows for more. (Not to be confused with trip.status!)
-  def is_confirmed; return self.confirmation_status == 1; end
+  property :is_leader,			Boolean, :required => true, :default => false
+  property :is_primary,			Boolean, :required => true, :default => false
+  property :is_single,			Boolean, :required => true, :default => false
+  property :is_invoicable,	Boolean, :required => true, :default => false
+  property :status_id,    	Integer, :required => true, :default => 0     # 0=Unconfirmed, 1=Confirmed, Allows for more. (Not to be confused with trip.status!)
 
 	property :created_at, Date
 	property :created_by, String, :default => ''
 	property :updated_at, Date
 	property :updated_by, String, :default => ''
+		
+  belongs_to :trip
+  belongs_to :client
+  belongs_to :status, :model => 'TripClientStatus', :child_key => [:status_id]
+  #belongs_to :tripElement				# TODO: Handle trip sub group?
 
 	#validates_is_unique :trip_id, :scope => :client_id, :message => "The client is already on this trip"
+
+  def is_confirmed; return self.status_id == TripClientStatus::CONFIRMED; end
+
+  alias confirmation_status status_id # Support for depricated field name
 
 
 #	before :valid? do

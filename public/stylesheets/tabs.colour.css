@@ -56,32 +56,35 @@
 	-moz-border-radius-topleft:0.5em; -webkit-border-top-left-radius:0.5em;
 	-moz-border-radius-bottomleft:0.5em; -webkit-border-bottom-left-radius:0.5em;
 }
-.ui-tabs-nav.ui-tabs-nav-vertical > LI > A{
-	color:#fff;
-	width:100%;
-}
-	.ui-tabs-nav.ui-tabs-nav-vertical > LI.ui-tabs-selected {
-		background-image:none;
+
+	.ui-tabs-nav.ui-tabs-nav-vertical > LI > A {
+		color:#fff;
+		width:100%;
 	}
-	.ui-tabs-nav.ui-tabs-nav-vertical > LI.ui-tabs-selected A {
-		color:#000;
-		font-weight:bold;
-	}
-		.ui-tabs-nav.ui-tabs-nav-vertical > LI.ui-tabs-selected.ui-state-hover A {
-			xcolor:#fff;
-			text-decoration:none;
+		.ui-tabs-nav.ui-tabs-nav-vertical > LI.ui-tabs-selected {
+			background-image:none;
 		}
-	.ui-tabs-nav.ui-tabs-nav-vertical > LI.ui-state-hover A {
-		xbackground-color:transparent;
-		xcolor:#000;
-		text-decoration:underline;
+		.ui-tabs-nav.ui-tabs-nav-vertical > LI.ui-tabs-selected A {
+			color:#000;
+			font-weight:bold;
+		}
+			.ui-tabs-nav.ui-tabs-nav-vertical > LI.ui-tabs-selected.ui-state-hover A {
+				text-decoration:none;
+			}
+		.ui-tabs-nav.ui-tabs-nav-vertical > LI.ui-state-hover A {
+			text-decoration:underline;
+		}
+
+	/* Label text used occasionally in LHS tabs: (Eg: For "New Fixed Departure based on trip template..." ) */
+	.ui-tabs-nav.ui-tabs-nav-vertical > LI > SMALL {
+		display:inline-block;
+		margin:0.5em 0.5em 0.5em 0.5em;
 	}
 
 
 
 
-
-.clientPage .sectionContainerLeft {
+.sectionContainerLeft.tabsContainer {
 	background-image:url(/images/tabs-lhs-nav-bg.png);
 	background-position:right top;
 	background-repeat:repeat-y;
@@ -120,7 +123,7 @@
 
 
 	UL.clientPageTabsNav LI.client-payments {
-		margin-bottom:2em;	/* Gap before trip tabs */
+		xmargin-bottom:2em;	/* Gap before trip tabs */
 	}
 
 
@@ -133,7 +136,7 @@
 		}
 
 		UL.clientPageTabsNav LI.trip.trip-canceled A,
-		UL.clientPageTabsNav LI.trip.trip-abandonned A {
+		UL.clientPageTabsNav LI.trip.trip-abandoned A {
 			text-decoration:line-through;
 		}
 

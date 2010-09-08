@@ -77,6 +77,17 @@ def valid_address_attributes2
   }
 end
 
+
+
+def valid_tour_attributes
+  {
+    :name       => 'Test tour',
+    :notes      => 'Just some notes',
+    :company_id => 1
+  }
+end
+
+
 # @trip = Trip.new(:name=>'Test trip',:start_date=>Date.today,:end_date=>Date.today+10,:company_id=>1,:user_id=>1)
 def valid_trip_attributes
   {
@@ -91,7 +102,7 @@ def valid_trip_attributes
     :price_per_adult_biz_supp   => 100,
     :price_per_child_biz_supp   => 100,
     :price_per_infant_biz_supp  => 100
-    }
+  }
 end
 
 
@@ -140,7 +151,9 @@ def valid_pnr_attributes
     :file_name					=> 'MOCK_PNR_FOR_AUTO_TESTS.txt',
     :flight_count				=> 2,																		# Must match number of valid U- lines in the raw data.
     :client_count				=> 1,																		# Must match number of valid I- lines line in the raw data.
-			:data								=> "AIR-BLK207;IM;;233;1500012976;1A1203214;001001
+
+    # The attributes above must correspond to this data:
+		:data								=> "AIR-BLK207;IM;;233;1500012976;1A1203214;001001
 AMD 1500000001;1/1;              
 GW4464979;1A1203214
 MUC1A ABCDEF002;0101;LONU12102;91497221;LONU12102;91497221;LONU12102;91497221;LONU12102;91497221;;;;;;;;;;;;;;;;;;;;;;BA NOSYNC
@@ -176,7 +189,9 @@ def updated_pnr_attributes
     :file_name					=> 'MOCK_PNR_FOR_AUTO_TESTS2.txt',
     :flight_count				=> 3,																		# Must match number of valid U- lines in the raw data.
     :client_count				=> 1,																		# Must match number of valid I- lines line in the raw data.
-			:data								=> "AIR-BLK207;IM;;233;1500012976;1A1203214;001001
+
+    # The attributes above must correspond to this data:
+		:data								=> "AIR-BLK207;IM;;233;1500012976;1A1203214;001001
 AMD 1500000001;1/1;              
 GW4464979;1A1203214
 MUC1A ABCDEF002;0101;LONU12102;91497221;LONU12102;91497221;LONU12102;91497221;LONU12102;91497221;;;;;;;;;;;;;;;;;;;;;;BA NOSYNC
@@ -304,10 +319,16 @@ alias valid_pnr_attributes2 updated_pnr_attributes
 
     # Trip statuses:
     TripState.create( :name => 'Unconfirmed' )  # 1
-    TripState.create( :name => 'Confirmed' )    # 2
-    TripState.create( :name => 'Completed' )    # 3
-    TripState.create( :name => 'Abandonned' )   # 4
-    TripState.create( :name => 'Cancelled' )    # 5
+    TripState.create( :name => 'Confirmed'   )  # 2
+    TripState.create( :name => 'Completed'   )  # 3
+    TripState.create( :name => 'Abandonned'  )  # 4
+    TripState.create( :name => 'Cancelled'   )  # 5
+
+    # Trip statuses:
+    TripType.create( :name => 'Tailor made'     )  # 1
+    TripType.create( :name => 'Tour template'   )  # 2
+    TripType.create( :name => 'Private group'   )  # 3
+    TripType.create( :name => 'Fixed Departure' )  # 4
 
     # DocumentType.copy :production, :test
     # The command above should work but had to be done manually instead:

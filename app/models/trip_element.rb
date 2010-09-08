@@ -357,22 +357,22 @@ class TripElement
 		if @overlaps.nil?
       
 			@overlaps = []
-			type_id		= self.type_id if type_id      == true	# Fiter by same type if type_id is true
-			type_id		= false        if type_id.to_i == 0			# Do not filter at all if type_id is false or non numeric.
+			type_id		= self.type_id if type_id      === true	# Fiter by same type if type_id is true
+			type_id		= false        if type_id.to_i ==  0			# Do not filter at all if type_id is false or non numeric.
       
 			# This technique matches fields returned from a single query, preventing multiple queries for each day:
 			self.trip.trip_elements.all( :order => [ :start_date, :id ] ).each do |elem|
         
-				@overlaps << elem if \
-          (  type_id == false || elem.type_id == type_id ) \
+				@overlaps << elem if (  type_id == false || elem.type_id == type_id ) \
         &&
         (
           # if dates overlap or match exactly:
           #( elem.start_date.jd <  self.end_date.jd && elem.end_date.jd >  self.start_date.jd ) ||	
           #( elem.start_date.jd == self.end_date.jd && elem.end_date.jd == self.start_date.jd )
           #( elem.start_date.jd <= self.end_date.jd && elem.end_date.jd >= self.start_date.jd )
-          self.start_date.jd >= elem.start_date.jd && self.start_date.jd <  elem.end_date.jd ||
-          self.end_date.jd   >  elem.start_date.jd && self.end_date.jd   <= elem.end_date.jd
+          ( self.start_date.jd == elem.start_date.jd ) ||
+          ( self.start_date.jd >= elem.start_date.jd && self.start_date.jd <  elem.end_date.jd   ) ||
+          ( self.end_date.jd   >  elem.start_date.jd && self.end_date.jd   <= elem.end_date.jd   )
         )
         
 			end

@@ -151,7 +151,7 @@ class TripElements < Application
     # Ensure we're not accidentally overriding dates and times etc on PNR Flights:
     if @element.bound_to_pnr?
 
-		  trip_element.delete("handler_id")
+		  trip_element.delete("supplier_id")  # Note: handler_id *can* be modified.
 		  trip_element.delete("start_date")
 		  trip_element.delete("start_time")
 		  trip_element.delete("end_date")

@@ -1,4 +1,7 @@
 <!-- _clientPage: -->
+<%
+	active_trips = client.active_trips.all( :type_id.not => TripType::TOUR_TEMPLATE, :order => [ :status_id, :start_date.desc, :created_at.desc ] )
+-%>
 <div class="sectionContainer noSectionFoot clientPage">
 
 	 <div class="sectionHead">
@@ -11,11 +14,12 @@
 				<small>
 					(<span class="clientTotalSpend" title="Total spent"><%= ( client.total_spend || 0 ).to_currency(:uk) %></span>)
 				</small>
-				<small>Trips: 
-					<%= client.trips_statement %>
+				<small>
+					Trips: <%= client.trips_statement %>
 				</small>
 			</h2>
 
+			<!-- Fields used by client-side script: -->
 			<%= hidden_field :name => :client_id,    :value => client.id %>
 			<%= hidden_field :name => :client_label, :value => client.shortname %>
 			
@@ -32,22 +36,35 @@
 						<!-- Client's LHS tabs: Details / Documents / Paymemts / Trips 1...n -->
 						<ul class="clientPageTabsNav ui-tabs-nav-vertical ellipsis">
 
-							<li class="client-details"						><span class="ui-icon ui-icon-client"></span><a href="<%= resource(client) %>/summary">Client details</a></li>
-							<li class="client-documents"					><span class="ui-icon ui-icon-document"></span><a href="<%= resource(client) %>/documents">Documents</a></li>
-							<li class="client-payments invisible"	><span class="ui-icon ui-icon-payment"></span><a href="#<%= nested_resource(client,true) %>payments">Payments</a></li>
+							<li class="dummy hidden"	                 ><span class="ui-icon ui-icon-payment" ></span><a href="#<%= nested_resource(client,true) %>dummy"></a></li>
+							<li class="client-details ui-tabs-selected"><span class="ui-icon ui-icon-client"  ></span><a href="<%= resource(client) %>/summary">Client details</a></li>
+							<li class="client-documents"					     ><span class="ui-icon ui-icon-document"></span><a href="<%= resource(client) %>/documents">Documents</a></li>
+							<li class="client-payments invisible"	     ><span class="ui-icon ui-icon-payment" ></span><a href="#<%= nested_resource(client,true) %>payments">Payments</a></li>
 
-							<!-- List of tabs for each trip: -->
-							<% client.active_trips.all( :order => [ :status_id, :start_date.desc, :created_at.desc ] ).each do |trip| %>
-								<li class="trip trip-<%= trip.status.code %>" title="<%= "#{ trip.title } - #{ trip.status.name } - #{ trip.countries_names.join(', ') }" %>">
-									<%= link_to trip.title, resource(client,trip) %>
-								</li>
-							<% end %>
+							<!-- List of left-hand-side tabs for each trip: -->
+							<%= partial 'trips/lhs_tabs', :trips => active_trips, :client_or_tour => client %>
 
 							<!-- Extra tab for CREATE TRIP: -->
 							<li class="trip trip-create" title="Create a lovely new trip">
 								<%= link_to 'New trip', resource(client,:trips,:new), :class => 'new' %>
 							</li>
- 
+
+							<%# When client is listed on a TOUR, show link(s) to create new fixed-dep based on the tour-template(s): %>
+							<% client.trips.all( :type_id => TripType::TOUR_TEMPLATE ).each do |tour_template| 
+
+								# Don't show "New Fixed Dep" link if one has already been created from the tour_template:
+								if client.fixed_deps( tour_template.tour_id ).count == 0 %>
+								
+									<!-- Extra tab for CREATE FIXED DEPARTURE trip: -->
+									<li class="trip trip-create" title="Create a new fixed departure based on the tour template &quot;<%= tour_template.name %>&quot;">
+										<%= link_to 'Fixed Dep.', resource( client, :trips, :new, :copy_trip_id => tour_template.id ), :class => 'new' %>
+										<small>Based on <%= tour_template.name %></small>
+									</li>
+
+								<% end %>
+
+							<% end %>
+
 						</ul>
 
 				 </div>
@@ -58,6 +75,9 @@
 			<!-- RHS CONTENT: -->
 			<div class="clientPageTabsContent ajaxPanel sectionContainer sectionContainerRight noSectionHead noSectionFoot">
 
+				<div id="<%= nested_resource(client,true) %>dummy">
+				</div>
+				
 				<div id="<%= nested_resource(client,true) %>payments" class="sectionBody clientPayments">
 					<div class="sectionContainer noSectionFoot">
 						<div class="sectionHead">
