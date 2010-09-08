@@ -1,0 +1,11 @@
+<table class="tasks">
+	<tbody>
+		<% tasks.all(:limit => 1000).each do |task| %>
+			<tr>
+				<%= tag :td, task.due_date.formatted(:uidate) %>
+				<%= tag :td, link_to( task.type.name, resource(task.client,task,:edit) ) %>
+				<%= tag :td, task.user.fullname if task.user %>
+			</tr>
+		<% end %>
+	</tbody>
+</table>

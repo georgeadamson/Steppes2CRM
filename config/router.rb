@@ -79,6 +79,7 @@ Merb::Router.prepare do
   # /clients/
   resources :clients do |client|
     client.resources :notes
+    client.resources :tasks
     client.resources :brochure_requests
     client.resources :documents
     client.resources :addresses

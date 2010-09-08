@@ -6,11 +6,9 @@ class TaskType
   
   has n, :tasks, :child_key => [:type_id]
 
-  # Always default to sort by name:
+  # Set the default sort order:
   default_scope(:default).update(:order => [:name])
 
 end
-
-# changed
 
 # TaskType.auto_migrate!		# Warning: Running this will clear the table!

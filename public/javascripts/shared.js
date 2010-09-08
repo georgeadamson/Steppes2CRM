@@ -199,6 +199,9 @@ jQuery(function($) {
 			// SysAdmin:
 			Layout.livePath('success', new RegExp('/system$'),							SysAdmin.initShow );
 
+			// Tasks: (AKA Followups / Reminders)
+			Layout.livePath('click', new RegExp('/tasks/([0-9]+)/edit$'),				Tasks.openEdit );
+
 			// AutoText:
 			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
 			Layout.livePath('success', /\/autotexts\?autotext/,							Autotext.showAutotexts );	// Eg: '/autotexts?autotext&country_id={value}&list=option'
@@ -3377,6 +3380,30 @@ function initTripInvoiceFormTotals(){
 		showAutotexts : function(options){
 		
 		
+		}
+
+	}
+
+
+	var Tasks = {
+	
+		openEdit : function(options){
+	
+			var $dialog = $('<div>')
+				.html('Opening...')
+				.dialog({
+					//autoOpen: false,
+					title	: 'Edit reminder',
+					open	: function(e,ui){
+						$(this).load(options.url);
+					}
+				});
+
+			//$dialog.dialog('open');
+
+			// We've intercepted a link so prevent default code from handling it:
+			options.event.stopImmediatePropagation();
+
 		}
 
 	}

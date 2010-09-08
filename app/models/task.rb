@@ -13,6 +13,7 @@ class Task
   property :closed_date,        Date,   :required => false # Formerly DateTimeClosed.
   property :closed_by_user_id,  Integer,:required => false # Formerly ClosedByConsultantID.
   property :closed_notes,       String, :required => false, :length => 500 # Formerly ClosingNotes.
+  property :created_on,         Date
 
   belongs_to :type,   :model => "TaskType",   :child_key => [:type_id]
   belongs_to :status, :model => "TaskStatus", :child_key => [:status_id]
@@ -22,6 +23,9 @@ class Task
 
   alias notes  name
   alias notes= name=
+
+  # Set the default sort order:
+  default_scope(:default).update( :order => [ :due_date.desc, :type_id, :created_on ] )
 
 end
 

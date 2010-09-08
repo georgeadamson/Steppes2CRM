@@ -2,7 +2,10 @@ class Tasks < Application
   # provides :xml, :yaml, :js
 
   def index
-    @tasks = Task.all
+    @tasks  = Task.all
+    @user   = User.get(params[:user_id])        if params[:user_id].to_i > 0
+    @client = Client.get(params[:client_id])    if params[:client_id].to_i > 0
+    @tasks  = @tasks.all( :client => @client )  if @client
     display @tasks
   end
 
