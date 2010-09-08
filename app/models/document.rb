@@ -40,7 +40,7 @@ class Document
   property :pdf_builder_output,     Text,    :required => false, :default => '' # String for feedback from the generation process.
   
 	property :created_at,	            DateTime
-	property :created_by,	            String,  :required => true, :length => 50,  :default => ''	# Consultant name
+	property :created_by,	            String,  :required => true, :length => 50, :auto_validation => false	  # Consultant name
 	#property :user_name,	            String,  :required => true, :length => 50,  :default => ''	# Consultant name
   
 	belongs_to :document_template  
@@ -66,7 +66,8 @@ class Document
   
   # Custom validations:
   validates_with_method :validate_file_paths
-  validates_with_method :document_template_file, :method => :does_document_template_file_exist?
+  validates_with_method :document_template_file, :method => :validate_document_template_file #, :when => [:now]
+  validates_present     :created_by #, :when => [:now]
   
 
   def status_name
@@ -102,10 +103,10 @@ class Document
       return [false, "Cannot find the folder where the document-generation gizmo lives (#{ Document.doc_builder_commands_folder_path })"]
     
     elsif !File.exist?( Document.doc_builder_script_path )
-      return [false, "Cannot find the gizmo that does the document-generation (#{ Document.doc_builder_script_path })"]
+      return [false, "Cannot find the script that does the document-generation (#{ Document.doc_builder_script_path })"]
     
     elsif !File.exist?( Document.doc_builder_settings_path )
-      return [false, "Cannot find the settings for the document-generation gizmo (#{ Document.doc_builder_settings_path })"]
+      return [false, "Cannot find the settings for the document-generation script (#{ Document.doc_builder_settings_path })"]
       
     else
       return true
@@ -116,7 +117,7 @@ class Document
 
   
   # Method for custom validations:
-  def does_document_template_file_exist?
+  def validate_document_template_file
     
     #if self.document_type_id == DocumentType::LETTER || self.document_type_id == DocumentType::BROCHURE
     if [ DocumentType::LETTER, DocumentType::BROCHURE ].include? self.document_type_id
@@ -135,6 +136,7 @@ class Document
   before :valid? do
     
     # Do what we can to derive missing parameters:
+    self.user                 ||= self.trip && self.trip.user
     self.company              ||= self.default_company
     self.file_name              = self.default_file_name              if self.file_name.blank?
     self.name                   = self.file_name                      if self.name.blank?

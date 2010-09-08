@@ -12,6 +12,7 @@ schema/*.db
 *.sqlite
 *.sqlite3
 *.db
+*.zip
 src/*
 .hgignore
 .hg/*
@@ -20,7 +21,9 @@ gems/gems/*
 gems/specifications/*
 merb_profile_results
 
-# To preserve developers' custom environments:
+# To preserve developers' custom environments and sanity:
+.bundle
 config/database.yml
 vendor/cache
-.bundle
+public/imageLibrary
+scripts/documents/doc_builder/(Sample Documents)

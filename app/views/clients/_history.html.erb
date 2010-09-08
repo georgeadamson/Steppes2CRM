@@ -13,9 +13,9 @@
 			</div>
 		</dd>
 
-		<dt>Followups</dt>
+		<dt>Followups <small>(<%= client.tasks.length %>)</dt>
 		<dd class="">
-			Followups coming soon!
+			<%= partial 'tasks/index', :tasks => client.tasks, :client => @client %>
 		</dd>
 
 		<dt>

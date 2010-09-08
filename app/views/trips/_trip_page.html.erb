@@ -1,9 +1,11 @@
 <%
 
-  client				||= @client
-  trips					||= @trips || client.trips
-  trip					||= @trip
-  trip.context	||= client # TODO: Allow for Group context instead of client context!
+  tour			  		||= @tour
+  client					||= @client
+	client_or_tour	||= @client_or_tour || @tour || @client
+  trip						||= @trip
+	trip							= trip.active_version if trip.active_version	# Ensure we always display the currently active version!
+  trip.context		||= client_or_tour			# TODO: Allow for Tour context instead of Client context!
 
   # versions_list = trip.versions sorted and formatted as a an array of key/value array pairs:
 	versions_count = trip.versions.length
@@ -11,11 +13,11 @@
 	active_version_number =	1
 	
   trip.versions.all( :order => [:id] ).each_with_index do |version,i|
-		versions_list << [ version.id, "v#{ i+1 }: #{ version.version_name }" ]
+		versions_list << [ version.id, "v#{ i+1 }: #{ version.version_name }#{ ' (active version)' if version.is_active_version }" ]
 		active_version_number = i+1 if version.is_active_version
 	end	
 	versions_list = { 'Versions of this trip:' => versions_list }
-	versions_list['Add another:'] = [ [ 'new', "+ Create a #{ (versions_count+1).ordinalize } version (copy elements from v#{ active_version_number })" ] ]
+	versions_list['Add another:'] = [ [ 'new', "+ Create a #{ (versions_count+1).ordinalize } version (copy elements from version #{ active_version_number })" ] ]
 		
 
 -%>
@@ -27,7 +29,7 @@
 
     <!-- Trip name and on-line-summary: -->
     <h3 class="tripHeading">
-      <span class="ui-icon ui-icon-trip"></span>
+      <%= icon trip.tour ? :group : :trip %>
 			<span class="tripName">
         <%= trip.title %>
       </span>
@@ -42,25 +44,28 @@
 		<%= hidden_field :name => 'trip_name',	:value => trip.name		%>
 		<%= hidden_field :name => 'trip_title',	:value => trip.title	%>
 
-		<% unless trip.tour %>
+		<% unless trip.type_id == TripType::TOUR_TEMPLATE %>
 			<!-- This picklist has a custom href attribute used for deriving the resource url of the chosen version.
 					 Eg: When href="/clients/1234/trips/{value}" and selected value="1122" then url is derived as "/clients/1234/trips/1122"
 			-->
-			<div class="tripVersion">
-				<%= select :version_of_trip_id, :label => "Active version:", :collection => versions_list, :selected => trip.id.to_s, :class=>"tripVersion width2Fields", :readonly => true, :href => "#{ resource(client,:trips) }/{value}?is_active_version=true&version_of_trip_id=#{ trip.version_of_trip_id }" %>
-			</div>
+			<%= form_for trip, :action => nested_resource(client_or_tour,trip) do %>
+				<div class="tripVersion">
+					<%= select :active_version_id, :label => "Active version:", :collection => versions_list, :selected => trip.id.to_s, :class=>"auto-submit tripVersion width2Fields stealth", :readonly => true, :xhref => "#{ resource(client_or_tour,:trips) }/{value}?version_of_trip_id=#{ trip.version_of_trip_id }&is_active_version=true" %>
+				</div>
+			<% end =%>
 		<% end %>
 
     <ul class="tripPageTabsNav">
-			<%# TODO: Get resource(client,trip,:builder) etc to work instead of explicitly assembling urls here: %>
+			<%# TODO: Get resource(client_or_tour,trip,:builder) etc to work instead of explicitly assembling urls here: %>
+      <li class="dummy hidden"><a href="#<%= nested_resource(trip,true) %>dummy"></a></li>
       <li class="ui-tabs-selected">
-				  <a href="<%= resource( client, trip, :edit ) %>"			>Trip summary</a></li>
-      <li><a href="<%= resource( client, trip ) %>/builder"			>Trip builder</a></li>
-      <li><a href="<%= resource( client, trip ) %>/itinerary"		>Itinerary preview</a></li>
-      <li><a href="<%= resource( client, trip ) %>/costings"		>Costings</a></li>
-      <li><a href="<%= resource( client, trip ) %>/money_ins/new" class="<%= 'hidden' if trip.tour %>">Invoice</a></li>
-      <li><a href="<%= resource( client, trip ) %>/money_outs"	>Suppliers</a></li>
-      <li><a href="#<%= nested_resource(trip,true) %>charities"   class="hidden">Charities</a></li>
+				  <a href="<%= resource( client_or_tour, trip, :edit ) %>"			>Trip summary</a></li>
+      <li><a href="<%= resource( client_or_tour, trip ) %>/builder"			>Trip builder</a></li>
+      <li><a href="<%= resource( client_or_tour, trip ) %>/itinerary"		>Itinerary preview</a></li>
+      <li><a href="<%= resource( client_or_tour, trip ) %>/costings"		>Costings</a></li>
+      <li><a href="<%= resource( client_or_tour, trip ) %>/money_ins/new" class="<%= 'hidden' if trip.tour %>">Invoice</a></li>
+      <li><a href="<%= resource( client_or_tour, trip ) %>/money_outs"	>Suppliers</a></li>
+      <!--<li class="hidden"><a href="#<%= nested_resource(client_or_tour,trip,true) %>charities"  >Charities</a></li>-->
 			<!-- TODO: Make tabs work without needing at least one non-ajax tab! -->
     </ul>
 
@@ -69,8 +74,11 @@
 
   <div class="tripPageTabsContent sectionBody">
  
-		<div id="<%= nested_resource(trip,true) %>charities">
-			<!-- TODO! -->
+		<!--<div id="<%= nested_resource(client_or_tour,trip,true) %>dummy" class="hidden">
+		</div>-->
+ 
+		<div id="<%= nested_resource(client_or_tour,trip,true) %>charities" class="hidden">
+			TODO: Charities
 		</div>
 
 		<!-- Tab contents loaded here via ajax: -->

@@ -1,6 +1,6 @@
 <%
 
-	# This code renders 1 row for a client on a trip *OR* a template row for use by client-side script to add rows.
+	# This code renders one CLIENT ROW on a trip summary page *OR* a template row for use by client-side script to add rows.
 
 	# This partial expects arguments:
 	trip_client			||= TripClient.new			# REQUIRED when editing existing records.
@@ -8,6 +8,9 @@
 	trip						||= trip_client.trip		# Optional when editing existing records because we can derive it from trip_client.
 	client					||= trip_client.client	# Optional when editing existing records because we can derive it from trip_client.
 	html_template		||= false
+	
+	# Allow for when new (unsaved) trip has trip.clients but no trip.trip_clients collection:
+	trip_client.client ||= client
 	
 	# Include the little menu of trip letters next to the client name: (unless we're creating a template row)
 	show_trip_letters_menu = !html_template
@@ -41,10 +44,10 @@
 	case when html_template
 		tooltip = "Client added but not saved yet!"
 			
-	when client_is_open_in_ui
+	when client && client_is_open_in_ui
 		tooltip = "You are working on a trip for #{ client.shortname } so you won't be able to remove them!"
 		
-	when trip_client.is_primary
+	when client && trip_client.is_primary
 		tooltip = "You won't be able to remove #{ client.shortname } while they are a primary contact."
 		
 	else
@@ -58,71 +61,78 @@
 	# Note: Because we are explicitly specifying document_template_file it will not need to be derived from document_type_id.
 	# Note: Letter templates are always in the /Templates/Letters subfolder.
 	# Eg: document[document_type_id]=8&document[client_id]=#{ client.id }&document[user_id]=#{ session.user.id }&document[generate_doc_after_create]=true&document[generate_doc_later]=true&document[document_template_file]=Letters/{value}&_method=post
-	if show_trip_letters_menu
+	if client && show_trip_letters_menu
 		
 		letter_builder_parameters = {
 			
 			'document[trip_id]'										=> trip.id,
 			'document[user_id]'										=> trip.user_id,
 			'document[client_id]'									=> client.id,
-			'document[document_type_id]'					=> 8,				# 8 = Letter template
-			'document[document_template_file]'		=> 'Letters/{value}&_method=post',
+			'document[document_type_id]'					=> DocumentType::LETTER,				# 8 = Letter template
+			'document[document_template_file]'		=> 'Letters/{value}',
 			'document[generate_doc_after_create]'	=> true,
 			'document[generate_doc_later]'				=> true,
 			:redirect_to													=> resource(client,trip)
 			
-		}.to_a.map{|pair| pair.map{ |part| h(part.to_s) }.join('=') }.join('&')
+		}.to_a.map{|pair| pair.map{ |part| h(part.to_s) }.join('=') }.join('&')	# WARNING: Do not be tempted to let merb serialise the hash for us because it will encode characters unecessarly!
 
 		# Cache list of letter templates (filtered by company) so we don't keep rebuilding it for each client:
 		@template_filenames	  ||= Document.doc_builder_letter_templates( :type => :trip, :prefix => ( trip.company || session.user.company ).initials )
-		show_trip_letters_menu	= false if @template_filenames.empty?
+
+		# Skip the letter-generation menu on a new trip or when there are no letter templates:
+		show_trip_letters_menu	= false if trip.new? || @template_filenames.empty?
 		
 	end
-				
+
 -%>
 
-						<tr title="<%= tooltip %>">
+	<tr title="<%= tooltip %>">
 
-							<%= fields_for trip_client do %>
+		<%= fields_for trip_client do %>
 
-								<td>
-									<div><%# <-- This div only exists to improve the animation when clients are added. %>
+			<td>
+				<div><%# <-- This div only exists to improve the animation when clients are added. %>
 
-										<span class="ui-icon ui-icon-client"></span>
+					<span class="ui-icon ui-icon-client"></span>
 
-										<%=
-											# No need to provide a link when client is currently open:
-											if client_is_open_in_ui
-												client_label
-											else
-												link_to client_name, "/clients/#{ client_id }/?label=#{ client_label }", :class => 'show clientName'
-											end
-										%>
+					<%=
+						# No need to provide a link when client is currently open:
+						if client_is_open_in_ui
+							client_label
+						else
+							link_to client_name, "/clients/#{ client_id }/?label=#{ client_label }", :class => 'show clientName'
+						end
+					%>
 
-										<!-- client_id is only used when adding clients and to prevent duplication: -->
-										<%= hidden_field		:name => "trip[trip_clients_attributes][#{ index }][client_id]",	:value => client_id %>
+					<!-- client_id is only used when adding clients and to prevent duplication: -->
+					<%= hidden_field		:name => "trip[trip_clients_attributes][#{ index }][client_id]",	:value => client_id %>
 
-										<!-- trip_client.id field is only needed when updating a trip: -->
-										<%=
-											unless trip.new? || html_template
-												hidden_field		:name => "trip[trip_clients_attributes][#{ index }][id]",					:value => trip_client.id
-											end
-										%>
+					<!-- trip_client.id field is only needed when updating a trip: -->
+					<%=
+						unless trip.new? || html_template
+							hidden_field		:name => "trip[trip_clients_attributes][#{ index }][id]",					:value => trip_client.id
+						end
+					%>
 
-									</div>
-								</td>
-								<td><%= orig_select :name => 'generate_letter', :collection => @template_filenames, :prompt => 'Create a trip letter...', :class => 'create-letter arrow-only', :'data-action' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }" if show_trip_letters_menu %></td>
-								<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_single]",						:checked => trip_client.is_single,			:boolean => true %></td>
-								<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_primary]",						:checked => trip_client.is_primary,			:boolean => true %></td>
-								<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_invoicable]",				:checked => trip_client.is_invoicable,	:boolean => true %></td>
-								<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][confirmation_status]",	:checked => trip_client.is_confirmed,	  :disabled => true, :readonly => true unless html_template %></td><!-- Disabled because this field is for info only and never needs to be submitted -->
-								<td><%= 
-										unless html_template	# Checkbox for Remove:
-											orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][_delete]",								:checked => false, :disabled => client_not_removable, :readonly => client_not_removable
-										end
-									%>
-								</td>
+				</div>
+			</td>
+			<td><%= orig_select :name => 'generate_letter', :collection => @template_filenames, :prompt => 'Create a trip letter...', :class => 'create-letter arrow-only', :'data-method' => 'post', :'data-href' => "#{ resource( client, :documents ) }?#{ letter_builder_parameters }", 'data-target' => '#no-target' if client && show_trip_letters_menu %></td>
+			<!--<td>
+				<%#= orig_radio_button	:name => "selected_client", :checked => (index==0) if client_id && trip.tour_template? %>
+				
+				<%#= link_to icon(:add), resource( client, :trips, :new, :copy_trip_id => trip.id ) if client && trip.tour_template? %>
+			</td>-->
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_single]",						:checked => trip_client.is_single,			:boolean => true %></td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_primary]",						:checked => trip_client.is_primary,			:boolean => true %></td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_invoicable]",				:checked => trip_client.is_invoicable,	:boolean => true %></td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][confirmation_status]",	:checked => trip_client.is_confirmed,	  :disabled => true, :readonly => true unless html_template %></td><!-- Disabled because this field is for info only and never needs to be submitted -->
+			<td><%= 
+					unless html_template	# Checkbox for Remove:
+						orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][_delete]",								:checked => false, :disabled => client_not_removable, :readonly => client_not_removable
+					end
+				%>
+			</td>
 
-							<% end =%>
+		<% end =%>
 
-						</tr>
+	</tr>

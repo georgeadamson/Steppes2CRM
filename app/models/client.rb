@@ -67,6 +67,7 @@ class Client
   belongs_to :address_client,  :model => "Client", :child_key => [:address_client_id]
   has 1,     :address_clients, :model => "Client", :child_key => [:address_client_id]
 
+  has n, :tasks       # AKA Followups
   has n, :notes
   has n, :documents
   has n, :money_ins   # AKA Invoices
@@ -296,8 +297,14 @@ class Client
 
   # All the client's trips that are the current active version of each of the client's trips: (ie ignore "other" versions)
   # Note how we cache @active_trips to prevent unecessary db trips as each trip is accessed:
+  # Added :type_id filter 01-Sep-2010 GA.
   def active_trips
-    return @active_trips ||= trips.all( :is_active_version => true )
+    return @active_trips ||= trips.all( :is_active_version => true, :type_id.not => TripType::TOUR_TEMPLATE )
+  end
+
+  def fixed_deps( tour_id = nil )
+    deps = self.active_trips.all( :type_id => TripType::FIXED_DEP )
+    return tour_id ? deps.all( :tour_id => tour_id ) : deps
   end
 
 
@@ -346,10 +353,10 @@ class Client
 
 
   # Helper to instruct database to rebuild search data for one or all clients:
-  # Warning: Takes longer when client_id not specified! (Usually less than 10 seconds)
+  # Warning: Takes longer when client_id not specified! (Though usually less than 10 seconds)
   def self.refresh_search_keywords(client_id = nil)
 
-    Merb.logger.info "Refreshing client_keywords table for #{ client_id || 'all clients'  }"
+    Merb.logger.info "Refreshing client_keywords table for client_id #{ client_id || 'all'  }"
 
 		sql_statement = "EXEC usp_client_keywords_refresh ?"
 		repository(:default).adapter.execute( sql_statement, client_id )
@@ -366,7 +373,7 @@ class Client
   # Define which properties are available in reports  
   def self.potential_report_fields
     #return [ :name, :title, :trip_clients, :trips ]
-    return [ :name, :title, :forename, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :client_type, :money_ins, :trips ]
+    return [ :name, :title, :forename, :addressee, :salutation, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :client_type, :money_ins, :trips ]
   end
 
 end

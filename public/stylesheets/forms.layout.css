@@ -11,8 +11,6 @@ SELECT OPTGROUP {
 
 
 
-
-
 .ui-widget {
 	font-size:1em !important;
 }
@@ -25,7 +23,6 @@ SELECT OPTGROUP {
 .ui-datepicker table {
 	font-size:0.8em;
 }
-
 
 
 
@@ -63,6 +60,14 @@ FORM {
 				bottom:1em;
 			}
 
+
+
+/* Hide submit button in auto-submit forms: */
+
+	.js FORM.auto-submit INPUT[type=submit],
+	.js FORM INPUT[type=submit].auto-submit {
+		display:none;
+	}
 
 
 
@@ -905,14 +910,19 @@ TABLE.tripTravellers THEAD TH SPAN.vertical {
 	white-space:nowrap;
 }
 TABLE.tripTravellers TBODY TD {
-	text-align:left;
 	min-width:1em;
 	padding:0.25em;
+	text-align:left;
 }
-TABLE.tripTravellers TBODY TD.centre,
-TABLE.tripTravellers TBODY TD.center {
+
+/* Align checkboxes below their headings: */
+TABLE.tripTravellers TBODY TD {
 	text-align:center;
 }
+TABLE.tripTravellers TBODY TD:first-child {
+	text-align:left;
+}
+
 	/* Customise the Trip-Letters pick list style for use in the tripTravellers table: */
 	TABLE.tripTravellers TBODY TD select.arrow-only {
 		float:none;

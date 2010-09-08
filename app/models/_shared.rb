@@ -33,7 +33,7 @@ module Merb
           
           args.unshift( trip = Trip.get(params[:trip_id]) ) if params[:trip_id]
 
-          if trip && trip.tour
+          if trip && trip.respond_to?(:tour) && trip.tour
             args.unshift trip.tour 
           elsif trip && params[:tour_id]
             args.unshift Tour.get(params[:tour_id])
@@ -51,9 +51,9 @@ module Merb
               args.unshift Trip.get(params[:trip_id])
             end
           end
-  
+
           # Now if first argument is a Trip, insert it's parent context object (tour or client) before it:
-          if args.first.is_a?(Trip) && args.first.tour
+          if args.first.is_a?(Trip) && args.first.respond_to?(:tour) && args.first.tour
             args.unshift args.first.tour
 
           elsif args.first.is_a?(Trip) && params[:tour_id]
@@ -71,16 +71,21 @@ module Merb
 
         end
   
+        # When last argument is a NEW object, swap it for symbols:
+        # Eg: [ trip, new_trip_element ] => [ trip, :trip_elements, :new ]
+        if args.last.respond_to?(:new?) && args.last.new?
+
+          obj   = args.pop
+          args << obj.model.name.snake_case.pluralize.to_sym
+          args << :new
+
         # Special allowance for nil TripElement object at end of args array:
-        #if args.last.is_a?(Object) && args.last.respond_to?(:id) && args.last.id.nil?
-        if args.last.nil?
+        elsif args.last.nil?
+
           args.pop
           args << :trip_elements
           args << :new
-        elsif args.last.respond_to?(:new?) && args.last.new?
-          obj = args.pop
-          args << obj.model.name.snake_case.pluralize.to_sym
-          args << :new
+
         end
   
       end
@@ -562,15 +567,30 @@ end
       
 		  # Helper to call collect_child_error_messages_for() on each child association:
       # Usage: collect_error_messages_for( @supplier, :companies )
-		  def collect_error_messages_for( obj, association_name, context = :default )
-  			
-			  errors = {}
-  			
-			  obj.send(association_name).each{ |a|
-          collect_child_error_messages_for( obj, a, context )
-        } if obj.respond_to? association_name
+		  def collect_error_messages_for( obj, association_name = :all, context = :default )
+
+        if association_name == :all
+          
+          @trip.model.relationships.each do | name, association |
+            if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
+              #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
+              if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
+                collect_error_messages_for @trip, name.to_sym
+              elsif rel
+                collect_child_error_messages_for @trip, rel
+              end
+            end
+          end
+          
+        else
+
+			    obj.send(association_name).each{ |a|
+            collect_child_error_messages_for( obj, a, context )
+          } if obj.respond_to? association_name
         
-			  return errors
+        end
+
+			  return obj.errors
         
 		  end
   

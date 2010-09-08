@@ -28,6 +28,7 @@
 @import url(/stylesheets/trip.itinerary.css);
 @import url(/stylesheets/trip.costings.css);
 @import url(/stylesheets/reports.css);
+@import url(/stylesheets/tour.css);
 
 
 /* These are only used during development and testing: */

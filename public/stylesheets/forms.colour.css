@@ -1,23 +1,33 @@
 
 /* Stealth fields just look like text until they gain the focus */
-SELECT.stealth,
-TEXTAREA.stealth,
-INPUT[type=text].stealth {
-	background-color:transparent;
-	outline:none;
-}
 
-SELECT,
-TEXTAREA,
-INPUT[type=text],
-INPUT[type=password],
-SELECT.stealth:focus,
-TEXTAREA.stealth:focus,
-INPUT[type=text].stealth:focus {
-	background-color:#fff;
-	border:none;
-	outline:solid 1px #D9D9D9;
-}
+	SELECT.stealth,
+	SELECT[readonly].stealth,
+	TEXTAREA.stealth,
+	TEXTAREA[readonly].stealth,
+	INPUT[type=text].stealth,
+	INPUT[type=text][readonly].stealth {
+		background-color:transparent;
+		outline:none;
+	}
+
+	SELECT,
+	TEXTAREA,
+	INPUT[type=text],
+	INPUT[type=password],
+	SELECT.stealth:hover,
+	TEXTAREA.stealth:hover,
+	INPUT[type=text].stealth:hover,
+	SELECT.stealth:focus,
+	TEXTAREA.stealth:focus,
+	INPUT[type=text].stealth:focus {
+		background-color:#fff;
+		border:none;
+		outline:solid 1px #D9D9D9;
+	}
+
+
+
 
 SELECT[readonly],
 TEXTAREA[readonly],

@@ -20,8 +20,8 @@ class ClientAddress
 
   before :save do
     # Make this is the primary address if there isn't one set for the client:
-    #self.is_active = true if self.client.client_addresses( :is_active => true ).count == 0
-    self.is_active = true unless self.client.primary_address
+    # Important: To allow for unsaved changes this must test the loaded instances not the database.
+    self.is_active = true unless self.client.client_addresses.select{|a| a.is_active }.length > 0
   end
 
   after :save do
@@ -56,4 +56,18 @@ class ClientAddress
 
   end
 
+
+  
+  
+  # Helper to provide a consistent 'friendly' name: (Used when users select content for reports etc)
+  def self.class_display_name
+    return 'Addresses'
+  end
+  
+  
+  # Define which properties are available in reports  
+  def self.potential_report_fields
+    return [ :client, :address, :is_active ]
+  end
+  
 end

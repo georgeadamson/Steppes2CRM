@@ -22,4 +22,4 @@ TripClientStatus.auto_migrate!		# Warning: Running this will clear the table!
 TripClientStatus.first_or_create( { :id => TripClientStatus::UNCONFIRMED }, { :id => TripClientStatus::UNCONFIRMED, :name => 'Unconfirmed' } )
 TripClientStatus.first_or_create( { :id => TripClientStatus::CONFIRMED   }, { :id => TripClientStatus::CONFIRMED,   :name => 'Confirmed'   } )
 TripClientStatus.first_or_create( { :id => TripClientStatus::WAITLISTED  }, { :id => TripClientStatus::WAITLISTED,  :name => 'Waitlisted'  } )
-TripClientStatus.first_or_create( { :id => TripClientStatus::INTERESTED  }, { :id => TripClientStatus::INTERESTED,  :name => 'Intrested'   } )
+TripClientStatus.first_or_create( { :id => TripClientStatus::INTERESTED  }, { :id => TripClientStatus::INTERESTED,  :name => 'Interested'  } )

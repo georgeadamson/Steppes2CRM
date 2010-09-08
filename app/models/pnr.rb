@@ -339,13 +339,11 @@ class Pnr
       end
 
 		  flight = {
-				
 			  :pnr_booking_date					=> pnr_booking_date,
 			  :pnr_number								=> pnr_number,
 			  :pnr_reminder_day					=> pnr_reminder_day,
 			  :pnr_reminder_month				=> pnr_reminder_month,
 			  :pnr_reminder_date				=> pnr_reminder_date
-		  
       }
 			
       begin
@@ -380,6 +378,7 @@ class Pnr
       end
 
 			
+      # Departure Airport:
       begin
         flight.merge!(
 				  :depart_airport_id				=> depart_airport ? depart_airport.id : nil,
@@ -393,6 +392,7 @@ class Pnr
         errors << "Unable to parse flight depart_airport (from #{data}) #{details}"
       end
 
+      # Arrival Airport:
       begin
         flight.merge!(
 				  :arrive_airport_id				=> arrive_airport ? arrive_airport.id : nil,
@@ -406,6 +406,7 @@ class Pnr
         errors << "Unable to parse flight arrive_airport (from #{data}) #{details}"
       end
 
+      # Departure Date/Time:
       begin
         flight.merge!(
 				  :depart_year							=> pnr_booking_date.year,
@@ -420,6 +421,7 @@ class Pnr
       end
   				
 
+      # Arrival Date/Time:
       begin
         flight.merge!(
 				  :arrive_year							=> pnr_booking_date.year,
@@ -442,9 +444,18 @@ class Pnr
 			    # Derive complete FLIGHT DATES AND TIMES:
 			    flight[:depart_date]		= DateTime::civil( flight[:depart_year], flight[:depart_month], flight[:depart_day], flight[:depart_hour], flight[:depart_minute], 0, 0 )
 			    flight[:arrive_date]		= DateTime::civil( flight[:arrive_year], flight[:arrive_month], flight[:arrive_day], flight[:arrive_hour], flight[:arrive_minute], 0, 0 )
-      
+
+          # Because flight dates do not include YEAR we must deduce year based on pnr_booking_date:
+          # So, if depart_date is earlier than pnr_booking_date then add a year to it!
+          # TODO: Is there a simpler way to increment the year?!
+          if flight[:depart_date] && flight[:depart_date].jd < pnr_booking_date.jd
+			      flight[:depart_date]	= DateTime::civil( pnr_booking_date.year + 1, flight[:depart_month], flight[:depart_day], flight[:depart_hour], flight[:depart_minute], 0, 0 )
+			      flight[:arrive_date]	= DateTime::civil( pnr_booking_date.year + 1, flight[:arrive_month], flight[:arrive_day], flight[:arrive_hour], flight[:arrive_minute], 0, 0 )
+          end
+            
 			    # Increment ARRIVAL YEAR when arrival month is earlier than departure month:
 			    # This is necessary because amadeus does not provide flight-year so dates must always be within a year of booking date!
+          # TODO: Is there a simpler way to increment the year?!
 			    if flight[:depart_date] && flight[:arrive_date] && flight[:arrive_date].jd < flight[:depart_date].jd
 				    flight[:arrive_year] += 1
 				    flight[:arrive_date] = DateTime::civil( flight[:arrive_year], flight[:arrive_month], flight[:arrive_day], flight[:arrive_hour], flight[:arrive_minute] )

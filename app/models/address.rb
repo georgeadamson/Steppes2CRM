@@ -41,5 +41,21 @@ class Address
 
   end
 
+  alias entire_address name
+
+
+  
+  
+  # Helper to provide a consistent 'friendly' name: (Used when users select content for reports etc)
+  def self.class_display_name
+    return 'Address'
+  end
+  
+  
+  # Define which properties are available in reports  
+  def self.potential_report_fields
+    return [ :entire_address, :address1, :address2, :address3, :address4, :address5, :address6, :postcode ]
+  end
 
 end
+

@@ -10,6 +10,7 @@ dependency "merb-assets", merb_gems_version
 dependency("merb-cache", merb_gems_version) do
   Merb::Cache.setup do
     register(Merb::Cache::FileStore) unless Merb.cache
+    # TODO: Find out why this is not setting up the :default cache.
   end
 end
 dependency "merb-helpers", merb_gems_version 

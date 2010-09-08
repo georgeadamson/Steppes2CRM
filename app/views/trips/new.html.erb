@@ -1,19 +1,21 @@
 <%
-	if @trip.tour
-		client_or_tour = @trip.tour
-		heading				 = "Create new tour dates for #{ client_or_tour.shortname }"
-	else
-		client_or_tour = @client
-		heading				 = "Create a new trip for #{ client_or_tour.shortname }"
-	end			
+
+	heading = case @trip.type_id 
+		when TripType::TOUR_TEMPLATE then "Create new group dates for #{ @client_or_tour.shortname }"
+		
+	  when TripType::FIXED_DEP then "Create a client's custom copy of #{ @client_or_tour.shortname }"
+		
+	else "Create a new trip for #{ @client_or_tour.shortname }"
+	end		
+	
 %>
 <div class="sectionContainer">
 
-	<%= form_for @trip, :action => nested_resource(client_or_tour, :trips) do %>
+	<%= form_for @trip, :action => nested_resource(@client_or_tour, :trips) do %>
 
 		<div class="sectionHead">
 			<h3 class="tripHeading">
-				<span class="ui-icon ui-icon-trip"></span>
+				<%= icon @trip.tour ? :group : :trip %> 
 				<span class="tripName"><%= heading %></span>
 			</h3>
 		</div>

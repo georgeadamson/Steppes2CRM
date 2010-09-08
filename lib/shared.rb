@@ -7,6 +7,7 @@
 # Note: DataMapper will not actually populate these until they're called for the first time.
 $cached = {
 	:trip_states			    => TripState.all( :order=>[:id] ),
+	:trip_client_statuses => TripClientStatus.all( :order=>[:id] ),
 	:world_regions		    => WorldRegion.all( :order=>[:name] ),
 	:mailing_zones		    => MailingZone.all( :order=>[:order_by] ),
 	:exchange_rates	      => ExchangeRate.all( :order=>[:name] ),

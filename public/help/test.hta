@@ -1,0 +1,454 @@
+<HTML>
+<HEAD>
+<TITLE>Basic Software Inventory</TITLE>
+
+<HTA:APPLICATION 
+     ID="Autotext"
+     VERSION="2.10"
+     APPLICATIONNAME="Steppes AutoText"
+     ICON="icon.trip.gif"
+     SCROLL="yes"
+     SINGLEINSTANCE="yes"
+     WINDOWSTATE="norma"l
+/>
+</HEAD>
+
+<script type="text/javascript" src="http://database2/javascripts/jquery/jquery-1.3.2.js"></script>
+<script type="text/javascript">
+	alert(jQuery)
+</script>
+
+<SCRIPT Language="VBScript">
+
+Option Explicit
+
+' Constants
+Const wbemFlagReturnImmediately = &h10
+Const wbemFlagForwardOnly       = &h20
+
+' Global variables
+dim clrBgErr, clrTxtErr, strAppName, strAppVer, strComputer, strFileNames
+
+clrBgErr      = "#FF0000"
+clrTxtErr     = "#FFFFFF"
+strAppName    = Autotext.ApplicationName
+strAppVer     = Autotext.Version
+strFileNames  = "software"
+
+
+Sub CheckUpdate( )
+	Dim lenLatestVer, strCurrentVer, strLatestVer
+
+	' Change cursor to hourglass while checking for update
+	Document.Body.Style.Cursor = "wait"
+
+	strLatestVer  = TextFromHTML( "http://www.robvanderwoude.com/updates/" & strFileNames & ".txt" )
+	lenLatestVer  = Len( strLatestVer )
+	If lenLatestVer = 4 Then
+		strCurrentVer = Split( strAppVer )(0)
+		If strLatestVer < strCurrentVer Then
+			Update.InnerHTML = "<P>You are using an invalid version (" & strCurrentVer _
+			                 & ") of the " & strAppName _
+			                 & ".<BR>The latest valid version is "    _
+			                 & strLatestVer & " and is available " _
+			                 & "<A HREF=""http://www.robvanderwoude.com/updates/" _
+			                 & strFileNames & ".html"">" _
+			                 & "<FONT COLOR=""Red"">here</FONT></A>.</P>"
+		End If
+		If strLatestVer > strCurrentVer Then
+			Update.InnerHTML = "<P>You are using version " & strCurrentVer _
+			                 & " of the " & strAppName _
+			                 & ".<BR>An update to version " _
+			                 & strLatestVer & " is available " _
+			                 & "<A HREF=""http://www.robvanderwoude.com/updates/" _
+			                 & strFileNames & ".html"">" _
+			                 & "<FONT COLOR=""Red"">here</FONT></A>.</P>"
+		End If
+	End If
+
+	' Change cursor back to default
+	Document.Body.Style.Cursor = "default"
+End Sub
+
+
+Sub CopyClipboard
+	Document.ParentWindow.ClipboardData.SetData "text", ResultsHiddenText.Value
+End Sub
+
+
+Sub EditQuery
+	ComputerNameTextBox.Disabled      = False
+	ResultsTextArea.Value             = ""
+	ResultsHiddenText.Value           = ""
+	FilterNameTextBox.Disabled        = False
+	FilterVendorTextBox.Disabled      = False
+	FilterDateTextBox.Disabled        = False
+	SPTextBox.Disabled                = False
+	CopyButton.Disabled               = True
+	EditButton.Disabled               = True
+	PasteButtonPC.Disabled            = False
+	PasteButtonNameFilter.Disabled    = False
+	PasteButtonVendorFilter.Disabled  = False
+	PasteButtonDateFilter.Disabled    = False
+	RunButton.Disabled                = False
+	ResetButton.Disabled              = False
+	ComputerNameTextBox.Focus( )
+End Sub
+
+
+Function GetComputerName( )
+	Dim colItems, objItem, objWMIService
+
+	On Error Resume Next
+
+	Set objWMIService = GetObject( "winmgmts://./root/cimv2" )
+	If Err Then
+		ComputerNameTextBox.Style.backgroundColor = clrBgErr
+		ComputerNameTextBox.Style.Color           = clrTxtErr
+		ComputerNameTextBox.Focus( )
+		Err.Clear
+		On Error GoTo 0
+		EditQuery( )
+		Exit Function
+	End If
+
+	Set colItems = objWMIService.ExecQuery( "Select * from Win32_ComputerSystem", , wbemFlagReturnImmediately + wbemFlagForwardOnly )
+	If Err Then
+		ComputerNameTextBox.Style.backgroundColor = clrBgErr
+		ComputerNameTextBox.Style.Color           = clrTxtErr
+		ComputerNameTextBox.Focus( )
+		Err.Clear
+		On Error GoTo 0
+		EditQuery( )
+		Exit Function
+	End If
+
+	For Each objItem in colItems
+		strComputer = objItem.Name
+	Next
+
+	On Error GoTo 0
+
+	ComputerNameTextBox.Value = strComputer
+	GetComputerName           = strComputer
+End Function
+
+
+Sub Inventory
+	Dim colItems, objItem, objWMIService, strCsv, strDateFilter, strNameFilter, strOutput, strSortDate, strVendorFilter
+
+	ComputerNameTextBox.Style.backgroundColor = ""
+	ComputerNameTextBox.Style.Color           = ""
+	strComputer     = ComputerNameTextBox.Value
+	strNameFilter   = FilterNameTextBox.Value
+	strVendorFilter = FilterVendorTextBox.Value
+	strDateFilter   = FilterDateTextBox.Value
+	strSortDate     = Year( Now( ) ) _
+	                & Right( "0" & Month( Now( ) ), 2 ) _
+	                & Right( "0" & Day(   Now( ) ), 2 )
+
+	If strComputer  = "" Then strComputer = GetComputerName( )
+
+	If strDateFilter <> "" Then
+		If IsNumeric( strDateFilter ) = False Then
+			MsgBox "The date filter format should be YYYYMMDD", vbInformation, "Date Filter Error"
+			FilterDateTextBox.Focus( )
+			Exit Sub
+		ElseIf strDateFilter < 19800101 Or strDateFilter > strSortDate Then
+			MsgBox "The date filter format should be YYYYMMDD", vbInformation, "Date Filter Error"
+			FilterDateTextBox.Focus( )
+			Exit Sub
+		End If
+	End If
+
+	WinVer( strComputer )
+
+	ComputerNameTextBox.Disabled     = True
+	FilterNameTextBox.Disabled       = True
+	FilterVendorTextBox.Disabled     = True
+	FilterDateTextBox.Disabled       = True
+	PasteButtonPC.Disabled           = True
+	PasteButtonNameFilter.Disabled   = True
+	PasteButtonVendorFilter.Disabled = True
+	PasteButtonDateFilter.Disabled   = True
+	RunButton.Disabled               = True
+	ResetButton.Disabled             = True
+	ResultsTextArea.Value            = "WMI query in progress, please wait . . ."
+	ResultsHiddenText.Value          = "Computer:"           & vbTab _
+	                                 & "Name:"               & vbTab _
+	                                 & "Version:"            & vbTab _
+	                                 & "Vendor:"             & vbTab _
+	                                 & "Install Date:"       & vbTab _
+	                                 & "Package Cache:"      & vbTab _
+	                                 & "Identifying Number:" & vbCrLf
+
+
+	On Error Resume Next
+
+	Set objWMIService = GetObject( "winmgmts://" & strComputer & "/root/CIMV2" )
+	If Err Then
+		ComputerNameTextBox.Style.backgroundColor = clrBgErr
+		ComputerNameTextBox.Style.Color           = clrTxtErr
+		ComputerNameTextBox.Focus( )
+		Err.Clear
+		On Error GoTo 0
+		EditQuery( )
+		Exit Sub
+	End If
+
+	Set colItems = objWMIService.ExecQuery( "SELECT * FROM Win32_Product", "WQL", wbemFlagReturnImmediately + wbemFlagForwardOnly )
+	If Err Then
+		ComputerNameTextBox.Style.backgroundColor = clrBgErr
+		ComputerNameTextBox.Style.Color           = clrTxtErr
+		ComputerNameTextBox.Focus( )
+		Err.Clear
+		On Error GoTo 0
+		EditQuery( )
+		Exit Sub
+	End If
+
+	ResultsTextArea.Value = ""
+
+	For Each objItem In colItems
+		If InStr( 1, objItem.Name,   strNameFilter,   vbTextCompare ) > 0 And _
+		   InStr( 1, objItem.Vendor, strVendorFilter, vbTextCompare ) > 0 And _
+		   objItem.InstallDate >= strDateFilter Then
+			strOutput = "Name               :  " & objItem.Name              & vbCrLf _
+			          & "Version            :  " & objItem.Version           & vbCrLf _
+			          & "Vendor             :  " & objItem.Vendor            & vbCrLf _
+			          & "Install Date       :  " & objItem.InstallDate       & vbCrLf _
+			          & "Package Cache      :  " & objItem.PackageCache      & vbCrLf _
+			          & "Identifying Number :  " & objItem.IdentifyingNumber & vbCrLf & vbCrLf
+			ResultsTextArea.Value = ResultsTextArea.Value & strOutput
+			strCsv    = strComputer               & vbTab _
+			          & objItem.Name              & vbTab _
+			          & objItem.Version           & vbTab _
+			          & objItem.Vendor            & vbTab _
+			          & objItem.InstallDate       & vbTab _
+			          & objItem.PackageCache      & vbTab _
+			          & objItem.IdentifyingNumber & vbCrLf
+			ResultsHiddenText.Value = ResultsHiddenText.Value & strCsv
+		End If
+	Next
+
+	On Error GoTo 0
+
+	CopyButton.Disabled  = False
+	EditButton.Disabled  = False
+	ResetButton.Disabled = False
+End Sub
+
+
+Sub PasteClipboardDateFilter
+	FilterDateTextBox.Value   = Document.ParentWindow.ClipboardData.GetData( "text" )
+End Sub
+
+
+Sub PasteClipboardNameFilter
+	FilterNameTextBox.Value   = Document.ParentWindow.ClipboardData.GetData( "text" )
+End Sub
+
+
+Sub PasteClipboardPC
+	ComputerNameTextBox.Value = Document.ParentWindow.ClipboardData.GetData( "text" )
+End Sub
+
+
+Sub PasteClipboardVendorFilter
+	FilterVendorTextBox.Value = Document.ParentWindow.ClipboardData.GetData( "text" )
+End Sub
+
+
+Function TextFromHTML( URL )
+	' Basic routine borrowed from http://dev.remotenetworktechnology.com/wsh/rubegoldberg.htm
+	' Improved wait-until-ready routine for HTAs by McKirahan on
+	' http://support.microsoft.com/newsgroups/default.aspx?dg=microsoft.public.scripting.scriptlets&tid=be461ec2-b444-440c-8155-ad0e8e839ca6&lang=en&cr=US&sloc=en-us&p=1
+
+	Dim objIE
+
+	TextFromHTML = ""
+
+	On Error Resume Next
+
+	Set objIE = CreateObject( "InternetExplorer.Application" )
+
+ 	objIE.Navigate URL
+
+	While objIE.Busy
+	Wend
+
+	TextFromHTML = objIE.Document.Body.InnerText
+
+	objIE.Quit
+
+	On Error Goto 0
+End Function
+
+
+Sub Window_Onload
+	ComputerNameTextBox.Disabled      = False
+	ComputerNameTextBox.Value         = ""
+	ResultsTextArea.Value             = ""
+	ResultsHiddenText.Value           = ""
+	FilterNameTextBox.Disabled        = False
+	FilterNameTextBox.Value           = ""
+	FilterVendorTextBox.Disabled      = False
+	FilterVendorTextBox.Value         = ""
+	FilterDateTextBox.Disabled        = False
+	FilterDateTextBox.Value           = ""
+	WindowsTextBox.Disabled           = False
+	WindowsTextBox.Value              = ""
+	SPTextBox.Disabled                = False
+	SPTextBox.Value                   = ""
+	CopyButton.Disabled               = True
+	EditButton.Disabled               = True
+	PasteButtonPC.Disabled            = False
+	PasteButtonNameFilter.Disabled    = False
+	PasteButtonVendorFilter.Disabled  = False
+	PasteButtonDateFilter.Disabled    = False
+	RunButton.Disabled                = False
+	ResetButton.Disabled              = False
+	AppName.InnerHTML                 = strAppName
+	AppVer.InnerHTML                  = strAppVer
+	CheckUpdate( )
+	ComputerNameTextBox.Focus( )
+End Sub
+
+
+Sub WinVer( strComputer )
+	Dim colItems, objItem, objWMIService
+
+	On Error Resume Next
+
+	Set objWMIService = GetObject( "winmgmts://" & strComputer & "/root/cimv2" )
+	If Err Then
+		ComputerNameTextBox.Style.backgroundColor = clrBgErr
+		ComputerNameTextBox.Style.Color           = clrTxtErr
+		ComputerNameTextBox.Focus( )
+		Err.Clear
+		On Error GoTo 0
+		EditQuery( )
+		Exit Sub
+	End If
+
+	Set colItems = objWMIService.ExecQuery("Select * from Win32_OperatingSystem",,48)
+	If Err Then
+		ComputerNameTextBox.Style.backgroundColor = clrBgErr
+		ComputerNameTextBox.Style.Color           = clrTxtErr
+		ComputerNameTextBox.Focus( )
+		Err.Clear
+		On Error GoTo 0
+		EditQuery( )
+		Exit Sub
+	End If
+
+	For Each objItem in colItems
+		WindowsTextBox.Value = Split( objItem.Caption, " ", 2, vbTextCompare )(1)
+		SPTextBox.Value      = objItem.CSDVersion
+	Next
+
+	On Error GoTo 0
+End Sub
+
+
+</SCRIPT>
+
+<BODY STYLE="font:12 pt arial; color:white; filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr='#0000FF', EndColorStr='#000000')">
+<iframe src="http://database2/clients/22615/summary" application="yes" />
+<DIV ALIGN="center">
+
+<SPAN ID="Update">&nbsp;</SPAN>
+
+<P>&nbsp;</P>
+
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0">
+<TR>
+    <TD WIDTH="20%">&nbsp;&nbsp;&nbsp;</TD>
+    <TD ALIGN="right"><B>Computer Name:</B></TD>
+    <TD>&nbsp;&nbsp;&nbsp;</TD>
+    <TD><INPUT TYPE="text" NAME="ComputerNameTextBox" SIZE="20" TITLE="Fill in a remote computer name or leave this field blank to query the local computer."></TD>
+    <TD>&nbsp;&nbsp;&nbsp;</TD>
+    <TD ALIGN="left"><INPUT ID="pastebuttonpc" CLASS="button" TYPE="button" VALUE=" Paste " NAME="PasteButtonPC" onClick="PasteClipboardPC" TITLE="Click here to paste a remote computer name from the clipboard into the Computer Name field."></TD>
+    <TD WIDTH="20%">&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR>
+    <TD COLSPAN="7">&nbsp;</TD>
+</TR>
+<TR>
+    <TD WIDTH="20%">&nbsp;&nbsp;&nbsp;</TD>
+    <TD COLSPAN="2">&nbsp;</TD>
+    <TD ALIGN="center"><B>Filters:</B></TD>
+    <TD COLSPAN="3">&nbsp;</TD>
+</TR>
+<TR>
+    <TD WIDTH="20%">&nbsp;&nbsp;&nbsp;</TD>
+    <TD ALIGN="right"><B>Name:</B></TD>
+    <TD>&nbsp;&nbsp;&nbsp;</TD>
+    <TD><INPUT NAME="FilterNameTextBox" SIZE="20" TITLE="Use this field to limit the output to only software with the filter string in its NAME value."></TD>
+    <TD>&nbsp;&nbsp;&nbsp;</TD>
+    <TD ALIGN="left"><INPUT ID="pastebuttonnamefilter" CLASS="button" TYPE="button" VALUE=" Paste " NAME="PasteButtonNameFilter" onClick="PasteClipboardNameFilter" TITLE="Click here to paste a filter string from the clipboard into the Name Filter field."></TD>
+    <TD WIDTH="20%">&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR>
+    <TD WIDTH="20%">&nbsp;&nbsp;&nbsp;</TD>
+    <TD ALIGN="right"><B>Vendor:</B></TD>
+    <TD>&nbsp;&nbsp;&nbsp;</TD>
+    <TD><INPUT NAME="FilterVendorTextBox" SIZE="20" TITLE="Use this field to limit the output to only software with the filter string in its VENDOR value."></TD>
+    <TD>&nbsp;&nbsp;&nbsp;</TD>
+    <TD ALIGN="left"><INPUT ID="pastebuttonvendorfilter" CLASS="button" TYPE="button" VALUE=" Paste " NAME="PasteButtonVendorFilter" onClick="PasteClipboardVendorFilter" TITLE="Click here to paste a filter string from the clipboard into the Vendor Filter field."></TD>
+    <TD WIDTH="20%">&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR>
+    <TD WIDTH="20%">&nbsp;&nbsp;&nbsp;</TD>
+    <TD ALIGN="right"><B>Install Date:</B></TD>
+    <TD>&nbsp;&nbsp;&nbsp;</TD>
+    <TD><INPUT NAME="FilterDateTextBox" SIZE="20" TITLE="Use this field to display only software installed at the specified date or later. Date should be in YYYYMMDD format."></TD>
+    <TD>&nbsp;&nbsp;&nbsp;</TD>
+    <TD ALIGN="left"><INPUT ID="pastebuttondatefilter" CLASS="button" TYPE="button" VALUE=" Paste " NAME="PasteButtonDateFilter" onClick="PasteClipboardDateFilter" TITLE="Click here to paste a filter date from the clipboard into the Install Date Filter field."></TD>
+    <TD WIDTH="20%">&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR>
+    <TD COLSPAN="7">&nbsp;</TD>
+</TR>
+<TR>
+    <TD COLSPAN="7">&nbsp;</TD>
+</TR>
+<TR>
+    <TD ALIGN="right" COLSPAN="4"><B>Windows Version:</B>&nbsp;&nbsp;&nbsp;<INPUT NAME="WindowsTextBox" SIZE="20" READONLY TITLE="This read-only field will display the Windows version."></TD>
+    <TD ALIGN="left" COLSPAN="3">&nbsp;&nbsp;&nbsp;<B>ServicePack:</B>&nbsp;&nbsp;&nbsp;<INPUT NAME="SPTextBox" SIZE="20" READONLY TITLE="This read-only field will display Windows' latest installed ServicePack."></TD>
+</TR>
+<TR>
+    <TD COLSPAN="7">&nbsp;</TD>
+</TR>
+<TR>
+    <TD COLSPAN="7" ALIGN="center"><TEXTAREA NAME="ResultsTextArea" ROWS="15" COLS="80" READONLY TITLE="This read-only field will display all software that has been installed by Windows' Installer."></TEXTAREA></TD>
+</TR>
+<TR>
+    <TD COLSPAN="7"><INPUT TYPE="hidden" NAME="ResultsHiddenText"></TD>
+</TR>
+</TABLE>
+
+<P>&nbsp;</P>
+
+<P>
+<INPUT ID="runbutton" CLASS="button" TYPE="button" VALUE="    Go    " NAME="RunButton" onClick="Inventory" TITLE="Click here to start the inventory">
+&nbsp;&nbsp;&nbsp;
+<INPUT ID="copybutton" CLASS="button" TYPE="button" VALUE="  Copy  " NAME="CopyButton" onClick="CopyClipboard" TITLE="Click here to copy the results to the clipboard. The data in the clipboard will be in tab delimited format. Paste the data in a spreadsheet, using tab as the only delimiter, to create reports.">
+&nbsp;&nbsp;&nbsp;
+<INPUT ID="editbutton" CLASS="button" TYPE="button" VALUE="   Edit   " NAME="EditButton" onClick="EditQuery" TITLE="Click here to clear the result and modify the filters.">
+&nbsp;&nbsp;&nbsp;
+<INPUT ID="resetbutton" CLASS="button" TYPE="button" VALUE=" Reset " NAME="ResetButton" onClick="Location.Reload(True)" TITLE="Click here to clear all fields"></P>
+
+<P><SPAN ID="AppName">Application Name</SPAN>,&nbsp; Version <SPAN ID=AppVer>0.00</SPAN><BR>
+<FONT SIZE="-2">&copy; 2005-2007, Rob van der Woude<BR>
+<A HREF="http://www.robvanderwoude.com/" TARGET="_blank"><FONT COLOR="Red">http://www.robvanderwoude.com</FONT></A></FONT></P>
+
+<P><FONT SIZE="-2">Created using the Microsoft Scripting Guys'
+<A HREF="http://www.microsoft.com/technet/scriptcenter/tools/scripto2.mspx" TARGET="_blank"><FONT COLOR="Red">Scriptomatic 2.0</FONT></A> and
+<A HREF="http://www.microsoft.com/downloads/details.aspx?FamilyId=231D8143-F21B-4707-B583-AE7B9152E6D9&displaylang=en" TARGET="_blank"><FONT COLOR="Red">HTA Helpomatic</FONT></A>
+tools.</FONT></P>
+
+</DIV>
+
+</BODY>
+</HTML>

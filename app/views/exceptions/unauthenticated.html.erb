@@ -1,4 +1,5 @@
-<%# TODO: Tidy this up. It was written rather hastily! %>
+<%# TODO: Tidy this up. It was written rather hastily!
+%>
 
 <style>
 	.error H2 { font-size:1.0em; }
@@ -20,16 +21,17 @@
   <% @login_param = Merb::Authentication::Strategies::Basic::Base.login_param %>
   <% @password_param = Merb::Authentication::Strategies::Basic::Base.password_param %>
 
-<form action="<%= slice_url(:merb_auth_slice_password, :perform_login) %>" method="POST" accept-charset="utf-8">
+<form action="<%= slice_url(:merb_auth_slice_password, :perform_login) %>" method="POST" accept-charset="utf-8" class="noajax">
+
 	<input type="hidden" name="_method" value="PUT" />
 
 	<div class="formField">
-		<label for="<%= @login_param.to_s %>">User name<%#= @login_param.to_s.capitalize %></label>
+		<label for="<%= @login_param.to_s %>">User name</label>
 		<input type="text" name="<%= @login_param.to_s %>" value="<%= params[:login] %>" id="<%= @login_param.to_s %>"/>
 	</div>
 
 	<div class="formField">
-		<label for="<%= @password_param.to_s %>">Password<%#= @password_param.to_s.capitalize %></label>
+		<label for="<%= @password_param.to_s %>">Password</label>
 		<input type="password" name="<%= @password_param.to_s %>" value="<%= params[:password] %>" id="<%= @password_param.to_s %>"/>
 	</div>
 
