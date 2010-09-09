@@ -31,8 +31,8 @@ class BrochureRequest
   belongs_to :document
   belongs_to :status, :model => "BrochureRequestStatus", :child_key => [:status_id]
   
-  #has 1, :document
-
+  has n, :tasks         # Brochure followups
+  
   alias name notes
   alias description custom_text
 
@@ -50,7 +50,14 @@ class BrochureRequest
   end
 
   after :update do
-    self.document.destroy if self.status_id == CLEARED && self.document
+
+    if self.status_id == CLEARED
+
+      self.document.destroy if self.document
+      self.create_task()
+
+    end
+
   end
   
   after :destroy do
@@ -127,6 +134,49 @@ class BrochureRequest
       collect_child_error_messages_for self, self.document if self.document
 
   end
+
+
+
+  
+  # Generate a followup for this request *if* it has been cleared:
+  def create_task(force = false)
+
+    # Check whether there's already a followup for this flight:
+    task = self.tasks.first
+
+    if !task && ( force || self.status_id == CLEARED )
+      
+      # This logic is based on the legacy database stored-procedure named "ClearBrochureMerge"
+      user      = self.user
+      client    = self.client
+      due_date  = Date.today + self.company.brochure_followup_days # || 7 )
+
+      # Automatically create a followup task for this flight:
+      task   = Task.new(
+        :name                  => "Follow up brochure sent on #{ Date.today.formatted(:uidate) } ",
+        :status_id            => TaskStatus::OPEN,
+        :type_id              => TaskType::BROCHURE_FOLLOWUP,
+        :due_date             => due_date,
+        :user                 => user,
+        :client               => client,
+        :brochure_request_id  => self.id  # Linked item id
+      )
+
+      if task.save!
+        self.tasks.reload
+      else
+        # For debugging:
+        task.valid?
+        Merb.logger.error "ERROR: Could not create brochure followup automatically because: #{ task.errors.inspect }"
+      end
+
+    end
+
+    return task
+
+  end
+
+
 
 
 

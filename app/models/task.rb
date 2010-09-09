@@ -14,6 +14,8 @@ class Task
   property :client_id,          Integer,:required => true  # Formerly ClientID.
   property :contact_client_id,  Integer,:required => true, :default => lambda{ |task,prop| task.client_id }  # Formerly ContactID.
   property :user_id,            Integer,:required => true  # Formerly ConsultantID.
+  property :trip_element_id,    Integer,:required => false # Formerly LinkedID.
+  property :brochure_request_id,Integer,:required => false # Formerly LinkedID.
   property :closed_date,        Date,   :required => false # Formerly DateTimeClosed.
   property :closed_by_user_id,  Integer,:required => false # Formerly ClosedByConsultantID.
   property :closed_notes,       String, :required => false, :length => 500 # Formerly ClosingNotes.
@@ -26,6 +28,10 @@ class Task
   belongs_to :user
   belongs_to :closed_by_user, :model => "User", :child_key => [:closed_by_user_id]
 
+  # Context-specific relationships:
+  belongs_to :trip_element
+  belongs_to :brochure_request
+  
   alias notes  name
   alias notes= name=
 
@@ -36,10 +42,11 @@ class Task
     return self.status_id == TaskStatus::OPEN
   end
 
-  before :save do
+  before :valid? do
 
-    self.status_id   ||= TaskStatus::OPEN
-    self.closed_date ||= Date.today unless self.status_id == TaskStatus::OPEN
+    self.status_id          ||= TaskStatus::OPEN
+    self.closed_date        ||= Date.today unless self.status_id == TaskStatus::OPEN
+    self.contact_client_id  ||= self.client_id
 
   end
 

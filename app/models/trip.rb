@@ -74,7 +74,7 @@ class Trip
     #def price_per_single_biz_supp=(); return 0.0; end
     
     has n, :documents
-    has n, :trip_elements
+    has n, :trip_elements #, :constraint => :destroy  # See: http://github.com/datamapper/dm-constraints
     alias elements trip_elements
     
     has n, :trip_clients
@@ -289,7 +289,7 @@ class Trip
           end
           
         end
-        
+
         
         # Refresh our change-tracking flags:
         @pnr_numbers_have_changed     = false
@@ -297,6 +297,13 @@ class Trip
         
       end
       
+
+      # Create flight followups if the trip is now confirmed:
+      if self.confirmed?
+        self.flights.each{ |flight| flight.create_task() }
+      end
+      
+
       @avoid_triggering_after_save_hook_recursively = false
       
       #end
@@ -317,6 +324,9 @@ class Trip
         self.version_of_trip.be_the_only_active_version!
 
       end
+
+      # Delete associated trip_elements too:
+      TripElement.all( :trip_id => self.id ).destroy
 
     end
 
