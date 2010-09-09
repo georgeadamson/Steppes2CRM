@@ -3409,8 +3409,8 @@ function initTripInvoiceFormTotals(){
 					Layout.load(options.url,options)
 				},
 				buttons		: {
-					'Save my new reminder'	: function(){ $('FORM',this).submit() },
-					'Cancel'				: function(){ $(this).dialog('close') }
+					'Cancel'				: function(){ $(this).dialog('close') },
+					'Save my new reminder'	: function(){ $('FORM',this).submit() }
 				}
 			});
 
@@ -3425,15 +3425,15 @@ function initTripInvoiceFormTotals(){
 				//autoOpen: false,
 				modal		: true,
 				title		: 'Modify followup',
-				minHeight	: 400,
+				minHeight	: 320,
 				width		: 550,
 				open		: function(e,ui){
 					options.target = '#' + $(this).id();
 					Layout.load(options.url,options)
 				},
 				buttons		: {
-					'Save my changes'	: function(){ $('FORM',this).submit() },
-					'Cancel'			: function(){ $(this).dialog('close') }
+					'Cancel'			: function(){ $(this).dialog('close') },
+					'Save my changes'	: function(){ $('FORM',this).submit() }
 				}
 			});
 

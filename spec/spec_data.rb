@@ -260,8 +260,8 @@ alias valid_pnr_attributes2 updated_pnr_attributes
 
     title    = Title.first_or_create(   { :name => 'Mr'  },  :name => 'Mr' )
     client   = Client.first_or_create(  { :name => 'Client 1'  }, { :title => title, :name => 'Client 1', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
-    company  = Company.first_or_create( { :initials => 'tst' }, { :initials => 'tst' } )
-    
+    company  = Company.first || Company.first_or_create( { :initials => 'tst' }, { :initials => 'tst' } )
+
     initials = company.initials
     doc_type = DocumentType.get( DocumentType::BROCHURE )
 
@@ -272,8 +272,8 @@ alias valid_pnr_attributes2 updated_pnr_attributes
       #:requested_date         => Time.now, # This should default to Time.now   
       :generated_date         => nil,       
       :client                 => client,            
-      :company_id             => company.id,           
-      :user_id                => User.first.id,
+      :company                => company,           
+      :user                   => User.first,
       :skip_doc_generation    => true
     }
 
