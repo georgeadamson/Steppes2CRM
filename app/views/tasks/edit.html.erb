@@ -1,4 +1,6 @@
-<h1>Tasks controller, edit action</h1>
-
-<p>Edit this file in <tt>app/views/tasks/edit.html.erb</tt></p>
-<p>For more information and examples of CRUD views read <a href="http://wiki.merbivore.com/howto/crud_view_example_with_merb_using_erb"> this wiki page</a>
+<%
+	@task.client ||= @client ||= Client.get(params[:client_id])
+%>
+<%= form_for @task, :action => resource(@task.client,@task) do %>
+	<%= partial 'tasks/form', :task => @task %>
+<% end =%>
