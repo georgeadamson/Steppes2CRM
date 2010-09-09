@@ -5,7 +5,7 @@ class TaskStatus
 
   OPEN       = 0 unless defined? OPEN
   COMPLETED  = 1 unless defined? COMPLETED
-  ABANDONNED = 2 unless defined? ABANDONNED
+  ABANDONED  = 2 unless defined? ABANDONED
 
   property :id,   Integer,  :required => true, :unique => true, :key => true
   property :name, String,   :required => true, :unique => true

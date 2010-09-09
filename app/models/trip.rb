@@ -8,7 +8,7 @@ class Trip
     UNCONFIRMED = TripState::UNCONFIRMED    unless defined? UNCONFIRMED
     CONFIRMED   = TripState::CONFIRMED      unless defined? CONFIRMED
     COMPLETED   = TripState::COMPLETED      unless defined? COMPLETED
-    ABANDONNED  = TripState::ABANDONNED     unless defined? ABANDONNED
+    ABANDONNED  = TripState::ABANDONED      unless defined? ABANDONED
     CANCELLED   = TripState::CANCELLED      unless defined? CANCELLED
     
     # TripType constants duplicated here for readability:
@@ -423,7 +423,7 @@ class Trip
     def unconfirmed?;     return self.status_id == TripState::UNCONFIRMED;  end
     def confirmed?;       return self.status_id == TripState::CONFIRMED;    end
     def completed?;       return self.status_id == TripState::COMPLETED;    end
-    def abandonned?;      return self.status_id == TripState::ABANDONNED;   end
+    def abandonned?;      return self.status_id == TripState::ABANDONED;    end
     def cancelled?;       return self.status_id == TripState::CANCELLED;    end
     def year;							return self.start_date.strftime("%Y"); end
     def month;						return self.start_date.strftime("%b %Y"); end

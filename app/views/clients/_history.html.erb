@@ -13,17 +13,20 @@
 			</div>
 		</dd>
 
-		<dt>Followups <small>(<%= client.tasks.length %>)</dt>
-		<dd class="">
+		<% tasks_panel_uid = nested_resource(client,:tasks,true) %>
+		<dt>
+			Followups &amp; history <small id="<%= tasks_panel_uid %>count">(<%= client.tasks.length %>)</small>
+		</dt>
+		<dd class="clientTasks" id="<%= tasks_panel_uid %>">
 			<%= partial 'tasks/index', :tasks => client.tasks, :client => @client %>
 		</dd>
 
+		<% brochures_panel_uid = nested_resource(client,:brochure_requests,true) %>
 		<dt>
-			Brochure requests
-			<small>(<%= client.brochure_requests.length %>)</small>
+			Brochure requests <small id="<%= brochures_panel_uid %>count">(<%= client.brochure_requests.length %>)</small>
 		</dt>
 		<dd class="">
-			<div id="<%= "#{ nested_resource(client,true) }brochure_requests" %>" class="ajaxPanel sectionContainer">
+			<div id="<%= brochures_panel_uid %>" class="ajaxPanel sectionContainer">
 				<%= partial 'brochure_requests/list', :brochure_requests => client.brochure_requests, :client_id => client.id %>
 			</div>
 		</dd>

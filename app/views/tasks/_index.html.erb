@@ -5,6 +5,6 @@
 
 	</div>
 	
-	<%= partial 'shared/sectionFoot_with_buttons', :add_caption => "Add a reminder #{ "for #{client.shortname}" if client }...", :add => true, :add_url => resource( client, :tasks, :new ), :cancel => false, :save => false %>
+	<%= partial 'shared/sectionFoot_with_buttons', :add_caption => "Add a followup #{ "for #{client.shortname}" if client }...", :add => true, :add_url => resource( client, :tasks, :new ), :cancel => false, :save => false %>
 
 </div>
