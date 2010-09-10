@@ -36,7 +36,7 @@ end
 
 def valid_client_attributes
   {
-    :title              => Title.first_or_create( { :name => 'Mr' }, { :name => 'Mr' } ),
+    :titlename          => Title.first_or_create( { :name => 'Mr' }, { :name => 'Mr' } ),
     :name               => 'Client 1',
     :forename           => 'Test',
     :marketing_id       => 1,
