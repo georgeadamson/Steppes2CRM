@@ -104,8 +104,8 @@ class BrochureRequest
       if self.document && self.document.save
 
         # SUCCESS!
-        puts "Document #{ self.document.id } details saved successfully for new brochure_request #{ self.id }"
-        puts self.document.doc_builder_output
+        Document.logger.info "Document #{ self.document.id } details saved successfully for new brochure_request #{ self.id }"
+        Document.logger.info self.document.doc_builder_output
         
         self.generated_date = Time.now
         self.status_id      = GENERATED
@@ -116,17 +116,17 @@ class BrochureRequest
       elsif self.document && !self.document.valid?
 
         # INVALID:
-        puts "Unable to save document details for brochure_request #{ self.id }. #{ self.document.errors.inspect }"
+        Document.logger.error "Unable to save document details for brochure_request #{ self.id }. #{ self.document.errors.inspect }"
 
       elsif !self.document
 
         # NIL:
-        puts "Failed to save document details for brochure_request #{ self.id }. No record was created so there are no error details!"
+        Document.logger.error "Failed to save document details for brochure_request #{ self.id }. No record was created so there are no error details!"
 
       else
 
         # Other:
-        puts "Failed to save document details for brochure_request #{ self.id }. \n brochure_request: #{ self.errors.inspect } \n document: #{ self.document.errors.inspect }"
+        Document.logger.error "Failed to save document details for brochure_request #{ self.id }. \n brochure_request: #{ self.errors.inspect } \n document: #{ self.document.errors.inspect }"
 
       end
 
@@ -147,18 +147,16 @@ class BrochureRequest
     if !task && ( force || self.status_id == CLEARED )
       
       # This logic is based on the legacy database stored-procedure named "ClearBrochureMerge"
-      user      = self.user
-      client    = self.client
-      due_date  = Date.today + self.company.brochure_followup_days # || 7 )
+      due_date = Date.today + ( self.company.brochure_followup_days || 7 )
 
       # Automatically create a followup task for this flight:
-      task   = Task.new(
-        :name                  => "Follow up brochure sent on #{ Date.today.formatted(:uidate) } ",
+      task = Task.new(
+        :name                 => "Follow up brochure #{ "sent on #{ self.generated_date.formatted(:uidate) }" if self.generated_date } ",
         :status_id            => TaskStatus::OPEN,
         :type_id              => TaskType::BROCHURE_FOLLOWUP,
         :due_date             => due_date,
-        :user                 => user,
-        :client               => client,
+        :user                 => self.user,
+        :client               => self.client,
         :brochure_request_id  => self.id  # Linked item id
       )
 

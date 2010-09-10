@@ -16,7 +16,7 @@
 <%= hidden_field :user_id %>
 <%= hidden_field :currency_id %>
 <%= text_field :name => 'supplier_name',						:label => 'Payment to',					:value => supplier.name, :readonly => true, :class => 'width2Fields' %>
-<%= text_field :name => :user_name,									:label => 'Requested by',				:value => "#{ @money_out.user.preferred_name } for #{ @trip.company.display_name }", :readonly => true, :class => 'width2Fields' %>
+<%= text_field :name => :user_name,									:label => 'Requested by',				:value => "#{ @money_out.user.fullname } for #{ @trip.company.display_name }", :readonly => true, :class => 'width2Fields' %>
 <%= text_field :name => 'trip_date',								:label => 'For trip',						:value => "#{ @trip.start_date.formatted(:uidisplay) }: #{ @trip.title }", :readonly => true, :class => 'width2Fields'	if @trip %>
 <%#= text_field :name => 'client_name',							:label => 'Client',							:value => @client.fullname,							:readonly => true, :class => 'width2Fields' if @client %>
 <%#= text_field :name => :company_name,							:label => 'Company',						:value => @trip.company.display_name,		:readonly => true, :class => 'width2Fields' if @trip %>

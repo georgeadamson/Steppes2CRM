@@ -1069,27 +1069,28 @@ class Trip
       return 0 if supplier.nil?
       supplier = Supplier.get(supplier) if supplier.is_a? Integer
       
-      supplier_elements = self.trip_elements.all( :supplier => supplier )
+      elems = self.trip_elements.all( :supplier => supplier ) | self.flights.all( :handler => supplier )
       
-      return  self.adults     * supplier_elements.sum( :cost_per_adult  ) +
-      self.children   * supplier_elements.sum( :cost_per_child  ) +
-      self.infants    * supplier_elements.sum( :cost_per_infant ) +
-      self.singles    * supplier_elements.sum( :single_supp ) +
-      self.adults     * supplier_elements.sum( :biz_supp_per_adult  ) +
-      self.children   * supplier_elements.sum( :biz_supp_per_child  ) +
-      self.infants    * supplier_elements.sum( :biz_supp_per_infant ) +
-      self.travellers * supplier_elements.sum( :taxes )
+      return  self.adults     * elems.sum( :cost_per_adult  ) +
+              self.children   * elems.sum( :cost_per_child  ) +
+              self.infants    * elems.sum( :cost_per_infant ) +
+              self.singles    * elems.sum( :single_supp ) +
+              self.adults     * elems.sum( :biz_supp_per_adult  ) +
+              self.children   * elems.sum( :biz_supp_per_child  ) +
+              self.infants    * elems.sum( :biz_supp_per_infant ) +
+              self.travellers * elems.sum( :taxes )
       
     end
     
     
-    # Helper to return an array of all suppliers involved in this trip's elements:
+    # Helper to return an array of all suppliers (and flight handlers) involved in this trip's elements:
     def suppliers
       
       suppliers = []
       
       self.trip_elements.each do |elem|
         suppliers << elem.supplier if elem.supplier && !suppliers.include?(elem.supplier)
+        suppliers << elem.handler  if elem.handler  && !suppliers.include?(elem.handler)  # Applies to flights only.
       end
       
       return suppliers

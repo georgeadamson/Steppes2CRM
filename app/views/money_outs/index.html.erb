@@ -1,88 +1,97 @@
 <%
 
 	@trip				||= Trip.get( params[:trip_id] )
-	@suppliers	||= @trip && @trip.suppliers			# Note: @suppliers is a standard array, not a DM collection. 
+	@suppliers	||= @trip && @trip.suppliers			# IMPORTANT: @suppliers is a standard array, not a DM collection. 
 
+	# As a last resort only, derive suppliers list from @money_outs:
 	if @suppliers.nil?
-		
-		@suppliers	= []
-	  
+		@suppliers = []
 		@money_outs.each do |payment|
 		  @suppliers << payment.supplier if payment.supplier && !@suppliers.include?(payment.supplier)
 	  end
-		
 	end
 
 	@money_outs ||= ( @trip && @trip.money_outs ) || MoneyOut.all( supplier_id => @suppliers )
 
+	# Sort suppliers by name:
+	@suppliers.sort!{ |a,b| a.name <=> b.name }
+	
 -%>
-<% if @suppliers.empty? %>
-	
-	<p>This has got to be the most boring trip ever. How about adding some trip elements?</p>
-	
-<% else %>
-<table class="money-out" cellspacing="0" cellpadding="0">
 
-	<thead>
-		<tr>
-			<th colspan="1">Supplier</th>
-			<th><!--Currency--></th>
-			<th>Amount</th>
-			<th>Requested</th>
-			<!--<th>Paid</th>-->
-			<th>Due</th>
-			</tr>
-	</thead>
+<div class="sectionBody">
 
-	<tbody>
-		<% @suppliers.each do |supplier| %>
+	<% if @suppliers.empty? %>
+		
+		<p>This has got to be the most boring trip ever. How about adding some trip elements?</p>
+		
+	<% else %>
+	<table class="money-out" cellspacing="0" cellpadding="0">
 
-			<%
-			
-				total_cost_of_supplier		= @trip && @trip.total_cost_of_supplier( supplier ) || 0
-				supplier_payment_requests = @money_outs.all( :supplier_id => supplier.id )
+		<thead>
+			<tr>
+				<th colspan="1">Supplier</th>
+				<th><!--Currency--></th>
+				<th>Amount</th>
+				<th>Requested</th>
+				<!--<th>Paid</th>-->
+				<th>Due</th>
+				</tr>
+		</thead>
 
-				# Skip suppliers that are not owed money and have no payment requests:
-				next if total_cost_of_supplier == 0 && supplier_payment_requests.length == 0
+		<tbody>
+			<% @suppliers.each do |supplier| %>
+
+				<%
 				
-			%>
-
-			<!-- SUPPLIER name: -->
-			<tr class="supplier">
-				<td><strong><%= supplier.name %></strong> - <%= supplier && supplier.country.name %></td>
-				<td></td>
-				<td><%= total_cost_of_supplier %></td>
-				<td><%#= request.amount_paid %></td>
-				<td><%= @trip && ( @trip.start_date - 21 ).formatted(:uidisplay) %></td>
-			</tr>
-
-			<!-- MONEY_OUTS are filtered by trip and supplier: -->
-			<% supplier_payment_requests.each do |request| %>
+					next if !supplier
 				
-				<tr class="payment">
-					<td colspan="1">Payment requested by <%= request.user && request.user.preferred_name || request.user_fullname %> on <%= request.requested_date.formatted(:uidisplay) %></td>
-					<td><%= request.currency.name %></td>
+					total_cost_of_supplier		= @trip && @trip.total_cost_of_supplier( supplier ) || 0
+					supplier_payment_requests = @money_outs.all( :supplier_id => supplier.id )
+
+					# Skip suppliers that are not owed money and have no payment requests:
+					next if total_cost_of_supplier == 0 && supplier_payment_requests.length == 0
+					
+				%>
+
+				<!-- SUPPLIER name: -->
+				<tr class="supplier">
+					<% supplier_type = supplier.type.supplier_type_name || supplier.type.name %>
+					<td><strong><%= supplier.name %></strong> - <%= supplier_type %> - <%= supplier.country.name %></td>
 					<td></td>
-					<td><%= request.amount_requested %></td>
+					<td><%= total_cost_of_supplier %></td>
+					<td><%#= request.amount_paid %></td>
+					<td><%= @trip && ( @trip.start_date - 21 ).formatted(:uidisplay) %></td>
 				</tr>
 
-				<%= tag :tr, tag(:td, tag(:small,"&nbsp; #{ request.notes }"), :colspan => 10), :class => :notes unless request.notes.blank? %>
+				<!-- MONEY_OUTS are filtered by trip and supplier: -->
+				<% supplier_payment_requests.each do |request| %>
+					
+					<tr class="payment">
+						<td colspan="1">Payment requested by <%= request.user && request.user.preferred_name || request.user_fullname %> on <%= request.requested_date.formatted(:uidisplay) %></td>
+						<td><%= request.currency.name %></td>
+						<td></td>
+						<td><%= request.amount_requested %></td>
+					</tr>
 
+					<%= tag :tr, tag(:td, tag(:small,"&nbsp; #{ request.notes }"), :colspan => 10), :class => :notes unless request.notes.blank? %>
+
+				<% end %>
+			
+				<tr>
+					<%
+						args = {
+							:trip_id			=> @trip.id,
+							:supplier_id	=> supplier.id
+						}
+						uri = "#{ nested_resource( @trip, :money_outs, :new ) }?#{ args.to_query }"
+					%>
+					<%= tag :td, link_to( "Request a payment...", uri, :class => 'ui-priority-secondary ui-state-default right' )+'<br/><br/><br/>', :colspan => 5 %>
+				</tr>
+			
 			<% end %>
+		<tbody>
 		
-			<tr>
-				<%
-					args = {
-						:trip_id			=> @trip.id,
-						:supplier_id	=> supplier.id
-					}
-					uri = "#{ nested_resource( @trip, :money_outs, :new ) }?#{ args.to_query }"
-				%>
-				<%= tag :td, link_to( "Request a payment...", uri, :class => 'ui-priority-secondary ui-state-default right' )+'<br/><br/><br/>', :colspan => 5 %>
-			</tr>
-		
-		<% end %>
-	<tbody>
-	
-</table>
-<% end %>
+	</table>
+	<% end %>
+
+</div>
