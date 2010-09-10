@@ -2974,8 +2974,8 @@ function initTripInvoiceFormTotals(){
 
 		initForm : function(options){
 
-			if( options && options.panel ){
-				$('DL.accordion', options.panel).accordion({ autoHeight: false });
+			if( options && options.panel || options.target ){
+				$( 'DL.accordion', options.panel || options.target ).accordion({ autoHeight: false });
 			}
 
 		},
