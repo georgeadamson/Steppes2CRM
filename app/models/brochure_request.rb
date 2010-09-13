@@ -31,8 +31,8 @@ class BrochureRequest
   belongs_to :document
   belongs_to :status, :model => "BrochureRequestStatus", :child_key => [:status_id]
   
-  #has 1, :document
-
+  has n, :tasks         # Brochure followups
+  
   alias name notes
   alias description custom_text
 
@@ -50,7 +50,14 @@ class BrochureRequest
   end
 
   after :update do
-    self.document.destroy if self.status_id == CLEARED && self.document
+
+    if self.status_id == CLEARED
+
+      self.document.destroy if self.document
+      self.create_task()
+
+    end
+
   end
   
   after :destroy do
@@ -97,8 +104,8 @@ class BrochureRequest
       if self.document && self.document.save
 
         # SUCCESS!
-        puts "Document #{ self.document.id } details saved successfully for new brochure_request #{ self.id }"
-        puts self.document.doc_builder_output
+        Document.logger.info "Document #{ self.document.id } details saved successfully for new brochure_request #{ self.id }"
+        Document.logger.info self.document.doc_builder_output
         
         self.generated_date = Time.now
         self.status_id      = GENERATED
@@ -109,17 +116,17 @@ class BrochureRequest
       elsif self.document && !self.document.valid?
 
         # INVALID:
-        puts "Unable to save document details for brochure_request #{ self.id }. #{ self.document.errors.inspect }"
+        Document.logger.error "Unable to save document details for brochure_request #{ self.id }. #{ self.document.errors.inspect }"
 
       elsif !self.document
 
         # NIL:
-        puts "Failed to save document details for brochure_request #{ self.id }. No record was created so there are no error details!"
+        Document.logger.error "Failed to save document details for brochure_request #{ self.id }. No record was created so there are no error details!"
 
       else
 
         # Other:
-        puts "Failed to save document details for brochure_request #{ self.id }. \n brochure_request: #{ self.errors.inspect } \n document: #{ self.document.errors.inspect }"
+        Document.logger.error "Failed to save document details for brochure_request #{ self.id }. \n brochure_request: #{ self.errors.inspect } \n document: #{ self.document.errors.inspect }"
 
       end
 
@@ -127,6 +134,47 @@ class BrochureRequest
       collect_child_error_messages_for self, self.document if self.document
 
   end
+
+
+
+  
+  # Generate a followup for this request *if* it has been cleared:
+  def create_task(force = false)
+
+    # Check whether there's already a followup for this flight:
+    task = self.tasks.first
+
+    if !task && ( force || self.status_id == CLEARED )
+      
+      # This logic is based on the legacy database stored-procedure named "ClearBrochureMerge"
+      due_date = Date.today + ( self.company.brochure_followup_days || 7 )
+
+      # Automatically create a followup task for this flight:
+      task = Task.new(
+        :name                 => "Follow up brochure #{ "sent on #{ self.generated_date.formatted(:uidate) }" if self.generated_date } ",
+        :status_id            => TaskStatus::OPEN,
+        :type_id              => TaskType::BROCHURE_FOLLOWUP,
+        :due_date             => due_date,
+        :user                 => self.user,
+        :client               => self.client,
+        :brochure_request_id  => self.id  # Linked item id
+      )
+
+      if task.save!
+        self.tasks.reload
+      else
+        # For debugging:
+        task.valid?
+        Merb.logger.error "ERROR: Could not create brochure followup automatically because: #{ task.errors.inspect }"
+      end
+
+    end
+
+    return task
+
+  end
+
+
 
 
 

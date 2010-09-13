@@ -5,7 +5,7 @@ class TripState   # Would have been TripStatus but pluralisation went screwy
   UNCONFIRMED = 1 unless defined? UNCONFIRMED
   CONFIRMED   = 2 unless defined? CONFIRMED
   COMPLETED   = 3 unless defined? COMPLETED
-  ABANDONNED  = 4 unless defined? ABANDONNED
+  ABANDONED   = 4 unless defined? ABANDONED
   CANCELLED   = 5 unless defined? CANCELLED
   
   property :id,   Serial									# 1=Active, 2=Confirmed, 3=complete, 4=Canceled, 5=Abandonned.

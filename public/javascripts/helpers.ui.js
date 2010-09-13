@@ -19,7 +19,7 @@ $.extend( $.ui.tabs.prototype, {
 	// Note: We test for existing tabs attibute first, just in case it is set by a future version of jQuery UI Tabs.
 	_ui: function( tab, panel ) {
 		var ui = orig_ui_method.call(this, tab, panel);
-		return ui.tabs ? ui : $.extend( ui, { tabs:this.element } );
+		return ui.tabs ? ui : $.extend( ui, { tabs: this.element[0] || this.element } );
 	},
 
 

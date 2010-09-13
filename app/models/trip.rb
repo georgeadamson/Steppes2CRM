@@ -8,7 +8,7 @@ class Trip
     UNCONFIRMED = TripState::UNCONFIRMED    unless defined? UNCONFIRMED
     CONFIRMED   = TripState::CONFIRMED      unless defined? CONFIRMED
     COMPLETED   = TripState::COMPLETED      unless defined? COMPLETED
-    ABANDONNED  = TripState::ABANDONNED     unless defined? ABANDONNED
+    ABANDONNED  = TripState::ABANDONED      unless defined? ABANDONED
     CANCELLED   = TripState::CANCELLED      unless defined? CANCELLED
     
     # TripType constants duplicated here for readability:
@@ -74,7 +74,7 @@ class Trip
     #def price_per_single_biz_supp=(); return 0.0; end
     
     has n, :documents
-    has n, :trip_elements
+    has n, :trip_elements #, :constraint => :destroy  # See: http://github.com/datamapper/dm-constraints
     alias elements trip_elements
     
     has n, :trip_clients
@@ -289,7 +289,7 @@ class Trip
           end
           
         end
-        
+
         
         # Refresh our change-tracking flags:
         @pnr_numbers_have_changed     = false
@@ -297,6 +297,13 @@ class Trip
         
       end
       
+
+      # Create flight followups if the trip is now confirmed:
+      if self.confirmed?
+        self.flights.each{ |flight| flight.create_task() }
+      end
+      
+
       @avoid_triggering_after_save_hook_recursively = false
       
       #end
@@ -317,6 +324,9 @@ class Trip
         self.version_of_trip.be_the_only_active_version!
 
       end
+
+      # Delete associated trip_elements too:
+      TripElement.all( :trip_id => self.id ).destroy
 
     end
 
@@ -423,7 +433,7 @@ class Trip
     def unconfirmed?;     return self.status_id == TripState::UNCONFIRMED;  end
     def confirmed?;       return self.status_id == TripState::CONFIRMED;    end
     def completed?;       return self.status_id == TripState::COMPLETED;    end
-    def abandonned?;      return self.status_id == TripState::ABANDONNED;   end
+    def abandonned?;      return self.status_id == TripState::ABANDONED;    end
     def cancelled?;       return self.status_id == TripState::CANCELLED;    end
     def year;							return self.start_date.strftime("%Y"); end
     def month;						return self.start_date.strftime("%b %Y"); end
@@ -1056,27 +1066,28 @@ class Trip
       return 0 if supplier.nil?
       supplier = Supplier.get(supplier) if supplier.is_a? Integer
       
-      supplier_elements = self.trip_elements.all( :supplier => supplier )
+      elems = self.trip_elements.all( :supplier => supplier ) | self.flights.all( :handler => supplier )
       
-      return  self.adults     * supplier_elements.sum( :cost_per_adult  ) +
-      self.children   * supplier_elements.sum( :cost_per_child  ) +
-      self.infants    * supplier_elements.sum( :cost_per_infant ) +
-      self.singles    * supplier_elements.sum( :single_supp ) +
-      self.adults     * supplier_elements.sum( :biz_supp_per_adult  ) +
-      self.children   * supplier_elements.sum( :biz_supp_per_child  ) +
-      self.infants    * supplier_elements.sum( :biz_supp_per_infant ) +
-      self.travellers * supplier_elements.sum( :taxes )
+      return  self.adults     * elems.sum( :cost_per_adult  ) +
+              self.children   * elems.sum( :cost_per_child  ) +
+              self.infants    * elems.sum( :cost_per_infant ) +
+              self.singles    * elems.sum( :single_supp ) +
+              self.adults     * elems.sum( :biz_supp_per_adult  ) +
+              self.children   * elems.sum( :biz_supp_per_child  ) +
+              self.infants    * elems.sum( :biz_supp_per_infant ) +
+              self.travellers * elems.sum( :taxes )
       
     end
     
     
-    # Helper to return an array of all suppliers involved in this trip's elements:
+    # Helper to return an array of all suppliers (and flight handlers) involved in this trip's elements:
     def suppliers
       
       suppliers = []
       
       self.trip_elements.each do |elem|
         suppliers << elem.supplier if elem.supplier && !suppliers.include?(elem.supplier)
+        suppliers << elem.handler  if elem.handler  && !suppliers.include?(elem.handler)  # Applies to flights only.
       end
       
       return suppliers

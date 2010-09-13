@@ -20,6 +20,13 @@ describe Trip do
     @client2      = Client.first_or_create(  { :name => 'Client 2'  }, { :title => @title, :name => 'Client 2', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
     @client3      = Client.first_or_create(  { :name => 'Client 3'  }, { :title => @title, :name => 'Client 3', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
 
+    # Ensure user has a "most_recent_client" (Helps when confirmed trip tries to create_task (flight followups) automatically)
+    user = User.first_or_create( { :id => valid_trip_attributes[:user_id] }, valid_user_attributes )
+    if user.clients.empty?
+      user.clients << @client1
+      user.save
+    end
+
     seed_lookup_tables()
 
   end
@@ -54,7 +61,7 @@ describe Trip do
     @main_invoice = MoneyIn.new( :skip_doc_generation => true, :client => @client1, :deposit => 100, :amount => 0, :user_id => 1  )
 
     @booking_fee  = 1.0 * @trip.calc( :total, :actual, :gross, :per, :person, :booking_fee => true, :string_format => false )
-
+    
   end
   
 

@@ -131,6 +131,7 @@ class TripElement
   belongs_to :depart_airport,	:model => 'Airport',							:child_key => [:depart_airport_id]
   belongs_to :arrive_airport,	:model => 'Airport',							:child_key => [:arrive_airport_id]
   
+  has n, :tasks         # Flight Reminders (Followups)
   has n, :touchdowns    # List of 0-n touchdown airports.
   
 	# Instance storage of airport codes. Intended for customising validation messages when creating or updating flights from PNR data:
@@ -168,6 +169,11 @@ class TripElement
   def start_date; d = self.raw_start_date; DateTime.civil( d.year, d.month, d.day, d.hour, d.min, 0, 0 ); end
   def end_date;   d = self.raw_end_date;   DateTime.civil( d.year, d.month, d.day, d.hour, d.min, 0, 0 ); end
   
+  # Extra helper attributes for relaying contextual info such as the current user or client:
+  # (Eg: These may be used when creating a followup task for a flight)
+  attr_accessor :user
+  attr_accessor :client
+
   
 	#  validates_with_block :arrive_airport_id do
 	#  
@@ -178,7 +184,8 @@ class TripElement
 	#		end
 	#  
 	#  end
-  
+    
+
   
   # Silently tidy up invalid attributes before saving:
   before :save do
@@ -213,6 +220,14 @@ class TripElement
   end
   
   
+  after :create do
+    
+    # Generate a followup reminder for this flight *if* the trip is confirmed:
+    self.create_task if self.flight? && self.trip.confirmed?
+
+  end
+
+  
   after :save do
     
     # Clear cached calculations because the data has changed:
@@ -222,10 +237,10 @@ class TripElement
     @nextElem = nil
     
     # Recalculate and save price_per_xxx and total_price OF THE TRIP:
-    if ( trip = self.trip )
-      trip.reload
-      trip.update_prices
-      trip.save!
+    if self.trip
+      self.trip.reload
+      self.trip.update_prices
+      self.trip.save!
     end       
     
   end
@@ -245,6 +260,9 @@ class TripElement
       trip.update_prices
       trip.save!
     end       
+    
+    # Delete related followups:
+    Task.all(:trip_element_id => self.id).destroy!
     
   end
   
@@ -317,17 +335,56 @@ class TripElement
 		end
   end
   
-	def dateSummary
+	def date_summary
 		# Eg: "Sun 4th May to Thu 5th Jun 2008"
 		sameYear  = (self.start_date.year  == self.end_date.year ? '' : ' %Y')    # Only show start year when different.
 		sameMonth = (self.start_date.month == self.end_date.month ? '' : ' %b') # Only show start month when different.
 		return self.start_date.strftime_ordinalized('%a %d' + sameMonth + sameYear) + " to " + self.end_date.strftime_ordinalized('%a %d %b %Y')
 	end
+  alias dateSummary date_summary  # DEPRICATED
   
 	#validates_format :start_time, :format => /[0-2][0-9]:[0-9][0-9]/
   
   
-  
+  # Generate a followup for this flight *if* the trip is confirmed:
+  def create_task(force = false)
+
+    # Check whether there's already a followup for this flight:
+    task = self.tasks.first
+
+    if !task && self.flight? && ( force || self.trip.confirmed? )
+      
+      # This logic is based on the legacy database view named "vw_FlightOptionTask"
+      trip      = self.trip
+      user      = self.user   || trip.user
+      client    = self.client || ( trip.respond_to?(:context) && trip.context.is_a?(Client) && trip.context ) || user.most_recent_client || trip.clients.first( Client.trip_clients.is_primary => true ) || trip.clients.first
+      due_date  = self.booking_reminder && self.booking_reminder.to_date != self.start_date.to_date ? self.booking_reminder.to_date : self.start_date.to_date - ( CRM[:flight_reminder_period] || 60 )
+
+      # Automatically create a followup task for this flight:
+      task   = Task.new(
+        :name             => "Followup flight option for #{ trip.title } ",   # self.summary
+        :status_id        => TaskStatus::OPEN,
+        :type_id          => TaskType::FLIGHT_REMINDER,
+        :due_date         => due_date,
+        :user             => user,
+        :client           => client,
+        :trip_element_id  => self.id
+      )
+
+      if task.save!
+        self.tasks.reload
+      else
+        # For debugging:
+        task.valid?
+        Merb.logger.error "ERROR: Could not create flight followup automatically because: #{ task.errors.inspect }"
+      end
+
+    end
+
+    return task
+
+  end
+
   
   
 	# Helpers for handling DAYS...
@@ -670,6 +727,33 @@ class TripElement
     
   end
   
+
+  # Helper for displaying a readable summary of this element:
+  def summary
+
+    # WARNING: This bombs during task_spec tests! Seems to be somethiing to do with self.element_type
+
+    units = self.accomm? ? 'nights' : 'days'
+    type  = self.element_type && self.element_type.name
+    supplier  = self.supplier && self.supplier.name
+
+    text = "#{self.days} #{units}: #{type} - #{supplier} #{self.name} #{self.description}"
+
+    if self.flight?
+      text << " ("
+      text << "Departs #{ self.depart_airport.display_name }"   if self.depart_airport
+      text << " #{ self.start_date.formatted(:uidatetime) } -"
+      text << " Arrives #{  self.arrive_airport.display_name }" if self.arrive_airport
+      text << " #{ self.end_date.formatted(:uidatetime)   }"
+      text << ")"
+    else
+      text << " #{ self.date_summary }"
+    end
+
+    return text
+    
+  end
+
   
   
   # Helper for re-calculating the trip.total_cost property: (Formerly known as total_spend)

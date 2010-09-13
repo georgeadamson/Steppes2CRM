@@ -45,6 +45,7 @@ jQuery(function($) {
 		UK_COUNTRY_ID					= 6,				// TODO: Find a data-driven way of settings this!
 		FIXED_DEPARTURE					= 4,				// TODO: Find a data-driven way of settings this!
 		DOCUMENT_TYPE_ID_FOR_LETTERS	= 8,				// TODO: Find a data-driven way of settings this!
+		TASK_STATUS_OPEN				= 0,				// TODO: Find a data-driven way of settings this!
 
 		SYSTEM_ADMIN_LABEL				= 'System admin',
 		WEB_REQUESTS_ADMIN_LABEL		= 'Web requests',
@@ -147,12 +148,14 @@ jQuery(function($) {
 			// TODO: Refactor liveForm to alternate syntax: Layout.liveForm('update:success', 'clients', Client.initForm ) & maybe combine with livePath()
 
 			// Clients:
-			Layout.livePath('success', new RegExp('clients/([0-9]+)$'),					Client.initShow );
+			Layout.livePath('click',   new RegExp('clients/new'),						Client.openNew );
 			Layout.livePath('success', new RegExp('clients/new'),						Client.initForm );
+			Layout.livePath('success', new RegExp('clients/([0-9]+)$'),					Client.initShow );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/edit'),				Client.initForm );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/summary'),			Client.initForm );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/trips$'),			Client.initForm );	// When user clicks to see all trips on client summary page.
 			Layout.livePath('success', /[\?\&]open_client_id=([0-9]+)/,					Client.openShow );	// Eg: web_requests?open_client_id=2138587702
+			Layout.liveForm('success', 'clients:create',								Client.openShow );	// After creating a new client.
 			Layout.liveForm('success', 'clients:update',								Client.initForm );
 
 			// Tours:
@@ -200,7 +203,13 @@ jQuery(function($) {
 			Layout.livePath('success', new RegExp('/system$'),							SysAdmin.initShow );
 
 			// Tasks: (AKA Followups / Reminders)
-			Layout.livePath('click', new RegExp('/tasks/([0-9]+)/edit$'),				Tasks.openEdit );
+			Layout.livePath('click',	new RegExp('/tasks/([0-9]+)/edit'),				Task.openEdit );
+			Layout.livePath('click',    new RegExp('/tasks/new'),						Task.openNew );
+			Layout.livePath('success',	new RegExp('/tasks/([0-9]+)/edit'),				Task.initForm, initDatepickers );
+			Layout.livePath('success',  new RegExp('/tasks/new'),						Task.initForm, initDatepickers );
+			Layout.livePath('success',  new RegExp('/tasks/?$'),						Task.initIndex );	// Refresh list of tasks.
+			Layout.liveForm('success',  'tasks:create',									Task.onCreateSuccess );
+			Layout.liveForm('success',  'tasks:update',									Task.onCreateSuccess );
 
 			// AutoText:
 			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
@@ -1193,7 +1202,8 @@ return
 
 // Respond to any "NEW CLIENT" or "NEW TOUR" links:
 
-	$("A[href *= '/clients/new'], A[href *= '/tours/new']").live('click', function() {
+	//$("A[href *= '/clients/new'], A[href *= '/tours/new']").live('click', function() {
+	$("A[href *= '/tours/new']").live('click', function() {
 
 		var url		= $(this).attr('href');
 		//var newId	= '#' + url.replace('/', '');
@@ -2336,17 +2346,17 @@ function initDatepickers() {
 
 		//.filter(":not(.daterange)")
 		.datepicker({
-			closeText: "Cancel",
+			//closeText: "Cancel",
 			dateFormat: "dd/mm/yy",
 			minDate: "-90y",
-			maxDate: "+3y",
+			maxDate: "+5y",
 			//numberOfMonths  : 2,
 			showButtonPanel: true,
 			showOtherMonths: false,
 			changeYear: true,
 			changeMonth: true,
-			yearRange: "-90:+3"
-		}).end();
+			yearRange: "-90:+5"
+		});
 
 	// Cannot use daterange picker yet because it does not have collision detection:
 	// http://www.filamentgroup.com/lab/date_range_picker_using_jquery_ui_16_and_jquery_ui_css_framework/
@@ -2963,12 +2973,29 @@ function initTripInvoiceFormTotals(){
 
 
 
+
+
+
 	var Client = {
+
+		openNew : function(options){
+
+			// We're intercepting a link so prevent the default ajax handler from loading it:
+			if(options && options.event){ options.event.stopImmediatePropagation() }	// isImmediatePropagationStopped()
+
+			var ui       = $('#pageTabs').tabs('url', /clients\/new/ );
+			var orig_url = $.data(ui.tab,'load.tabs');
+			
+			$.data(ui.tab, 'load.tabs', options.url);
+			$(ui.tabs).tabs('select', ui.index);
+			$.data(ui.tab, 'load.tabs', orig_url);
+
+		},
 
 		initForm : function(options){
 
-			if( options && options.panel ){
-				$('DL.accordion', options.panel).accordion({ autoHeight: false });
+			if( options && options.panel || options.target ){
+				$( 'DL.accordion', options.panel || options.target ).accordion({ autoHeight: false });
 			}
 
 		},
@@ -2976,10 +3003,12 @@ function initTripInvoiceFormTotals(){
 		// Helper to open a client tab:
 		openShow : function(options){
 
-			var id   = options && options.matches[1],							// Result of livePath regex.
-			    name = options && options.matches[2] || 'Oops missing label!',	// Result of livePath regex.
-				url  = 'clients/' + id,
-				ui   = $('#pageTabs').tabs('url',url);
+			var matches	= options && options.matches,
+				form	= options && options.form,
+				id		= matches && matches[1] || form && form.client_id,	// Result of livePath regex or submitted form.
+			    name	= matches && matches[2] || 'Oops missing label!',	// Result of livePath regex.
+				url		= Url('clients',id),
+				ui		= $('#pageTabs').tabs('url',url);
 
 			// Select existing tab if already open:
 			if( id && ui.tab ) {
@@ -3385,28 +3414,104 @@ function initTripInvoiceFormTotals(){
 	}
 
 
-	var Tasks = {
-	
-		openEdit : function(options){
-	
-			var $dialog = $('<div>')
-				.html('Opening...')
-				.dialog({
-					//autoOpen: false,
-					title	: 'Edit reminder',
-					open	: function(e,ui){
-						$(this).load(options.url);
-					}
-				});
+	var Task = {
 
-			//$dialog.dialog('open');
+		openNew : function(options){
 
 			// We've intercepted a link so prevent default code from handling it:
 			options.event.stopImmediatePropagation();
 
+			$('<div>').html('Opening...').dialog({
+				//autoOpen: false,
+				title		: '<span class="ui-icon ui-icon-clock "></span> New followup',
+				minHeight	: 300,
+				width		: 550,
+				open		: function(e,ui){
+					options.target = '#' + $(this).id();
+					Layout.load(options.url,options)
+				},
+				buttons		: {
+					'Cancel'				: function(){ $(this).dialog('close') },
+					'Save my new reminder'	: function(){ $('FORM',this).submit() }
+				}
+			});
+
+		},
+	
+		openEdit : function(options){
+
+			// We've intercepted a link so prevent default code from handling it:
+			options.event.stopImmediatePropagation();
+
+			var $dialog = $('<div>').html('Opening...').dialog({
+				//autoOpen: false,
+				modal		: true,
+				title		: 'Modify followup',
+				minHeight	: 320,
+				width		: 550,
+				open		: function(e,ui){
+					options.target = '#' + $(this).id();
+					Layout.load(options.url,options)
+				},
+				buttons		: {
+					'Cancel'			: function(){ $(this).dialog('close') },
+					'Save my changes'	: function(){ $('FORM',this).submit() }
+				}
+			});
+
+		},
+		
+		initIndex : function(ui){
+			// unused
+		},
+		
+		initForm : function(ui){
+
+			$("SELECT[name='task[status_id]']").change(Task.toggleClosedTaskFields).trigger('change');
+
+		},
+
+		// Helper for reacting to selection in the task[status_id] field:
+		toggleClosedTaskFields : function(){
+
+			var $closed_fields = $(this).closest('FORM').find("[name ^= 'task[closed_']");
+
+			if( $(this).val() == TASK_STATUS_OPEN ){
+				$closed_fields.attr('disabled','disabled').parent('.formField').slideUp();	// Important: Disabled fields will not be submitted.
+			}else{
+				$closed_fields.removeAttr('disabled').parent('.formField').slideDown();
+			}
+
+		},
+
+		onCreateSuccess : function(ui){
+
+			// Close all dialogs: (TODO: Can we be more specific?!)
+			$('DIV.ui-dialog-content').dialog('close');
+
+			if(ui && ui.form && ui.form.client_id){
+
+				// Refresh the list of the client's tasks:
+				ui.url		= Url('clients', ui.form.client_id, 'tasks');	// Eg: "/clients/1234/tasks"
+				ui.target	= '#' + ui.url.replace('/','','g');				// Eg: "#clients1234tasks"
+
+				// No need to use Layout.load(ui.url,ui) here, just go ahead and refresh the content;
+				$(ui.target).load(ui.url)
+
+			}
 		}
 
-	}
+	};
+
+
+
+
+
+// Helper for assembling a url from several arguments: (Eg: Url('clients',client_id,'tasks') => "/clients/1234/tasks")
+function Url(path){
+	return '/' + Array.prototype.slice.call(arguments).join('/');
+}
+
 
 
 // Helper to parse details from a url and return an object hash similar to the window.location object:

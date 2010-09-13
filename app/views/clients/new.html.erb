@@ -1,3 +1,29 @@
+<%
+
+	if params[:copy_client_id] && copy_client = Client.get(params[:copy_client_id])
+
+		#puts 'xxx', copy_client.attributes.inspect, 'xxx'
+		
+		attributes_to_copy = [:title_id, :forename, :name, :salutation, :addressee, :known_as, :tel_work, :fax_work, :tel_mobile, :tel_mobile2, :email1, :email2]
+		attributes = copy_client.attributes.reject{ |attr,val| !attributes_to_copy.include? attr }
+		@client.attributes = attributes
+		
+		#puts copy_client.addresses.inspect
+		
+		copy_client.client_addresses.each do |addr|
+			#puts addr.attributes.inspect
+			@client.client_addresses << ClientAddress.new(
+				:is_active	=> addr.is_active,
+				:address		=> Address.new( addr.address.attributes.reject{ |attr,val| attr == :id } )
+			)
+		end
+		
+		puts @client.client_addresses.length, @client.addresses.length, @client.client_addresses.inspect, @client.client_addresses.first.address.inspect
+		#puts copy_client.attributes.inspect, '!', attributes.inspect, '!!!', @client.attributes.inspect, '!'
+		
+	end
+
+%>
 <div class="sectionContainer clientPage">
 	
 	<%= form_for @client, :action => resource(:clients) do %>
@@ -12,7 +38,7 @@
 		</div>
 				
 		<!-- sectionFoot: -->
-		<%= partial 'shared/sectionFoot_with_buttons', :ui_target => :auto, :save_caption => 'Save new client', :cancel => false, :save_class => 'createClient' %>
+		<%= partial 'shared/sectionFoot_with_buttons', :ui_target => '_open_client', :save_caption => 'Save new client', :cancel => false, :save_class => 'createClient' %>
 
 	<% end =%>
 
