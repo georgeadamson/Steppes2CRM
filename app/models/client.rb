@@ -237,10 +237,13 @@ class Client
 	end
 
   # Helper for setting one of the client_addresses as primary. (Used by the addresses form)
+  # (The test for blank/new just prevents accidentally submitted attribute from causing errors)
 	def primary_address_id=(id)
 
-	  self.client_addresses.each{ |a| a.is_active = (a.address_id == id.to_i) }.save!
-    @primary_address = nil
+    unless id.blank? || self.new? || self.client_addresses.all( :address_id => id ).empty?
+	    self.client_addresses.each{ |a| a.is_active = (a.address_id == id) }.save!
+      @primary_address = nil
+    end
 
   end
 

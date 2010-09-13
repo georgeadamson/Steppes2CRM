@@ -148,12 +148,14 @@ jQuery(function($) {
 			// TODO: Refactor liveForm to alternate syntax: Layout.liveForm('update:success', 'clients', Client.initForm ) & maybe combine with livePath()
 
 			// Clients:
-			Layout.livePath('success', new RegExp('clients/([0-9]+)$'),					Client.initShow );
+			Layout.livePath('click',   new RegExp('clients/new'),						Client.openNew );
 			Layout.livePath('success', new RegExp('clients/new'),						Client.initForm );
+			Layout.livePath('success', new RegExp('clients/([0-9]+)$'),					Client.initShow );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/edit'),				Client.initForm );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/summary'),			Client.initForm );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/trips$'),			Client.initForm );	// When user clicks to see all trips on client summary page.
 			Layout.livePath('success', /[\?\&]open_client_id=([0-9]+)/,					Client.openShow );	// Eg: web_requests?open_client_id=2138587702
+			Layout.liveForm('success', 'clients:create',								Client.openShow );	// After creating a new client.
 			Layout.liveForm('success', 'clients:update',								Client.initForm );
 
 			// Tours:
@@ -1200,7 +1202,8 @@ return
 
 // Respond to any "NEW CLIENT" or "NEW TOUR" links:
 
-	$("A[href *= '/clients/new'], A[href *= '/tours/new']").live('click', function() {
+	//$("A[href *= '/clients/new'], A[href *= '/tours/new']").live('click', function() {
+	$("A[href *= '/tours/new']").live('click', function() {
 
 		var url		= $(this).attr('href');
 		//var newId	= '#' + url.replace('/', '');
@@ -2970,7 +2973,24 @@ function initTripInvoiceFormTotals(){
 
 
 
+
+
+
 	var Client = {
+
+		openNew : function(options){
+
+			// We're intercepting a link so prevent the default ajax handler from loading it:
+			if(options && options.event){ options.event.stopImmediatePropagation() }	// isImmediatePropagationStopped()
+
+			var ui       = $('#pageTabs').tabs('url', /clients\/new/ );
+			var orig_url = $.data(ui.tab,'load.tabs');
+			
+			$.data(ui.tab, 'load.tabs', options.url);
+			$(ui.tabs).tabs('select', ui.index);
+			$.data(ui.tab, 'load.tabs', orig_url);
+
+		},
 
 		initForm : function(options){
 
@@ -2983,10 +3003,12 @@ function initTripInvoiceFormTotals(){
 		// Helper to open a client tab:
 		openShow : function(options){
 
-			var id   = options && options.matches[1],							// Result of livePath regex.
-			    name = options && options.matches[2] || 'Oops missing label!',	// Result of livePath regex.
-				url  = 'clients/' + id,
-				ui   = $('#pageTabs').tabs('url',url);
+			var matches	= options && options.matches,
+				form	= options && options.form,
+				id		= matches && matches[1] || form && form.client_id,	// Result of livePath regex or submitted form.
+			    name	= matches && matches[2] || 'Oops missing label!',	// Result of livePath regex.
+				url		= Url('clients',id),
+				ui		= $('#pageTabs').tabs('url',url);
 
 			// Select existing tab if already open:
 			if( id && ui.tab ) {
@@ -3470,7 +3492,7 @@ function initTripInvoiceFormTotals(){
 			if(ui && ui.form && ui.form.client_id){
 
 				// Refresh the list of the client's tasks:
-				ui.url		= url('clients', ui.form.client_id, 'tasks');	// Eg: "/clients/1234/tasks"
+				ui.url		= Url('clients', ui.form.client_id, 'tasks');	// Eg: "/clients/1234/tasks"
 				ui.target	= '#' + ui.url.replace('/','','g');				// Eg: "#clients1234tasks"
 
 				// No need to use Layout.load(ui.url,ui) here, just go ahead and refresh the content;
@@ -3485,8 +3507,8 @@ function initTripInvoiceFormTotals(){
 
 
 
-// Helper for assembling a url from several arguments: (Eg: url('clients',client_id,'tasks') => "/clients/1234/tasks")
-function url(path){
+// Helper for assembling a url from several arguments: (Eg: Url('clients',client_id,'tasks') => "/clients/1234/tasks")
+function Url(path){
 	return '/' + Array.prototype.slice.call(arguments).join('/');
 }
 
