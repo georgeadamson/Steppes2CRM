@@ -1,22 +1,24 @@
 ﻿<%
 
-supplier ||= @supplier
-@properties = supplier.method(:properties).call	
+	supplier ||= @supplier
+	@properties = supplier.method(:properties).call	
 
-email_label = supplier.email.blank? ? 'Email' : tag(:A,'Email',:href=>"mailto:#{ supplier.email }")
+	email_label = supplier.email.blank? ? 'Email' : tag(:A,'Email',:href=>"mailto:#{ supplier.email }")
 
-#linked_suppliers_list = []
-#company_suppliers = supplier.company_suppliers
+	#linked_suppliers_list = []
+	#company_suppliers = supplier.company_suppliers
 
-#Company.all( :is_active => true, :order=>[:name] ).each do |company|
-#	mapped = company_suppliers.first( :company_id => company.id )
-#	linked_suppliers_list << [
-#		mapped ? mapped.id : '',
-#		company.name
-#	]
-#end
+	#Company.all( :is_active => true, :order=>[:name] ).each do |company|
+	#	mapped = company_suppliers.first( :company_id => company.id )
+	#	linked_suppliers_list << [
+	#		mapped ? mapped.id : '',
+	#		company.name
+	#	]
+	#end
 
-@show_required_fields_message = true
+	image_filenames = Folder.new( CRM[:images_folder_path] ).files( "*.jpg", false )
+
+	@show_required_fields_message = true
 
 %>
 
@@ -32,6 +34,8 @@ email_label = supplier.email.blank? ? 'Email' : tag(:A,'Email',:href=>"mailto:#{
 
 			<%= text_field :name,						:label => "#{ supplier.type.supplier_type_name } name",		:maxlength => @properties[:name].length, :class => 'width2Fields' %>
 			<%= text_field :location,				:label => 'Location',					:maxlength => @properties[:location].length, :class => 'width2Fields' if supplier.accomm? %>
+			<%#= text_field :image_file,			:label => 'Image',						:maxlength => @properties[:image_file].length, :class => 'width2Fields' if supplier.accomm? %>
+			<%= select :image_file,					:label => 'Image',						:selected => supplier.image_file,       :collection => image_filenames, :class => 'width2Fields' if supplier.accomm? %>
 			<%= select :currency_id,				:label => 'Currency',					:selected => supplier.currency_id.to_s,	:collection => collection_for(supplier, :currency),	:class => 'width1Field' %>
 			<%= select :country_id,					:label => 'Country',					:selected => supplier.country_id.to_s,	:collection => collection_for(supplier, :country),	:class => 'width1Field' %>
 			<%= select :linked_supplier_id,	:label => 'Default handler',	:selected => supplier.linked_supplier_id.to_s,	:collection => collection_for(supplier, :linked_supplier, :conditions => {:type_id=>5}, :prevent_empty => false ), :prompt => '- none', :class => 'width1Field' if supplier.is_accomm? %>
@@ -67,5 +71,4 @@ email_label = supplier.email.blank? ? 'Email' : tag(:A,'Email',:href=>"mailto:#{
 
 		</fieldset>
 
-			
 </div>

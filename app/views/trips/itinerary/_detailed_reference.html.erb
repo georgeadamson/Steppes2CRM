@@ -14,12 +14,19 @@
 	
 	<tbody>
 		<% @trip.days.each do |day| %>
+		
+		<%
+			accomm   = day.elements.select{ |elem| elem.type_id == TripElementType::ACCOMM }.first
+			supplier = accomm && accomm.supplier
+			img_file = supplier && accomm.supplier.image_file.strip.gsub(' ','+')
+		%>
+		
 		<tr>
 		
 			<td>
 				Day	<%= day.number %><br/>
 				<%= day.date.strftime_ordinalized('%a %d %b') %>
-				<%= tag :img, :src => '/images/image.placeholder.jpg', :width => 100 %>
+				<%= tag :img, :src => "/images/#{ img_file }", :width => 100, :title => "#{ supplier.name } (#{ supplier.image_file })", :style => 'border:solid #EFEDDE 0.5em;margin-top:0.5em' unless img_file.blank? %>
 			</td>
 
 
