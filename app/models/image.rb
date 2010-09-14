@@ -11,7 +11,8 @@ class Image
 
   belongs_to :country
 
-  def initialize
+  def initialize(*)
+    super
     @libraryPath = "/users/georgeadamson/sites/steppes2/public/imageLibrary"
   end
 

@@ -353,25 +353,25 @@ class Trip
     # Calculate duration of trip in days: (When overrun is true, we include any trip elements that are not within trip dates!)
     def duration(overrun = false)
       if overrun || overrun == :with_overrun
-        return ( self.latest_element.end_date.jd - self.earliest_element.start_date.jd ) + 1
+        return ( self.last_element.end_date.jd - self.first_element.start_date.jd ) + 1
       else
         return ( self.end_date.jd - self.start_date.jd ) + 1
       end
     end
     
     
-    # Return array of simple "day" objects each containing useful info about elements etc on that day:
+    # Return array of simple "day" hashes each containing useful info about elements etc on that day:
     def days(overrun = false)
       
-      overrun		||= (overrun == :with_overrun)
+      overrun		||= (overrun == :with_overrun)  # True to include elements that lie outside trip dates.
       result			= []
-      first_date	= overrun ? self.earliest_element.start_date : self.start_date
-      last_date		= overrun ? self.latest_element.start_date   : self.end_date
+      first_date	= overrun ? self.first_element.start_date.to_date : self.start_date
+      last_date		= overrun ? self.last_element.start_date.to_date  : self.end_date
       total_days	= last_date.jd - first_date.jd + 1		# jd returns julian date number
       
       # Dummy loop to encourage datamapper to load all the trip_elements: (Thereby preventing multiple queries later)
       # TODO: Try another technique. This is not preventing dm from querying for each day!
-      trip_elements = self.trip_elements.all().each{ |elem| x = elem.description }
+      trip_elements = self.trip_elements.all.each{ |elem| x = elem.description }
       
       # Build a hash to represent each day and add them to the result array:
       total_days.times do |i|
@@ -380,7 +380,7 @@ class Trip
         
         elements = trip_elements.all(
           
-          :start_date.lte	=> date,	# Elements beginning on or before date.
+          :start_date.lt	=> date + 1,	# Elements beginning on or before date.
           :end_date.gte		=> date,	# Elements ending on or after date.
           :order					=> [:type_id, :start_date, :id]
           
@@ -400,7 +400,7 @@ class Trip
         #	}
         
         
-        # Create a hash-like object to represent qa day: (An OpenStruct is like a hash but can be accessed using day.date instead of day[:date] )
+        # Create a hash-like object to represent a day: (An OpenStruct is like a hash but can be accessed using day.date instead of day[:date] )
         day = OpenStruct.new(
           :number		=> i + 1,
           :date			=> date,
@@ -545,25 +545,27 @@ class Trip
     
     
     # Calculate which trip_element starts first: (Arbitrarily choose one if several start on same date)
-    def earliest_element
-      return self.trip_elements.first( :order => [:start_date] )
+    def first_element
+      return self.trip_elements.first( :order => [:start_date, :id] )
     end
     # Calculate which trip_element finishes last: (Arbitrarily choose one if several finish on same date)
-    def latest_element
-      return self.trip_elements.first( :order => [:end_date.desc] )
+    def last_element
+      return self.trip_elements.first( :order => [:end_date.desc, :id.desc] )
     end
+    alias earliest_element first_element  # Depricated.
+    alias latest_element   last_element   # Depricated.
     
     
-    # When the earliest_element starts before the trip's start_date, calculate how many days out it is:
+    # When the earliest element starts before the trip's start_date, calculate how many days out it is:
     def days_overrun_before
-      result = self.start_date.jd - self.earliest_element.start_date.jd
+      result = self.start_date.jd - self.first_element.start_date.jd
       return result >= 0 ? result : 0
     end
     
     
-    # When the latest_element ends after the trip's end_date, calculate how many days out it is:
+    # When the latest element ends after the trip's end_date, calculate how many days out it is:
     def days_overrun_after
-      result = self.latest_element.end_date.jd - self.end_date.jd
+      result = self.last_element.end_date.jd - self.end_date.jd
       return result >= 0 ? result : 0
     end
     

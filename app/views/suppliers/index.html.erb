@@ -10,7 +10,7 @@
 	type_id = params[:type_id]
 
 	@suppliers = @suppliers.all( :type_id => type_id ) if type_id.to_i > 0
-
+	@suppliers.all(:limit=>100)
 	
 	# Make the display more friendly by customising the text for Airlines or Accommodation etc:
 	type_name = TripElementType.get(type_id).supplier_type_name if type_id

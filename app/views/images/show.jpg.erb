@@ -1,0 +1,8 @@
+<%
+	# Images are handled in the controller.
+	# (For some reason send_file does not work in a view)
+%>
+
+<%# path = CRM[:images_folder_path].gsub('\\','/') / @image.path -%>
+<%# send_file( path, :type => 'image/jpeg', :disposition => 'inline' ) -%>
+<%#= File.read(path) # <-- But this does work in a view -%>

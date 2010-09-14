@@ -8,8 +8,8 @@ class Folder
   attr :currentFolder
 
   def initialize(folder = nil, parentFolder = nil)
-    @currentFolder = folder || "/users/georgeadamson/sites/steppes2/public/imageLibrary/S*/A*"
-    @parentFolder = parentFolder || File.dirname(@currentFolder)
+    @currentFolder = folder || CRM[:images_folder_path] || "/users/georgeadamson/sites/steppes2/public/imageLibrary/S*/A*"
+    @parentFolder  = parentFolder || File.dirname(@currentFolder)
   end
 
   # Return array of child folders in the parentFolder (defaults to folders beginning with "Steppes...")
@@ -29,14 +29,15 @@ class Folder
   end
 
   # Return array of all files within parentFolder (Defaults to folders beginning with "S...")
-  def files(match = "*.jpg", formatCollection = true, folder = nil, recursive = true, fullPaths = false)
+  def files(match = '*.jpg', formatCollection = true, folder = nil, recursive = true, fullPaths = false)
 
     #root = "/users/georgeadamson/sites/steppes2/public/imageLibrary/SteppesEast/_Photos"
-    @currentFolder = folder || @currentFolder
-    query = @currentFolder / "**" / match
+    @currentFolder ||= folder
+    query = @currentFolder.gsub('\\','/') / '**' / match
 
     #return Dir.entries(folderPath).find_all{ |filename| filename =~ /.jpg$/ }.sort()
-    files = Dir[query].map{ |file| file.sub(@currentFolder,"") }  #.propercase
+    unwanted_path_string = @currentFolder.gsub('\\','/')
+    files = Dir[query].map{ |file| file.sub(unwanted_path_string,'').sub(/^\//,'') }  #.propercase
  
     if formatCollection
       result = {}
