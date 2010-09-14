@@ -122,9 +122,11 @@ Merb::Router.prepare do
   match('/documents/download').to( :controller => 'documents', :action => 'download' )
   resources :documents
   
+  #match('/images/:action/:id' ).to( :controller => 'images', :action => :action, :id => id )
+
   resources :photos
-  #resources :image_files
-  #resources :images
+  resources :image_files
+  resources :images
   resources :articles
   resources :exchange_rates
   resources :companies
