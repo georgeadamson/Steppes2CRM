@@ -65,7 +65,19 @@
 				</div>
 			
 				<div class="sectionBody formSurround">
-					
+
+					<div id="dashboard-tabs" class="sectionContainer" style="width:40em;">
+
+							<ul>
+								<li><a href="#user-followups">My followups</a></li>
+							</ul>
+
+							<div id="user-followups" class="sectionBody">
+								<%= partial 'tasks/index' %>
+							</div>
+
+					</div>
+
 					<div id="recentClients" class="tabs" style="width:35em;">
 
 						<!--<ul>
