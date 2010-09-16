@@ -14,15 +14,15 @@
 	
 	<tbody>
 		<% @trip.days.each do |day| %>
-		
+
 		<%
 			accomm   = day.elements.select{ |elem| elem.type_id == TripElementType::ACCOMM }.first
 			supplier = accomm && accomm.supplier
 			img_file = supplier && accomm.supplier.image_file.strip.gsub(' ','+')
 		%>
-		
+
 		<tr>
-		
+
 			<td>
 				Day	<%= day.number %><br/>
 				<%= day.date.strftime_ordinalized('%a %d %b') %>
