@@ -175,6 +175,8 @@ jQuery(function($) {
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)$/,							Trip.initShow );
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/edit/,						Trip.initForm );
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/builder/,					Trip.initTimeline );
+			Layout.livePath('click',   /clients\/([0-9]+)\/trips\/([0-9]+)\/copy/,						Trip.showSearch );
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/,				Trip.showSearchResults );
 			Layout.liveForm('success', 'trips:create',													Trip.onCreateSuccess );
 			Layout.liveForm('success', 'trips:update',													Trip.onUpdateSuccess );
 			Layout.liveForm('success', 'trips:destroy',													Trip.onDestroySuccess );
@@ -1134,7 +1136,7 @@ return
 		//initLevel2Tabs_forSysAdmin();
 		//initLevel2Tabs_forReports();	// Typically this is no use here but helpful when testing reports page in isolation.
 
-		$('#recentClients.tabs').tabs();
+		$('#dashboard-tabs').tabs();
 
 
 	// Initialise accordions:
@@ -3223,6 +3225,37 @@ function initTripInvoiceFormTotals(){
 				}
 
 			}
+		},
+
+		// For finding another trip to copy elements from:
+		showSearch : function(options){
+
+			// We've intercepted a link so prevent default code from handling it:
+			options.event.stopImmediatePropagation();
+
+			dialog = $('DIV.#trip-search-results')
+
+			$('<div>').html('Opening...').dialog({
+				modal		: true,
+				title		: icon('trip') + ' Find a trip to copy from',
+				minHeight	: 400,
+				width		: 750,
+				open		: function(e,ui){
+					ui.panel = this;
+					options.target = '#' + $(ui.panel).id();
+					options.url = options.url + '?limit=500'
+					Layout.load(options.url,options);
+				},
+				buttons		: {
+					'Cancel'			: function(){ $(this).dialog('close').remove() },
+					'Copy from trip'	: function(){ $('FORM',this).submit() }	// Dialog will be losed if submit is successful.
+				}
+			});
+
+		},
+
+		showSearchResults : function(options){
+			// Results will be loaded into #trip-search-results
 		}
 
 	} // End of Trip utilities.
@@ -3423,15 +3456,16 @@ function initTripInvoiceFormTotals(){
 
 			$('<div>').html('Opening...').dialog({
 				//autoOpen: false,
-				title		: '<span class="ui-icon ui-icon-clock "></span> New followup',
+				title		: icon('clock') + ' New followup',
 				minHeight	: 300,
 				width		: 550,
 				open		: function(e,ui){
-					options.target = '#' + $(this).id();
+					ui.panel = this;
+					options.target = '#' + $(ui.panel).id();
 					Layout.load(options.url,options)
 				},
 				buttons		: {
-					'Cancel'				: function(){ $(this).dialog('close') },
+					'Cancel'				: function(){ $(this).dialog('close').remove() },
 					'Save my new reminder'	: function(){ $('FORM',this).submit() }
 				}
 			});
@@ -3454,7 +3488,7 @@ function initTripInvoiceFormTotals(){
 					Layout.load(options.url,options)
 				},
 				buttons		: {
-					'Cancel'			: function(){ $(this).dialog('close') },
+					'Cancel'			: function(){ $(this).dialog('close').remove() },
 					'Save my changes'	: function(){ $('FORM',this).submit() }
 				}
 			});
@@ -3463,6 +3497,8 @@ function initTripInvoiceFormTotals(){
 		
 		initIndex : function(ui){
 			// unused
+			console.log(ui)
+			alert(1)
 		},
 		
 		initForm : function(ui){
@@ -3487,7 +3523,7 @@ function initTripInvoiceFormTotals(){
 		onCreateSuccess : function(ui){
 
 			// Close all dialogs: (TODO: Can we be more specific?!)
-			$('DIV.ui-dialog-content').dialog('close');
+			$('DIV.ui-dialog-content').dialog('close').remove();
 
 			if(ui && ui.form && ui.form.client_id){
 
@@ -3497,6 +3533,7 @@ function initTripInvoiceFormTotals(){
 
 				// No need to use Layout.load(ui.url,ui) here, just go ahead and refresh the content;
 				$(ui.target).load(ui.url)
+				$("#user-followups").load('/tasks')
 
 			}
 		}
@@ -3512,6 +3549,11 @@ function Url(path){
 	return '/' + Array.prototype.slice.call(arguments).join('/');
 }
 
+// Helper for generating the markup required for a standard icon:
+// TODO: Refactor using html template?
+function icon(name){
+	return '<span class="ui-icon ui-icon-{name}"></span>'.replace('{name}',name,'g');
+}
 
 
 // Helper to parse details from a url and return an object hash similar to the window.location object:
