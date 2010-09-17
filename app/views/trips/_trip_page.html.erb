@@ -33,8 +33,10 @@
 			<span class="tripName">
         <%= trip.title %>
       </span>
-      <small>
+      <small class="hidden">
         (&pound;<span class="tripTotalSpend"><%= trip.total_price.to_i %></span>)
+      </small>
+      <small>
          <%= trip.summary %>
       </small>
     </h3>
