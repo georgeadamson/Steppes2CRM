@@ -117,13 +117,19 @@ class Trip
     accepts_nested_attributes_for :trip_clients, :allow_destroy => true
     
     # Handlers for has n through associations: 
-    accepts_ids_for :clients		    # ONLY used for providing a clients_names attribute, not for receiving clients_ids!
-    accepts_ids_for :countries			# Country IDs are accessed via trip.countries_ids
-    accepts_ids_for :pnrs						# Pnr numbers are accessed via trip.pnrs_names (or pnr_numbers alias)
+    accepts_ids_for :clients		        # ONLY used for providing a clients_names attribute, not for receiving clients_ids!
+    accepts_ids_for :countries			    # Country IDs are accessed via trip.countries_ids
+    accepts_ids_for :pnrs						    # Pnr numbers are accessed via trip.pnrs_names (or pnr_numbers alias)
     
     attr_accessor :debug
-    
-    
+    attr_accessor :do_copy_trip_id         # Specifies a trip to copy details from.
+    attr_accessor :do_copy_trip_clients    # Allows clients to be copied from another trip.      Use with do_copy_trip_id.
+    attr_accessor :do_copy_trip_elements   # Allows elements to be cloned from another trip.     Use with do_copy_trip_id.
+    attr_accessor :do_copy_trip_itinerary  # Allows elements etc to be cloned from another trip. Use with do_copy_trip_id.
+    attr_accessor :do_copy_trip_countries  # Allows countries to be copied from another trip.    Use with do_copy_trip_id.
+       
+
+
     # This fix is redundant because trip.start/end_date are Date properties not DateTime
     #  # Ugly workaround for the way datamapper returns datetime properties!
     #  # See _shared.rb: Helper for ensuring datamapper does not mess up datetime fields by returning them with +1 hour offset!
@@ -190,6 +196,30 @@ class Trip
       # 
       self.is_active_version = true if @new_active_version_id && @new_active_version_id == self.id
       
+      # Copy details from another trip if required:
+      if self.do_copy_trip_id && other_trip = Trip.get(self.do_copy_trip_id)
+
+        # Copy Clients from other_trip:
+        if self.do_copy_trip_clients
+          self.copy_clients_from other_trip
+          self.do_copy_trip_clients = nil     # Clear flag to prevent duplication if saved again.
+        end
+
+        # Copy Countries from other_trip:
+        if self.do_copy_trip_countries
+          self.copy_countries_from other_trip
+          self.do_copy_trip_countries = nil   # Clear flag to prevent duplication if saved again.
+        end
+
+        # Copy Trip Elements from other_trip:
+        # Important: PNR Flight elements are cloned as standard flights (without booking_code)
+        if self.do_copy_trip_elements
+          self.copy_elements_from other_trip, :adjust_dates => true, :discard_booking_code => true
+          self.do_copy_trip_elements = nil    # Clear flag to prevent duplication if saved again.
+        end
+
+      end
+
       # Ensure all trip elements still have valid numbers of adults/children/infants
       # (Also see TripElement before :save)
       # TODO: Handle subgroups?
@@ -588,6 +618,7 @@ class Trip
         return "No travellers!"
       end
     end
+    alias client_summary traveller_summary
     alias travellerSummary traveller_summary	# Depricated
     
 
@@ -647,7 +678,7 @@ class Trip
     # Alias for the setter above and the getter generated dynamically by accepts_ids_for(:pnrs)
     alias pnr_numbers= pnrs_names=
     alias pnr_numbers  pnrs_names
-    
+
     
     # Helper for returning the number of somethings...
     def count_of(something)
@@ -1257,15 +1288,18 @@ class Trip
         )
         
         # Copy trip clients and countries:
-        master.clients.each{ |client| clone.clients << client }
-        master.countries.each{ |country| clone.countries << country }
+        #master.clients.each{ |client| clone.clients << client }
+        #master.countries.each{ |country| clone.countries << country }
+        self.copy_clients_from master
+        self.copy_countries_from master
         
-        # Clone the trip elements:
-        master.trip_elements.each do |master_elem|
-          attrs =  master_elem.attributes.merge( :id => nil )
-          clone.trip_elements << TripElement.new(attrs)
-        end
-        
+        # Clone the trip elements: (Without changing their dates)
+        #  master.trip_elements.each do |master_elem|
+        #    attrs =  master_elem.attributes.merge( :id => nil )
+        #    clone.trip_elements << TripElement.new(attrs)
+        #  end
+        self.copy_elements_from master
+
         # Override defaults with any attributes explicitly specified in this method's arguments:
         clone.attributes = custom_attributes || {}
       
@@ -1275,7 +1309,43 @@ class Trip
       
     end
     
+    def copy_clients_from( master, clone = self)
+      master.clients.each{ |client| clone.clients << client }
+    end
     
+    def copy_countries_from( master, clone = self)
+      master.countries.each{ |country| clone.countries << country }
+    end
+
+
+    # Helper for cloning elements from another trip:
+    # Options:
+    #    :adjust_dates true to ensure first element is at start of trip)
+    #    :discard_booking_code true to skip any PNR Numbers associated with flights.
+    def copy_elements_from(master, options = nil )
+
+      # Apply defaults for omitted options:
+      defaults  = { :adjust_dates => false, :clone => self, :type_id => nil, :discard_booking_code => false }
+      options   = defaults.merge( options || {} )
+      clone     = options[:clone]
+      type_id   = options[:type_id].to_i > 0 ? options[:type_id] : nil
+
+      master.trip_elements.each do |master_elem|
+
+        attrs       =  master_elem.attributes.merge( :id => nil )
+        attrs.delete(:booking_code) if options[:discard_booking_code]
+        clone_elem  = TripElement.new(attrs)
+
+        # If required, use the .day helper to set the elem.start_date relative to trip.start_date:
+        clone_elem.day = master_elem.day if options[:adjust_dates]
+
+        # Add cloned element to the trip (unless type_id was specified and matches element type)
+        clone.trip_elements << clone_elem if !type_id || master_elem.type_id == type_id  
+
+      end
+
+    end
+
     
     
     def initialize(*)

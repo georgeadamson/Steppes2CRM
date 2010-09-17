@@ -28,6 +28,10 @@
 			:save_class				=> 'updateTrip',			# Important: A class of 'createTrip' would cause javascript to add a new tab for the new trip.
 			:foot_class				=> 'formSurround',
 
+			:add							=> true,
+			:add_caption			=> 'Copy details from another trip...',
+			:add_url					=> "#{ nested_resource(client_or_tour,@trip) }/copy",
+
 			# Define a special <label> element that can be clicked to activate the delete_button below:
 			:label_for_delete	=> label_for_delete,	# Specify that we want to render a <label> instead of a button.
 			:delete_id				=> delete_uid,				# This is used to associate the label with the button.

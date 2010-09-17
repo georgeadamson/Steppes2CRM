@@ -1,15 +1,17 @@
 
 def valid_company_attributes
   {
-    :name     => 'Steppes Test',
-    :initials => 'ST'
+    :name           => 'Steppes Test',
+    :initials       => 'ST',
+    :invoice_prefix => 'ST',
+    :short_name     => 'ST'
   }
 end
 
 
 def valid_country_attributes
 
-  company      = Company.first_or_create( { :name => valid_company_attributes[:name] }, valid_company_attributes )
+  company      = Company.first_or_create( { :initials => valid_company_attributes[:initials] }, valid_company_attributes )
   world_region = WorldRegion.first_or_create( { :name => 'Dummy Region' }, { :name => 'Dummy Region' } )
   mailing_zone = MailingZone.first_or_create( { :name => 'Dummy Zone'   }, { :name => 'Dummy Zone'   } )
 
