@@ -47,9 +47,9 @@
 			<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
 
 				<span>I want to copy:</span>
-				<%= check_box :do_copy_trip_elements,  :label => 'Trip elements', :checked => true,  :class => 'widthAuto'  %>
-				<%= check_box :do_copy_trip_countries, :label => 'Countries',     :checked => true,  :class => 'widthAuto'  %>
-				<%= check_box :do_copy_trip_clients,   :label => 'Clients',				:checked => false, :class => 'widthAuto'  %>
+				<%= check_box :name => 'trip[do_copy_trip_elements]',  :label => 'Trip elements', :value => true, :checked => true,  :class => 'widthAuto'  %>
+				<%= check_box :name => 'trip[do_copy_trip_countries]', :label => 'Countries',     :value => true, :checked => true,  :class => 'widthAuto'  %>
+				<%= check_box :name => 'trip[do_copy_trip_clients]',   :label => 'Clients',				:value => true, :checked => false, :class => 'widthAuto'  %>
 				<%#= check_box :do_copy_trip_itinerary, :label => 'Copy Itinerary document', :checked => false, :class => 'widthAuto' %>
 
 			</div>
