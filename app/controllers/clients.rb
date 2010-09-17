@@ -36,12 +36,12 @@ class Clients < Application
 
     # Eg: /search?q=Smith GL7 1AB&limit=20
     limit		= params[:limit].to_i.zero? ? 20 : params[:limit].to_i		# Max rows to return.
-    words		= params[:q].strip.split(/\s+/)														# Words are separated by whitespace.
+    words		= params[:q].to_s.strip.split(/\s+/)														# Words are separated by whitespace.
     prev_word	= nil
 
 		# If the user provided any '*' wildcards then swap them for valid sql '%' wildcards:
 		# Insert sql '%' wildcard after each word: (unless user provided their own wildcards)
-		phrase = params[:q].strip.gsub(/\*/, '%') + ' '
+		phrase = params[:q].to_s.strip.gsub(/\*/, '%') + ' '
 		phrase.gsub!( /\b /, '% ' ).strip! unless phrase.include? '%'
 
 		# Prepare custom sql statement: (We rely on datamapper to handle escaping of dodgy charaters such as ')

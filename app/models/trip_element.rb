@@ -395,9 +395,35 @@ class TripElement
   # Element's start day as percent of total trip length:
   def percentThroughTrip; return 100 * self.day.to_f / self.trip.days; end 
   
-  # Number of days since start of trip:
+  # Get number of days since start of trip:
   def day; return ( ( Date.parse(self.start_date.to_s) - Date.parse(self.trip.start_date.to_s) ) + 1).to_i; end  
   
+  # Set start_date as number of days since start of trip: (And preserve it's duration)
+  def day=(number)
+
+    # PNR flights cannot be modified:
+    return if self.bound_to_pnr?
+
+    # Decrement number by 1 because number is a 1-based index (but day1 has offset of 0, day2 is offset 1 etc)
+    # (The element.day getter method does the opposite by adding 1 to the offset)
+    number -= 1 if number > 0
+
+    duration        = ( self.end_date - self.start_date ).to_i
+    orig_start_time = self.start_date
+    orig_end_time   = self.end_date
+
+    self.start_date = ( self.trip.start_date.to_time + number.days                 ).to_datetime
+    self.end_date   = ( self.trip.start_date.to_time + number.days + duration.days ).to_datetime
+
+    # Set flight times back the way they were:
+    # TODO: Find a simpler way to set hour/minute.
+    if self.flight?
+      self.start_date = DateTime.civil(self.start_date.year, self.start_date.month, self.start_date.day, orig_start_time.hour, orig_start_time.min)
+      self.end_date   = DateTime.civil(self.end_date.year,   self.end_date.month,   self.end_date.day,   orig_end_time.hour,   orig_end_time.min)
+    end
+
+  end
+
   # Duration of trip element in days:
   def days                                                                  
     result = ( Date.parse(self.end_date.to_s) - Date.parse(self.start_date.to_s) ).to_i

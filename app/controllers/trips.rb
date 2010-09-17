@@ -53,6 +53,7 @@ class Trips < Application
     render :edit
   end
   
+  # Trip elements-builder (timeline) page:
   def builder(id)
     @trip = Trip.get(id)
     raise NotFound unless @trip
@@ -60,6 +61,7 @@ class Trips < Application
     display @trip
   end
   
+  # Itinerary preview page:
   def itinerary(id)
     @trip = Trip.get(id)
     raise NotFound unless @trip
@@ -67,6 +69,14 @@ class Trips < Application
     display @trip
   end
   
+  # Copy-from-another-trip page:
+  def copy(id)
+    @trip = Trip.get(id)
+    raise NotFound unless @trip
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    display @trip
+  end
+
   def documents(id)
     @trip = Trip.get(id)
     raise NotFound unless @trip

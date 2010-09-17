@@ -73,7 +73,6 @@ Merb::Router.prepare do
     #trip.resources :elements, :controller => :trip_elements
     trip.resources :trip_elements                              # TODO: Depricate this!
     match('/summary').to(:controller => 'trips', :action => 'summary' )
-    
   end
   
   # /clients/
@@ -168,6 +167,7 @@ Merb::Router.prepare do
   match('/clients/:client_id/trips/:id/costings').to(:controller => 'trips', :action => 'costings' )
   match('/clients/:client_id/trips/:id/documents').to(:controller => 'trips', :action => 'documents' )
   match('/clients/:client_id/trips/:id/accounting').to(:controller => 'trips', :action => 'accounting' )
+  match('/clients/:client_id/trips/:id/copy').to(:controller => 'trips', :action => 'copy' )
   
   # Route for TOUR TRIP summary and builder etc: (Could not get nested route to work. See above!)
   match('/tours/:tour_id/trips/:id/summary').to(:controller => 'trips', :action => 'summary' )
@@ -176,6 +176,7 @@ Merb::Router.prepare do
   match('/tours/:tour_id/trips/:id/costings').to(:controller => 'trips', :action => 'costings' )
   match('/tours/:tour_id/trips/:id/documents').to(:controller => 'trips', :action => 'documents' )
   match('/tours/:tour_id/trips/:id/accounting').to(:controller => 'trips', :action => 'accounting' )
+  match('/tours/:tour_id/trips/:id/copy').to(:controller => 'trips', :action => 'copy' )
   
   # Articles for a Country:
   match('/countries/:country_id/articles/:id/edit').to(:controller => 'articles', :action => 'edit' )
