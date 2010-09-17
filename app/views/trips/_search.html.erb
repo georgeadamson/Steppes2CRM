@@ -1,0 +1,59 @@
+<%
+
+	@trips = Trip.all( :limit => 500, :is_active_version => true )	# Default row-limit.
+	@trips = @trips.all( :user_id												=> user_id							)	unless user_id.blank?		
+	@trips = @trips.all( :company_id										=> company_id						)	unless company_id.blank?
+	@trips = @trips.all( Trip.trip_countries.country_id	=> country_id						)	unless country_id.blank?
+	@trips = @trips.all( :limit												  => params[:limit].to_i	)	if params[:limit].to_i > 0		
+	@trips = @trips.all( :id.not												=> @trip.id							) if @trip
+	
+	# Encourage ORM to pre-fetch all relevant records to minimise queries: 
+	@trips.reload
+	@trips.trip_clients.reload
+	@trips.clients.reload
+	@trips.trip_countries.reload
+	
+	# Prepare hashes for looking up countries and client names while iterating through trips:
+	lookup_client  = {}; @trips.clients.each{ |c| lookup_client[c.id] = c.name }
+	lookup_country = cached(:countries_hash); # Here we have one ready made!
+
+	# Sort the trips by first-client's name:
+	# We use our pre-prepared lookup to prevent the ORM from querying each client individually:
+	@trips.sort!{ |a,b|
+		client_a = a.trip_clients.first
+		client_b = b.trip_clients.first
+		( lookup_client[client_a && client_a.client_id] || '' ) <=> ( lookup_client[client_b && client_b.client_id] || '' )
+	}
+	
+%>
+
+	<ul class="radio-list">
+		<% @trips.each_with_index do |trip,i| %>
+
+			<%
+				# Prepare trip summary text: (Equivalent to "trip.countries_names.join(', ')" but hopefully a little faster)
+				client_names  = trip.trip_clients.all(  :trip_id => trip.id).map{|c| lookup_client[c.client_id]   }.uniq.join(', ')
+				country_names = trip.trip_countries.all(:trip_id => trip.id).map{|c| lookup_country[c.country_id] }.join(', ')
+				trip_summary  = "#{ client_names }: #{ country_names } - #{ trip.client_summary } - #{ trip.duration } days"
+				ui_id					= "copy-trip#{ trip.id }"
+			%>
+
+			<li>
+				<%= fields_for trip do %>
+				<%= icon :trip %> 
+				<%= radio_button :do_copy_trip_id, :value => trip.id, :label => trip_summary, :id => ui_id, :class => 'widthAuto', :checked => i==0 %>
+				<% end =%>
+			</li>
+
+		<% end %>
+	</ul>
+
+	<% if @trips.empty? %>
+		<p>
+			Nope, could not find any trips 
+			<%= "handled by #{ User.get(user_id).forename }"    unless user_id.blank?    %>
+			<%= "for #{        Company.get(company_id).name }"  unless company_id.blank? %>
+			<%= "visiting #{   Country.get(country_id).name }"  unless country_id.blank? %>
+			.
+		</p>
+	<% end %>

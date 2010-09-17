@@ -3233,11 +3233,12 @@ function initTripInvoiceFormTotals(){
 			// We've intercepted a link so prevent default code from handling it:
 			options.event.stopImmediatePropagation();
 
-			dialog = $('DIV.#trip-search-results')
-
-			$('<div>').html('Opening...').dialog({
+			// Re-use existing dialog or create new: 
+			$('#trip-search-results').parents('.ui-dialog').add('<div>').first()
+			.html('Opening...')
+			.dialog({
 				modal		: true,
-				title		: icon('trip') + ' Find a trip to copy from',
+				title		: icon('trip') + ' Find a trip to copy details from',
 				minHeight	: 400,
 				width		: 750,
 				open		: function(e,ui){
@@ -3532,8 +3533,8 @@ function initTripInvoiceFormTotals(){
 				ui.target	= '#' + ui.url.replace('/','','g');				// Eg: "#clients1234tasks"
 
 				// No need to use Layout.load(ui.url,ui) here, just go ahead and refresh the content;
-				$(ui.target).load(ui.url)
-				$("#user-followups").load('/tasks')
+				$(ui.target).load(ui.url);				// Reload client's custom list of tasks.
+				$("#user-followups").load('/tasks');	// Reload user's custom list of tasks on the home page.
 
 			}
 		}
