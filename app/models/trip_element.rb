@@ -211,6 +211,7 @@ class TripElement
       self.children			= trip.children  if self.children > trip.children
       self.infants			= trip.infants   if self.infants  > trip.infants
       self.is_subgroup	= ( self.adults < trip.adults || children < trip.children || infants < trip.infants )
+      self.arrive_next_day = self.flight? && ( self.start_date.day != self.end_date.day )
       
     end
     
