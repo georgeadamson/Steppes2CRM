@@ -3005,27 +3005,34 @@ function initTripInvoiceFormTotals(){
 		// Helper to open a client tab:
 		openShow : function(options){
 
-			var matches	= options && options.matches,
-				form	= options && options.form,
-				id		= matches && matches[1] || form && form.client_id,	// Result of livePath regex or submitted form.
-			    name	= matches && matches[2] || 'Oops missing label!',	// Result of livePath regex.
-				url		= Url('clients',id),
-				ui		= $('#pageTabs').tabs('url',url);
+			var matches		= options && options.matches;	// Result of livePath regex or submitted form.
+			var form		= options && options.form;
+			var $idField	= options && options.data && $(options.data).find('INPUT.show-client[name=client_id][value]');
+			var $labelField	= $($idField).siblings('INPUT[name=client_label]').add( $($idField).parent().siblings().children('INPUT[name=client_label]') ).first();
+			var id			= matches && matches[1] || form && form.client_id || $idField.val();
+			var name		= matches && matches[2] ||                           $labelField.val() || 'Oops missing label!';
 
-			// Select existing tab if already open:
-			if( id && ui.tab ) {
-				$('#pageTabs').tabs('select',ui.index);
+			if(id){
 
-			// Otherwise add a fresh tab:
-			}else if(id){
+				var url		= Url('clients',id);
+				var ui		= $('#pageTabs').tabs('url',url);
 
-				// Workaround when spaces have been escaped as '+' in a link:
-				name = name.replace( /\+/g,' ');
-				var label = name + '<input type="hidden" value="{id}" class="tour-id"/>'.replace('{id}',id);
-				$("#pageTabs").tabs('add', url, label);
+				// Select existing tab if already open:
+				if( ui.tab ) {
+					$('#pageTabs').tabs('select',ui.index);
+
+				// Otherwise add a fresh tab:
+				}else{
+
+					// Workaround when spaces have been escaped as '+' in a link:
+					// var label = name.replace(/\+/g,' ') + '<input type="hidden" value="{id}" class="client-id"/>'.replace('{id}',id);
+					var label = name.replace(/\+/g,' ') + tag('input', null, { type:'hidden', value:id, 'class':'client-id' });
+					$("#pageTabs").tabs('add', url, label);
+
+				}
 
 			}else{
-				console.log( 'Unable to open client tab(', id, COMMA, name, ')' );
+				console.log( 'Unable to open client tab(', id, COMMA, name, ')', options );
 			}
 
 		},
@@ -3625,8 +3632,8 @@ function parseUrl(url) {
 // Specify attrs as an object hash of name:value pairs.
 function tag(name, contents, attrs) {
 
-	// Make it a self-closing tag when contents omitted.
-	// Otherwise make Opening/closing tags either side of contents:
+	// Make it a self-closing tag when contents undefined.
+	// Otherwise open/close tags either side of contents:
 	return (contents === null || contents === undefined)
 			? '<' + name + html_attributes(attrs) + '/>'
 			: '<' + name + html_attributes(attrs) + '>' + contents + '</' + name + '>';
@@ -3634,8 +3641,8 @@ function tag(name, contents, attrs) {
 	function html_attributes(attrs) {
 		if(!attrs){ return '' }
 		var arr = [];
-		$.each(attrs, function(name, val) { arr.push(name + '="' + val + '"') });
-		return " " + arr.join(" ");
+		$.each(attrs, function(name,val) { arr.push(name + '="' + val + '"') });
+		return ' ' + arr.join(' ');
 	}
 };
 
