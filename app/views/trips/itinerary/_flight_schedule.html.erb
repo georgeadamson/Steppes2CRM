@@ -36,7 +36,7 @@
 
 				<%= tag :td, flight.start_time || 'TBC' %>
 
-				<%= tag :td, flight.end_time || 'TBC' %>
+				<%= tag :td, "#{ flight.end_time || 'TBC' }#{ '*' if flight.arrive_next_day }" %>
 
 			</tr>
 

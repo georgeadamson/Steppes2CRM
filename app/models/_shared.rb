@@ -571,13 +571,13 @@ end
 
         if association_name == :all
           
-          @trip.model.relationships.each do | name, association |
-            if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
-              #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
-              if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
-                collect_error_messages_for @trip, name.to_sym
+          obj.model.relationships.each do | name, association |
+            if obj.respond_to?(name) #&& name.to_sym != :version_of_trips
+              #if ( rel = obj.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
+              if ( rel = obj.method(name).call ) && rel.respond_to?(:each)
+                collect_error_messages_for obj, name.to_sym
               elsif rel
-                collect_child_error_messages_for @trip, rel
+                collect_child_error_messages_for obj, rel
               end
             end
           end

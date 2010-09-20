@@ -186,16 +186,15 @@ class TripElement
 	#  end
     
 
-  
-  # Silently tidy up invalid attributes before saving:
-  before :save do
+  # Clean up properties etc (without affecting related objects!)
+  before :valid? do
     
     self.handler_id = nil unless handler_id.to_i > 0
     
+    # Always save flight number in upper case:
+    self.flight_code.upcase! if self.flight?
+    
     if ( trip = self.trip )
-      
-      # Always save flight number in upper case:
-      self.flight_code.upcase! if self.flight?
       
       # Ensure start/end_date are not blank: (Unless it's a flight element created by a PNR)
       self.start_date	||= DateTime.parse( trip.start_date ) unless self.bound_to_pnr?
@@ -211,8 +210,16 @@ class TripElement
       self.children			= trip.children  if self.children > trip.children
       self.infants			= trip.infants   if self.infants  > trip.infants
       self.is_subgroup	= ( self.adults < trip.adults || children < trip.children || infants < trip.infants )
+      self.arrive_next_day = self.flight? && ( self.start_date.day != self.end_date.day )
       
     end
+
+  end
+
+
+  
+  # Silently tidy up invalid attributes before saving:
+  before :save do
     
     # Recalculate this element's total cost and price:
     self.update_prices()

@@ -227,7 +227,22 @@ describe TripElement do
     
   end
   
-  
+  it "should derive arrive_next_day flag correctly" do
+
+    @elem.start_date = Time.now.to_datetime
+    @elem.end_date   = Time.now.to_datetime
+    @elem.save.should be_true
+    @elem.arrive_next_day.should be_false    
+
+    @elem.start_date = Time.now.to_datetime
+    @elem.end_date   = (Time.now + 1.day ).to_datetime
+    @elem.save.should be_true
+    @elem.arrive_next_day.should be_true
+
+  end
+
+
+
 
   
 
