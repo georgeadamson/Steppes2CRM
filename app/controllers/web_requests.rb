@@ -58,8 +58,8 @@ class WebRequests < Application
     # Scenario 4: The Web Request is beng discarded so all we're doing is setting the status_id.
 
     # Ensure the correct status is being set when assigning a new or existing client:
-    web_request[:status_id] = 2 if web_request[:status_id] == 3 && is_old_client    # Process (assign to) client
-    web_request[:status_id] = 3 if web_request[:status_id] == 2 && is_new_client    # Import client
+    web_request[:status_id] = WebRequestStatus::PROCESSED if web_request[:status_id] == WebRequestStatus::ALLOCATED && is_old_client    # Process (assign to) client
+    web_request[:status_id] = WebRequestStatus::ALLOCATED if web_request[:status_id] == WebRequestStatus::PROCESSED && is_new_client    # Import client
 
     # (Scenario 1) The mere presence of the id attribute will prevent NEW CLIENT from saving: (even if id is an empty string)
     web_request[:client_attributes].delete(:id) if is_new_client
@@ -92,13 +92,14 @@ class WebRequests < Application
       # Or provide a more specific message if possible:
       if @web_request.status_id != status_before_update
         case @web_request.status_id
-          when 2 then message[:notice] = "The web request has been processed for #{ @web_request.client.fullname }\n#{ 'The new client has been added to the system' if is_new_client }"
-          when 3 then message[:notice] = "The web request has been allocated to #{ @web_request.company.name }"
-          when 4 then message[:notice] = 'The web request has been rejected'
+          when WebRequestStatus::PROCESSED then message[:notice] = "The web request has been processed for #{ @web_request.client.fullname }\n#{ 'The new client has been added to the system' if is_new_client }"
+          when WebRequestStatus::ALLOCATED then message[:notice] = "The web request has been allocated to #{ @web_request.company.name }"
+          when WebRequestStatus::REJECTED  then message[:notice] = 'The web request has been rejected'
         end
      end
     
-      redirect resource( :web_requests, args ), :message => message
+     # Note: args may include "open_client_id=1234" to instruct ui to open a client:
+     redirect resource( :web_requests, args ), :message => message
 
     else
       collect_child_error_messages_for @web_request, @web_request.client
