@@ -305,8 +305,9 @@ module Merb::Helpers::Form
       
       client_label ||= ( c = Client.get(client_id) ) && c.shortname
       
-      hidden_field( :name => :client_id,		:value => client_id,		:class => 'showClient' ) +
-      hidden_field( :name => :client_label,	:value => client_label, :class => 'showClient' )
+      # TODO: Depricate the 'showClient' css class in favour of 'show-client':
+      hidden_field( :name => :client_id,		:value => client_id,		:class => 'show-client showClient' ) +
+      hidden_field( :name => :client_label,	:value => client_label, :class => 'show-client showClient' )
       
     end
     
