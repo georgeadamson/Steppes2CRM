@@ -105,6 +105,10 @@
 							<td colspan="8">
 								<ul class="checkboxList">
 									<%= partial 'shared/list', :list_type => :checkbox, :collection => @trip.clients, :selected => :all, :field_name => 'money_in[clients_ids][]', :id_prefix => nested_resource( @client, @trip, :money_ins, true ), :custom_attrs => { :readonly => :readonly, :disabled => :disabled },  :empty_message => '<p>No clients have been named on this trip!</p>' %>
+									<!-- TODO: These hidden fields do the job of the disabled checkboxes until a better solution can be found: (Because disabled fields do not get submitted!) -->
+									<% @trip.clients.each do |c| %>
+										<%= hidden_field :name => 'money_in[clients_ids][]', :value => c.id %>
+									<% end %>
 								</ul>
 							</td>
 						</tr>

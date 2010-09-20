@@ -3252,7 +3252,7 @@ function initTripInvoiceFormTotals(){
 				},
 				buttons		: {
 					'Cancel'			: function(){ $(this).dialog('close').remove() },
-					'Copy from trip'	: function(){ $('FORM',this).submit() }	// Dialog will be losed if submit is successful.
+					'Copy from trip'	: function(){ $('FORM:last',this).submit() }	// First form is for searching the second (last) is to perform the copy.
 				}
 			});
 
