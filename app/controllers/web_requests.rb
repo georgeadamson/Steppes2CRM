@@ -71,15 +71,26 @@ class WebRequests < Application
     # (Scenario 1 & 2) Remember whether the @web_request was assigned to a client before this update:
     was_not_assigned_to_client = !@web_request.client
     
+    # Feeble attempt to assume a default source when absolutely necessary:
+    if web_request[:client_attributes]
+      web_request[:client_attributes][:source_id]          = ClientSource.first(:name => 'Web request').id || ClientSource.first(:name => 'Unknown').id || ClientSource.first(:name => 'Google').id if web_request[:client_attributes][:source_id].blank?
+      web_request[:client_attributes][:original_source_id] = web_request[:client_attributes][:source_id] if web_request[:client_attributes][:original_source_id].blank?
+    end
 
     if @web_request.update(web_request)
 
       # (Scenario 1) Explicitly save nested associations: (because they may be too nested to have been saved automatically)
       if client = @web_request.client
+      
         #client.addresses.save if client.addresses.first && client.addresses.first.new?
         #client.client_interests.save if client.client_interests
         client.source_id = new_client_attrs[:source_id] if new_client_attrs[:source_id]
+
+        client.original_company_id ||= @web_request.company_id || session.user.company_id
+        client.created_by            = session.user.fullname if client.new? && client.created_by.blank?
+        client.updated_by            = session.user.fullname
         client.save
+
       end
 
       # (Scenario 1 & 2) Pass special params to next page instructing client-side script to open a client tab:

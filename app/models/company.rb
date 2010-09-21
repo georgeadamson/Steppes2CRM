@@ -24,6 +24,7 @@ class Company
   has n, :money_ins   # AKA Invoices
   has n, :web_requests
   has n, :brochure_requests
+  #has n, :clients, :child_key => [:original_company_id]  # Clients do have original_company_id but company.clients is not used so we can omit it.
   
   has n, :company_suppliers
   has n, :suppliers, :through => :company_suppliers
