@@ -136,6 +136,10 @@ class Client
 	def shortname; return "#{ self.title } #{ self.forename.slice(0,1) } #{ self.surname }"; end
 	alias :display_name :fullname
 
+  def age
+    return self.birth_date ? (Date.today - self.birth_date.to_date).to_i / 365 : nil
+  end
+
   # Match name is used to show extra details when trying to compare client names: (Eg when processing WebRequests)
   def match_name
     return "#{ 'NEW: ' if self.new? }#{ self.fullname }#{ ' ['+self.postcode+']' unless self.postcode.blank? }"
