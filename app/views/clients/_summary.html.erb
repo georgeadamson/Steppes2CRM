@@ -45,7 +45,7 @@
 				<dt>Date of birth</dt>
 				<dd>
 					<% if client.birth_date %>
-						<%= client.birth_date.formatted(:uidate) %> <%= "<small>(age #{ (Date.today - client.birth_date.to_date).to_i / 365 })</small>" %>
+						<%= client.birth_date.formatted(:uidate) %> <%= "<small>(age #{ client.age })</small>" %>
 					<% else %>
 						n/a
 					<% end %>

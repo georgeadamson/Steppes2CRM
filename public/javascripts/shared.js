@@ -404,7 +404,7 @@ jQuery(function($) {
 			});
 
 			// Trigger custom 'hashchange' event whenever a link is clicked:
-			$('A:not(.noajax,.scrollTo)').live('click', function(e, source){
+			$('A:not( .noajax, .scrollTo, [href ^= mailto] )').live('click', function(e, source){
 
 				var $link	= $(this),	// TODO: $link = $(source || this) to handle auto-linking lists.
 				    path	= $link.attr('href').replace(/^#\/?/,''),

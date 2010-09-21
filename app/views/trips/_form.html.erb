@@ -14,7 +14,15 @@
 		else                              TripType.all( :id => [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP ] )
 	end
 	
+	
+	# Prepare content for the all-client-details mailto link:
+	email_all = {
+		:subject	=> 'Client details',
+		:body			=> @trip.clients.map{|c| '%0A' + partial('clients/traveller_summary',:client=>c) }.join('%0A')
+	}
+	
 -%>
+
 <%= hidden_field :version_of_trip_id,		:value => @trip.version_of_trip_id.to_i unless trip.tour %>
 <%= hidden_field :tour_id,							:value => @trip.tour_id || params[:tour_id] %>
 <%#= hidden_field :name => 'client_id',	:value => @trip.context.id %>
@@ -100,7 +108,8 @@
 									<input type="text" class="trip-client-search" placeholder="Client search">
 								<% end -%>
 							</th>
-							<th title="Create a letter document" class=""><span class="vertical">Create letter</span></th>
+							<th title="Create a letter document"><span class="vertical">Create letter</span></th>
+							<th title="Create email with all client details"><span class="vertical"><%= trip.clients.empty? ? 'Email details' : link_to('Email details', "mailto:&#{ email_all.to_params }") %></span></th>
 							<th title="Requires single room"		><span class="vertical">Single</span></th>
 							<th title="Who to send documents to (Primary contacts)"><span class="vertical">Primary</span></th>
 							<th title="Who to send invoices to"	><span class="vertical">Invoicable</span></th>
