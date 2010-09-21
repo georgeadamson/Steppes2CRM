@@ -125,6 +125,7 @@
 		endDateLabel		= 'Last day'		
 	end
 	
+	
 	# Decide whether exchange rate may be altered:
 	allow_modify_exchange_rate = ( trip.tour_template? || trip.fixed_dep? ) && trip.start_date > Date.today
 	
@@ -295,7 +296,7 @@
 			<%= orig_select :name => 'currency', :label => 'Currency', :class => 'tableCell', :readonly=>'readonly', :disabled=>"disabled", :selected => element.supplier && element.supplier.currency.id.to_s, :collection => ExchangeRate.all(:order=>:name), :value_method => :id, :text_method => :name_and_rate %></td>
 		</div></td>
 		<td>
-			<%= text_field :exchange_rate, :label => 'Exchange rate', :class => 'widthHalfField exchange_rate decimal', :disabled => !allow_modify_exchange_rate %>
+			<%= text_field :exchange_rate, :label => 'Exchange rate', :class => 'widthHalfField exchange_rate decimal', :readonly => !allow_modify_exchange_rate %>
 		</td>
 		<td>
 			<%= text_field :taxes, :label => 'Taxes/fees pp<small><br/>Margin n/a</small>', :class => 'widthHalfField exchange_rate decimal' %>
