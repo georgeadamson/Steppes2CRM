@@ -943,6 +943,11 @@ TABLE.tripTravellers THEAD TH SPAN.vertical {
 	width:1em;
 	white-space:nowrap;
 }
+
+	TABLE.tripTravellers THEAD TH SPAN.vertical A {
+		text-decoration:none;
+	}
+
 TABLE.tripTravellers TBODY TD {
 	min-width:1em;
 	padding:0.25em;

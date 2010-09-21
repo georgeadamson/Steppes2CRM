@@ -54,7 +54,7 @@ if !do_totals -%>
 
 	<!-- COSTINGS TOTALS at foot of costings table: -->
 	<tr>
-		<%= tag :td, "File booking fee &pound;#{ trip.calc( :daily, :actual, :net,  :per, :person, :booking_fee => true, :to_currency => true ) } per person" %>
+		<%= tag :td, "File booking fee &pound;#{ trip.calc( :daily, :actual, :net,  :per, :person, :booking_fee => true, :to_currency => true ) } per person (no margin)" %>
 		<%= tag :td, '' %>
 		<%= tag :td, '' %>
 		<%= tag :td, '' %>

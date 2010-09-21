@@ -42,8 +42,24 @@
 				<dt>Known as</dt><dd><%= client.known_as %></dd>
 				<dt>Salutation</dt><dd><%= client.salutation %></dd>
 				<dt>Addressee</dt><dd><%= client.salutation %></dd>
-				<dt>Date of birth</dt><dd><%= client.birth_date.formatted(:uidate) %> <%= "<small>(age #{ (Date.today - client.birth_date.to_date).to_i / 365 })</small>" if client.birth_date %></dd>
-				<dl>
+				<dt>Date of birth</dt>
+				<dd>
+					<% if client.birth_date %>
+						<%= client.birth_date.formatted(:uidate) %> <%= "<small>(age #{ client.age })</small>" %>
+					<% else %>
+						n/a
+					<% end %>
+				</dd>
+				<% if client.created_at || client.original_company || !client.created_by.blank? %>
+					<dt>Added</dt>
+					<dd>
+						<%= client.created_at.formatted(:uidate)	if client.created_at %>
+						<%= '<br/>by'																if client.original_company || !client.created_by.blank? %>
+						<%= "#{ client.created_by }<br/>"						if !client.created_by.blank? %>
+						<%= client.original_company.name						if client.original_company %>
+					</dd>
+				<% end %>
+			<dl>
     </div>
 
     <div class="fieldset widthFifth withHeading">
