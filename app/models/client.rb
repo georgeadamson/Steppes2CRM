@@ -50,15 +50,21 @@ class Client
   property :original_source_id,		Integer, :default => 1, :lazy => [:all], :required => true
   property :source_id,						Integer, :default => 1, :lazy => [:all]
 
+  property :address_client_id,		Integer, :required => false
   property :legacy_contactid,			Integer,								:lazy => [:all]
 
-  property :address_client_id,		Integer, :required => false
+  property :original_company_id,  Integer   # The company who first added the client to the database.
+  property :created_at,           DateTime
+  property :created_by,           String
+  property :updated_at,           DateTime
+  property :updated_by,           String
   
   belongs_to :titlename,        :model => "Title",            :child_key => [:title_id]
   belongs_to :type,             :model => "ClientType",       :child_key => [:type_id]
   belongs_to :source,           :model => "ClientSource",     :child_key => [:source_id]
   belongs_to :original_source,  :model => "ClientSource",     :child_key => [:original_source_id]
   belongs_to :marketing,        :model => "ClientMarketing",  :child_key => [:marketing_id]
+  belongs_to :original_company, :model => "Company",          :child_key => [:original_company_id]
 
   # For reports:
   alias client_source source

@@ -158,6 +158,10 @@ class Clients < Application
     @client = Client.new(client)
     #@client.address_client = nil #unless @client.addressClient
 
+    @client.original_company_id ||= session.user.company_id
+    @client.created_by          ||= session.user.fullname
+    @client.updated_by          ||= session.user.fullname
+
     # Prevent the search keywords table from being updated right now:
     @client.auto_refresh_search_keywords_after_save = false
 

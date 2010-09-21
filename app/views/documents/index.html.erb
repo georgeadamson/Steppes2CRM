@@ -184,7 +184,7 @@
 				<%=
 					tag :td do
 						link_to( " doc", resource( client, doc, :format => :doc ), :class => 'noajax' ) + ' | ' +
-						link_to( " pdf", resource( client, doc, :format => :pdf ), :class => 'noajax' )
+						link_to( " pdf", resource( client, doc, :format => :pdf ), :class => 'noajax strikethough', :title => 'Sorry folks, the Microsoft PDF converter is buggy and may crash the server!' )
 					end if doc.file_exist?
 				%>
 

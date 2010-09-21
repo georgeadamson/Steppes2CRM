@@ -44,38 +44,38 @@
 
   </dd>
 
-  <dt>Personal and passport details</dt>
-  <dd class="fieldsets" style="">
-	<div style="display:table-row">
-	  <div style="display:table-cell; vertical-align:top;">
-		<fieldset class="width1Field">
-			<legend class="ui-helper-hidden">Personal</legend>
-			<%= partial 'clients/personal', :client => client %>
-		</fieldset>
-	  </div>
-	  <div style="display:table-cell">
-		<fieldset class="width1Field">
-			<legend class="ui-helper-hidden">Passport</legend>
-			<%= partial 'clients/passport', :client => client %>
-		</fieldset>
-	  </div>
-	</div>
-  </dd>
-
-  <dt>Travel preferences</dt>
-  <dd>
-	<fieldset class="width2Fields noFrame fieldFlowHoriz">
-		<legend class="ui-helper-hidden">Preferences</legend>
- 		<%= partial 'clients/preferences', :client => client %>
-	</fieldset>
-  </dd>
-
   <dt>Marketing and source</dt>
   <dd>
 		<fieldset class="width1Field">
 			<legend class="ui-helper-hidden">Marketing</legend>
 			<%= partial 'clients/marketing', :client => client %>
 			<%= partial 'clients/profile', :client => client %>
+		</fieldset>
+  </dd>
+
+  <dt>Personal and passport details</dt>
+  <dd class="fieldsets" style="">
+		<div style="display:table-row">
+			<div style="display:table-cell; vertical-align:top;">
+			<fieldset class="width1Field">
+				<legend class="ui-helper-hidden">Personal</legend>
+				<%= partial 'clients/personal', :client => client %>
+			</fieldset>
+			</div>
+			<div style="display:table-cell">
+			<fieldset class="width1Field">
+				<legend class="ui-helper-hidden">Passport</legend>
+				<%= partial 'clients/passport', :client => client %>
+			</fieldset>
+			</div>
+		</div>
+  </dd>
+
+  <dt>Travel preferences</dt>
+  <dd>
+		<fieldset class="width2Fields noFrame fieldFlowHoriz">
+			<legend class="ui-helper-hidden">Preferences</legend>
+ 			<%= partial 'clients/preferences', :client => client %>
 		</fieldset>
   </dd>
 

@@ -54,6 +54,7 @@ end
 
 
 
+
 # Workaround for "TripClient#update cannot be called on a dirty resource - (DataMapper::UpdateConflictError)"
 # See /jruby-1.4.0/lib/ruby/gems/1.8/gems/dm-core-0.10.2/lib/dm-core/resource.rb:323:in `update'
 # This is the same code but with one line removed to prevent UpdateConflictError.
@@ -67,3 +68,34 @@ module DataMapper
     end
   end
 end
+
+
+
+
+
+
+# This bug was not upsetting users but simply causing noise in the output/log:
+# "Read error: #<NoMethodError: undefined method `each' for 186:Fixnum>"
+# C:/Program Files (x86)/jruby-1.4.0/lib/ruby/gems/1.8/gems/merb-core-1.0.15/lib/merb-core/rack/stream_wrapper.rb:18:in `each'
+module Merb
+  module Rack
+    
+    class StreamWrapper
+      
+      # :api: private
+      def each(&callback)
+        if Proc === @body
+          @writer = lambda { |x| callback.call(x) }
+          @body.call(self)
+        elsif @body.is_a?(String)
+          @body.each_line(&callback)
+        else
+          # @body.each(&callback) # Line 18: Changed this as follows. Not sure what it's doing exactly:
+          @body.each(&callback) if @body.respond_to? :each
+        end
+      end
+
+    end   
+  
+  end
+end  
