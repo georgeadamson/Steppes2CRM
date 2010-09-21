@@ -3005,6 +3005,8 @@ function initTripInvoiceFormTotals(){
 		// Helper to open a client tab:
 		openShow : function(options){
 
+			// TODO: Move show-client tab functionality to generic handler that runs after all responses.
+
 			var matches		= options && options.matches;	// Result of livePath regex or submitted form.
 			var form		= options && options.form;
 			var $idField	= options && options.data && $(options.data).find('INPUT.show-client[name=client_id][value]');
