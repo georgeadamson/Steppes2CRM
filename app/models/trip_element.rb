@@ -262,10 +262,10 @@ class TripElement
     @nextElem = nil
     
     # Recalculate and save price_per_xxx and total_price OF THE TRIP:
-    if ( trip = self.trip )
-      trip.reload
-      trip.update_prices
-      trip.save!
+    if self.trip
+      self.trip.reload
+      self.trip.update_prices
+      self.trip.save!
     end       
     
     # Delete related followups:
@@ -795,8 +795,10 @@ class TripElement
     
     options = options.merge( :with_all_extras => true )
     options.merge!( :to_currency => false, :string_format => false ) if options[:as_decimal]
-    
-    return self.calc( :total, :actual, :net, :for_all, :travellers, options )
+
+    #puts self.total_cost, self.calc( :total, :actual, :net, :for_all, :travellers, options )
+
+    return self.calc( :daily, :actual, :net, :for_all, :travellers, options )
     
   end
   
@@ -807,7 +809,7 @@ class TripElement
     options = options.merge( :with_all_extras => true )
     options.merge!( :to_currency => false, :string_format => false ) if options[:as_decimal]
     
-    return self.calc( :total, :actual, :gross, :for_all, :travellers, options )
+    return self.calc( :daily, :actual, :gross, :for_all, :travellers, options )
     
   end
   

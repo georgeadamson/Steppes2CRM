@@ -296,6 +296,11 @@ describe Trip do
     end
 
 
+    it "should not cause element cost to change for no apparent reason" do
+
+    end
+
+
   end
 
 
