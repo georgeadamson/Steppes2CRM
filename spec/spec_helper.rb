@@ -30,6 +30,6 @@ end
 
 
 # Handy CUSTOM currency matcher: An alternative to using "be_close(value,0.001)"
-def match_currency( currency_value, tolerance = 0.001 )
+def match_currency( currency_value, tolerance = 0.01 )
   return be_close( currency_value, tolerance )
 end

@@ -293,7 +293,7 @@
 
 	<tr class="tableRow"><!-- Currency and exchange rate: -->
 		<td><div class="formField">
-			<%= orig_select :name => 'currency', :label => 'Currency', :class => 'tableCell', :readonly=>'readonly', :disabled=>"disabled", :selected => element.supplier && element.supplier.currency.id.to_s, :collection => ExchangeRate.all(:order=>:name), :value_method => :id, :text_method => :name_and_rate %></td>
+			<%= orig_select :name => 'currency', :label => 'Currency', :class => 'tableCell', :readonly=>'readonly', :selected => element.supplier && element.supplier.currency.id.to_s, :collection => ExchangeRate.all(:order=>:name), :value_method => :id, :text_method => :name_and_rate %></td>
 		</div></td>
 		<td>
 			<%= text_field :exchange_rate, :label => 'Exchange rate', :class => 'widthHalfField exchange_rate decimal', :readonly => !allow_modify_exchange_rate %>
@@ -322,15 +322,15 @@
 		</div></td>
 	</tr>-->
 
-	<tr class="tableRow"><!-- Total prices: -->
+	<tr class="tableRow"><!-- Total prices: BE WARY IF WHICH FIELDS ARE LOCAL vs GBP! -->
 		<td><div class="formField total">
 			<%= orig_text_field :id=>"trip_element_total_margin", :label=>"Element margin", :class=>"total", :readonly=>"readonly" %>
 		</div></td>
-		<td><%= text_field :total_cost, :label=>"Element cost", :class=>"total", :readonly=>"readonly" %></td>
+		<td><%= text_field :total_cost, :label=>"Element GBP cost", :class=>"total", :readonly=>"readonly" %></td>
 		<!-- Gross fields have been hidden because the client-side calculation may be misleading: -->
-		<td class="hidden"><%= text_field :total_price, :label=>"Element gross", :class=>"total", :readonly=>"readonly" %></td>
+		<td class="hidden"><%= text_field :total_price, :label=>"Element gross", :class=>"total", :readonly=>"readonly", :disabled=>"disabled" %></td>
 		<td class="hidden"><div class="formField total">
-			<%= orig_text_field :name=>"total_price_gbp", :label=>"Element GBP", :class=>"total", :readonly=>"readonly" %>
+			<%= orig_text_field :name=>"total_price_gbp", :label=>"Element GBP", :class=>"total", :readonly=>"readonly", :disabled=>"disabled" %>
 		</div></td>
 	</tr>
 
