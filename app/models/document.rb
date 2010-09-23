@@ -282,7 +282,7 @@ class Document
   def doc_size
     
     # Return 'cached' value if available to reduce unecessary file accesses:
-    return @doc_size if defined?(@doc_size) && @doc_size
+    return @doc_size if instance_variable_defined?(:@doc_size) #&& @doc_size
     
     begin
       return @doc_size = File.size?( self.doc_path )
@@ -291,7 +291,7 @@ class Document
     end
     
   end
-
+  
   def doc_exist?
     return !!self.doc_size
   end
@@ -307,8 +307,10 @@ class Document
   def delete_file!( type = :pdf, file_path = nil )
     
     file_path ||= ( type == :doc ) ? self.doc_path : self.pdf_path
-    @doc_size = @pdf_size = nil
-
+    #@doc_size = @pdf_size = nil
+    remove_instance_variable(:@doc_size) if instance_variable_defined?(:@doc_size)
+    remove_instance_variable(:@pdf_size) if instance_variable_defined?(:@pdf_size)
+    
     return Document.delete_file!( file_path, self.id )
     
   end
@@ -435,6 +437,10 @@ class Document
     
     # Prepare parameters for the doc builder script if there are none already:
     self.parameters = self.default_parameters                           if self.parameters.blank?
+    
+    # Avoid mis-information by clearing cached document info:
+    remove_instance_variable(:@doc_size) if instance_variable_defined?(:@doc_size)
+    remove_instance_variable(:@pdf_size) if instance_variable_defined?(:@pdf_size)
     
 
     #  if self.generate_doc_later

@@ -2836,34 +2836,30 @@ function initTripElementFormTotals(){
 		var total_taxes			= taxes * travellers
 		var total_cost			= total_std_cost + total_biz_supp + total_taxes;
 		var total_price			= total_cost + total_margin;
-		var total_price_gbp		= total_price / Math.max(exchange_rate, 0.001);  // Prevent divide-by-zero error.
+		var total_margin_gbp	= total_margin / Math.max(exchange_rate, 0.0001);  //
+		var total_cost_gbp		= total_cost   / Math.max(exchange_rate, 0.0001);  // Avoid divide-by-zero error.
+		var total_price_gbp		= total_price  / Math.max(exchange_rate, 0.0001);  //
 
 		// For better display, round currency values to 2 decimal places and pad pence with zeros where necessary:
 		total_margin	= round(total_margin);
 		total_cost		= round(total_cost);
 		total_price		= round(total_price);
+		total_margin_gbp= round(total_margin_gbp);
+		total_cost_gbp	= round(total_cost_gbp);
 		total_price_gbp	= round(total_price_gbp);
 
 		// Update fields with new totals etc:
-		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers")
-			.filter("INPUT").val(travellers)
-			//.end().not("INPUT").text(travellers);
+		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers").filter("INPUT").val(travellers)
 
-		$totals.filter("[name='trip_element[total_margin]'], #trip_element_total_margin")
-			.filter("INPUT").val(total_margin)
-			//.end().not("INPUT").text(total_margin);
+		// BEWARE! total_margin field is actually total_margin_gbp!
+		$totals.filter("[name='trip_element[total_margin]'], #trip_element_total_margin").filter("INPUT").val(total_margin_gbp)
 
-		$totals.filter("[name='trip_element[total_cost]']")
-			.filter("INPUT").val(total_cost)
-			//.end().not("INPUT").text(total_cost);
+		// BEWARE! total_cost field is actually total_cost_gbp!
+		$totals.filter("[name='trip_element[total_cost]']").filter("INPUT").val(total_cost_gbp)
 
-		$totals.filter("[name='trip_element[total_price]']")
-			.filter("INPUT").val(total_price)
-			//.end().not("INPUT").text(total_price);
+		$totals.filter("[name='trip_element[total_price]']").filter("INPUT").val(total_price)
 
-		$totals.filter("[name='total_price_gbp']")
-			.filter("INPUT").val(total_price_gbp)
-			//.end().not("INPUT").text(total_price_gbp);
+		$totals.filter("[name='total_price_gbp']").filter("INPUT").val(total_price_gbp)
 
 	};
 
