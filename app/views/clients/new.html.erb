@@ -3,7 +3,8 @@
 	# Copy name and address from another client if specified:
 	if params[:copy_client_id] && master = Client.get(params[:copy_client_id])
 		
-		attributes_to_copy = [:title_id, :forename, :name, :salutation, :addressee, :known_as, :tel_work, :fax_work, :tel_mobile, :tel_mobile2, :email1, :email2]
+		#attributes_to_copy = [:name, :salutation, :addressee, :known_as, :tel_work, :fax_work, :tel_mobile, :tel_mobile2, :email1, :email2]
+		attributes_to_copy = [:name]
 		attributes         = master.attributes.reject{ |attr,val| !attributes_to_copy.include? attr }
 		@client.attributes = attributes
 				
