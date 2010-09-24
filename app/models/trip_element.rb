@@ -262,10 +262,10 @@ class TripElement
     @nextElem = nil
     
     # Recalculate and save price_per_xxx and total_price OF THE TRIP:
-    if ( trip = self.trip )
-      trip.reload
-      trip.update_prices
-      trip.save!
+    if self.trip
+      self.trip.reload
+      self.trip.update_prices
+      self.trip.save!
     end       
     
     # Delete related followups:
@@ -660,10 +660,10 @@ class TripElement
           
           # When returning biz_supp or taxes we must not multiply by the number of days:
           days = 1 if !days || days.zero? || options[:biz_supp] || options[:taxes]
-          
+
           result  = per_person_amount
           result *= person_count.abs if per_or_all == :all
-          result *= days  # :daily => 1, :total => self.days, otherwise specify number of days.
+          result *= days # :daily => 1, :total => self.days, otherwise specify number of days.
           
           # Add extras to the result if required:
           if options[:with_taxes] || options[:with_biz_supp]
@@ -791,23 +791,25 @@ class TripElement
   
   # Helper for re-calculating the trip.total_cost property: (Formerly known as total_spend)
   # Includes WITH_ALL_EXTRAS
-  def calc_total_cost( options = { :as_decimal => true } )
+  def calc_total_cost( options = {} )
     
-    options = options.merge( :with_all_extras => true )
+    options = { :as_decimal => true, :with_all_extras => true, :days => :daily }.merge( options || {} )
     options.merge!( :to_currency => false, :string_format => false ) if options[:as_decimal]
-    
-    return self.calc( :total, :actual, :net, :for_all, :travellers, options )
+
+    #puts self.total_cost, self.calc( :total, :actual, :net, :for_all, :travellers, options )
+
+    return self.calc( options[:days], :actual, :net, :for_all, :travellers, options )
     
   end
   
   # Helper for re-calculating the trip.total_price property: (Formerly known as total_spend)
   # Includes WITH_ALL_EXTRAS
-  def calc_total_price( options = { :as_decimal => true } )
+  def calc_total_price( options = {} )
     
-    options = options.merge( :with_all_extras => true )
+    options = { :as_decimal => true, :with_all_extras => true, :days => :daily }.merge( options || {} )
     options.merge!( :to_currency => false, :string_format => false ) if options[:as_decimal]
     
-    return self.calc( :total, :actual, :gross, :for_all, :travellers, options )
+    return self.calc( options[:days], :actual, :gross, :for_all, :travellers, options )
     
   end
   

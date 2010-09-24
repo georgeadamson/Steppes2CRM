@@ -12,6 +12,14 @@
 	@show_all_required_field_message = true	
 	
 %>
+
+
+<h1>
+	Please step away. This page is for administrators only!<br/><br/>
+	<small>(And only administrators who know what they're doing ;o)</small><br/><br/><br/>
+</h1>
+<br/>
+
 <%= text_field	:name,				:label => 'Setting name', :maxlength => @properties[:name].length, :class => 'snakecase' %>
 <%= select			:value_type,	:label => 'Type of value',:selected  => app_setting.value_type, :collection => data_types_list %>
 <%= text_field	:value,				:label => 'Value',				:maxlength => @properties[:value].length, :class => 'width2Fields' %>
