@@ -24,7 +24,7 @@ class Document
   property :name,				            String,  :required => true, :length => 255, :default => 'Document'
 	property :file_name,	            String,  :required => true, :length => 500, :default => ''
   property :document_type_id,	      Integer, :required => true
-  property :client_id,	            Integer, :required => true  # The person this document was created for. Others may have access to it too through trip.
+  property :client_id,	            Integer  #required unless trip.tour_template? See validation below. # The person this document was created for. Others may have access to it too through trip.
   property :company_id,	            Integer, :required => true
   property :trip_id,		            Integer, :required => false
   property :user_id,		            Integer, :required => false  # Not applicable for legacy database1 user_names because they are not in users list.
@@ -68,7 +68,7 @@ class Document
   validates_with_method :validate_file_paths
   validates_with_method :document_template_file, :method => :validate_document_template_file #, :when => [:now]
   validates_present     :created_by #, :when => [:now]
-  
+  validates_present     :client_id, :unless => lambda{ |d| d.trip && d.trip.tour_template? }
 
   def status_name
 
