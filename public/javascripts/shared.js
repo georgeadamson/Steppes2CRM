@@ -2992,8 +2992,12 @@ function initTripInvoiceFormTotals(){
 
 		initForm : function(options){
 
-			if( options && options.panel || options.target ){
-				$( 'DL.accordion', options.panel || options.target ).accordion({ autoHeight: false });
+			var target = options && options.panel || options.target;
+
+			if( target ){
+				// Select 2nd panel when form is for new client:
+				var index = options.client_id ? 0 : 1;
+				$( 'DL.accordion', target ).accordion({ autoHeight: false, active: index });
 			}
 
 		},
