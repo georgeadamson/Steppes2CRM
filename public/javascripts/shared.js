@@ -49,7 +49,7 @@ jQuery(function($) {
 
 		SYSTEM_ADMIN_LABEL				= 'System admin',
 		WEB_REQUESTS_ADMIN_LABEL		= 'Web requests',
-		BROCHURE_REQUESTS_ADMIN_LABEL	= 'Brochure requests',
+		BROCHURE_REQUESTS_ADMIN_LABEL	= 'Brochure merge',
 		REPORTS_PAGE_LABEL				= 'Reports',
 		ALLOW_DOWNLOAD_OF				= { doc:true, pdf:true, csv:true },
 		ELEMENT_URL_ATTR				= 'data-ajax-url',
