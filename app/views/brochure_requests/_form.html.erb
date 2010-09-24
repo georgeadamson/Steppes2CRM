@@ -23,14 +23,19 @@
 	# Only unactioned requests may be modified:
 	editable = brochure.generated_date.nil?
 	
+	# Add some default text to help identify what each field is for:
+	# TODO: Depricate this when browser supports placeholder on textarea field.
+	brochure.notes       = 'Add notes here (and/or custom text below)'   if brochure.notes.blank?
+	#brochure.custom_text = 'Your custom text' if brochure.custom_text.blank?
+	
 -%>
 
 <%= hidden_field :client_id %>
 <%= text_field		:name => :client_name,		:readonly => true,			:label => 'Client',						:value => brochure.client.fullname, :class => 'width2Fields' %>
 <%= select				:company_id,							:disabled => !editable,	:label => 'Brochure',					:selected => brochure.company_id.to_s,				:collection => companies_list, :value_method => :id, :text_method => :display_name %>
 <%= select				:document_template_file,	:disabled => !editable,	:label => 'Letter template',	:selected => brochure.document_template_file, :collection => templates_list, :class => 'width2Fields' %>
-<%= text_area			:notes,										:disabled => !editable,	:label => 'Notes <br/><small>For our internal use only</small>',									:class => 'width2Fields height2Fields', :title => 'Notes (For our internal use only)' %>
-<%= text_area			:custom_text,							:disabled => !editable,	:label => 'Custom text <br/><small>May appear in client correspondence</small>',	:class => 'width2Fields height3Fields', :title => 'Custom text (May appear in client correspondence)' %>
+<%= text_area			:notes,										:disabled => !editable,	:label => 'Notes <br/><small>For our internal use only</small>',									:class => 'width2Fields height2Fields', :title => 'Notes (For our internal use only)', :placeholder => 'Add your own notes here' %>
+<%= text_area			:custom_text,							:disabled => !editable,	:label => 'Custom text <br/><small>May appear in client correspondence</small>',	:class => 'width2Fields height3Fields', :title => 'Custom text (May appear in client correspondence)', :placeholder => 'Add your custom text here' %>
 <%= select				:user_id,									:disabled => !editable,	:label => 'From consultant',	:selected => brochure.user_id.to_s,						:collection => users_list, :value_method => :id, :text_method => :display_name, :prompt => '(Choose one)' %>
 <%= text_field		:requested_date,					:disabled => true,			:label => 'Date requested',		:name => :requested_date, :value => brochure.requested_date.formatted(:uidatetime) unless brochure.generated_date %>
 <%= text_field		:generated_date,					:disabled => true,			:label => 'Date sent',				:name => :generated_date, :value => brochure.generated_date.formatted(:uidatetime) if     brochure.generated_date %>
