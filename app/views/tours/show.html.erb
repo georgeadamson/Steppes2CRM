@@ -1,5 +1,5 @@
 <%
-	trips = @tour.trips.all( :order => [ :status_id, :start_date.desc, :created_at.desc ] )
+	trips = @tour.trips.all( :is_active_version => true, :order => [ :status_id, :start_date.desc, :created_at.desc ] )
 %>
 <!-- Tour page: -->
 <div class="sectionContainer noSectionFoot tour">
@@ -9,7 +9,7 @@
 			<h2>
 				<span class="ui-icon ui-icon-group"></span>
 				<span class="tour-name"><%= @tour.name %></span>
-				<small>(<%= @tour.trips.count %> tour dates)</small>
+				<small>(<%= trips.count %> tour dates)</small>
 			</h2>
 
 			<!-- Fields used by client-side script: -->
