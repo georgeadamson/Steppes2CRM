@@ -465,6 +465,7 @@ jQuery(function($) {
 
 			})
 
+			// Initialise common form handler:
 			$('FORM:not(.noajax)').live('submit', function(e, source){
 
 				// The source argument will only be present when triggered by SELECT.auto-submit:
@@ -473,6 +474,7 @@ jQuery(function($) {
 					url			= $form.attr('action').replace(/^#/, ''),
 					dataType	= $form.attr('data-type')   || 'html',
 					target		= $form.attr('data-target') || Layout.getTargetOf($button),
+					ext			= url.split('.')[1],	// Filename extension				
 					form		= Layout.getActionOf($form),
 					options		= { url:url, target:target, form:form },
 					buttonData	= {};
@@ -481,6 +483,9 @@ jQuery(function($) {
 
 				// When using a live event the ajaxSubmit() method will not include name/value of the submit button so add it:
 				if( $button.is(':submit') && $button.attr('name') ){ buttonData[ $button.attr('name') ] = $button.val() }
+				
+				// Stop interfering right now if form is generating a file to download:
+				if( ALLOW_DOWNLOAD_OF[ext] || $button.is('.download, .ajaxDownload') || $form.is('.download, .ajaxDownload') ){ return }
 
 				// By setting up the ajaxSubmit here, each of the callbacks can refer to the $form using a closure:
 				$form.ajaxSubmit({
