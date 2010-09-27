@@ -13,12 +13,18 @@
 	# Add the default brochure template to the top of the list:
 	templates_list['Default brochure letter template'] = "#{ initials }_#{ default_template.template_file_name }" if default_template
 
-	# List all the alternative letter templates too:
+	# List all the alternative letter templates too: (Defined as an array of arrays)
 	if other_templates.empty?
 		templates_list['Custom letters'] = [ ['',"(None available for #{ brochure.company.name })"] ]
 	else
-		templates_list['Custom letters'] = other_templates
+		templates_list['Custom letters'] = other_templates.map{|t| [t,t] }
 	end
+
+	# Allow for existing brochures that somehow have a template file that is not in the default templates_list:
+	unless brochure.document_template_file.blank? || templates_list['Custom letters'].include?(brochure.document_template_file)
+		templates_list['Custom letters'] << [ brochure.document_template_file, brochure.document_template_file ]
+	end
+	
 
 	# Only unactioned requests may be modified:
 	editable = brochure.generated_date.nil?
