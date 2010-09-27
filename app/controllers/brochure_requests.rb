@@ -32,7 +32,7 @@ class BrochureRequests < Application
       @brochure_requests = BrochureRequest.all( :id => params[:brochure_request_ids] )
 
       # WARNING! This text must match button label: (TODO: Find a better way to distinguish Run and Clear!)
-      if params[:submit] =~ /Run merge/
+      if params[:submit] =~ /Run.*merge/
 
         only_provides :doc
         
