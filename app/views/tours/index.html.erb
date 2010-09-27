@@ -7,7 +7,7 @@
 	
 	@tours = @tours.all( :order => [ :name, :id.desc ] )
 	@tours = @tours.all( :company_id => selected_company_id ) if selected_company_id
-	
+
 	@cached_trips = Trip.all( :id => @tours.map{|t|t.id}, :order => [ :tour_id.desc, :status_id, :start_date.desc, :created_at.desc ] )
 	# The @cached_trips collection was an attempt to speed up loading and prevent DM from querying trips for each tour one by one.
 	# It worked but actually turned out slower because ruby takes longer to find trips by tour_id than sql does.
@@ -55,7 +55,7 @@
 
 							<%
 								#tour_trips = @cached_trips.all( :tour_id => tour.id )
-								tour_trips				= tour.trips
+								tour_trips				= tour.trips.all( :is_active_version => true )
 								
 								# Assume tour is old if it only has completed trips:
 								tour_has_no_trips = tour_trips.empty?
