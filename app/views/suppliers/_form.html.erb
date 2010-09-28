@@ -16,7 +16,8 @@
 	#	]
 	#end
 
-	image_filenames = Folder.new( CRM[:images_folder_path] ).files( "*.jpg", false )
+	image_folder    = Folder.new( CRM[:images_folder_path] )
+	image_filenames = image_folder.files( "*.jpg", false )
 
 	@show_required_fields_message = true
 
@@ -35,7 +36,7 @@
 			<%= text_field :name,						:label => "#{ supplier.type.supplier_type_name } name",		:maxlength => @properties[:name].length, :class => 'width2Fields' %>
 			<%= text_field :location,				:label => 'Location',					:maxlength => @properties[:location].length, :class => 'width2Fields' if supplier.accomm? %>
 			<%#= text_field :image_file,			:label => 'Image',						:maxlength => @properties[:image_file].length, :class => 'width2Fields' if supplier.accomm? %>
-			<%= select :image_file,					:label => 'Image',						:selected => supplier.image_file,       :collection => image_filenames, :class => 'width2Fields' if supplier.accomm? %>
+			<%= select :image_file,					:label => 'Image',						:selected => supplier.image_file,       :collection => image_filenames, :class => 'width2Fields', :prompt => '- Choose an image to use in Itineraries' if supplier.accomm? %>
 			<%= select :currency_id,				:label => 'Currency',					:selected => supplier.currency_id.to_s,	:collection => collection_for(supplier, :currency),	:class => 'width1Field' %>
 			<%= select :country_id,					:label => 'Country',					:selected => supplier.country_id.to_s,	:collection => collection_for(supplier, :country),	:class => 'width1Field' %>
 			<%= select :linked_supplier_id,	:label => 'Default handler',	:selected => supplier.linked_supplier_id.to_s,	:collection => collection_for(supplier, :linked_supplier, :conditions => {:type_id=>5}, :prevent_empty => false ), :prompt => '- none', :class => 'width1Field' if supplier.is_accomm? %>
