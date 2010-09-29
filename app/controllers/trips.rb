@@ -289,15 +289,26 @@ class Trips < Application
     trip[:start_date] ||= @trip.start_date || Date.today
     trip[:end_date]   ||= @trip.end_date   || trip[:start_date]
     
+    # Convert blank to nil on fields that expect IDs:
+    trip[:user_id]    = nil if trip[:user_id].blank?
+    trip[:company_id] = nil if trip[:company_id].blank?
+    trip[:type_id]    = nil if trip[:type_id].blank?
+  
 		# Make a note of the PNR numbers associated with the trip before it is updated:
 		pnr_numbers_before  = @trip.pnr_numbers
     flight_count_before = @trip.flights.length
     
     next_page = params[:redirect_to] && params[:redirect_to].to_sym || nil
 
+ 
+    # Update EXCHANGE RATES
+    if params[:submit] =~ /exchange rates/i
+
+      @trip.update_exchange_rates :save
+
       
     # Special case: Make a new version of this trip if requested!
-    if trip[:active_version_id] == 'new'
+    elsif trip[:active_version_id] == 'new'
       
       puts "Creating new version_of_trip #{ @trip.version_of_trip_id } from #{ @trip.id }"
       trip.delete(:active_version_id)
