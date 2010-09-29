@@ -288,11 +288,6 @@ class Trips < Application
 		accept_valid_date_fields_for trip, [ :start_date, :end_date ]
     trip[:start_date] ||= @trip.start_date || Date.today
     trip[:end_date]   ||= @trip.end_date   || trip[:start_date]
-    
-    # Convert blank to nil on fields that expect IDs:
-    trip[:user_id]    = nil if trip[:user_id].blank?
-    trip[:company_id] = nil if trip[:company_id].blank?
-    trip[:type_id]    = nil if trip[:type_id].blank?
   
 		# Make a note of the PNR numbers associated with the trip before it is updated:
 		pnr_numbers_before  = @trip.pnr_numbers
