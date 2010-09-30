@@ -183,7 +183,7 @@
 	<!-- sectionFoot: -->
 	<div class="sectionFoot ui-widget">
 		<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
-			<%= submit 'Update exchange rates',			:class => 'ui-priority-secondary ui-state-default left' %>
+			<%= submit 'Update exchange rates',			:class => 'ui-priority-secondary ui-state-default left', :disabled => ( trip.confirmed? || trip.completed? ) %>
 			<%#= button 'Recalculate gross prices',	:class => 'ui-priority-secondary ui-state-default left', :disabled => true %>
 			<%= submit 'Save price adjustments',		:class => 'ui-priority-primary ui-state-default' %>
 		</div>
