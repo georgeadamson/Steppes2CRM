@@ -22,8 +22,8 @@
 
 			<%= hidden_field	:name => :search_for, :value => 'trips' %>
 			<%= select				:name => :user_id,		:label => 'Show me trips handled by',	:selected => user_id.to_s,		:collection => User.all( :order=>[:is_active.desc, :forename, :name] ), :prompt => 'Anyone',	:class => 'labelWidthAuto', :value_method => :id, :text_method => :display_name %>
-			<%= select				:name => :company_id,	:label => 'for',											:selected => company_id.to_s,	:collection => Company.all( :order=>[:is_active.desc, :name] ),					:prompt => 'Any company',						:class => 'labelWidthAuto', :value_method => :id, :text_method => :display_name %>
-			<%= select				:name => :country_id,	:label => 'visiting',									:selected => country_id.to_s, :collection => Country.all( :order=>[:name] ),													:prompt => 'Anywhere',							:class => 'labelWidthAuto', :value_method => :id, :text_method => :name %>
+			<%= select				:name => :company_id,	:label => '&nbsp; for',								:selected => company_id.to_s,	:collection => Company.all( :order=>[:is_active.desc, :name] ),					:prompt => 'Any company',						:class => 'labelWidthAuto', :value_method => :id, :text_method => :display_name %>
+			<%= select				:name => :country_id,	:label => '&nbsp; visiting',					:selected => country_id.to_s, :collection => Country.all( :order=>[:name] ),													:prompt => 'Anywhere',							:class => 'labelWidthAuto', :value_method => :id, :text_method => :name %>
 
 			<%= submit 'Search', :class => 'ui-priority-primary ui-state-default' %>
 
