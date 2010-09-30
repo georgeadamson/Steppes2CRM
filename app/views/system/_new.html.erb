@@ -10,6 +10,7 @@
 	single_label	||= model.to_s.gsub('_',' ')
 
 	url_params		||= params[:url_params] || '{}'
+	url_params			= CGI::unescape(url_params) if url_params =~ /^%7B/		# Check for escaped "{"
 	url_params			= JSON.parse( url_params ) unless url_params.is_a? Hash
 	url_params.merge!({ :url_params => url_params.to_json })
 
