@@ -4,6 +4,7 @@
 
 	edit								||= false
 	element							||= @element
+	trip									= element.trip
 	handlers_list					= []
 	suppliers_list				= []
 	depart_airports_list	= []
@@ -27,24 +28,27 @@
 	handlers		= Supplier.all( :type_id => 2, Supplier.companies.id => element.trip.company_id, :order => [:name] )
 	suppliers		= Supplier.all( :order => [:name] )
 	
-	
+	# Set a flag to indicate that this is not the full list:
+	show_minimal_lists = edit && request.ajax?
 	
 	# Fetch list of suppliers that we will put in the pick list:
-	# Set a flag to indicate that this is not the full list.
-	if edit && request.ajax?
-		# Prepare minimal list when edit page is fetched via ajax, allowing much faster load time.
-		show_minimal_lists	= true
+	if show_minimal_lists
+		# EDIT: Prepare minimal list when page is fetched via ajax, allowing much faster load time.
 		airports						= airports.all(  :id => [ element.depart_airport_id, element.arrive_airport_id, 0 ] )
 		handlers						= handlers.all(  :id => element.handler_id )
 		suppliers						= suppliers.all( :id => element.supplier_id || 0 )
 	else
-		# Prepare array for populating the SUPPLIERS dropdown list: (Filtered by trip_element_type: Flight, Accomm etc)
-		show_minimal_lists	= false
+		# NEW: Prepare array for populating the SUPPLIERS dropdown list: (Filtered by trip_element_type: Flight, Accomm etc)
+		# Only filter by countries if we have some to filter on and if those countries have suppliers assigned:
 		airports						= airports.all
 		handlers						= handlers.all( Supplier.companies.id => element.trip.company_id )
 		suppliers						= suppliers.all( :type_id => element.element_type.id, Supplier.companies.id => element.trip.company_id )
+		unless element.flight? || element.trip.countries_ids.empty?
+			country_suppliers = suppliers.all( Supplier.country.id => element.trip.countries_ids )
+			suppliers					= country_suppliers if country_suppliers.length > 0
+		end
 	end
-	
+
 	
 	
 	
@@ -124,6 +128,10 @@
 		endDateLabel		= 'Last day'		
 	end
 	
+	
+	# Exchange rate may only be altered on group trips that have not happened yet:
+	allow_modify_exchange_rate = ( trip.tour_template? || trip.fixed_dep? ) && trip.start_date > Date.today
+	
 -%>
 
 <!-- Eg: class="isFlight is_subgroup hasAdults noChildren noInfants noSingles" -->
@@ -141,10 +149,10 @@
 
 		<!-- Supplier list is limited to those assigned to the trip's invoice company: (eg: SteppesEast Suppliers) -->
 		<%#= select :supplier_id, :label=>supplierLabel, :class=>"tableCell", :collection => suppliers_list, :selected => element.supplier.id.to_s, :value_method => :id, :text_method => :display_name %>
-		<%=  select :supplier_id, :label => supplierLabel, :class => 'tableCell width2Fields', :collection => suppliers_list, :selected => element.supplier.id.to_s, :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? %>
+		<%=  select :supplier_id, :label => supplierLabel, :class => 'tableCell width2Fields', :collection => suppliers_list, :selected => element.supplier_id.to_s, :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr?, :prompt => ( element.supplier ? nil : "- Must choose #{ element.element_type.supplier_type_name }!" ) %>
 
 		<%# One of these is included when elemen_type is Flight or Misc: %>
-		<%= select :handler_id,   :label => 'Flight agent',  :class => "tableCell whenFlight #{ 'load-more' if show_minimal_lists }", :collection => handlers_list, :prompt => '' if element.flight? %>
+		<%= select :handler_id,   :label => 'Flight agent',  :class => "tableCell whenFlight #{ 'load-more' if show_minimal_lists }", :collection => handlers_list, :prompt => ( element.handler ? nil : '- Don&apos;t forget me!' ) if element.flight? %>
 		<%= select :misc_type_id, :label => 'Misc category', :class => 'tableCell whenMisc', :collection => TripElementMiscType.all, :value_method => :id, :text_method => :name  if element.misc? %>
 
 		<!-- THIS FUNCTIONALITY HAS BEEN DISABLED until a future release: (Remove "invisible" class to reactivate this) -->
@@ -288,10 +296,10 @@
 
 	<tr class="tableRow"><!-- Currency and exchange rate: -->
 		<td><div class="formField">
-			<%= orig_select :name => 'currency', :label => 'Currency', :class => 'tableCell', :readonly=>'readonly', :disabled=>"disabled", :selected => element.supplier && element.supplier.currency.id.to_s, :collection => ExchangeRate.all(:order=>:name), :value_method => :id, :text_method => :name_and_rate %></td>
+			<%= orig_select :name => 'currency', :label => 'Currency', :class => 'tableCell', :readonly=>'readonly', :selected => element.supplier && element.supplier.currency.id.to_s, :collection => ExchangeRate.all(:order=>:name), :value_method => :id, :text_method => :name_and_rate %></td>
 		</div></td>
 		<td>
-			<%= text_field :exchange_rate, :label => 'Exchange rate', :class => 'widthHalfField exchange_rate decimal' %>
+			<%= text_field :exchange_rate, :label => 'Exchange rate', :class => 'widthHalfField exchange_rate decimal', :readonly => !allow_modify_exchange_rate %>
 		</td>
 		<td>
 			<%= text_field :taxes, :label => 'Taxes/fees pp<small><br/>Margin n/a</small>', :class => 'widthHalfField exchange_rate decimal' %>
@@ -317,15 +325,15 @@
 		</div></td>
 	</tr>-->
 
-	<tr class="tableRow"><!-- Total prices: -->
+	<tr class="tableRow"><!-- Total prices: BE WARY OF WHICH FIELDS ARE LOCAL vs GBP! -->
 		<td><div class="formField total">
-			<%= orig_text_field :id=>"trip_element_total_margin", :label=>"Element margin", :class=>"total", :readonly=>"readonly" %>
+			<%= orig_text_field :id=>"trip_element_total_margin", :label=>"Elem GBP margin", :class=>"total", :readonly=>"readonly" %>
 		</div></td>
-		<td><%= text_field :total_cost, :label=>"Element cost", :class=>"total", :readonly=>"readonly" %></td>
+		<td><%= text_field :total_cost, :label=>"Element GBP cost", :class=>"total", :readonly=>"readonly" %></td>
 		<!-- Gross fields have been hidden because the client-side calculation may be misleading: -->
-		<td class="hidden"><%= text_field :total_price, :label=>"Element gross", :class=>"total", :readonly=>"readonly" %></td>
+		<td class="hidden"><%= text_field :total_price, :label=>"Element gross", :class=>"total", :readonly=>"readonly", :disabled=>"disabled" %></td>
 		<td class="hidden"><div class="formField total">
-			<%= orig_text_field :name=>"total_price_gbp", :label=>"Element GBP", :class=>"total", :readonly=>"readonly" %>
+			<%= orig_text_field :name=>"total_price_gbp", :label=>"Element GBP", :class=>"total", :readonly=>"readonly", :disabled=>"disabled" %>
 		</div></td>
 	</tr>
 

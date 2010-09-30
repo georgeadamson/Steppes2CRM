@@ -117,13 +117,19 @@ class Trip
     accepts_nested_attributes_for :trip_clients, :allow_destroy => true
     
     # Handlers for has n through associations: 
-    accepts_ids_for :clients		    # ONLY used for providing a clients_names attribute, not for receiving clients_ids!
-    accepts_ids_for :countries			# Country IDs are accessed via trip.countries_ids
-    accepts_ids_for :pnrs						# Pnr numbers are accessed via trip.pnrs_names (or pnr_numbers alias)
+    accepts_ids_for :clients		        # ONLY used for providing a clients_names attribute, not for receiving clients_ids!
+    accepts_ids_for :countries			    # Country IDs are accessed via trip.countries_ids
+    accepts_ids_for :pnrs						    # Pnr numbers are accessed via trip.pnrs_names (or pnr_numbers alias)
     
     attr_accessor :debug
-    
-    
+    attr_accessor :do_copy_trip_id         # Specifies a trip to copy details from.
+    attr_accessor :do_copy_trip_clients    # Allows clients to be copied from another trip.      Use with do_copy_trip_id.
+    attr_accessor :do_copy_trip_elements   # Allows elements to be cloned from another trip.     Use with do_copy_trip_id.
+    attr_accessor :do_copy_trip_itinerary  # Allows elements etc to be cloned from another trip. Use with do_copy_trip_id.
+    attr_accessor :do_copy_trip_countries  # Allows countries to be copied from another trip.    Use with do_copy_trip_id.
+       
+
+
     # This fix is redundant because trip.start/end_date are Date properties not DateTime
     #  # Ugly workaround for the way datamapper returns datetime properties!
     #  # See _shared.rb: Helper for ensuring datamapper does not mess up datetime fields by returning them with +1 hour offset!
@@ -156,13 +162,18 @@ class Trip
     
 
     before :valid? do
+
+      # Convert blank string to nil on fields that expect IDs:
+      self.user_id    = nil if self.user_id.blank?
+      self.type_id    = nil if self.type_id.blank?
+      self.company_id = nil if self.company_id.blank?
       
       self.name								||= "Untitled trip"
       self.status_id					||= Trip::UNCONFIRMED
       self.tour_id              = nil if self.tour_id.to_i == 0
       self.type_id              = TripType::TOUR_TEMPLATE if self.tour && !self.fixed_dep? && !self.tour_template?
       self.version_of_trip_id ||= 0	# Cannot be nil. If zero, this will be set to the trip's own new id after save.
-      
+
       # Swap start and end dates if start date is later than end date:
       # Beware! Setting start/end_date here is a workaround for when they've not been submitted as part of the form
       # and the update methods decides to overwrite them with their defaulv values!
@@ -190,6 +201,30 @@ class Trip
       # 
       self.is_active_version = true if @new_active_version_id && @new_active_version_id == self.id
       
+      # Copy details from another trip if required:
+      if self.do_copy_trip_id && other_trip = Trip.get(self.do_copy_trip_id)
+
+        # Copy Clients from other_trip:
+        if self.do_copy_trip_clients
+          self.copy_clients_from other_trip
+          self.do_copy_trip_clients = nil     # Clear flag to prevent duplication if saved again.
+        end
+
+        # Copy Countries from other_trip:
+        if self.do_copy_trip_countries
+          self.copy_countries_from other_trip
+          self.do_copy_trip_countries = nil   # Clear flag to prevent duplication if saved again.
+        end
+
+        # Copy Trip Elements from other_trip:
+        # Important: PNR Flight elements are cloned as standard flights (without booking_code)
+        if self.do_copy_trip_elements
+          self.copy_elements_from other_trip, :adjust_dates => true, :discard_booking_code => true
+          self.do_copy_trip_elements = nil    # Clear flag to prevent duplication if saved again.
+        end
+
+      end
+
       # Ensure all trip elements still have valid numbers of adults/children/infants
       # (Also see TripElement before :save)
       # TODO: Handle subgroups?
@@ -202,7 +237,7 @@ class Trip
         #elem.save!      if elem.dirty? #&& !elem.new? && !elem.destroyed? && elem.valid? && elem.supplier_id
         
       end
-      
+    
       # Recalculate and set price_per_xxx and total_price attributes:
       # This also calls calc_total_price() for us.
       # Only where price pp is currently zero because we must not override prices set manually in costing sheet!
@@ -353,25 +388,25 @@ class Trip
     # Calculate duration of trip in days: (When overrun is true, we include any trip elements that are not within trip dates!)
     def duration(overrun = false)
       if overrun || overrun == :with_overrun
-        return ( self.latest_element.end_date.jd - self.earliest_element.start_date.jd ) + 1
+        return ( self.last_element.end_date.jd - self.first_element.start_date.jd ) + 1
       else
         return ( self.end_date.jd - self.start_date.jd ) + 1
       end
     end
     
     
-    # Return array of simple "day" objects each containing useful info about elements etc on that day:
+    # Return array of simple "day" hashes each containing useful info about elements etc on that day:
     def days(overrun = false)
       
-      overrun		||= (overrun == :with_overrun)
+      overrun		||= (overrun == :with_overrun)  # True to include elements that lie outside trip dates.
       result			= []
-      first_date	= overrun ? self.earliest_element.start_date : self.start_date
-      last_date		= overrun ? self.latest_element.start_date   : self.end_date
+      first_date	= overrun ? self.first_element.start_date.to_date : self.start_date
+      last_date		= overrun ? self.last_element.start_date.to_date  : self.end_date
       total_days	= last_date.jd - first_date.jd + 1		# jd returns julian date number
       
       # Dummy loop to encourage datamapper to load all the trip_elements: (Thereby preventing multiple queries later)
       # TODO: Try another technique. This is not preventing dm from querying for each day!
-      trip_elements = self.trip_elements.all().each{ |elem| x = elem.description }
+      trip_elements = self.trip_elements.all.each{ |elem| x = elem.description }
       
       # Build a hash to represent each day and add them to the result array:
       total_days.times do |i|
@@ -380,7 +415,7 @@ class Trip
         
         elements = trip_elements.all(
           
-          :start_date.lte	=> date,	# Elements beginning on or before date.
+          :start_date.lt	=> date + 1,	# Elements beginning on or before date.
           :end_date.gte		=> date,	# Elements ending on or after date.
           :order					=> [:type_id, :start_date, :id]
           
@@ -400,7 +435,7 @@ class Trip
         #	}
         
         
-        # Create a hash-like object to represent qa day: (An OpenStruct is like a hash but can be accessed using day.date instead of day[:date] )
+        # Create a hash-like object to represent a day: (An OpenStruct is like a hash but can be accessed using day.date instead of day[:date] )
         day = OpenStruct.new(
           :number		=> i + 1,
           :date			=> date,
@@ -545,25 +580,27 @@ class Trip
     
     
     # Calculate which trip_element starts first: (Arbitrarily choose one if several start on same date)
-    def earliest_element
-      return self.trip_elements.first( :order => [:start_date] )
+    def first_element
+      return self.trip_elements.first( :order => [:start_date, :id] )
     end
     # Calculate which trip_element finishes last: (Arbitrarily choose one if several finish on same date)
-    def latest_element
-      return self.trip_elements.first( :order => [:end_date.desc] )
+    def last_element
+      return self.trip_elements.first( :order => [:end_date.desc, :id.desc] )
     end
+    alias earliest_element first_element  # Depricated.
+    alias latest_element   last_element   # Depricated.
     
     
-    # When the earliest_element starts before the trip's start_date, calculate how many days out it is:
+    # When the earliest element starts before the trip's start_date, calculate how many days out it is:
     def days_overrun_before
-      result = self.start_date.jd - self.earliest_element.start_date.jd
+      result = self.start_date.jd - self.first_element.start_date.jd
       return result >= 0 ? result : 0
     end
     
     
-    # When the latest_element ends after the trip's end_date, calculate how many days out it is:
+    # When the latest element ends after the trip's end_date, calculate how many days out it is:
     def days_overrun_after
-      result = self.latest_element.end_date.jd - self.end_date.jd
+      result = self.last_element.end_date.jd - self.end_date.jd
       return result >= 0 ? result : 0
     end
     
@@ -586,6 +623,7 @@ class Trip
         return "No travellers!"
       end
     end
+    alias client_summary traveller_summary
     alias travellerSummary traveller_summary	# Depricated
     
     def summary
@@ -648,7 +686,7 @@ class Trip
     # Alias for the setter above and the getter generated dynamically by accepts_ids_for(:pnrs)
     alias pnr_numbers= pnrs_names=
     alias pnr_numbers  pnrs_names
-    
+
     
     # Helper for returning the number of somethings...
     def count_of(something)
@@ -1178,7 +1216,25 @@ class Trip
       
     end
     
-    
+
+    # Helper to set all elements' exchange rates to the current rate:
+    # Note: Expected behaviour is to recalculate prices even if rates have not changed.
+    def update_exchange_rates( save = false )
+
+      self.elements.each do |elem|
+
+        elem.exchange_rate = elem.supplier.currency.rate if elem.supplier && elem.supplier.currency
+        elem.update_prices
+        elem.save! if save
+
+      end
+
+      result = self.update_prices
+      self.save! if save
+      return result
+
+    end
+
     
     
     
@@ -1258,15 +1314,18 @@ class Trip
         )
         
         # Copy trip clients and countries:
-        master.clients.each{ |client| clone.clients << client }
-        master.countries.each{ |country| clone.countries << country }
+        #master.clients.each{ |client| clone.clients << client }
+        #master.countries.each{ |country| clone.countries << country }
+        self.copy_clients_from master
+        self.copy_countries_from master
         
-        # Clone the trip elements:
-        master.trip_elements.each do |master_elem|
-          attrs =  master_elem.attributes.merge( :id => nil )
-          clone.trip_elements << TripElement.new(attrs)
-        end
-        
+        # Clone the trip elements: (Without changing their dates)
+        #  master.trip_elements.each do |master_elem|
+        #    attrs =  master_elem.attributes.merge( :id => nil )
+        #    clone.trip_elements << TripElement.new(attrs)
+        #  end
+        self.copy_elements_from master
+
         # Override defaults with any attributes explicitly specified in this method's arguments:
         clone.attributes = custom_attributes || {}
       
@@ -1276,7 +1335,43 @@ class Trip
       
     end
     
+    def copy_clients_from( master, clone = self)
+      master.clients.each{ |client| clone.clients << client }
+    end
     
+    def copy_countries_from( master, clone = self)
+      master.countries.each{ |country| clone.countries << country }
+    end
+
+
+    # Helper for cloning elements from another trip:
+    # Options:
+    #    :adjust_dates true to ensure first element is at start of trip)
+    #    :discard_booking_code true to skip any PNR Numbers associated with flights.
+    def copy_elements_from(master, options = nil )
+
+      # Apply defaults for omitted options:
+      defaults  = { :adjust_dates => false, :clone => self, :type_id => nil, :discard_booking_code => false }
+      options   = defaults.merge( options || {} )
+      clone     = options[:clone]
+      type_id   = options[:type_id].to_i > 0 ? options[:type_id] : nil
+
+      master.trip_elements.each do |master_elem|
+
+        attrs       =  master_elem.attributes.merge( :id => nil )
+        attrs.delete(:booking_code) if options[:discard_booking_code]
+        clone_elem  = TripElement.new(attrs)
+
+        # If required, use the .day helper to set the elem.start_date relative to trip.start_date:
+        clone_elem.day = master_elem.day if options[:adjust_dates]
+
+        # Add cloned element to the trip (unless type_id was specified and matches element type)
+        clone.trip_elements << clone_elem if !type_id || master_elem.type_id == type_id  
+
+      end
+
+    end
+
     
     
     def initialize(*)

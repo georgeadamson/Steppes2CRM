@@ -19,6 +19,7 @@ Merb.add_mime_type :css, :to_css, %w[text/css]	#, "Content-Encoding" => "gzip"		
 Merb.add_mime_type :doc, :to_doc, %w[application/msword]
 Merb.add_mime_type :pdf, :to_pdf, %w[application/pdf]
 Merb.add_mime_type :csv, :to_csv, %w[application/excel]
+Merb.add_mime_type :jpg, :to_jpg, %w[image/jpeg]
 
 
 Merb::Config.use do |c|

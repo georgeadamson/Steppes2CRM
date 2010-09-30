@@ -1,22 +1,35 @@
 
 def valid_company_attributes
   {
-    :name     => 'Steppes Test',
-    :initials => 'ST'
+    :name           => 'Steppes Test',
+    :initials       => 'ST',
+    :invoice_prefix => 'ST',
+    :short_name     => 'ST'
   }
 end
 
 
+def valid_exchange_rate_attributes
+  {
+    :name => 'DummyDollar', 
+    :rate => 1, 
+    :new_rate => 1, 
+    :new_rate_on_date => Date.today
+  }
+end
+alias valid_currency_attributes valid_exchange_rate_attributes
+
+
 def valid_country_attributes
 
-  company      = Company.first_or_create( { :name => valid_company_attributes[:name] }, valid_company_attributes )
+  company      = Company.first_or_create( { :initials => valid_company_attributes[:initials] }, valid_company_attributes )
   world_region = WorldRegion.first_or_create( { :name => 'Dummy Region' }, { :name => 'Dummy Region' } )
   mailing_zone = MailingZone.first_or_create( { :name => 'Dummy Zone'   }, { :name => 'Dummy Zone'   } )
 
   {
     :code          => 'C1',
     :name          => 'Country 1',
-    :companies_ids => [company.id],
+    :companies     => [company],
     :world_region  => world_region,
     :mailing_zone  => mailing_zone
   }
@@ -311,11 +324,17 @@ alias valid_pnr_attributes2 updated_pnr_attributes
 
 
 
-
-
   def seed_lookup_tables
 
     User.create( valid_user_attributes )
+
+    country   = Country.first || Country.first_or_create(valid_country_attributes)
+    company   = Company.first_or_create(valid_company_attributes)
+    currency  = ExchangeRate.first_or_create(valid_currency_attributes)
+    currency2 = ExchangeRate.first_or_create(valid_currency_attributes.merge :name => 'DummyEuro')
+    supplier  = Supplier.first_or_create( :name => 'Test Supplier', :country => country, :currency => currency, :companies => [company] )
+    supplier2 = Supplier.first_or_create( :name => 'Another Supplier', :country => country, :currency => currency2, :companies => [company] )
+    #puts country.errors.inspect, company.errors.inspect, currency.errors.inspect, supplier.errors.inspect
 
     # Trip statuses:
     TripState.create( :name => 'Unconfirmed' )  # 1

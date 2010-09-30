@@ -56,8 +56,8 @@
 								if client.fixed_deps( tour_template.tour_id ).count == 0 %>
 								
 									<!-- Extra tab for CREATE FIXED DEPARTURE trip: -->
-									<li class="trip trip-create" title="Create a new fixed departure based on the tour template &quot;<%= tour_template.name %>&quot;">
-										<%= link_to 'Fixed Dep.', resource( client, :trips, :new, :copy_trip_id => tour_template.id ), :class => 'new' %>
+									<li class="trip trip-create" title="Create a new fixed departure based on the group trip &quot;<%= tour_template.name %>&quot;">
+										<%= link_to 'Copy group', resource( client, :trips, :new, :copy_trip_id => tour_template.id ), :class => 'new' %>
 										<small>Based on <%= tour_template.name %></small>
 									</li>
 

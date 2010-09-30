@@ -1,10 +1,26 @@
-<div class="sectionContainer noSectionHead">
+<%
+
+	client ||= nil
+	user   ||= nil
+	
+	# Filter by user if specified, otherwise only default to current user if there's no client filter:
+	user   = User.get( params[:user_id] ) if params[:user_id]
+	user ||= request.session.user         unless client
+
+	tasks ||= Task.all( :limit => 500 )
+	tasks   = tasks.all( :user => user )  if user
+	
+%>
+<div class="sectionContainer noSectionHead <%= 'noSectionFoot' unless client %>">
+
 	<div class="sectionBody">
 		
-		<%= partial 'tasks/list', :tasks => tasks, :client => client %>
+		<%= partial 'tasks/list', :tasks => tasks %>
 
 	</div>
 	
-	<%= partial 'shared/sectionFoot_with_buttons', :add_caption => "Add a followup #{ "for #{client.shortname}" if client }...", :add => true, :add_url => resource( client, :tasks, :new ), :cancel => false, :save => false %>
+	<%= if client
+		partial 'shared/sectionFoot_with_buttons', :add_caption => "Add a followup #{ "for #{client.shortname}" if client }...", :add => true, :add_url => resource( client, :tasks, :new ), :cancel => false, :save => false	
+	end %>
 
 </div>

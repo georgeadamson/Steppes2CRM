@@ -49,7 +49,7 @@ jQuery(function($) {
 
 		SYSTEM_ADMIN_LABEL				= 'System admin',
 		WEB_REQUESTS_ADMIN_LABEL		= 'Web requests',
-		BROCHURE_REQUESTS_ADMIN_LABEL	= 'Brochure requests',
+		BROCHURE_REQUESTS_ADMIN_LABEL	= 'Brochure merge',
 		REPORTS_PAGE_LABEL				= 'Reports',
 		ALLOW_DOWNLOAD_OF				= { doc:true, pdf:true, csv:true },
 		ELEMENT_URL_ATTR				= 'data-ajax-url',
@@ -148,12 +148,14 @@ jQuery(function($) {
 			// TODO: Refactor liveForm to alternate syntax: Layout.liveForm('update:success', 'clients', Client.initForm ) & maybe combine with livePath()
 
 			// Clients:
-			Layout.livePath('success', new RegExp('clients/([0-9]+)$'),					Client.initShow );
+			Layout.livePath('click',   new RegExp('clients/new'),						Client.openNew );
 			Layout.livePath('success', new RegExp('clients/new'),						Client.initForm );
+			Layout.livePath('success', new RegExp('clients/([0-9]+)$'),					Client.initShow );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/edit'),				Client.initForm );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/summary'),			Client.initForm );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/trips$'),			Client.initForm );	// When user clicks to see all trips on client summary page.
 			Layout.livePath('success', /[\?\&]open_client_id=([0-9]+)/,					Client.openShow );	// Eg: web_requests?open_client_id=2138587702
+			Layout.liveForm('success', 'clients:create',								Client.openShow );	// After creating a new client.
 			Layout.liveForm('success', 'clients:update',								Client.initForm );
 
 			// Tours:
@@ -173,6 +175,8 @@ jQuery(function($) {
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)$/,							Trip.initShow );
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/edit/,						Trip.initForm );
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/builder/,					Trip.initTimeline );
+			Layout.livePath('click',   /clients\/([0-9]+)\/trips\/([0-9]+)\/copy/,						Trip.showSearch );
+			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/,				Trip.showSearchResults );
 			Layout.liveForm('success', 'trips:create',													Trip.onCreateSuccess );
 			Layout.liveForm('success', 'trips:update',													Trip.onUpdateSuccess );
 			Layout.liveForm('success', 'trips:destroy',													Trip.onDestroySuccess );
@@ -400,7 +404,7 @@ jQuery(function($) {
 			});
 
 			// Trigger custom 'hashchange' event whenever a link is clicked:
-			$('A:not(.noajax,.scrollTo)').live('click', function(e, source){
+			$('A:not( .noajax, .scrollTo, [href ^= mailto] )').live('click', function(e, source){
 
 				var $link	= $(this),	// TODO: $link = $(source || this) to handle auto-linking lists.
 				    path	= $link.attr('href').replace(/^#\/?/,''),
@@ -461,6 +465,7 @@ jQuery(function($) {
 
 			})
 
+			// Initialise common form handler:
 			$('FORM:not(.noajax)').live('submit', function(e, source){
 
 				// The source argument will only be present when triggered by SELECT.auto-submit:
@@ -469,6 +474,7 @@ jQuery(function($) {
 					url			= $form.attr('action').replace(/^#/, ''),
 					dataType	= $form.attr('data-type')   || 'html',
 					target		= $form.attr('data-target') || Layout.getTargetOf($button),
+					ext			= url.split('.')[1],	// Filename extension				
 					form		= Layout.getActionOf($form),
 					options		= { url:url, target:target, form:form },
 					buttonData	= {};
@@ -477,6 +483,9 @@ jQuery(function($) {
 
 				// When using a live event the ajaxSubmit() method will not include name/value of the submit button so add it:
 				if( $button.is(':submit') && $button.attr('name') ){ buttonData[ $button.attr('name') ] = $button.val() }
+				
+				// Stop interfering right now if form is generating a file to download:
+				if( ALLOW_DOWNLOAD_OF[ext] || $button.is('.download, .ajaxDownload') || $form.is('.download, .ajaxDownload') ){ return }
 
 				// By setting up the ajaxSubmit here, each of the callbacks can refer to the $form using a closure:
 				$form.ajaxSubmit({
@@ -1132,7 +1141,7 @@ return
 		//initLevel2Tabs_forSysAdmin();
 		//initLevel2Tabs_forReports();	// Typically this is no use here but helpful when testing reports page in isolation.
 
-		$('#recentClients.tabs').tabs();
+		$('#dashboard-tabs').tabs();
 
 
 	// Initialise accordions:
@@ -1200,7 +1209,8 @@ return
 
 // Respond to any "NEW CLIENT" or "NEW TOUR" links:
 
-	$("A[href *= '/clients/new'], A[href *= '/tours/new']").live('click', function() {
+	//$("A[href *= '/clients/new'], A[href *= '/tours/new']").live('click', function() {
+	$("A[href *= '/tours/new']").live('click', function() {
 
 		var url		= $(this).attr('href');
 		//var newId	= '#' + url.replace('/', '');
@@ -2824,6 +2834,7 @@ function initTripElementFormTotals(){
 		var biz_supp_margin		= numVal("[name='biz_supp_margin']", $texts);
 		var biz_supp_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val();
 
+
 		// Calculate totals etc:
 		var travellers			= adults + children + infants;
 		var total_std_cost		= adults * cost_per_adult + children * cost_per_child + infants * cost_per_infant;
@@ -2834,34 +2845,30 @@ function initTripElementFormTotals(){
 		var total_taxes			= taxes * travellers
 		var total_cost			= total_std_cost + total_biz_supp + total_taxes;
 		var total_price			= total_cost + total_margin;
-		var total_price_gbp		= total_price / Math.max(exchange_rate, 0.001);  // Prevent divide-by-zero error.
+		var total_margin_gbp	= total_margin / Math.max(exchange_rate, 0.0001);  //
+		var total_cost_gbp		= total_cost   / Math.max(exchange_rate, 0.0001);  // Avoid divide-by-zero error.
+		var total_price_gbp		= total_price  / Math.max(exchange_rate, 0.0001);  //
 
 		// For better display, round currency values to 2 decimal places and pad pence with zeros where necessary:
 		total_margin	= round(total_margin);
 		total_cost		= round(total_cost);
 		total_price		= round(total_price);
+		total_margin_gbp= round(total_margin_gbp);
+		total_cost_gbp	= round(total_cost_gbp);
 		total_price_gbp	= round(total_price_gbp);
 
 		// Update fields with new totals etc:
-		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers")
-			.filter("INPUT").val(travellers)
-			//.end().not("INPUT").text(travellers);
+		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers").filter("INPUT").val(travellers)
 
-		$totals.filter("[name='trip_element[total_margin]'], #trip_element_total_margin")
-			.filter("INPUT").val(total_margin)
-			//.end().not("INPUT").text(total_margin);
+		// BEWARE! total_margin field is actually total_margin_gbp!
+		$totals.filter("[name='trip_element[total_margin]'], #trip_element_total_margin").filter("INPUT").val(total_margin_gbp)
 
-		$totals.filter("[name='trip_element[total_cost]']")
-			.filter("INPUT").val(total_cost)
-			//.end().not("INPUT").text(total_cost);
+		// BEWARE! total_cost field is actually total_cost_gbp!
+		$totals.filter("[name='trip_element[total_cost]']").filter("INPUT").val(total_cost_gbp)
 
-		$totals.filter("[name='trip_element[total_price]']")
-			.filter("INPUT").val(total_price)
-			//.end().not("INPUT").text(total_price);
+		$totals.filter("[name='trip_element[total_price]']").filter("INPUT").val(total_price)
 
-		$totals.filter("[name='total_price_gbp']")
-			.filter("INPUT").val(total_price_gbp)
-			//.end().not("INPUT").text(total_price_gbp);
+		$totals.filter("[name='total_price_gbp']").filter("INPUT").val(total_price_gbp)
 
 	};
 
@@ -2973,12 +2980,33 @@ function initTripInvoiceFormTotals(){
 
 
 
+
+
+
 	var Client = {
+
+		openNew : function(options){
+
+			// We're intercepting a link so prevent the default ajax handler from loading it:
+			if(options && options.event){ options.event.stopImmediatePropagation() }	// isImmediatePropagationStopped()
+
+			var ui       = $('#pageTabs').tabs('url', /clients\/new/ );
+			var orig_url = $.data(ui.tab,'load.tabs');
+			
+			$.data(ui.tab, 'load.tabs', options.url);
+			$(ui.tabs).tabs('select', ui.index);
+			$.data(ui.tab, 'load.tabs', orig_url);
+
+		},
 
 		initForm : function(options){
 
-			if( options && options.panel || options.target ){
-				$( 'DL.accordion', options.panel || options.target ).accordion({ autoHeight: false });
+			var target = options && options.panel || options.target;
+
+			if( target ){
+				// Select 2nd panel when form is for new client:
+				var index = options.client_id ? 0 : 1;
+				$( 'DL.accordion', target ).accordion({ autoHeight: false, active: index });
 			}
 
 		},
@@ -2986,25 +3014,36 @@ function initTripInvoiceFormTotals(){
 		// Helper to open a client tab:
 		openShow : function(options){
 
-			var id   = options && options.matches[1],							// Result of livePath regex.
-			    name = options && options.matches[2] || 'Oops missing label!',	// Result of livePath regex.
-				url  = 'clients/' + id,
-				ui   = $('#pageTabs').tabs('url',url);
+			// TODO: Move show-client tab functionality to generic handler that runs after all responses.
 
-			// Select existing tab if already open:
-			if( id && ui.tab ) {
-				$('#pageTabs').tabs('select',ui.index);
+			var matches		= options && options.matches;	// Result of livePath regex or submitted form.
+			var form		= options && options.form;
+			var $idField	= options && options.data && $(options.data).find('INPUT.show-client[name=client_id][value]');
+			var $labelField	= $($idField).siblings('INPUT[name=client_label]').add( $($idField).parent().siblings().children('INPUT[name=client_label]') ).first();
+			var id			= matches && matches[1] || form && form.client_id || $idField.val();
+			var name		= matches && matches[2] ||                           $labelField.val() || 'Oops missing label!';
 
-			// Otherwise add a fresh tab:
-			}else if(id){
+			if(id){
 
-				// Workaround when spaces have been escaped as '+' in a link:
-				name = name.replace( /\+/g,' ');
-				var label = name + '<input type="hidden" value="{id}" class="tour-id"/>'.replace('{id}',id);
-				$("#pageTabs").tabs('add', url, label);
+				var url		= Url('clients',id);
+				var ui		= $('#pageTabs').tabs('url',url);
+
+				// Select existing tab if already open:
+				if( ui.tab ) {
+					$('#pageTabs').tabs('select',ui.index);
+
+				// Otherwise add a fresh tab:
+				}else{
+
+					// Workaround when spaces have been escaped as '+' in a link:
+					// var label = name.replace(/\+/g,' ') + '<input type="hidden" value="{id}" class="client-id"/>'.replace('{id}',id);
+					var label = name.replace(/\+/g,' ') + tag('input', null, { type:'hidden', value:id, 'class':'client-id' });
+					$("#pageTabs").tabs('add', url, label);
+
+				}
 
 			}else{
-				console.log( 'Unable to open client tab(', id, COMMA, name, ')' );
+				console.log( 'Unable to open client tab(', id, COMMA, name, ')', options );
 			}
 
 		},
@@ -3204,6 +3243,38 @@ function initTripInvoiceFormTotals(){
 				}
 
 			}
+		},
+
+		// For finding another trip to copy elements from:
+		showSearch : function(options){
+
+			// We've intercepted a link so prevent default code from handling it:
+			options.event.stopImmediatePropagation();
+
+			// Re-use existing dialog or create new: 
+			$('#trip-search-results').parents('.ui-dialog').add('<div>').first()
+			.html('Opening...')
+			.dialog({
+				modal		: true,
+				title		: icon('trip') + ' Find a trip to copy details from',
+				minHeight	: 400,
+				width		: 750,
+				open		: function(e,ui){
+					ui.panel = this;
+					options.target = '#' + $(ui.panel).id();
+					options.url = options.url + '?limit=500'
+					Layout.load(options.url,options);
+				},
+				buttons		: {
+					'Cancel'			: function(){ $(this).dialog('close').remove() },
+					'Copy from trip'	: function(){ $('FORM:last',this).submit() }	// First form is for searching the second (last) is to perform the copy.
+				}
+			});
+
+		},
+
+		showSearchResults : function(options){
+			// Results will be loaded into #trip-search-results
 		}
 
 	} // End of Trip utilities.
@@ -3404,15 +3475,16 @@ function initTripInvoiceFormTotals(){
 
 			$('<div>').html('Opening...').dialog({
 				//autoOpen: false,
-				title		: '<span class="ui-icon ui-icon-clock "></span> New followup',
+				title		: icon('clock') + ' New followup',
 				minHeight	: 300,
 				width		: 550,
 				open		: function(e,ui){
-					options.target = '#' + $(this).id();
+					ui.panel = this;
+					options.target = '#' + $(ui.panel).id();
 					Layout.load(options.url,options)
 				},
 				buttons		: {
-					'Cancel'				: function(){ $(this).dialog('close') },
+					'Cancel'				: function(){ $(this).dialog('close').remove() },
 					'Save my new reminder'	: function(){ $('FORM',this).submit() }
 				}
 			});
@@ -3435,7 +3507,7 @@ function initTripInvoiceFormTotals(){
 					Layout.load(options.url,options)
 				},
 				buttons		: {
-					'Cancel'			: function(){ $(this).dialog('close') },
+					'Cancel'			: function(){ $(this).dialog('close').remove() },
 					'Save my changes'	: function(){ $('FORM',this).submit() }
 				}
 			});
@@ -3444,6 +3516,8 @@ function initTripInvoiceFormTotals(){
 		
 		initIndex : function(ui){
 			// unused
+			console.log(ui)
+			alert(1)
 		},
 		
 		initForm : function(ui){
@@ -3468,16 +3542,17 @@ function initTripInvoiceFormTotals(){
 		onCreateSuccess : function(ui){
 
 			// Close all dialogs: (TODO: Can we be more specific?!)
-			$('DIV.ui-dialog-content').dialog('close');
+			$('DIV.ui-dialog-content').dialog('close').remove();
 
 			if(ui && ui.form && ui.form.client_id){
 
 				// Refresh the list of the client's tasks:
-				ui.url		= url('clients', ui.form.client_id, 'tasks');	// Eg: "/clients/1234/tasks"
+				ui.url		= Url('clients', ui.form.client_id, 'tasks');	// Eg: "/clients/1234/tasks"
 				ui.target	= '#' + ui.url.replace('/','','g');				// Eg: "#clients1234tasks"
 
 				// No need to use Layout.load(ui.url,ui) here, just go ahead and refresh the content;
-				$(ui.target).load(ui.url)
+				$(ui.target).load(ui.url);				// Reload client's custom list of tasks.
+				$("#user-followups").load('/tasks');	// Reload user's custom list of tasks on the home page.
 
 			}
 		}
@@ -3488,11 +3563,16 @@ function initTripInvoiceFormTotals(){
 
 
 
-// Helper for assembling a url from several arguments: (Eg: url('clients',client_id,'tasks') => "/clients/1234/tasks")
-function url(path){
+// Helper for assembling a url from several arguments: (Eg: Url('clients',client_id,'tasks') => "/clients/1234/tasks")
+function Url(path){
 	return '/' + Array.prototype.slice.call(arguments).join('/');
 }
 
+// Helper for generating the markup required for a standard icon:
+// TODO: Refactor using html template?
+function icon(name){
+	return '<span class="ui-icon ui-icon-{name}"></span>'.replace('{name}',name,'g');
+}
 
 
 // Helper to parse details from a url and return an object hash similar to the window.location object:
@@ -3563,8 +3643,8 @@ function parseUrl(url) {
 // Specify attrs as an object hash of name:value pairs.
 function tag(name, contents, attrs) {
 
-	// Make it a self-closing tag when contents omitted.
-	// Otherwise make Opening/closing tags either side of contents:
+	// Make it a self-closing tag when contents undefined.
+	// Otherwise open/close tags either side of contents:
 	return (contents === null || contents === undefined)
 			? '<' + name + html_attributes(attrs) + '/>'
 			: '<' + name + html_attributes(attrs) + '>' + contents + '</' + name + '>';
@@ -3572,8 +3652,8 @@ function tag(name, contents, attrs) {
 	function html_attributes(attrs) {
 		if(!attrs){ return '' }
 		var arr = [];
-		$.each(attrs, function(name, val) { arr.push(name + '="' + val + '"') });
-		return " " + arr.join(" ");
+		$.each(attrs, function(name,val) { arr.push(name + '="' + val + '"') });
+		return ' ' + arr.join(' ');
 	}
 };
 

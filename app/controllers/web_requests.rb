@@ -58,8 +58,8 @@ class WebRequests < Application
     # Scenario 4: The Web Request is beng discarded so all we're doing is setting the status_id.
 
     # Ensure the correct status is being set when assigning a new or existing client:
-    web_request[:status_id] = 2 if web_request[:status_id] == 3 && is_old_client    # Process (assign to) client
-    web_request[:status_id] = 3 if web_request[:status_id] == 2 && is_new_client    # Import client
+    web_request[:status_id] = WebRequestStatus::PROCESSED if web_request[:status_id] == WebRequestStatus::ALLOCATED && is_old_client    # Process (assign to) client
+    web_request[:status_id] = WebRequestStatus::ALLOCATED if web_request[:status_id] == WebRequestStatus::PROCESSED && is_new_client    # Import client
 
     # (Scenario 1) The mere presence of the id attribute will prevent NEW CLIENT from saving: (even if id is an empty string)
     web_request[:client_attributes].delete(:id) if is_new_client
@@ -71,15 +71,26 @@ class WebRequests < Application
     # (Scenario 1 & 2) Remember whether the @web_request was assigned to a client before this update:
     was_not_assigned_to_client = !@web_request.client
     
+    # Feeble attempt to assume a default source when absolutely necessary:
+    if web_request[:client_attributes]
+      web_request[:client_attributes][:source_id]          = ClientSource.first(:name => 'Web request').id || ClientSource.first(:name => 'Unknown').id || ClientSource.first(:name => 'Google').id if web_request[:client_attributes][:source_id].blank?
+      web_request[:client_attributes][:original_source_id] = web_request[:client_attributes][:source_id] if web_request[:client_attributes][:original_source_id].blank?
+    end
 
     if @web_request.update(web_request)
 
       # (Scenario 1) Explicitly save nested associations: (because they may be too nested to have been saved automatically)
       if client = @web_request.client
+      
         #client.addresses.save if client.addresses.first && client.addresses.first.new?
         #client.client_interests.save if client.client_interests
         client.source_id = new_client_attrs[:source_id] if new_client_attrs[:source_id]
+
+        client.original_company_id ||= @web_request.company_id || session.user.company_id
+        client.created_by            = session.user.fullname if client.new? && client.created_by.blank?
+        client.updated_by            = session.user.fullname
         client.save
+
       end
 
       # (Scenario 1 & 2) Pass special params to next page instructing client-side script to open a client tab:
@@ -92,13 +103,14 @@ class WebRequests < Application
       # Or provide a more specific message if possible:
       if @web_request.status_id != status_before_update
         case @web_request.status_id
-          when 2 then message[:notice] = "The web request has been processed for #{ @web_request.client.fullname }\n#{ 'The new client has been added to the system' if is_new_client }"
-          when 3 then message[:notice] = "The web request has been allocated to #{ @web_request.company.name }"
-          when 4 then message[:notice] = 'The web request has been rejected'
+          when WebRequestStatus::PROCESSED then message[:notice] = "The web request has been processed for #{ @web_request.client.fullname }\n#{ 'The new client has been added to the system' if is_new_client }"
+          when WebRequestStatus::ALLOCATED then message[:notice] = "The web request has been allocated to #{ @web_request.company.name }"
+          when WebRequestStatus::REJECTED  then message[:notice] = 'The web request has been rejected'
         end
      end
     
-      redirect resource( :web_requests, args ), :message => message
+     # Note: args may include "open_client_id=1234" to instruct ui to open a client:
+     redirect resource( :web_requests, args ), :message => message
 
     else
       collect_child_error_messages_for @web_request, @web_request.client

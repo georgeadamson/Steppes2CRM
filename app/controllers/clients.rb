@@ -36,12 +36,12 @@ class Clients < Application
 
     # Eg: /search?q=Smith GL7 1AB&limit=20
     limit		= params[:limit].to_i.zero? ? 20 : params[:limit].to_i		# Max rows to return.
-    words		= params[:q].strip.split(/\s+/)														# Words are separated by whitespace.
+    words		= params[:q].to_s.strip.split(/\s+/)														# Words are separated by whitespace.
     prev_word	= nil
 
 		# If the user provided any '*' wildcards then swap them for valid sql '%' wildcards:
 		# Insert sql '%' wildcard after each word: (unless user provided their own wildcards)
-		phrase = params[:q].strip.gsub(/\*/, '%') + ' '
+		phrase = params[:q].to_s.strip.gsub(/\*/, '%') + ' '
 		phrase.gsub!( /\b /, '% ' ).strip! unless phrase.include? '%'
 
 		# Prepare custom sql statement: (We rely on datamapper to handle escaping of dodgy charaters such as ')
@@ -157,6 +157,10 @@ class Clients < Application
 
     @client = Client.new(client)
     #@client.address_client = nil #unless @client.addressClient
+
+    @client.original_company_id ||= session.user.company_id
+    @client.created_by          ||= session.user.fullname
+    @client.updated_by          ||= session.user.fullname
 
     # Prevent the search keywords table from being updated right now:
     @client.auto_refresh_search_keywords_after_save = false

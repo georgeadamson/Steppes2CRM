@@ -186,16 +186,15 @@ class TripElement
 	#  end
     
 
-  
-  # Silently tidy up invalid attributes before saving:
-  before :save do
+  # Clean up properties etc (without affecting related objects!)
+  before :valid? do
     
     self.handler_id = nil unless handler_id.to_i > 0
     
+    # Always save flight number in upper case:
+    self.flight_code.upcase! if self.flight?
+    
     if ( trip = self.trip )
-      
-      # Always save flight number in upper case:
-      self.flight_code.upcase! if self.flight?
       
       # Ensure start/end_date are not blank: (Unless it's a flight element created by a PNR)
       self.start_date	||= DateTime.parse( trip.start_date ) unless self.bound_to_pnr?
@@ -211,8 +210,16 @@ class TripElement
       self.children			= trip.children  if self.children > trip.children
       self.infants			= trip.infants   if self.infants  > trip.infants
       self.is_subgroup	= ( self.adults < trip.adults || children < trip.children || infants < trip.infants )
+      self.arrive_next_day = self.flight? && ( self.start_date.day != self.end_date.day )
       
     end
+
+  end
+
+
+  
+  # Silently tidy up invalid attributes before saving:
+  before :save do
     
     # Recalculate this element's total cost and price:
     self.update_prices()
@@ -255,10 +262,10 @@ class TripElement
     @nextElem = nil
     
     # Recalculate and save price_per_xxx and total_price OF THE TRIP:
-    if ( trip = self.trip )
-      trip.reload
-      trip.update_prices
-      trip.save!
+    if self.trip
+      self.trip.reload
+      self.trip.update_prices
+      self.trip.save!
     end       
     
     # Delete related followups:
@@ -395,9 +402,35 @@ class TripElement
   # Element's start day as percent of total trip length:
   def percentThroughTrip; return 100 * self.day.to_f / self.trip.days; end 
   
-  # Number of days since start of trip:
+  # Get number of days since start of trip:
   def day; return ( ( Date.parse(self.start_date.to_s) - Date.parse(self.trip.start_date.to_s) ) + 1).to_i; end  
   
+  # Set start_date as number of days since start of trip: (And preserve it's duration)
+  def day=(number)
+
+    # PNR flights cannot be modified:
+    return if self.bound_to_pnr?
+
+    # Decrement number by 1 because number is a 1-based index (but day1 has offset of 0, day2 is offset 1 etc)
+    # (The element.day getter method does the opposite by adding 1 to the offset)
+    number -= 1 if number > 0
+
+    duration        = ( self.end_date - self.start_date ).to_i
+    orig_start_time = self.start_date
+    orig_end_time   = self.end_date
+
+    self.start_date = ( self.trip.start_date.to_time + number.days                 ).to_datetime
+    self.end_date   = ( self.trip.start_date.to_time + number.days + duration.days ).to_datetime
+
+    # Set flight times back the way they were:
+    # TODO: Find a simpler way to set hour/minute.
+    if self.flight?
+      self.start_date = DateTime.civil(self.start_date.year, self.start_date.month, self.start_date.day, orig_start_time.hour, orig_start_time.min)
+      self.end_date   = DateTime.civil(self.end_date.year,   self.end_date.month,   self.end_date.day,   orig_end_time.hour,   orig_end_time.min)
+    end
+
+  end
+
   # Duration of trip element in days:
   def days                                                                  
     result = ( Date.parse(self.end_date.to_s) - Date.parse(self.start_date.to_s) ).to_i
@@ -627,10 +660,10 @@ class TripElement
           
           # When returning biz_supp or taxes we must not multiply by the number of days:
           days = 1 if !days || days.zero? || options[:biz_supp] || options[:taxes]
-          
+
           result  = per_person_amount
           result *= person_count.abs if per_or_all == :all
-          result *= days  # :daily => 1, :total => self.days, otherwise specify number of days.
+          result *= days # :daily => 1, :total => self.days, otherwise specify number of days.
           
           # Add extras to the result if required:
           if options[:with_taxes] || options[:with_biz_supp]
@@ -758,23 +791,25 @@ class TripElement
   
   # Helper for re-calculating the trip.total_cost property: (Formerly known as total_spend)
   # Includes WITH_ALL_EXTRAS
-  def calc_total_cost( options = { :as_decimal => true } )
+  def calc_total_cost( options = {} )
     
-    options = options.merge( :with_all_extras => true )
+    options = { :as_decimal => true, :with_all_extras => true, :days => :daily }.merge( options || {} )
     options.merge!( :to_currency => false, :string_format => false ) if options[:as_decimal]
-    
-    return self.calc( :total, :actual, :net, :for_all, :travellers, options )
+
+    #puts self.total_cost, self.calc( :total, :actual, :net, :for_all, :travellers, options )
+
+    return self.calc( options[:days], :actual, :net, :for_all, :travellers, options )
     
   end
   
   # Helper for re-calculating the trip.total_price property: (Formerly known as total_spend)
   # Includes WITH_ALL_EXTRAS
-  def calc_total_price( options = { :as_decimal => true } )
+  def calc_total_price( options = {} )
     
-    options = options.merge( :with_all_extras => true )
+    options = { :as_decimal => true, :with_all_extras => true, :days => :daily }.merge( options || {} )
     options.merge!( :to_currency => false, :string_format => false ) if options[:as_decimal]
     
-    return self.calc( :total, :actual, :gross, :for_all, :travellers, options )
+    return self.calc( options[:days], :actual, :gross, :for_all, :travellers, options )
     
   end
   

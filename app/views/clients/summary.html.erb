@@ -54,7 +54,8 @@
 		<div class="sectionFoot ui-widget">
 			<div class="buttonBar ui-dialog-buttonpane ui-widget-content xui-widget-header ui-corner-all ui-helper-clearfix">
 
-				<%= link_to 'Edit client details', "#{ resource(@client, :edit) }#name", :class => 'ui-priority-primary ui-state-default' %>
+				<%= link_to 'Add a client with same address...',	"#{ resource :clients, :new, :copy_client_id => @client.id }", :class => 'ui-priority-secondary ui-state-default left' %>
+				<%= link_to 'Edit client details...',							"#{ resource @client, :edit }#name", :class => 'ui-priority-primary ui-state-default' %>
 			
 			</div>
 		</div>

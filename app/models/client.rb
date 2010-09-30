@@ -50,15 +50,21 @@ class Client
   property :original_source_id,		Integer, :default => 1, :lazy => [:all], :required => true
   property :source_id,						Integer, :default => 1, :lazy => [:all]
 
+  property :address_client_id,		Integer, :required => false
   property :legacy_contactid,			Integer,								:lazy => [:all]
 
-  property :address_client_id,		Integer, :required => false
+  property :original_company_id,  Integer   # The company who first added the client to the database.
+  property :created_at,           DateTime
+  property :created_by,           String
+  property :updated_at,           DateTime
+  property :updated_by,           String
   
   belongs_to :titlename,        :model => "Title",            :child_key => [:title_id]
   belongs_to :type,             :model => "ClientType",       :child_key => [:type_id]
   belongs_to :source,           :model => "ClientSource",     :child_key => [:source_id]
   belongs_to :original_source,  :model => "ClientSource",     :child_key => [:original_source_id]
   belongs_to :marketing,        :model => "ClientMarketing",  :child_key => [:marketing_id]
+  belongs_to :original_company, :model => "Company",          :child_key => [:original_company_id]
 
   # For reports:
   alias client_source source
@@ -129,6 +135,10 @@ class Client
 	def fullname;  return self.fullname_in_database.blank? ? "#{ self.title } #{ self.forename } #{ self.surname }" : self.fullname_in_database; end
 	def shortname; return "#{ self.title } #{ self.forename.slice(0,1) } #{ self.surname }"; end
 	alias :display_name :fullname
+
+  def age
+    return self.birth_date ? (Date.today - self.birth_date.to_date).to_i / 365 : nil
+  end
 
   # Match name is used to show extra details when trying to compare client names: (Eg when processing WebRequests)
   def match_name
@@ -237,10 +247,13 @@ class Client
 	end
 
   # Helper for setting one of the client_addresses as primary. (Used by the addresses form)
+  # (The test for blank/new just prevents accidentally submitted attribute from causing errors)
 	def primary_address_id=(id)
 
-	  self.client_addresses.each{ |a| a.is_active = (a.address_id == id.to_i) }.save!
-    @primary_address = nil
+    unless id.blank? || self.new? || self.client_addresses.all( :address_id => id ).empty?
+	    self.client_addresses.each{ |a| a.is_active = (a.address_id == id) }.save!
+      @primary_address = nil
+    end
 
   end
 

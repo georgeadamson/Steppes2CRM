@@ -28,34 +28,17 @@ class ClientSources < Application
     display @client_source
   end
 
+
   def create(client_source)
-    @client_source = ClientSource.new(client_source)
-    if @client_source.save
-      redirect resource(@client_source), :message => {:notice => "ClientSource was successfully created"}
-    else
-      message[:error] = "ClientSource failed to be created"
-      render :new
-    end
+    generic_action_create( client_source, ClientSource )
   end
 
   def update(id, client_source)
-    @client_source = ClientSource.get(id)
-    raise NotFound unless @client_source
-    if @client_source.update_attributes(client_source)
-       redirect resource(@client_source)
-    else
-      display @client_source, :edit
-    end
+    generic_action_update( id, client_source, ClientSource )
   end
 
   def destroy(id)
-    @client_source = ClientSource.get(id)
-    raise NotFound unless @client_source
-    if @client_source.destroy
-      redirect resource(:client_sources)
-    else
-      raise InternalServerError
-    end
+    generic_action_destroy( id, ClientSource )
   end
 
 end # ClientSources

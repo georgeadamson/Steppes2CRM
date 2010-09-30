@@ -227,7 +227,22 @@ describe TripElement do
     
   end
   
-  
+  it "should derive arrive_next_day flag correctly" do
+
+    @elem.start_date = Time.now.to_datetime
+    @elem.end_date   = Time.now.to_datetime
+    @elem.save.should be_true
+    @elem.arrive_next_day.should be_false    
+
+    @elem.start_date = Time.now.to_datetime
+    @elem.end_date   = (Time.now + 1.day ).to_datetime
+    @elem.save.should be_true
+    @elem.arrive_next_day.should be_true
+
+  end
+
+
+
 
   
 
@@ -1187,7 +1202,7 @@ describe TripElement do
         
         travellers_total = adult_test + child_test + infant_test + single_test
         
-        @elem.calc_total_cost.should match_currency travellers_total
+        @elem.calc_total_cost( :days => :total ).should match_currency travellers_total
         
       end
       
@@ -1275,7 +1290,7 @@ describe TripElement do
         
         # a fairly complex calc scenario: (And the calc_total_price method should produce the same result too)
         @elem.calc( :total, :actual, :gross, :all, :travellers, @options.merge( :with_all_extras => true) ).should match_currency travellers_total
-        @elem.calc_total_price.should match_currency travellers_total
+        @elem.calc_total_price( :days => :total ).should match_currency travellers_total
         
       end
       
@@ -1351,7 +1366,7 @@ describe TripElement do
       @elem.reload
       
       @elem.total_price.should_not == orig_total_price
-      @elem.total_price.should     == @elem.calc_total_price
+      @elem.total_price.should     match_currency @elem.calc_total_price
       
     end
     
@@ -1366,10 +1381,10 @@ describe TripElement do
       @elem.cost_per_adult  = 10000
       @elem.save.should be_true
       
-      @elem.total_price.should_not  == elem_orig_total_price
-      @elem.total_price.should      == @elem.calc_total_price
-      @trip.total_price.should      == trip_orig_total_price
-      @trip.total_price.should      == @trip.calc_total_price
+      @elem.total_price.should_not  match_currency elem_orig_total_price
+      @elem.total_price.should      match_currency @elem.calc_total_price
+      @trip.total_price.should      match_currency trip_orig_total_price
+      @trip.total_price.should      match_currency @trip.calc_total_price
       
       trip_total_cost = @trip.calc( :daily, :actual, :net, :for_all, :travellers, options )
       trip_total_cost.should_not    == trip_orig_total_net

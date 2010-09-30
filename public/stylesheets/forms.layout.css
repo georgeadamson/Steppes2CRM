@@ -286,6 +286,14 @@ FORM {
 		width:auto;
 	}
 
+	.formField.labelWidthAuto LABEL {	/* Allow field to be as wide as it's label and field require */
+		width:auto;
+	}
+
+	.formField.widthAuto.checkbox INPUT[type="checkbox"] {
+		margin-left:1em;
+	}
+
 	.formField INPUT[type=text],
 	.formField INPUT[type=password] { width:10em; }
 	.formField TEXTAREA { width:10.5em; }
@@ -383,6 +391,7 @@ INPUT.date.hasDatepicker {
 
 
 
+/* CHECKBOX button list: */
 
 .checkboxList
 {
@@ -415,6 +424,23 @@ INPUT.date.hasDatepicker {
 		width:9em;
 	}
 	.checkboxList LI LABEL[for]{ cursor:pointer; }
+
+
+
+
+
+/* RADIO button list: */
+
+UL.radio-list DIV.formField {
+	display:inline-block;
+}
+
+	UL.radio-list DIV.formField.radio INPUT[type="radio"] {
+		margin-left:0;
+	}
+
+
+
 
 
 
@@ -917,6 +943,11 @@ TABLE.tripTravellers THEAD TH SPAN.vertical {
 	width:1em;
 	white-space:nowrap;
 }
+
+	TABLE.tripTravellers THEAD TH SPAN.vertical A {
+		text-decoration:none;
+	}
+
 TABLE.tripTravellers TBODY TD {
 	min-width:1em;
 	padding:0.25em;

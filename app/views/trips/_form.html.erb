@@ -1,6 +1,4 @@
-
 <!-- Trip form: (Shown on the Trip summary page) -->
-
 <%
 
 	@trip   ||= trip
@@ -14,7 +12,19 @@
 		else                              TripType.all( :id => [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP ] )
 	end
 	
+	# Prepare consultants pick list and ensure trip.user is on it even if they're inactive:
+	user_list = User.all( :is_active => true, :order=>[:forename, :name] )
+	user_list << @trip.user
+	
+	
+	# Prepare content for the all-client-details mailto link:
+		email_all = @trip.new? ? nil : {
+			:subject	=> 'Client details',
+			:body			=> @trip.clients.map{|c| '%0A' + partial('clients/traveller_summary',:client=>c) }.join('%0A')
+		}
+	
 -%>
+
 <%= hidden_field :version_of_trip_id,		:value => @trip.version_of_trip_id.to_i unless trip.tour %>
 <%= hidden_field :tour_id,							:value => @trip.tour_id || params[:tour_id] %>
 <%#= hidden_field :name => 'client_id',	:value => @trip.context.id %>
@@ -40,7 +50,7 @@
 
 	<tr>
 		<td><%= text_field	:start_date,	:label => 'Start date',		:value => @trip.start_date.formatted(:uidate), :class => 'date dtstart', :fieldClass => 'fieldFlowHoriz' %></td>
-		<td><%= select			:user_id,			:label => 'Handled by',	  :selected => @trip.user_id.to_s, :collection => User.all( :is_active => true, :order=>[:forename]), :value_method => :id, :text_method => :fullname %></td>
+		<td><%= select			:user_id,			:label => 'Handled by',	  :selected => @trip.user_id.to_s, :collection => user_list, :value_method => :id, :text_method => :display_name, :prompt => '- Choose user' %></td>
 		<td><%= text_field	:adults,			:label => 'Adults',				:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin1' %></td>
 
 		<!-- Total count of trip members: -->
@@ -54,7 +64,7 @@
 
 	<tr>
 		<td><%= text_field	:end_date,		:label => 'End date',		:value => @trip.end_date.formatted(:uidate), :class => 'date dtend', :fieldClass => 'fieldFlowHoriz' %></td>
-		<td><%= select			:company_id,	:label => 'Invoice as', :collection => Company.all(:is_active=>true), :value_method => :id, :text_method => :name %></td>
+		<td><%= select			:company_id,	:label => 'Invoice as', :collection => Company.all(:is_active=>true), :value_method => :id, :text_method => :name, :prompt => '- Choose company' %></td>
 		<td><%= text_field	:children,		:label => 'Children',		:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
 	</tr>
 
@@ -100,7 +110,8 @@
 									<input type="text" class="trip-client-search" placeholder="Client search">
 								<% end -%>
 							</th>
-							<th title="Create a letter document" class=""><span class="vertical">Create letter</span></th>
+							<th title="Create a letter document"><span class="vertical">Create letter</span></th>
+							<th title="Create email with all client details"><span class="vertical"><%= trip.clients.empty? || !email_all ? 'Email details' : link_to('Email details', "mailto:&#{ email_all.to_params }") %></span></th>
 							<th title="Requires single room"		><span class="vertical">Single</span></th>
 							<th title="Who to send documents to (Primary contacts)"><span class="vertical">Primary</span></th>
 							<th title="Who to send invoices to"	><span class="vertical">Invoicable</span></th>

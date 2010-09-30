@@ -12,16 +12,27 @@ class Images < Application
   end
 
   def show(id)
-    @image = Image.get(id)
-    raise NotFound unless @image
-    display @image
+
+    only_provides :jpg
+
+    format = params[:format] || 'jpg'
+    folder = CRM[:images_folder_path].gsub('\\','/')
+
+    # Try to find images by ID or by filename:
+    @image = Image.get(id) || Image.first_or_new( :path => "#{ id.gsub('+',' ') }.#{ format }" )
+    raise NotFound unless @image && !@image.path.blank? && File.exist?( folder / @image.path )
+
+    path = folder / @image.path
+    send_file( path, :type => 'image/jpeg', :disposition => 'inline' )
+    #display @image, :layout => false
+
   end
 
   def new
     only_provides :html
     @libraryPath = "/users/georgeadamson/sites/steppes2/public/imageLibrary/"
     @company = Company.get(1)
-    @currentFolder = @company.imagesFolder || "S*"
+    @currentFolder = @company.images_folder || "S*"
     @currentSubFolder = params[:folder_name] || "A*"
     @folder = Folder.new( @libraryPath / @currentFolder, @libraryPath / @currentFolder / @currentSubFolder )
     #@folderName = params[:folder_name] || "A*"

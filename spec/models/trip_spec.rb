@@ -296,6 +296,118 @@ describe Trip do
     end
 
 
+    it "should not cause element cost to change for no apparent reason" do
+
+      # Test created from live data that was triggering a bug:
+      trip = Trip.new(
+        :name=>"test", 
+        :version=>1, 
+        :version_of_trip_id=>0, 
+        :is_active_version=>true, 
+        :is_version_snapshot=>false, 
+        :start_date=>Date.today, 
+        :end_date=>(Date.today.to_time + 10.days).to_date, 
+        :adults=>2, 
+        :children=>0, 
+        :infants=>0, 
+        :singles=>0, 
+        :price_per_adult=>100, 
+        :price_per_child=>0,
+        :price_per_infant=>0,
+        :price_per_adult_biz_supp=>0,
+        :price_per_child_biz_supp=>0,
+        :price_per_infant_biz_supp=>0,
+        :price_per_single_supp=>0,
+        :type_id=>1, 
+        :status_id=>1, 
+        :deleted=>false, 
+        :tour_id=>nil, 
+        :total_price=>1000, 
+        :created_at=>Time.now, 
+        :created_by=>"", 
+        :updated_at=>Time.now, 
+        :updated_by=>"", 
+        :company_id=>1, 
+        :user_id=>1
+      )
+
+      elem = TripElement.new(
+        :type_id=>1, 
+        :misc_type_id=>1, 
+        :supplier_id=>1, 
+        :handler_id=>1, 
+        :name=>"flight", 
+        :description=>"description", 
+        :notes=>"notes", 
+        :start_date=>trip.start_date, 
+        :end_date=>(trip.start_date.to_time + 1.days).to_date, 
+        :adults=>2, 
+        :children=>0, 
+        :infants=>0, 
+        :singles=>0, 
+        :margin_type=>"%", 
+        :margin=>10, 
+        :exchange_rate=>1, 
+        :cost_per_adult=>100, 
+        :cost_per_child=>0, 
+        :cost_per_infant=>0,
+        :cost_per_triple=>0,
+        :cost_by_room=>0,
+        :single_supp=>0,
+        :total_cost=>0,
+        :total_price=>0, 
+        :meal_plan=>nil, 
+        :room_type=>nil, 
+        :single_rooms=>0, 
+        :twin_rooms=>0, 
+        :triple_rooms=>0, 
+        :flight_code=>"BA123", 
+        :flight_leg=>false, 
+        :arrive_next_day=>true, 
+        :touchdownDescription=>"", 
+        :taxes=>0, 
+        :biz_supp_per_adult=>0, 
+        :biz_supp_per_child=>0,
+        :biz_supp_per_infant=>0, 
+        :biz_supp_margin=>10, 
+        :biz_supp_margin_type=>"%", 
+        :is_subgroup=>false, 
+        :is_active=>true, 
+        :booking_code=>"ABCD", 
+        :booking_reminder=>nil, 
+        :booking_expiry=>nil, 
+        :booking_line_number=>nil, 
+        :booking_line_revision=>nil, 
+        :depart_airport_id=>1, 
+        :arrive_airport_id=>1, 
+        :depart_terminal=>nil, 
+        :arrive_terminal=>nil, 
+        :created_at=>Time.now, 
+        :updated_at=>Time.now, 
+        :created_by=>nil, 
+        :updated_by=>"george"
+      )
+
+      elem.update_prices()
+      
+      orig_cost  = elem.total_cost
+      orig_price = elem.total_price
+      
+      trip.save.should be_true
+      trip.elements << elem
+      trip.save.should be_true
+      trip.should have(1).trip_elements
+
+      @trip.update(:name => 'New name')
+      elem = trip.trip_elements.first
+
+      elem.total_cost.should  match_currency orig_cost 
+      elem.total_price.should match_currency orig_price
+
+    end
+
+
+
   end
 
 

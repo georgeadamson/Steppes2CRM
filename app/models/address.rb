@@ -20,6 +20,12 @@ class Address
   has n, :client_addresses
   has n, :clients, :through => :client_addresses
 
+  
+  # Defensive measure to prevent accidentally submitted blank id attribute from being applied:
+  def id=(new_id)
+    self.attribute_set(:id,new_id) unless new_id.blank?
+  end
+
 
   # Helper for returning the full address with commas between each line:
   # Note we separate lines with 2 spaces to provide a way for receiving code to distinguish the address lines if necessary.

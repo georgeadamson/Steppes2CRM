@@ -20,7 +20,7 @@
 
 			<thead class="line-below">
 				<tr>
-					<th>Trip pricing <small>per person</small></th>
+					<th>Adjust trip pricing <small>per person</small></th>
 					<th>Net</th>
 					<th>Gross</th>
 					<th class="set-gross">Set gross</th>
@@ -183,9 +183,10 @@
 	<!-- sectionFoot: -->
 	<div class="sectionFoot ui-widget">
 		<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
-			<%#= button 'Update exchange rates',			:class => 'ui-priority-secondary ui-state-default', :disabled => true %>
-			<%#= button 'Recalculate gross prices',	:class => 'ui-priority-secondary ui-state-default', :disabled => true %>
+			<!-- Important! The markup order of these buttons is significant to ensure that pressing Enter submits 'Save' -->
+			<%#= button 'Recalculate gross prices',	:class => 'ui-priority-secondary ui-state-default left', :disabled => true %>
 			<%= submit 'Save price adjustments',		:class => 'ui-priority-primary ui-state-default' %>
+			<%= submit 'Update exchange rates',			:class => 'ui-priority-secondary ui-state-default left', :disabled => ( trip.confirmed? || trip.completed? ) %>
 		</div>
 	</div>
 
