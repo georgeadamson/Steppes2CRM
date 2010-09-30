@@ -2781,7 +2781,7 @@ function initKeyPressFilters(){
 function initTripElementFormTotals(){
 
 	// Update TripElement totals when these fields change:
-	$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
+	$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
 		.live( 'keyup', onTripElementFieldChange )
 		.live( 'click', onTripElementFieldChange );
 
@@ -2818,6 +2818,7 @@ function initTripElementFormTotals(){
 		var adults				= numVal("[name='trip_element[adults]']", $texts);
 		var children			= numVal("[name='trip_element[children]']", $texts);
 		var infants				= numVal("[name='trip_element[infants]']", $texts);
+		var singles				= numVal("[name='trip_element[singles]']", $texts);
 		var cost_per_adult		= numVal("[name='trip_element[cost_per_adult]']", $texts);
 		var cost_per_child		= numVal("[name='trip_element[cost_per_child]']", $texts);
 		var cost_per_infant		= numVal("[name='trip_element[cost_per_infant]']", $texts);
@@ -2825,6 +2826,7 @@ function initTripElementFormTotals(){
 		var taxes				= numVal("[name='trip_element[taxes]']", $texts);
 		var margin				= numVal("[name='trip_element[margin]']", $texts);
 		var margin_type			= $lists.filter("[name='trip_element[margin_type]']").val();
+		var single_supp			= numVal("[name='trip_element[single_supp]']", $texts);
 		var biz_supp_per_adult	= numVal("[name='trip_element[biz_supp_per_adult]']", $texts);
 		var biz_supp_per_child	= numVal("[name='trip_element[biz_supp_per_child]']", $texts);
 		var biz_supp_per_infant	= numVal("[name='trip_element[biz_supp_per_infant]']", $texts);
@@ -2833,7 +2835,8 @@ function initTripElementFormTotals(){
 
 		// Calculate totals etc:
 		var travellers			= adults + children + infants;
-		var total_std_cost		= adults * cost_per_adult + children * cost_per_child + infants * cost_per_infant;
+		var total_single_supp	= singles * single_supp;
+		var total_std_cost		= adults * cost_per_adult + children * cost_per_child + infants * cost_per_infant + total_single_supp;
 		var total_biz_supp		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
 		var total_biz_margin	= (biz_supp_margin_type === '%') ? (total_biz_supp * biz_supp_margin / 100) : biz_supp_margin;	// Typically 10%
 		var total_std_margin	= (margin_type === '%') ? (total_std_cost * margin / 100) : margin;
@@ -2844,7 +2847,7 @@ function initTripElementFormTotals(){
 		var total_margin_gbp	= total_margin / Math.max(exchange_rate, 0.0001);  //
 		var total_cost_gbp		= total_cost   / Math.max(exchange_rate, 0.0001);  // Avoid divide-by-zero error.
 		var total_price_gbp		= total_price  / Math.max(exchange_rate, 0.0001);  //
-
+console.log(total_std_cost, adults, cost_per_adult, children, cost_per_child, infants, cost_per_infant)
 		// For better display, round currency values to 2 decimal places and pad pence with zeros where necessary:
 		total_margin	= round(total_margin);
 		total_cost		= round(total_cost);

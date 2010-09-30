@@ -20,7 +20,7 @@
 
 			<thead class="line-below">
 				<tr>
-					<th>Trip pricing <small>per person</small></th>
+					<th>Adjust trip pricing <small>per person</small></th>
 					<th>Net</th>
 					<th>Gross</th>
 					<th class="set-gross">Set gross</th>
@@ -183,8 +183,8 @@
 	<!-- sectionFoot: -->
 	<div class="sectionFoot ui-widget">
 		<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
-			<%#= button 'Update exchange rates',			:class => 'ui-priority-secondary ui-state-default', :disabled => true %>
-			<%#= button 'Recalculate gross prices',	:class => 'ui-priority-secondary ui-state-default', :disabled => true %>
+			<%= submit 'Update exchange rates',			:class => 'ui-priority-secondary ui-state-default left' %>
+			<%#= button 'Recalculate gross prices',	:class => 'ui-priority-secondary ui-state-default left', :disabled => true %>
 			<%= submit 'Save price adjustments',		:class => 'ui-priority-primary ui-state-default' %>
 		</div>
 	</div>

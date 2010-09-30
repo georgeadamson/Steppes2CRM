@@ -2,7 +2,7 @@
 
 	brochure = brochure_request ||= @brochure_request
 	
-	users_list				= User.all( :is_active => true, :order => [:name] )
+	users_list				= User.all( :is_active => true, :order => [:forename, :name] )
 	companies_list		= Company.all( :is_active => true, :order => [:name] )
 	
 	initials					= brochure.company.initials
