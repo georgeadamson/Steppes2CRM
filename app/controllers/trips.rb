@@ -330,8 +330,12 @@ class Trips < Application
         @trip = new_version
         message[:notice] = "A new version has been created and is now the active version of this trip."
       else
-        collect_error_messages_for @trip
-        message[:error]  = error_messages_for( @trip, :header => 'Could not create a new version of this trip because:' )
+        collect_error_messages_for new_version
+        errors = new_version.instance_variable_get(:@errors)
+        errors.each_pair{ |field,messages| messages.each{|m| @trip.errors.add field,m } }
+        #@trip.instance_variable_set :@errors, new_version.instance_variable_get(:@errors)
+        #message[:error]  = error_messages_for( @trip, :header => 'Could not create a new version of this trip because:' )
+  			message[:error] = "The version you are copying from seems to have a few issues so it cannot be copied\n(typical causes are elements without a supplier or handler). \n #{ error_messages_for( @trip, :header => 'The new version could not be saved because:' ) }"
       end
       
       return render :show
@@ -392,7 +396,7 @@ class Trips < Application
     else
 
       collect_error_messages_for @trip
-			message[:error] = "Oops, something odd happened. In all the excitement I kinda got lost. \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
+			message[:error] = "Oops, something odd happened. In all the excitement I kinda got lost.\n(The usual suspects are elements without a supplier or handler). \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
       print "\n /trips/#{ id }/update FAILED !!!\n #{ message[:error] } #{ @trip.errors.inspect }\n"
       render :show
 
