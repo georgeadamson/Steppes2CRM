@@ -975,28 +975,48 @@ Sub populate_list_of_daily_activities
 				'			- not sure supplier_location is right for heading item for accom as often it is missed out
 
 				strDayDate = GetSQLFriendlyDate(objDatesFields.Item("day_date"))
+				boolIgnoreDateField = false
 
 				objItemsRecordSet.Open "EXEC sp_document_data_day_elements " & strTripId & ", '" & strDayDate & "'", objSqlConnection						
 
-				boolIgnoreDateField = false
+				' Add a row to the table for each element on this day:
+				If NOT objItemsRecordSet.EOF Then
 
-				Do Until objItemsRecordSet.EOF
+					Do Until objItemsRecordSet.EOF
+
+						objTable.Rows(intNewRowNumber).Range.FormattedText = objTemplateRow.Range.FormattedText
+						objTable.Rows(intNewRowNumber).Select 
+
+						FindAndReplaceFields "trip_element", objItemsFields, True, boolIgnoreDateField 
+
+						objItemsRecordSet.MoveNext
+						boolIgnoreDateField = true 'only ignore the first time
+						intNewRowNumber = intNewRowNumber + 1
+
+						CheckError "Unable to populate list of daily activities in items loop", False
+
+					Loop
+
+				' When there are no elements on this day just add a blank row: (Added 30-Sep-2010 by GA)
+				' Note: This assumes sp_document_data_day_elements can accept an extra parameter to generate a dummy row.
+				Else
+
+					' Generate a fake item to populate the row: (Notice the extra "1" parameter)
+					' This approach means we can still call the FindAndReplaceFields function to replace all the tags in the row.
+					objItemsRecordSet.Close
+					objItemsRecordSet.Open "EXEC sp_document_data_day_elements " & strTripId & ", '" & strDayDate & "', 1", objSqlConnection						
 
 					objTable.Rows(intNewRowNumber).Range.FormattedText = objTemplateRow.Range.FormattedText
 					objTable.Rows(intNewRowNumber).Select 
 
 					FindAndReplaceFields "trip_element", objItemsFields, True, boolIgnoreDateField 
-					boolIgnoreDateField = true 'only ignore the first time
-
-					objItemsRecordSet.MoveNext
 					intNewRowNumber = intNewRowNumber + 1
-					
-					CheckError "Unable to populate list of daily activities in items loop", False
 
-				Loop
+				End If
+
 				objItemsRecordSet.Close
 				objDatesRecordSet.MoveNext
-				
+
 				CheckError "Unable to populate list of daily activities in days loop", False
 
 			Loop
