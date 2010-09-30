@@ -162,13 +162,18 @@ class Trip
     
 
     before :valid? do
+
+      # Convert blank string to nil on fields that expect IDs:
+      self.user_id    = nil if self.user_id.blank?
+      self.type_id    = nil if self.type_id.blank?
+      self.company_id = nil if self.company_id.blank?
       
       self.name								||= "Untitled trip"
       self.status_id					||= Trip::UNCONFIRMED
       self.tour_id              = nil if self.tour_id.to_i == 0
       self.type_id              = TripType::TOUR_TEMPLATE if self.tour && !self.fixed_dep? && !self.tour_template?
       self.version_of_trip_id ||= 0	# Cannot be nil. If zero, this will be set to the trip's own new id after save.
-      
+
       # Swap start and end dates if start date is later than end date:
       # Beware! Setting start/end_date here is a workaround for when they've not been submitted as part of the form
       # and the update methods decides to overwrite them with their defaulv values!
@@ -232,7 +237,7 @@ class Trip
         #elem.save!      if elem.dirty? #&& !elem.new? && !elem.destroyed? && elem.valid? && elem.supplier_id
         
       end
-      
+    
       # Recalculate and set price_per_xxx and total_price attributes:
       # This also calls calc_total_price() for us.
       # Only where price pp is currently zero because we must not override prices set manually in costing sheet!
@@ -1211,7 +1216,25 @@ class Trip
       
     end
     
-    
+
+    # Helper to set all elements' exchange rates to the current rate:
+    # Note: Expected behaviour is to recalculate prices even if rates have not changed.
+    def update_exchange_rates( save = false )
+
+      self.elements.each do |elem|
+
+        elem.exchange_rate = elem.supplier.currency.rate if elem.supplier && elem.supplier.currency
+        elem.update_prices
+        elem.save! if save
+
+      end
+
+      result = self.update_prices
+      self.save! if save
+      return result
+
+    end
+
     
     
     

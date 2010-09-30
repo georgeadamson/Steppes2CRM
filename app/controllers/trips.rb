@@ -288,16 +288,37 @@ class Trips < Application
 		accept_valid_date_fields_for trip, [ :start_date, :end_date ]
     trip[:start_date] ||= @trip.start_date || Date.today
     trip[:end_date]   ||= @trip.end_date   || trip[:start_date]
-    
+  
 		# Make a note of the PNR numbers associated with the trip before it is updated:
 		pnr_numbers_before  = @trip.pnr_numbers
     flight_count_before = @trip.flights.length
     
     next_page = params[:redirect_to] && params[:redirect_to].to_sym || nil
 
+ 
+    # Update EXCHANGE RATES
+    if params[:submit] =~ /exchange rates/i
+
+      if @trip.update_exchange_rates :save
+      
+        message[:notice] = "Successfully updated the exchange rate on each element and then recalculated trip prices."
+        
+        if request.ajax?
+          next_page ? render(next_page) : render(:show)
+        else
+          redirect "#{ nested_resource(@trip) }/#{ next_page }", :message => message
+        end
+      
+      else
+
+        collect_error_messages_for @trip
+			  message[:error] = "Oh dear, there was some difficulty updating the exchange rates. \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
+        render :show
+
+      end
       
     # Special case: Make a new version of this trip if requested!
-    if trip[:active_version_id] == 'new'
+    elsif trip[:active_version_id] == 'new'
       
       puts "Creating new version_of_trip #{ @trip.version_of_trip_id } from #{ @trip.id }"
       trip.delete(:active_version_id)
@@ -371,7 +392,6 @@ class Trips < Application
     else
 
       collect_error_messages_for @trip
-
 			message[:error] = "Oops, something odd happened. In all the excitement I kinda got lost. \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
       print "\n /trips/#{ id }/update FAILED !!!\n #{ message[:error] } #{ @trip.errors.inspect }\n"
       render :show

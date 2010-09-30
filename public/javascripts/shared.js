@@ -2834,6 +2834,7 @@ function initTripElementFormTotals(){
 		var biz_supp_margin		= numVal("[name='biz_supp_margin']", $texts);
 		var biz_supp_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val();
 
+
 		// Calculate totals etc:
 		var travellers			= adults + children + infants;
 		var total_std_cost		= adults * cost_per_adult + children * cost_per_child + infants * cost_per_infant;
