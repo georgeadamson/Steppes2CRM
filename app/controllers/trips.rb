@@ -299,8 +299,23 @@ class Trips < Application
     # Update EXCHANGE RATES
     if params[:submit] =~ /exchange rates/i
 
-      @trip.update_exchange_rates :save
+      if @trip.update_exchange_rates :save
+      
+        message[:notice] = "Successfully updated the exchange rate on each element and then recalculated trip prices."
+        
+        if request.ajax?
+          next_page ? render(next_page) : render(:show)
+        else
+          redirect "#{ nested_resource(@trip) }/#{ next_page }", :message => message
+        end
+      
+      else
 
+        collect_error_messages_for @trip
+			  message[:error] = "Oh dear, there was some difficulty updating the exchange rates. \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
+        render :show
+
+      end
       
     # Special case: Make a new version of this trip if requested!
     elsif trip[:active_version_id] == 'new'
@@ -377,7 +392,6 @@ class Trips < Application
     else
 
       collect_error_messages_for @trip
-
 			message[:error] = "Oops, something odd happened. In all the excitement I kinda got lost. \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
       print "\n /trips/#{ id }/update FAILED !!!\n #{ message[:error] } #{ @trip.errors.inspect }\n"
       render :show

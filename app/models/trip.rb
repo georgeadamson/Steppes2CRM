@@ -1226,8 +1226,9 @@ class Trip
 
       end
 
-      self.update_prices
+      result = self.update_prices
       self.save! if save
+      return result
 
     end
 
