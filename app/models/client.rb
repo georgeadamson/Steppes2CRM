@@ -317,7 +317,7 @@ class Client
   # Note how we cache @active_trips to prevent unecessary db trips as each trip is accessed:
   # Added :type_id filter 01-Sep-2010 GA.
   def active_trips
-    return @active_trips ||= trips.all( :is_active_version => true, :type_id.not => TripType::TOUR_TEMPLATE )
+    return @active_trips ||= self.trips.all( :is_active_version => true, :type_id.not => TripType::TOUR_TEMPLATE )
   end
 
   def fixed_deps( tour_id = nil )
@@ -325,6 +325,19 @@ class Client
     return tour_id ? deps.all( :tour_id => tour_id ) : deps
   end
 
+  def booked_trips
+    return self.active_trips.all( :status_id => [ TripStatus::CONFIRMED, TripStatus::COMPLETED ] )
+  end
+
+  # Used in reports:
+  def booked_trips_count
+    return self.booked_trips.count
+  end
+
+  # Used in reports:
+  def invoice_total
+    return self.money_ins.sum(:amount)
+  end
 
   # Depricated?
   # Returns a very compact alternative to the trips collection (Eg: for use with client.TO_JSON in "views/clients/search.json.erb")
@@ -390,7 +403,7 @@ class Client
   # Define which properties are available in reports  
   def self.potential_report_fields
     #return [ :name, :title, :trip_clients, :trips ]
-    return [ :name, :title, :forename, :addressee, :salutation, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :client_type, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name ]
+    return [ :name, :title, :forename, :addressee, :salutation, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :client_type, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :booked_trips_count, :invoice_total, :created_at ]
   end
 
 end
