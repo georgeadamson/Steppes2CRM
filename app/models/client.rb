@@ -118,8 +118,9 @@ class Client
   alias client_source source
   #alias client_type   type
   alias type client_type
-  def country_name; self.country && self.country.name; end
-  #def type_name;    self.type.name; end
+  def country_name;      self.country.name; end
+  def mailing_zone_name; self.country && self.country.mailing_zone.name; end
+  def areas_of_interest; self.countries_names.join(', '); end
 
 	alias :interests_ids  :countries_ids
 	alias :interests_ids= :countries_ids=
@@ -403,7 +404,7 @@ class Client
   # Define which properties are available in reports  
   def self.potential_report_fields
     #return [ :name, :title, :trip_clients, :trips ]
-    return [ :name, :title, :forename, :addressee, :salutation, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :client_type, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :booked_trips_count, :invoice_total, :created_at ]
+    return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :client_type, :areas_of_interest, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :booked_trips_count, :invoice_total, :created_at ]
   end
 
 end
