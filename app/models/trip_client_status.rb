@@ -16,7 +16,7 @@ class TripClientStatus
 end
 
 
-TripClientStatus.auto_migrate!		# Warning: Running this will clear the table!
+# TripClientStatus.auto_migrate!		# Warning: Running this will clear the table!
 
 # Seed the statuses: (Same IDs as legacy database GroupItineraryStatus, to simplify data migration)
 TripClientStatus.first_or_create( { :id => TripClientStatus::UNCONFIRMED }, { :id => TripClientStatus::UNCONFIRMED, :name => 'Unconfirmed' } )
