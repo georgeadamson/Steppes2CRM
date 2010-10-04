@@ -8,7 +8,7 @@
 	exchange_rate.new_rate = exchange_rate.rate
 	
 	selected				= Date.today
-	date_list				= [ [ Date.today, 'Immediately' ] ]
+	date_list				= [ [ Date.today, 'Immediately' ], [ Date.today + 1, 'Tomorrow' ] ]
 
 	# TODO: Delayed change is disabled temporarily until a fix is found to imprement it
 	#	unless exchange_rate.new_record?
