@@ -9,7 +9,7 @@
 			<span class="ui-icon ui-icon-client"></span>
 			Client details for
 			<%= @client.fullname %>
-			<%= @client.known_as ? '<small>- known as ' + @client.known_as + '</small>' : "" %>
+			<%= tag :small, "- known as #{ @client.known_as }" unless @client.known_as.blank? %>
 		</h3>
 	</div>
 
