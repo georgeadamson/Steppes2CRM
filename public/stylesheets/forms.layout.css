@@ -1077,7 +1077,7 @@ BLOCKQUOTE.amadeus_air
 	}	
 
 
-		.web-requests LI .ui-icon {
+		.web-requests LI > .ui-icon {
 			left:1em;
 			position:absolute;
 		}

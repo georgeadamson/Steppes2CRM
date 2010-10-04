@@ -229,8 +229,9 @@ class Client
 	
   # Accessors for the client's current active ADDRESS:
   # Note how we cache @primary_address to prevent unecessary db trips as each address line is accessed:
+  # Also, in the situation where a *new* client's attributes are being set, there will be no client_address mapping yet.
   def primary_address
-		return @primary_address ||= self.addresses.first( ClientAddress.is_active => true )
+		return @primary_address ||= self.addresses.first( ClientAddress.is_active => true ) || ( self.new? && self.addresses.first )
   end
 
   # Depricated:
@@ -339,6 +340,13 @@ class Client
   def invoice_total
     return self.money_ins.sum(:amount)
   end
+
+
+  # Helper to identify clients that have only just been added to the database:
+  def created_today?
+    self.new? || ( self.created_at && self.created_at.jd == Date.today.jd ) || false
+  end
+
 
   # Depricated?
   # Returns a very compact alternative to the trips collection (Eg: for use with client.TO_JSON in "views/clients/search.json.erb")

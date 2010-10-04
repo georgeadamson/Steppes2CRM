@@ -48,6 +48,9 @@ class WebRequest
   def imported?;  self.status_id == 3; end
   def rejected?;  self.status_id == 4; end
 
+  # Helpers for handling old and new types of request: (Only old requests will have email_text, migrated from old database Sep 2010)
+  def legacy?;    !self.email_text.blank?; end
+  def raw_text;   !self.email_text.blank? ? self.email_text : self.xml_text; end
 
   def client_name
     return "#{ self.field(:FirstName) } #{ self.field(:Surname) }"
@@ -63,6 +66,7 @@ class WebRequest
 	
   # Helper to read a field value from the web service response xml FormEntry/Fields nodes:
 	# Eg: <ArrayOfFormEntry><FormEntry><Fields><FormField><Field>Email</Field><Value>a@b.com</Value>...
+  # See views/webs_requests/edit.html.erb for code that uses this to populate client attributes.
 	def parse_field( field_name, xml_node = nil )
 		return parse_node( "//FormEntry[ID][Fields]/Fields/FormField[Field='#{ field_name }']/Value", xml_node )
 	end
@@ -102,12 +106,12 @@ class WebRequest
   def self.first_or_new_from_xml(xml)
 
     # Make a new web_request object and set it's raw xml so other properties can then be derived:
-    new_web_request = WebRequest.new( :xml_text => xml.to_s )
-    new_web_request.set_attributes_from_xml()
+    new_req = WebRequest.new( :xml_text => xml.to_s )
+    new_req.set_attributes_from_xml()
 
-    old_web_request = WebRequest.first( :origin_web_request_id => new_web_request.origin_web_request_id )
+    old_req = WebRequest.first( :origin_web_request_id => new_req.origin_web_request_id )
 
-    return old_web_request || new_web_request
+    return old_req || new_req
     
   end
 
@@ -168,17 +172,19 @@ class WebRequest
 			
 			WebRequest.logger.info "Downloading WebRequests #{ Time.now }: '#{ form_name }' from url #{ uri }"
       
+		  # Start by calling the web-service:
       begin
 
-			  # Call the web-service:
 			  #response	= Net::HTTP.start(url.host, url.port) {|http| http.get(path) }
         response  = Net::HTTP.get_response(uri)
 
+      # Handle download ERROR:
       rescue Exception => reason
 
           puts "Error: Could not download web requests. See WebRequests.log"
           WebRequest.logger.error!  "Error: Could not fetch web requests: \n Url: #{ uri } \n Reason: #{ reason }"
 
+      # Otherwise CONTINUE if all is well:
       else
 
         begin
