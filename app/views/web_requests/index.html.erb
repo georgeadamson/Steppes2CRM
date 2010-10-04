@@ -26,7 +26,7 @@
 	<div class="sectionContainer noSectionFoot web-requests-index">
 	
 	<div class="sectionHead indentSurround">
-		<h2><%= icon :gear %> Web requests</h2>
+		<h2><%= icon :heart %> Web requests</h2>
 	</div>
 
 	<div class="sectionBody formSurround indentSurround">
@@ -64,7 +64,8 @@
 
 								<% if !web_request.xml_text.blank? %>
 
-									<%= link_to 'Process...', resource(web_request, :edit), :class => 'ui-priority-secondary ui-state-default' unless web_request.new? || web_request.processed? || web_request.imported? %> 
+									<%= link_to "#{ icon :heart } Process...", resource(web_request, :edit), :class => 'ui-priority-secondary ui-state-default' unless web_request.new? || web_request.processed? || web_request.imported? %> 
+									<%= link_to "#{ icon :search } View data", resource(web_request), :class => 'ui-priority-secondary ui-state-default' %> 
 									<%= icon :client %> 
 									<%= tag :span, web_request.client_name, :class => 'client-name' %>
 									<%= tag :small, web_request.status.name, :class => 'status' %>
