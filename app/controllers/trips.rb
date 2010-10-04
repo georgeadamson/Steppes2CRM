@@ -162,7 +162,8 @@ class Trips < Application
       
 		  # Ensure current client is on this new trip:
       @trip.trip_clients.new( :client_id => client.id )
-      @trip.user_id   ||= session.user.id
+      @trip.user    ||= session.user
+      @trip.company ||= @trip.user && @trip.user.company
       
       message[:notice]  = "This new trip will be added to the database when you save it"
       
@@ -219,10 +220,6 @@ class Trips < Application
 
     @trip		= Trip.new(trip)
     @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
-    puts @trip.inspect
-    # Workaround: For some reason these are not set by "Trip.new(trip)":
-    #@trip.user_id						||= ( trip[:user_id]		|| 1 ).to_i
-    #@trip.company_id					||= ( trip[:company_id] || 1 ).to_i
     
 		@trip.updated_by					||= session.user.fullname
     @trip.clients							<<	@client_or_tour unless @trip.tour
