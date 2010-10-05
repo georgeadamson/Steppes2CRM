@@ -92,7 +92,9 @@
 
 			<fieldset class="web-request-details width2Fields">
 
-				<%= "<div style=\"left:24em;position:absolute;\">#{ icon :search } #{ link_to 'View raw request data', resource(@web_request, :raw => true) }</div>" %>
+				<div style="position:absolute;left:25em;top:0.5em;">
+					<%= link_to "#{ icon :search } View raw data", resource(@web_request, :raw => true), :class => 'ui-priority-secondary ui-state-default' %>
+				</div>
 
 				<%= form_for @web_request, :action => nested_resource(@web_request) do %>
 
