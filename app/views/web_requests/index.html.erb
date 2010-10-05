@@ -38,7 +38,7 @@
 				<%= form_for :web_requests, :method => :get, :action => resource(:web_requests) do %>
 				
 				<%= select :name => :status_id,	 :label => 'Show requests that are',	:selected => status_id_filter.to_s,		:collection => WebRequestStatus.all,																:value_method => :id, :text_method => :name, :class => 'auto-submit labelWidthAuto' %>
-				<%= select :name => :company_id, :label => '&nbsp; for company',					:selected => company_id_filter.to_s,	:collection => Company.all( :is_active => true, :order => :name ),	:value_method => :id, :text_method => :name, :class => 'auto-submit labelWidthAuto', :prompt => 'n/a (unallocated)' %>
+				<%= select :name => :company_id, :label => '&nbsp; for company',			:selected => company_id_filter.to_s,	:collection => Company.all( :is_active => true, :order => :name ),	:value_method => :id, :text_method => :name, :class => 'auto-submit labelWidthAuto', :prompt => '(unallocated)' %>
 				<%= tag :div, :class => 'formField' do; submit( 'Refresh', :class => 'ui-priority-secondary ui-state-default xhidden-when-js-enabled' ); end %>
 				
 			<% end =%>
@@ -65,7 +65,7 @@
 								<% if !web_request.xml_text.blank? %>
 
 									<%= link_to "#{ icon :heart } Process...", resource(web_request, :edit), :class => 'ui-priority-secondary ui-state-default' unless web_request.new? || web_request.processed? || web_request.imported? %> 
-									<%= link_to "#{ icon :search } View data", resource(web_request), :class => 'ui-priority-secondary ui-state-default' %> 
+									<%= link_to "#{ icon :search } View raw data", resource(web_request), :class => 'ui-priority-secondary ui-state-default' %> 
 									<%= icon :client %> 
 									<%= tag :span, web_request.client_name, :class => 'client-name' %>
 									<%= tag :small, web_request.status.name, :class => 'status' %>
