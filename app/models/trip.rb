@@ -490,6 +490,10 @@ class Trip
     alias first_version_name		title
     alias first_version					version_of_trip
     
+    # Helper to return a string of client names: (Used in reports)
+    def primary_clients_names
+      self.clients.all( TripClient.is_primary => true ).map{|c| "#{ c.fullname } #{ c.postcode }" }.join(',')
+    end
     
     # Helper to return a list of all versions of this trip:
     def versions
@@ -1434,7 +1438,7 @@ class Trip
     # Define which properties are available in reports  
     def self.potential_report_fields
       #return [ :name, :title, :trip_clients, :clients ]
-      return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names ]
+      return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names, :primary_clients_names ]
     end
     
 end
