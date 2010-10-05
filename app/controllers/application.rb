@@ -12,8 +12,7 @@ class Application < Merb::Controller
     if @@updates_run < Date.today
       rates = ExchangeRate.all(:new_rate_on_date.lte => Date.today)
       rates.each do |rate|
-        rate.rate = rate.new_rate
-        rate.save
+        rate.update!( :rate => rate.new_rate )
       end
       @@updates_run = Date.today
     end
