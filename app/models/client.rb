@@ -137,7 +137,7 @@ class Client
 	alias :surname  :name
 	alias :surname= :name=
 	alias :fullname_in_database :fullname
-	def fullname;  return self.fullname_in_database.blank? ? "#{ self.title } #{ self.forename } #{ self.surname }" : self.fullname_in_database; end
+	def fullname;  return "#{ self.title } #{ self.forename            } #{ self.surname }"; end
 	def shortname; return "#{ self.title } #{ self.forename.slice(0,1) } #{ self.surname }"; end
 	alias :display_name :fullname
 
@@ -174,6 +174,9 @@ class Client
     # (This should not be confused with client_addresses or address_clients!)
     self.address_client ||= self
 
+    # Re-concatenate fullname string:
+    self.fullname = self.fullname
+    
     # This functionality has been moved to the ClientAddress model.
     # Make sure exactly one address is tagged as active: (aka primary)
     # Sort them by is_active first then ensure only the first one is indeed active:

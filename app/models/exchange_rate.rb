@@ -7,12 +7,28 @@ class ExchangeRate
   property :new_rate,					BigDecimal, :required => true, :precision => 6, :scale => 2, :default => 1	# AKA NewSterlingRate
   property :new_rate_on_date,	Date,				:required => true
 
+  property :created_at,       DateTime
+  property :created_by,       String
+  property :updated_at,       DateTime
+  property :updated_by,       String
+  
   has n, :suppliers,  :child_key => [:currency_id]
   has n, :money_outs, :child_key => [:currency_id]  # Formerly known as SupplierPaymentRequests
   
   before :save do
+
 		# Apply new_rate immediately if today's date was specified:
-		self.rate = self.new_rate if self.new_rate_on_date.jd == Date.today.jd
+    if self.new_rate_on_date.jd == Date.today.jd
+
+		  self.rate = self.new_rate
+
+    # Disregard future-dated change if new_rate is no different:
+    elsif self.new_rate == self.rate && self.new_rate_on_date > Date.today
+
+      self.new_rate_on_date = Date.today
+
+    end
+
   end
 	
   after :save do
@@ -30,3 +46,26 @@ end
 # Allow Currency to be used an alias for ExchangeRate:
 class Currency < ExchangeRate
 end
+
+# SQL script to add table columns 5-Oct-2010:
+=begin
+
+  BEGIN TRANSACTION
+  GO
+  ALTER TABLE dbo.exchange_rates ADD
+  created_at datetime NULL,
+  created_by varchar(50) NULL,
+  updated_at datetime NULL,
+  updated_by varchar(50) NULL
+  GO
+  ALTER TABLE dbo.exchange_rates ADD CONSTRAINT
+  DF_exchange_rates_created_at DEFAULT getdate() FOR created_at
+  GO
+  ALTER TABLE dbo.exchange_rates ADD CONSTRAINT
+  DF_exchange_rates_updated_at DEFAULT getdate() FOR updated_at
+  GO
+  COMMIT
+
+  UPDATE exchange_rates SET created_at = '2010-10-01' WHERE created_at IS NULL
+
+=end
