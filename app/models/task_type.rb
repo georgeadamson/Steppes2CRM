@@ -2,6 +2,7 @@ class TaskType
   include DataMapper::Resource
   
   # Important: Some tasks are created automatically using these hard-coded contants:
+  NOTE                  = 3 unless defined? NOTE                # "Note"
   FLIGHT_REMINDER       = 5 unless defined? FLIGHT_REMINDER     # "Flight Ticket Deadline"
   BROCHURE_FOLLOWUP     = 4 unless defined? BROCHURE_FOLLOWUP   # "Brochure Followup"
   
