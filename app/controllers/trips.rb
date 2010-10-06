@@ -277,8 +277,11 @@ class Trips < Application
     # This also fixes bug where saving the costing sheet caused country selections to be lost! http://www.bugtails.com/projects/299/tickets/209.html
 		trip[:countries_ids] ||= @trip.countries_ids
     
-    if trip[:active_version_id].to_i != @trip.id && ( new_active_version = @trip.versions.get(trip[:active_version_id]) )
+    # Check whether we're switching versions:
+    if trip[:active_version_id].to_i > 0 && trip[:active_version_id].to_i != @trip.id && ( new_active_version = @trip.versions.get(trip[:active_version_id]) )
       @trip = new_active_version
+    else
+      new_active_version = nil
     end
 
 		# Convert from UK date formats and make assumptions for missing dates:
@@ -321,18 +324,18 @@ class Trips < Application
       trip.delete(:active_version_id)
       new_version = Trip.new
       new_version.copy_attributes_from @trip, :is_active_version => true
-      new_version.user_id ||= session.user.id
+      new_version.user_id = session.user.id
       
       if new_version.save
         @trip = new_version
         message[:notice] = "A new version has been created and is now the active version of this trip."
       else
         collect_error_messages_for new_version
-        errors = new_version.instance_variable_get(:@errors)
-        errors.each_pair{ |field,messages| messages.each{|m| @trip.errors.add field,m } }
+        #errors = new_version.instance_variable_get(:@errors)
+        #errors.each_pair{ |field,messages| messages.each{|m| @trip.errors.add field,m } }
         #@trip.instance_variable_set :@errors, new_version.instance_variable_get(:@errors)
         #message[:error]  = error_messages_for( @trip, :header => 'Could not create a new version of this trip because:' )
-  			message[:error] = "The version you are copying from seems to have a few issues so it cannot be copied\n(typical causes are elements without a supplier or handler). \n #{ error_messages_for( @trip, :header => 'The new version could not be saved because:' ) }"
+  			message[:error] = "The version you are copying from seems to have a few issues so it cannot be copied\n(typical causes are elements without a supplier or handler). \n #{ error_messages_for( new_version, :header => 'The new version could not be saved because:' ) }"
       end
       
       return render :show

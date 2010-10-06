@@ -52,7 +52,7 @@
 			-->
 			<%= form_for trip, :action => nested_resource(client_or_tour,trip) do %>
 				<div class="tripVersion">
-					<%= select :active_version_id, :label => "Active version:", :collection => versions_list, :selected => trip.id.to_s, :class=>"auto-submit tripVersion width2Fields stealth", :readonly => true, :xhref => "#{ resource(client_or_tour,:trips) }/{value}?version_of_trip_id=#{ trip.version_of_trip_id }&is_active_version=true" %>
+					<%= select :active_version_id, :label => "Active version:", :collection => versions_list, :selected => trip.id.to_s, :class=>"auto-submit tripVersion width2Fields stealth", :readonly => true %>
 				</div>
 			<% end =%>
 		<% end %>
