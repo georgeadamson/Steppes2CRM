@@ -122,7 +122,7 @@ class Trip
     accepts_ids_for :pnrs						    # Pnr numbers are accessed via trip.pnrs_names (or pnr_numbers alias)
     
     attr_accessor :debug
-    attr_accessor :do_copy_trip_id         # Specifies a trip to copy details from.
+    attr_accessor :do_copy_trip_id         # Specify a trip to copy details from.
     attr_accessor :do_copy_trip_clients    # Allows clients to be copied from another trip.      Use with do_copy_trip_id.
     attr_accessor :do_copy_trip_elements   # Allows elements to be cloned from another trip.     Use with do_copy_trip_id.
     attr_accessor :do_copy_trip_itinerary  # Allows elements etc to be cloned from another trip. Use with do_copy_trip_id.
@@ -204,28 +204,9 @@ class Trip
       self.is_active_version = true if @new_active_version_id && @new_active_version_id == self.id
       
       # Copy details from another trip if required:
-      if self.do_copy_trip_id && other_trip = Trip.get(self.do_copy_trip_id)
-
-        # Copy Clients from other_trip:
-        if self.do_copy_trip_clients
-          self.copy_clients_from other_trip
-          self.do_copy_trip_clients = nil     # Clear flag to prevent duplication if saved again.
-        end
-
-        # Copy Countries from other_trip:
-        if self.do_copy_trip_countries
-          self.copy_countries_from other_trip
-          self.do_copy_trip_countries = nil   # Clear flag to prevent duplication if saved again.
-        end
-
-        # Copy Trip Elements from other_trip:
-        # Important: PNR Flight elements are cloned as standard flights (without booking_code)
-        if self.do_copy_trip_elements
-          self.copy_elements_from other_trip, :adjust_dates => true, :delete_booking_code => true
-          self.do_copy_trip_elements = nil    # Clear flag to prevent duplication if saved again.
-        end
-
-      end
+      # Warning: Relying on this hook can cause save to fail if copied elements are invalid.
+      # Note: This clears the do_copy_trip_xxxx flags to prevent copies from being created again accidentally.
+      self.do_copy_trip if self.do_copy_trip_id
 
       # Ensure all trip elements still have valid numbers of adults/children/infants
       # (Also see TripElement before :save)
@@ -1299,31 +1280,72 @@ class Trip
 
     end
 
+
+
+    # Helper to copy details from another trip if required:
+    # Warning: Relying on this hook can cause save to fail if copied elements are invalid.
+    # Note: This clears the do_copy_trip_xxxx flags to prevent copies from being created again accidentally.
+    def do_copy_trip( from_trip_id = nil )
+
+      from_trip_id ||= self.do_copy_trip_id
+
+      # Copy details from another trip if required:
+      if from_trip_id && other_trip = Trip.get(from_trip_id)
+
+        # Copy Clients from other_trip:
+        if self.do_copy_trip_clients
+          self.copy_clients_from other_trip
+          self.do_copy_trip_clients = nil     # Clear flag to prevent duplication if saved again.
+        end
+
+        # Copy Countries from other_trip:
+        if self.do_copy_trip_countries
+          self.copy_countries_from other_trip
+          self.do_copy_trip_countries = nil   # Clear flag to prevent duplication if saved again.
+        end
+
+        # Copy Trip Elements from other_trip:
+        # Important: PNR Flight elements are cloned as standard flights (without booking_code)
+        if self.do_copy_trip_elements
+          self.copy_elements_from other_trip, :adjust_dates => true, :delete_booking_code => true
+          self.do_copy_trip_elements = nil    # Clear flag to prevent duplication if saved again.
+        end
+
+      end
+
+    end
+
+
     
     # Helper for CLONING a trip along with it's assigned clients, countries and new clones of the trip_elements:
-    def copy_attributes_from( master, custom_attributes = {} )
+    def copy_attributes_from( master, custom_attributes = nil )
       
       if master
         
         clone    = self
-        new_name = master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }"
-        type_id  = master.tour_template? ? TripType::FIXED_DEP       : master.type_id # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
-        
-        puts master.attributes.inspect
-        clone.attributes = master.attributes.merge(
+
+        attributes = {
           :id       => nil,
-          :name     => new_name,
-          :type_id  => type_id
-        )
+          :name     => master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }",
+          :type_id  => master.tour_template? ? TripType::FIXED_DEP       : master.type_id   # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
+        }
+
+        clone.attributes = master.attributes.merge(attributes)
+
+        #new_name = master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }"
+        #type_id  = master.tour_template? ? TripType::FIXED_DEP       : master.type_id # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
+        #  :id       => nil,
+        #  :name     => new_name,
+        #  :type_id  => type_id
+        #)
         
         # Copy clients and countries and elements:
-        self.copy_clients_from master
-        self.copy_countries_from master
-        self.copy_elements_from master
-        
+        clone.copy_clients_from master
+        clone.copy_elements_from master
+        clone.copy_countries_from master
 
         # Override defaults with any attributes explicitly specified in this method's arguments:
-        clone.attributes = custom_attributes || {}
+        clone.attributes = custom_attributes if custom_attributes
       
         return clone.attributes
         
@@ -1331,24 +1353,34 @@ class Trip
       
     end
     
-    def copy_clients_from( master, clone = self)
-      #master.clients.each{ |client| clone.clients << client }
+
+    def copy_clients_from( master, clone = nil )
+
+      clone ||= self
+
       master.trip_clients.each do |c|
 
         attributes = c.attributes.merge( :id => nil, :status_id => TripClientStatus::UNCONFIRMED )
-        clone.trip_clients.new( attributes )
-
+        conditions = { :client_id => c.client_id }
+        clone.trip_clients.first_or_new( conditions, attributes )
+    
       end
+
     end
     
-    def copy_countries_from( master, clone = self)
-      #master.countries.each{ |country| clone.countries << country }
+
+    def copy_countries_from( master, clone = nil )
+
+      clone ||= self
+
       master.trip_countries.each do |c|
 
         attributes = c.attributes.merge( :id => nil  )
-        clone.trip_countries.new( attributes )
+        conditions = { :country_id => c.country_id }
+        clone.trip_countries.first_or_new( conditions, attributes )
 
       end
+
     end
 
 
