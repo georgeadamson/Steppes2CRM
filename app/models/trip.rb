@@ -492,7 +492,7 @@ class Trip
     
     # Helper to return a string of client names: (Used in reports)
     def primary_clients_names
-      self.clients.all( TripClient.is_primary => true ).map{|c| "#{ c.fullname } #{ c.postcode }" }.join(',')
+      self.clients.all( TripClient.is_primary => true ).map{|c| "#{ c.fullname } #{ c.postcode }" }.join(', ')
     end
     
     # Helper to return a list of all versions of this trip:

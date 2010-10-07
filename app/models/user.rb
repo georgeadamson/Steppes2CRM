@@ -19,7 +19,7 @@ class User
 
   property :preferred_name,	String, :required => true, :default => 'New user'
   property :email,					String, :lazy => [:slow], :default => 'user@steppestravel.co.uk'
-  property :profile,				String, :lazy => [:slow], :default => '', :length => 500, :unique => true
+  property :profile,				String, :lazy => [:slow], :default => '', :length => 2000, :unique => true
   property :signature_file,	String, :lazy => [:slow], :default => 'signature.jpg'
   property :portrait_file,	String, :lazy => [:slow], :default => 'portrait.jpg'
 
