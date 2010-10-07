@@ -92,25 +92,38 @@ class Clients < Application
 
 		session.user ||= User.first
 		
+    # Add new user_client record if it's not already there:
+    session.user.user_clients.first_or_create( :client_id => id )
+
+    # Update tracking flags for all affected user_client rows:
 		session.user.user_clients.each do |user_client|
 
-			select								  = (user_client.client_id == id.to_i)
-			user_client.is_open     = select if select
-			user_client.is_selected = select
-			user_client.save!
-			@user_client						= user_client if select
+      # Set selected flag for current client id only:
+			is_selected	= ( user_client.client_id == id.to_i )
+      is_open     = is_selected ? true : user_client.is_open
+
+      # Only update row if we've changed it: (We do this manually so that updated_at will be set)
+      unless is_selected == user_client.is_selected && is_open == user_client.is_open
+        user_client.update!(
+          :is_open      => is_open,
+          :is_selected  => is_selected,
+          :updated_at   => DateTime.now # Explicity set date because hook will not be triggered by update!()
+        )
+      end
 
 		end
 
-		# Add client to the list if not already there:
-		unless @user_client.nil?
-			session.user.clients << @user_client.client
-			@user_client.is_open     = true
-			@user_client.is_selected = true
-			session.user.save!
-		end
+    #	# Add client to the list if not already there:
+    #	unless @user_client.nil?
+    #		session.user.clients << @user_client.client
+    #		@user_client.is_open     = true
+    #		@user_client.is_selected = true
+    #		session.user.save!
+    #	end
 
-		return session.user.user_clients.length
+    #@user_client.update!( :is_open => true, :is_selected => true ) unless @user_client.is_open && @user_client.is_selected
+    
+		return session.user.user_clients.count
 
 	end
 
@@ -120,23 +133,27 @@ class Clients < Application
 
 		session.user ||= User.first
 
-		# In theory this should only update one row:
-		session.user.user_clients.all( :client_id => id ).each do |user_client|
-			user_client.is_open     = false
-			user_client.is_selected = false
-			user_client.save
-			@user_client						= user_client
-		end
+		# # In theory this should only update one row:
+    #	session.user.user_clients.all( :client_id => id ).each do |user_client|
+    #		user_client.is_open     = false
+    #		user_client.is_selected = false
+    #		user_client.save
+    #		@user_client						= user_client
+    #	end
+      
+    #	# Add client to the list if not already there:
+    #	unless @user_client
+    #		session.user.clients << @user_client.client
+    #		@user_client.is_open     = false
+    #		@user_client.is_selected = false
+    #		session.user.save
+    #    
+    #	end
 
-		# Add client to the list if not already there:
-		unless @user_client
-			session.user.clients << @user_client.client
-			@user_client.is_open     = false
-			@user_client.is_selected = false
-			session.user.save
-		end
+    user_client = session.user.user_clients.first_or_create( { :client_id => id } )
+    user_client.update!( :is_open => false, :is_selected => false, :updated_at => DateTime.now )
 
-		return session.user.user_clients.length
+		return session.user.user_clients.count
 
 	end
 

@@ -67,7 +67,7 @@ describe Tour do
     
   end
 
-  it "should clone trip template for a client trip" do
+  it "should clone trip template for a client to make a fixed departure" do
 
     @tour.save.should be_true
     @tour.trips.new( valid_trip_attributes )
@@ -76,7 +76,31 @@ describe Tour do
     template_trip = @tour.trips.first
     template_trip.type_id.should == TripType::TOUR_TEMPLATE
     template_trip.tour_template?.should be_true
-    new_trip      = @tour.create_trip_from_template( template_trip )
+
+    new_trip = @tour.create_trip_from_template( template_trip )
+
+    new_trip.tour_id.should == @tour.id
+    new_trip.type_id.should == TripType::FIXED_DEP
+    new_trip.fixed_dep?.should be_true
+    new_trip.save.should be_true
+    
+  end
+
+  it "should copy elements too when making a fixed departure" do
+
+    @tour.save.should be_true
+    @tour.trips.new( valid_trip_attributes )
+    @tour.save.should be_true
+
+    elem = @tour.trips.first.elements.new(valid_flight_attributes)
+    puts elem.errors.inspect unless elem.valid?
+    elem.save.should be_true
+
+    template_trip = @tour.trips.first
+    template_trip.type_id.should == TripType::TOUR_TEMPLATE
+    template_trip.tour_template?.should be_true
+
+    new_trip = @tour.create_trip_from_template( template_trip )
 
     new_trip.tour_id.should == @tour.id
     new_trip.type_id.should == TripType::FIXED_DEP
