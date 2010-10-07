@@ -37,7 +37,7 @@ class Trips < Application
     #@trip = @trip.active_version
     
     # Belt and braces in case active_version is missing! Revert to the requested trip id:
-    @trip = requested_version.become_active_version! unless @trip
+    @trip ||= requested_version.become_active_version!
     #@trip = requested_version  # What was this line for?
     
     display @trip
@@ -270,34 +270,88 @@ class Trips < Application
     
     @trip = Trip.get(id)
     raise NotFound unless @trip
-
+    @trip_version = @trip
+    
     @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     
 		# Workaround for when no checkboxes are ticked: (Because posted params will not contain an array of ids)
     # This also fixes bug where saving the costing sheet caused country selections to be lost! http://www.bugtails.com/projects/299/tickets/209.html
 		trip[:countries_ids] ||= @trip.countries_ids
     
-    # Check whether we're switching versions:
-    if trip[:active_version_id].to_i > 0 && trip[:active_version_id].to_i != @trip.id && ( new_active_version = @trip.versions.get(trip[:active_version_id]) )
-      @trip = new_active_version
-    else
-      new_active_version = nil
-    end
-
 		# Convert from UK date formats and make assumptions for missing dates:
 		accept_valid_date_fields_for trip, [ :start_date, :end_date ]
     trip[:start_date] ||= @trip.start_date || Date.today
     trip[:end_date]   ||= @trip.end_date   || trip[:start_date]
-  
+    
 		# Make a note of the PNR numbers associated with the trip before it is updated:
 		pnr_numbers_before  = @trip.pnr_numbers
     flight_count_before = @trip.flights.length
     
     next_page = params[:redirect_to] && params[:redirect_to].to_sym || nil
+    
+    
+    # Switch VERSION:
+    if trip[:active_version_id].to_i != @trip.id
 
- 
+
+      # Make NEW VERSION:
+      if trip[:active_version_id] == 'new'
+        
+        Merb.logger.info "Creating new version of trip #{ @trip.version_of_trip_id } from version #{ @trip.id }"
+        #@trip_version = Trip.new
+        #@trip_version.copy_attributes_from @trip, { :is_active_version => true, :user => session.user }
+        @trip_version = @trip.new_version( :is_active_version => true, :user => session.user )
+        
+        if @trip_version.become_active_version!( :save, :save_versions )
+
+          @trip = @trip_version
+          message[:notice] = "A new version has been created and is now the active version of this trip."
+
+          clients_saved   = @trip_version.trip_clients.save!
+          elements_saved  = @trip_version.trip_elements.save!
+          countries_saved = @trip_version.trip_countries.save!
+          
+          unless clients_saved && countries_saved && elements_saved
+
+            message[:error] = 'But...'
+            message[:error] << '\n There was a problem copying elements!'  unless elements_saved
+            message[:error] << '\n There was a problem copying clients!'   unless clients_saved
+            message[:error] << '\n There was a problem copying countries!' unless countries_saved
+
+          end
+
+        else
+          collect_error_messages_for @trip_version
+  			  message[:error] = "The version you are copying from seems to have a few issues so it cannot be copied\n(typical causes are elements without a supplier or handler). \n #{ error_messages_for( @trip_version, :header => 'The new version could not be saved because:' ) }"
+        end
+        
+        return render :show
+
+
+      # Change the ACTIVE VERSION:
+      else
+
+        @trip_version = @trip.versions.get( trip[:active_version_id] )
+
+        if @trip_version && @trip_version.become_active_version!(:save)
+
+          @trip = @trip_version
+          message[:notice] = 'The active version has been changed successfully.'
+
+        else
+
+          collect_error_messages_for @trip_version
+  			  message[:error] = "Oh dear. Unable to switch versions.\n(typical causes are elements without a supplier or handler). \n #{ error_messages_for( @trip_version, :header => 'The new version could not be saved because:' ) }"
+          
+        end
+
+        render :show
+
+      end
+
+
     # Update EXCHANGE RATES
-    if params[:submit] =~ /exchange rates/i
+    elsif params[:submit] =~ /exchange rates/i
 
       if @trip.update_exchange_rates :save
       
@@ -316,35 +370,12 @@ class Trips < Application
         render :show
 
       end
-      
-    # Special case: Make a new version of this trip if requested!
-    elsif trip[:active_version_id] == 'new'
-      
-      puts "Creating new version_of_trip #{ @trip.version_of_trip_id } from #{ @trip.id }"
-      trip.delete(:active_version_id)
-      new_version = Trip.new
-      new_version.copy_attributes_from @trip, :is_active_version => true
-      new_version.user_id = session.user.id
-      
-      if new_version.save
-        @trip = new_version
-        message[:notice] = "A new version has been created and is now the active version of this trip."
-      else
-        collect_error_messages_for new_version
-        #errors = new_version.instance_variable_get(:@errors)
-        #errors.each_pair{ |field,messages| messages.each{|m| @trip.errors.add field,m } }
-        #@trip.instance_variable_set :@errors, new_version.instance_variable_get(:@errors)
-        #message[:error]  = error_messages_for( @trip, :header => 'Could not create a new version of this trip because:' )
-  			message[:error] = "The version you are copying from seems to have a few issues so it cannot be copied\n(typical causes are elements without a supplier or handler). \n #{ error_messages_for( new_version, :header => 'The new version could not be saved because:' ) }"
-      end
-      
-      return render :show
 
     # Otherwise apply the changes in the normal way:
 		elsif @trip.update(trip)
       
 			message[:notice]	  = 'Trip was updated successfully. '
-      message[:notice]   += 'The active version has been changed.' if new_active_version
+      #message[:notice]   += 'The active version has been changed.' if @trip_version
       
       # Prepare to apply specified PNR numbers:
 			pnr_errors				  = []
@@ -419,14 +450,9 @@ class Trips < Application
 
       if @trip == original_version
         message[:notice] = "The trip has been deleted"
-        #display @client_or_tour.trips, :index
-        #redirect resource(@client_or_tour, :trips)
       else
         message[:notice] = "The trip-version has been deleted"
         @trip = original_version
-        #@trip.become_active_version!
-        #display @trip
-        #render :show
       end
 
       redirect resource(@client_or_tour), :message => message
