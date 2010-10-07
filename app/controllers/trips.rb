@@ -291,7 +291,7 @@ class Trips < Application
     
     
     # Switch VERSION:
-    if trip[:active_version_id].to_i != @trip.id
+    if trip[:active_version_id] && trip[:active_version_id].to_i != @trip.id
 
 
       # Make NEW VERSION:
@@ -340,9 +340,13 @@ class Trips < Application
 
         else
 
-          collect_error_messages_for @trip_version
-  			  message[:error] = "Oh dear. Unable to switch versions.\n(typical causes are elements without a supplier or handler). \n #{ error_messages_for( @trip_version, :header => 'The new version could not be saved because:' ) }"
-          
+          if @trip_version
+            collect_error_messages_for @trip_version
+  			    message[:error] = "Oh dear. Unable to switch versions.\n(typical causes are elements without a supplier or handler). \n #{ error_messages_for( @trip_version, :header => 'The new version could not be saved because:' ) }"
+          else
+  			    message[:error] = "Oh dear. Unable to switch versions.\n(typical causes are elements without a supplier or handler)."
+          end
+
         end
 
         render :show
