@@ -52,8 +52,8 @@
 <div class="sectionFoot ui-widget <%= foot_class %>">
 	<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
 
-		<%= link_to				add_caption,    add_url,		:rel	=> ui_target,	:title => add_tooltip,		:class => "#{ add_class    } #{ secondary_class } ajaxNew"	if add	%>
 		<%= submit				save_caption,								:rel	=> ui_target,	:title => save_tooltip,		:class => "#{ save_class   } #{ primary_class }"						if save		%>
+		<%= link_to				add_caption,    add_url,		:rel	=> ui_target,	:title => add_tooltip,		:class => "#{ add_class    } #{ secondary_class } ajaxNew"	if add	%>
 		<%= tag :input,		reset_caption,							:type	=> 'reset',		:title => reset_tooltip,	:class => "#{ reset_class  } #{ secondary_class }"					if reset	%>
 		<%= link_to				cancel_caption, cancel_url, :rel	=> ui_target,	:title => cancel_tooltip,	:class => "#{ cancel_class } #{ secondary_class } ajaxCancel"	if cancel	%>
 		

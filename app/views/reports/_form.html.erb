@@ -198,9 +198,9 @@
 
 				<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
 					<%# Important: The controller checks the name of this submit button to decide how to react: %>
-					<%= submit  "Save this report", :class => 'ajax ui-priority-secondary ui-state-default', :name => 'save_report', :rel => '#report-page' %>
-					<%= link_to "#{ icon :delete  } Delete this report", resource( @report, :delete),	:rel => '#report-page',	:class => "ajax ui-priority-secondary ui-state-default" unless @report.new?	%>
+					<%= submit  "Save this report", :class => 'ajax ui-priority-primary ui-state-default', :name => 'save_report', :rel => '#report-page' %>
 					<%= link_to "#{ icon :extlink } Export to Excel",    resource( @report, :format => :csv ),	:target => '_tab', :class => "noajax ui-priority-secondary ui-state-default" unless @report.new?	%>
+					<%= link_to "#{ icon :delete  } Delete this report", resource( @report, :delete),	:rel => '#report-page',	:class => "ajax ui-priority-secondary ui-state-default" unless @report.new?	%>
 				</div>
 
 			</div>
