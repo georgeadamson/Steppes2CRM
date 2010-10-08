@@ -243,8 +243,10 @@ class Clients < Application
     # Prevent the search keywords table from being updated right now: (We'll use run_later instead)
     client[:auto_refresh_search_keywords_after_save] = false
 
+    # Unsuccessful attempt to overcome overzealous deep validation errors by doing things manually:
+    # Temporary fix. Kinda works but cannot handle address _delete.
     @client.attributes = client
-    
+
     saved_ok = @client.valid? && 
               @client.client_interests.select{|obj| !obj.valid? }.empty? &&
               @client.client_addresses.select{|obj| !obj.valid? }.empty? &&
@@ -257,6 +259,8 @@ class Clients < Application
 
     if saved_ok       
 
+    #if @client.update(client)
+      
       @client.reload
       number_of_addresses_added   = ( @client.addresses_ids - addresses_ids_before_save ).length
       number_of_addresses_removed = ( addresses_ids_before_save - @client.addresses_ids ).length
@@ -288,6 +292,8 @@ class Clients < Application
       
     else
       collect_error_messages_for @client
+      #collect_error_messages_for @client, :interests
+      #collect_error_messages_for @client, :addresses
       message[:error] = "Uh oh, could not update client details because \n" + @client.errors.full_messages.join('\n')
       display @client, :edit
     end

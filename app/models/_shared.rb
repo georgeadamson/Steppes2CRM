@@ -573,22 +573,27 @@ end
         if association_name == :all
           
           obj.model.relationships.each do | name, association |
-            if obj.respond_to?(name) #&& name.to_sym != :version_of_trips
 
-              begin
+            begin
 
-                #if ( rel = obj.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
-                if ( rel = obj.method(name).call ) && rel.respond_to?(:each)
-                  collect_error_messages_for obj, name.to_sym
-                elsif rel
-                  collect_child_error_messages_for obj, rel
+              if obj.respond_to?(name)
+
+                if ( rel = obj.method(name).call ) #&& rel.respond_to?(:dirty?) && rel.dirty?
+
+                  if rel.respond_to?(:each)
+                    collect_error_messages_for obj, name.to_sym
+                  else
+                    collect_child_error_messages_for obj, rel
+                  end
+
                 end
 
-              rescue Exception => reason
-                Merb.logger.error "ERROR during collect_error_messages_for #{ obj.inspect } #{ reason }"
               end
 
+            rescue Exception => reason
+              Merb.logger.error "ERROR during collect_error_messages_for #{ obj.inspect } #{ reason }"
             end
+
           end
           
         else
