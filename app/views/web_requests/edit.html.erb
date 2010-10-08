@@ -92,6 +92,10 @@
 
 			<fieldset class="web-request-details width2Fields">
 
+				<div style="position:absolute;left:25em;top:0.5em;">
+					<%= link_to "#{ icon :search } View raw data", resource(@web_request, :raw => true), :class => 'ui-priority-secondary ui-state-default' %>
+				</div>
+
 				<%= form_for @web_request, :action => nested_resource(@web_request) do %>
 
 					<%= text_field :name => :status,								:label => 'This Request is',:value => @web_request.status.name,							:readonly => true,	:class => 'width1Field ' %> 
@@ -126,8 +130,8 @@
 
 					<% elsif !@web_request.email_text.blank? %>
 
-						<%= tag :h3, "Legacy 'email' Web Request from the old database:" %>
-						<%= tag :span, "Email text: #{ @web_request.email_text.gsub(/(\r\n?)+/,'<br/>') }" %>
+						<%= tag :p, "<br/>This is a legacy 'email' Web Request from the old database." %>
+						<%#= tag :span, "Email text: #{ @web_request.email_text.gsub(/(\r\n?)+/,'<br/>') }" %>
 
 					<% else %>
 

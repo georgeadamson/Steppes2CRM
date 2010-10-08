@@ -26,9 +26,9 @@
 		
 		'Date filters:' => [
 			
-			[ 'gt',		'is from' ],
-			[ 'lt',		'is to' ],
-			[ 'eql',	'is' ]
+			[ 'gte',	'is from' ],
+			[ 'lt',		'is before' ],
+			#[ 'eql',	'is' ]			# Depricated because database always wants to match on time "00:00" as well!
 			
 		],
 		

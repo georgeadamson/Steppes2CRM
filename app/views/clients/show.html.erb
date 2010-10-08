@@ -1,3 +1,4 @@
-<% client = client || @client %>
-
+<%
+	client ||= @client	
+%>
 <%= partial 'clients/client_page', :client => client %>

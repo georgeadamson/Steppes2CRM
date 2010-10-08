@@ -199,6 +199,8 @@ jQuery(function($) {
 			Layout.liveForm('success', 'reports:update',								Report.initForm );
 
 			// WebRequests:
+			//Layout.livePath('click', new RegExp('web_requests/([0-9]+)\\?raw'),			WebRequest.openShow );
+			Layout.livePath('click', new RegExp('web_requests/([0-9]+)(\\?.*)?$'),			WebRequest.openShow );
 			Layout.liveForm('success', 'web_requests:update',							Client.openShow ); // TODO!
 
 			// SysAdmin:
@@ -334,6 +336,9 @@ jQuery(function($) {
 				}
 			//}
 
+			// Display any error/notice messages found in the response:
+			//showMessage( Layout.getMessagesFrom( xhr.responseText || data ) );
+
 			// Update the location hash and trigger matching livePath handlers: (but do not trigger the hashchange event)
 			if(path){
 				Layout.setHash( path, options, false );
@@ -345,7 +350,7 @@ jQuery(function($) {
 		// Helper for triggering all the livePath handlers that match path: (type expects 'success' or 'error')
 		triggerLivePath : function(type, path, options, data){
 
-			options.data  = options.data  || data;
+			options.data  = options.data || data;
 
 			$.each( Layout.livePathPattern[type], function(i,handler){
 
@@ -421,6 +426,7 @@ jQuery(function($) {
 				// Derive a {resource}_id property for each resource in the path: (Eg: "clients/1/trips/2" => {client_id:1, trip_id:2}
 				$.extend( options, Layout.getResourceIDsFrom(path) );
 
+				// Trigger generic CLICK handlers:
 				Layout.triggerLivePath('click', path, options, '');
 				Layout.setHash( path, options, !e.isImmediatePropagationStopped() );	// Allow for e.stopImmediatePropagation()
 				e.preventDefault();
@@ -571,6 +577,7 @@ jQuery(function($) {
 		// Parse error & notice message elements from the xhr response:
 		// Test for messages in data eg: <!--<MESSAGES>--><h2 class="errorMessage">Oops, something odd happened. <br/> <div class='error'>The trip details could not be saved because:<ul><li>TripElement: (Flight) The Flight agent cannot be left blank</li></ul></div></h2><!--</MESSAGES>-->
 		getMessagesFrom: function(data){
+			if( typeof(data) !== 'string' ){ data = $(data).html() }
 			var fragment = ( FIND_MESSAGE_CONTENT.exec(data) || [] )[1] || '';
 			return $('<div>').html(fragment).find(".noticeMessage,.errorMessage");
 		},
@@ -713,7 +720,11 @@ jQuery(function($) {
 		// Triggered when a tab loads successfully: (Just passes the arguments along to the generic Layout.onSuccess)
 		onTabSuccess : function(e,ui){
 			var xhr = ui.tabs && ui.tabs.xhr || {};
+			//ui.url = ui.url || $.data(ui.tab, 'load.tabs');		// TODO: Fix unformatted tabs after close client tab!
 			Layout.onSuccess( ui.panel, 'success', xhr, ui, e );
+
+			// Display any error/notice messages found in the response:
+			showMessage( Layout.getMessagesFrom( xhr && xhr.responseText || ui.panel ) );
 		},
 
 		// TODO: Triggered when a tab fails: (Just passes the arguments along to the generic Layout.onError)
@@ -2092,6 +2103,7 @@ return
 
 			// Let the server know which client is in the foreground: (So it can be the default tab next time)
 			show	: function(e,ui){
+
 				//if(ui.index==1){ $(ui.panel).html('<p>Fetching tours...</p>') }
 				var url = $.data(ui.tab, 'load.tabs');
 				//if( url && url.indexOf('clients/') >= 0 ){ $.get( url + '/select' ) }
@@ -3558,6 +3570,39 @@ function initTripInvoiceFormTotals(){
 		}
 
 	};
+
+
+
+
+	var WebRequest = {
+	
+		openShow : function(options){
+
+			// We've intercepted a link so prevent default code from handling it:
+			options.event.stopImmediatePropagation();
+
+			var $dialog = $('<div>').html('Opening...').dialog({
+
+				modal		: true,
+				title		: 'Geeky Web Request data',
+				minHeight	: 300,
+				maxHeight	: 300,
+				minWidth	: 600,
+				maxWidth	: 700,
+				open		: function(e,ui){
+					$(this).css({'max-height': 300}); 
+					options.target = '#' + $(this).id();
+					Layout.load(options.url,options)
+				},
+				buttons		: {
+					'Close'	: function(){ $(this).dialog('close').remove() }
+				}
+			});
+
+		}
+
+	}
+
 
 
 

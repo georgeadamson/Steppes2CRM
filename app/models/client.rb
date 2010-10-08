@@ -45,8 +45,8 @@ class Client
   property :total_spend,					Integer, :default => 0, :lazy => [:all]
 
   # Defaults for the belongs_to fields below:
-  property :marketing_id,					Integer, :default => 1, :lazy => [:all], :required => true			# Marketing preferences (email, post etc)
-  property :type_id,							Integer, :default => 2, :lazy => [:all], :required => true     #(Default to ClientType.first(:name=>"Client").id)
+  property :marketing_id,					Integer, :default => 1, :lazy => [:all], :required => true		# Marketing preferences (email, post etc)
+  property :type_id,							Integer, :default => 2, :lazy => [:all], :required => true    #(Default to ClientType.first(:name=>"Client").id)
   property :original_source_id,		Integer, :default => 1, :lazy => [:all], :required => true
   property :source_id,						Integer, :default => 1, :lazy => [:all]
 
@@ -60,14 +60,12 @@ class Client
   property :updated_by,           String
   
   belongs_to :titlename,        :model => "Title",            :child_key => [:title_id]
-  belongs_to :type,             :model => "ClientType",       :child_key => [:type_id]
+  #belongs_to :type,             :model => "ClientType",       :child_key => [:type_id]
+  belongs_to :client_type,      :model => "ClientType",       :child_key => [:type_id]
   belongs_to :source,           :model => "ClientSource",     :child_key => [:source_id]
   belongs_to :original_source,  :model => "ClientSource",     :child_key => [:original_source_id]
   belongs_to :marketing,        :model => "ClientMarketing",  :child_key => [:marketing_id]
   belongs_to :original_company, :model => "Company",          :child_key => [:original_company_id]
-
-  # For reports:
-  alias client_source source
 
   # Foreign-key back to clients table when referring to address of another client:
   belongs_to :address_client,  :model => "Client", :child_key => [:address_client_id]
@@ -115,7 +113,14 @@ class Client
   
 	#validates_format :birth_date, :with => /^[0-3]?[0-9][\-\/][0-1]?[0-9][\-\/][0-9][0-9][0-9][0-9]$/, :allow_nil => true, :message => "The client's date of birth needs to be valid, or leave it blank please"
 	#validates_format :birth_date, :with => /^[1-2][0-9]{3}[-\/][0-1][0-9][-\/][0-3][0-9]$/, :message => "Date of birth: Needs to be of the form 'dd/mm/yyyy' (or leave it blank)"
-		
+
+  # For reports:
+  alias client_source source
+  #alias client_type   type
+  alias type client_type
+  def country_name;      self.country.name; end
+  def mailing_zone_name; self.country && self.country.mailing_zone.name; end
+  def areas_of_interest; self.countries_names.join(', '); end
 
 	alias :interests_ids  :countries_ids
 	alias :interests_ids= :countries_ids=
@@ -132,7 +137,7 @@ class Client
 	alias :surname  :name
 	alias :surname= :name=
 	alias :fullname_in_database :fullname
-	def fullname;  return self.fullname_in_database.blank? ? "#{ self.title } #{ self.forename } #{ self.surname }" : self.fullname_in_database; end
+	def fullname;  return "#{ self.title } #{ self.forename            } #{ self.surname }"; end
 	def shortname; return "#{ self.title } #{ self.forename.slice(0,1) } #{ self.surname }"; end
 	alias :display_name :fullname
 
@@ -169,6 +174,9 @@ class Client
     # (This should not be confused with client_addresses or address_clients!)
     self.address_client ||= self
 
+    # Re-concatenate fullname string:
+    self.fullname = self.fullname
+    
     # This functionality has been moved to the ClientAddress model.
     # Make sure exactly one address is tagged as active: (aka primary)
     # Sort them by is_active first then ensure only the first one is indeed active:
@@ -224,8 +232,9 @@ class Client
 	
   # Accessors for the client's current active ADDRESS:
   # Note how we cache @primary_address to prevent unecessary db trips as each address line is accessed:
+  # Also, in the situation where a *new* client's attributes are being set, there will be no client_address mapping yet.
   def primary_address
-		return @primary_address ||= self.addresses.first( ClientAddress.is_active => true )
+		return @primary_address ||= self.addresses.first( ClientAddress.is_active => true ) || ( self.new? && self.addresses.first )
   end
 
   # Depricated:
@@ -267,10 +276,11 @@ class Client
 		return self.primary_address && self.primary_address.country
   end
 
+
   # Generate accessor methods for the attributes of the active address:
   %w[ address1 address2 address3 address4 address5 address6 postcode country_id tel_home fax_home ].each do |attr_name|
     define_method attr_name do
-      return self.address ? self.address[attr_name.to_sym] : ''
+      return self.primary_address ? self.primary_address[attr_name.to_sym] : ''
     end
   end
 	
@@ -312,12 +322,32 @@ class Client
   # Note how we cache @active_trips to prevent unecessary db trips as each trip is accessed:
   # Added :type_id filter 01-Sep-2010 GA.
   def active_trips
-    return @active_trips ||= trips.all( :is_active_version => true, :type_id.not => TripType::TOUR_TEMPLATE )
+    return @active_trips ||= self.trips.all( :is_active_version => true, :type_id.not => TripType::TOUR_TEMPLATE )
   end
 
   def fixed_deps( tour_id = nil )
     deps = self.active_trips.all( :type_id => TripType::FIXED_DEP )
     return tour_id ? deps.all( :tour_id => tour_id ) : deps
+  end
+
+  def booked_trips
+    return self.active_trips.all( :status_id => [ TripStatus::CONFIRMED, TripStatus::COMPLETED ] )
+  end
+
+  # Used in reports:
+  def booked_trips_count
+    return self.booked_trips.count
+  end
+
+  # Used in reports:
+  def invoice_total
+    return self.money_ins.sum(:amount)
+  end
+
+
+  # Helper to identify clients that have only just been added to the database:
+  def created_today?
+    self.new? || ( self.created_at && self.created_at.jd == Date.today.jd ) || false
   end
 
 
@@ -382,11 +412,10 @@ class Client
     return 'Client'
   end
   
-  
   # Define which properties are available in reports  
   def self.potential_report_fields
     #return [ :name, :title, :trip_clients, :trips ]
-    return [ :name, :title, :forename, :addressee, :salutation, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :client_type, :money_ins, :trips ]
+    return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :client_type, :areas_of_interest, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :booked_trips_count, :invoice_total, :created_at ]
   end
 
 end

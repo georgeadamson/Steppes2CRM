@@ -64,6 +64,7 @@ class Clients < Application
   end
 
   def show(id)
+
     # Entire Client page with tabs for Details / Documents / Payments / Trips
     @client = Client.get(id)
     raise NotFound unless @client
@@ -75,8 +76,14 @@ class Clients < Application
 			session.user.clients << @client
 			session.user.save
     end
- 
+
+    if @client.created_today?
+      message[:notice] ||= ''
+      message[:notice] << "Be sure to set this client's Original Source today. You won't be allowed to tomorrow!"
+    end
+
     display @client
+
   end
 
 	# Called when user selects a client tab: (Simply records the user's current visible client)
