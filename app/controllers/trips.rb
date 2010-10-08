@@ -69,7 +69,7 @@ class Trips < Application
     display @trip
   end
   
-  # Copy-from-another-trip page:
+  # GET the Copy-from-another-trip page:
   def copy(id)
     @trip = Trip.get(id)
     raise NotFound unless @trip
@@ -118,7 +118,7 @@ class Trips < Application
     original_version  = Trip.get( params[:version_of_trip_id] )
     is_new_version    = !original_version.nil?
     
-    # New copy of a trip:
+    # New copy of a trip, ready to be saved: (Eg: Copy of a Tour Template trip)
     if params[:copy_trip_id]
       
       if master = Trip.get( params[:copy_trip_id] )
@@ -127,7 +127,7 @@ class Trips < Application
           
   		  # Ensure current client is on this new trip:
         @trip.trip_clients.new( :client_id => client.id ) if client.id && @trip.trip_clients.all( :client_id => client.id ).empty?
-        @trip.user_id ||= session.user.id
+        @trip.user = session.user
         
         message[:notice]  = "Voila! A copy of #{ master.title } to do with as you please...\n(Don't forget to save it!)"
         
@@ -143,19 +143,19 @@ class Trips < Application
       
       message[:notice]  = "Don't forget to save this new fixed-departure for #{ @trip.tour.name }"
 
-    # This functionality moved to trips#update
-    #  # A new version of an existing trip:
-    #  elsif is_new_version
-    #    
-    #    @trip.copy_attributes_from( original_version.active_version )
-    #    #@trip.version_of_trip = original_version.active_version
-    #    @trip.user_id   ||= session.user.id
-    #
-    #    if @trip.save && @trip.update( :version_of_trip_id => original_version.active_version.id )
-    #      message[:notice] = "A new version of this trip has been created"
-    #    else
-    #      message[:error]  = error_messages_for( @trip, :header => 'Could not create a new version of this trip because:' )
-    #    end
+      # This functionality moved to trips#update
+      #  # A new version of an existing trip:
+      #  elsif is_new_version
+      #    
+      #    @trip.copy_attributes_from( original_version.active_version )
+      #    #@trip.version_of_trip = original_version.active_version
+      #    @trip.user_id   ||= session.user.id
+      #
+      #    if @trip.save && @trip.update( :version_of_trip_id => original_version.active_version.id )
+      #      message[:notice] = "A new version of this trip has been created"
+      #    else
+      #      message[:error]  = error_messages_for( @trip, :header => 'Could not create a new version of this trip because:' )
+      #    end
       
     # A whole new trip:
     else
@@ -218,6 +218,9 @@ class Trips < Application
     # This typically only occurs when creating a new fixed dep that is a duplicate of a tour template.
     trip[:trip_clients_attributes].delete_if{ |i,attributes| attributes[:_delete] } if trip[:trip_clients_attributes]
 
+    # Remember whether we need to copy elements etc from another trip:
+    do_copy_trip_id = trip.delete(:do_copy_trip_id)
+
     @trip		= Trip.new(trip)
     @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     
@@ -230,15 +233,35 @@ class Trips < Application
 		if @trip.save
       
       message[:notice] = "Trip was created successfully"
-      
+
+      # Populate our new trip with elements etc from another trip if specified:
+      if do_copy_trip_id
+
+        @trip.do_copy_trip do_copy_trip_id
+
+        clients_saved   = @trip.trip_clients.save!
+        elements_saved  = @trip.trip_elements.save!
+        countries_saved = @trip.trip_countries.save!
+        
+        unless clients_saved && countries_saved && elements_saved
+
+          message[:error] = 'But...'
+          message[:error] << '\n There was a problem copying elements!'  unless elements_saved
+          message[:error] << '\n There was a problem copying clients!'   unless clients_saved
+          message[:error] << '\n There was a problem copying countries!' unless countries_saved
+
+        end
+
+      end
+
       if request.ajax?
         display @trip, :show
-        #redirect resource( @client_or_tour, :show ), :message => message, :layout => :ajax
       else
         redirect resource( @client_or_tour, @trip, :edit ), :message => message
       end
       
     else
+
       collect_error_messages_for @trip, :clients
       collect_error_messages_for @trip, :trip_clients
       collect_error_messages_for @trip, :countries

@@ -1,11 +1,11 @@
 <%
 
-	heading = case @trip.type_id 
+	heading = case @trip.type_id
+	
 		when TripType::TOUR_TEMPLATE then "Create new group dates for #{ @client_or_tour.shortname }"
+	  when TripType::FIXED_DEP     then "Create a client's custom copy of #{ @client_or_tour.shortname }"
+		else                              "Create a new trip for #{ @client_or_tour.shortname }"
 		
-	  when TripType::FIXED_DEP then "Create a client's custom copy of #{ @client_or_tour.shortname }"
-		
-	else "Create a new trip for #{ @client_or_tour.shortname }"
 	end		
 	
 %>
@@ -21,6 +21,14 @@
 		</div>
 
 		<div class="sectionBody tripPage formSurround">
+
+			<!-- Optional fields when elements etc should be copied from another trip, such as a Group Template: -->
+			<% if params[:copy_trip_id].to_i > 0 %>
+				<%= hidden_field :do_copy_trip_id,				:value => params[:copy_trip_id] %>
+				<%= hidden_field :do_copy_trip_clients,   :value => true %>
+				<%= hidden_field :do_copy_trip_countries, :value => true %>
+				<%= hidden_field :do_copy_trip_elements,  :value => true %>
+			<% end %>
 
 			<%= partial "trips/form", :trip => @trip %>
 
