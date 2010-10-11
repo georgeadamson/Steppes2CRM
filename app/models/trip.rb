@@ -353,8 +353,22 @@ class Trip
     # Derived properties and helpers...
     
     def leaders;			return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_leader			=> true ); end
-    def primaries;		return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_primary		=> true ); end
     def invoicables;	return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_invoicable	=> true ); end
+
+    def primaries
+
+      primaries = self.clients.all( TripClient.is_primary => true )
+
+      # Attempt to correct trip with no primary client!
+      if primaries.empty? && ( first_trip_client = self.trip_clients.first( :order => [:id] ) )
+        first_trip_client.is_primary = true
+        first_trip_client.save!
+        primaries.reload
+      end
+
+      return primaries
+
+    end
     
     def flights;	return self.trip_elements.all( :type_id => TripElement::FLIGHT,  :order => [:start_date, :id] ); end
     def handlers; return self.trip_elements.all( :type_id => TripElement::HANDLER, :order => [:start_date, :id] ); end	# AKA Flight agents
@@ -475,7 +489,9 @@ class Trip
     
     # Helper to return a string of client names: (Used in reports)
     def primary_clients_names
-      self.clients.all( TripClient.is_primary => true ).map{|c| "#{ c.fullname } #{ c.postcode }" }.join(', ')
+
+      return self.primaries.map{|c| "#{ c.fullname } #{ c.postcode }" }.join(', ')
+
     end
     
     # Helper to return a list of all versions of this trip:

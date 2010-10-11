@@ -234,7 +234,13 @@ class Client
   # Note how we cache @primary_address to prevent unecessary db trips as each address line is accessed:
   # Also, in the situation where a *new* client's attributes are being set, there will be no client_address mapping yet.
   def primary_address
-		return @primary_address ||= self.addresses.first( ClientAddress.is_active => true ) || ( self.new? && self.addresses.first )
+    
+    return @primary_address if @primary_address
+    primary_mapping    = self.client_addresses.first( :is_active => true )
+    @primary_address ||= primary_mapping && primary_mapping.address
+    return @primary_address || ( self.new? && self.addresses.first ) || nil
+
+		#return @primary_address ||= self.addresses.first( ClientAddress.is_active => true ) || ( self.new? && self.addresses.first ) || nil
   end
 
   # Depricated:
@@ -255,13 +261,18 @@ class Client
 		return self.primary_address.id
 	end
 
-  # Helper for setting one of the client_addresses as primary. (Used by the addresses form)
-  # (The test for blank/new just prevents accidentally submitted attribute from causing errors)
+  # SETTER to make one of the client_addresses primary. (Used by the addresses form)
+  # (The tests for blank & new just prevent accidentally submitted attribute from causing errors)
+  # Important: Syntax could be simpler but this approach queries unsaved data instead of querying sql only.
 	def primary_address_id=(id)
 
     unless id.blank? || self.new? || self.client_addresses.all( :address_id => id ).empty?
-	    self.client_addresses.each{ |a| a.is_active = (a.address_id == id) }.save!
-      @primary_address = nil
+
+	    self.client_addresses.each{ |a| puts a.inspect, a.is_active = (a.address_id == id.to_i) }.save!
+
+      primary_mapping  = self.client_addresses.first( :is_active => true )
+      @primary_address = primary_mapping && primary_mapping.address || nil
+
     end
 
   end
