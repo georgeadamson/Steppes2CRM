@@ -18,7 +18,7 @@
 		<%
 			accomm   = day.elements.select{ |elem| elem.type_id == TripElementType::ACCOMM }.first
 			supplier = accomm && accomm.supplier
-			img_file = supplier && accomm.supplier.image_file.strip.gsub(' ','+')
+			img_file = supplier && ( accomm.supplier.image_file || '' ).strip.gsub(' ','+')
 		%>
 
 		<tr>
