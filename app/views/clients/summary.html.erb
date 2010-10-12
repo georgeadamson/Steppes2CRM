@@ -3,6 +3,9 @@
 	#visible_trips_count = ( max_trips_to_show < @client.active_trips.length ) ? max_trips_to_show : @client.active_trips.length
 %>
 <div class="sectionContainer xnoSectionFoot clientSummary fieldsetGrid">
+	
+	<!-- TOTAL-SPEND is included here so that js can update total_spend field at top of client page when page loads: -->
+	<%= hidden_field :'data-resource' => resource(@client), :'data-field' => 'client[total_spend]', :value => @client.total_spend.to_currency(:uk) %>
 
 	<div class="sectionHead">
 		<h3>

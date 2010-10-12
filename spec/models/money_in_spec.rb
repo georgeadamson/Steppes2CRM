@@ -12,6 +12,7 @@ describe MoneyIn do
 
     seed_lookup_tables()
     @company = Company.first_or_create( :initials => 'SE' )
+    @client  = Client.first_or_create( valid_client_attributes )
     
     # Override default paths in app_settings:
     @doc_folder_path    = CRM[:doc_folder_path]    = 'C:/SteppesCRM/steppes2dev/scripts/documents/doc_builder/(Sample Documents)'
@@ -24,13 +25,13 @@ describe MoneyIn do
     live_doc_templates_path = '//selfs/Documents/Templates'
 
     # Eg: //selfs/Documents/Templates/SE_Invoice.doc | SE_InvoiceSupp.doc | SE_CreditNote.doc
-    @live_main_invoice_template_path = live_doc_templates_path / Document.new( :document_type_id => DocumentType::MAIN_INVOICE ).default_document_template_file
-    @live_supp_invoice_template_path = live_doc_templates_path / Document.new( :document_type_id => DocumentType::SUPP_INVOICE ).default_document_template_file
-    @live_cred_invoice_template_path = live_doc_templates_path / Document.new( :document_type_id => DocumentType::CREDIT_NOTE  ).default_document_template_file
-    
-    @main_invoice_template_path = @doc_templates_path / Document.new( :document_type_id => DocumentType::MAIN_INVOICE ).default_document_template_file
-    @supp_invoice_template_path = @doc_templates_path / Document.new( :document_type_id => DocumentType::SUPP_INVOICE ).default_document_template_file
-    @cred_invoice_template_path = @doc_templates_path / Document.new( :document_type_id => DocumentType::CREDIT_NOTE  ).default_document_template_file
+    @live_main_invoice_template_path = live_doc_templates_path / Document.new( :document_type_id => DocumentType::MAIN_INVOICE, :company => @company ).default_document_template_file
+    @live_supp_invoice_template_path = live_doc_templates_path / Document.new( :document_type_id => DocumentType::SUPP_INVOICE, :company => @company ).default_document_template_file
+    @live_cred_invoice_template_path = live_doc_templates_path / Document.new( :document_type_id => DocumentType::CREDIT_NOTE,  :company => @company ).default_document_template_file
+
+    @main_invoice_template_path = @doc_templates_path / Document.new( :document_type_id => DocumentType::MAIN_INVOICE, :company => @company ).default_document_template_file
+    @supp_invoice_template_path = @doc_templates_path / Document.new( :document_type_id => DocumentType::SUPP_INVOICE, :company => @company ).default_document_template_file
+    @cred_invoice_template_path = @doc_templates_path / Document.new( :document_type_id => DocumentType::CREDIT_NOTE,  :company => @company ).default_document_template_file
     
     # Copy live templates to our test folder:
     FileUtils.copy( @live_main_invoice_template_path, @main_invoice_template_path ) if File.exist?(@live_main_invoice_template_path)
@@ -80,6 +81,24 @@ describe MoneyIn do
     @company.destroy!
 
   end
+
+
+
+
+
+  it 'should update client total_spend after creation' do
+    
+    sum_of_invoices = @invoice.client.money_ins.sum(:amount) || 0
+    @invoice.client.total_spend.should == sum_of_invoices
+
+    @invoice.amount = 100
+    @invoice.save.should be_true
+    @invoice.client.reload
+    
+    @invoice.client.total_spend.should == sum_of_invoices + 100
+    
+  end
+
 
 
 

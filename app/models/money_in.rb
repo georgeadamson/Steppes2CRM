@@ -207,7 +207,10 @@ class MoneyIn
   after :save do
     
     # Trip becomes CONFIRMED when MAIN INVOICE is created:
-    self.trip.update( :status_id => Trip::CONFIRMED ) if self.trip && self.trip.unconfirmed? && self.main_invoice? && self.total_requested > 0
+    self.trip.update!( :status_id => Trip::CONFIRMED ) if self.trip && self.trip.unconfirmed? && self.main_invoice? && self.total_requested > 0
+    
+    # Recalculate client total_spend:
+    self.client.update_total_spend!
     
   end
   
