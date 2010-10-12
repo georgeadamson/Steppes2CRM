@@ -18,7 +18,7 @@ if( !console.log    ){ console.log = function(){} };
 	if( !$.fn.delay ){
 
 		$.fn.delay = function(time, type){
-			time = $.fx && $.fx.speeds && $.fx.speeds[time] || time || 600;
+			time = $.fx && $.fx.speeds && $.fx.speeds[time] || parseInt(time) || 600;
 			type = type || "fx";
 			return this.queue(type, function() {
 				var elem = this;
@@ -58,7 +58,7 @@ jQuery(function($) {
 		AJAX_TIMEOUT					= 30000,			// Milliseconds.
 
 		// Settings for client-search:
-		CLIENT_SEARCH_MAX_ROWS			= 15,				// Will be sent as &limit=n parameter when searching for clients via ajax.
+		CLIENT_SEARCH_MAX_ROWS			= 20,				// Will be sent as &limit=n parameter when searching for clients via ajax.
 		CLIENT_SEARCH_DELAY_BEFORE_AJAX	= 500,				// Slight delay before searching for the keywords being typed in client search box.
 
 		// Settings for postcode-lookup:
@@ -92,11 +92,10 @@ jQuery(function($) {
 
 		// IMPORTANT: These Lookups must match codes in the corresponding TripElementTypes database table!
 		lookupTripElementType = { 1:'flight', 2:'flightagent', 4:'accomm', 5:'ground', 8:'misc' },
-		
-		COMMA							= ',',
-		
-		KEY = {
 
+		COMMA							= ',',
+
+		KEY = {
 			digits			: /[0-9]|[\x60-\x69]/,						// Allows for number-pad digits too.
 			integer			: /[0-9]|[\x60-\x69]|[\x6D]/,				// Same as digits but allow minus (-) too.
 			'decimal'		: /[0-9]|[\x60-\x69]|[\x6D]|[\xBE\x6E]/,	// Same as digits but allow minus (-) and dot (.) too.
@@ -139,7 +138,7 @@ jQuery(function($) {
 
 			// Bind custom 'hashchange' event:
 			$(document).bind('hashchange', Layout.reload);
-		
+
 			Layout.initLinksHandler();
 			Layout.initFormsHandler();
 
@@ -152,11 +151,11 @@ jQuery(function($) {
 			Layout.livePath('success', new RegExp('clients/new'),						Client.initForm );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)$'),					Client.initShow );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/edit'),				Client.initForm );
-			Layout.livePath('success', new RegExp('clients/([0-9]+)/summary'),			Client.initForm );
+			Layout.livePath('success', new RegExp('clients/([0-9]+)/summary'),			Client.initForm, BoundFields.update );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/trips$'),			Client.initForm );	// When user clicks to see all trips on client summary page.
 			Layout.livePath('success', /[\?\&]open_client_id=([0-9]+)/,					Client.openShow );	// Eg: web_requests?open_client_id=2138587702
 			Layout.liveForm('success', 'clients:create',								Client.openShow );	// After creating a new client.
-			Layout.liveForm('success', 'clients:update',								Client.initForm );
+			Layout.liveForm('success', 'clients:update',								Client.initForm, BoundFields.update );
 
 			// Tours:
 			Layout.livePath('click',   /tours\/([0-9]+)$/,								Tour.openShow );	//openTourTab
@@ -189,6 +188,10 @@ jQuery(function($) {
 			Layout.liveForm('success', 'trip_elements:create',										Trip.initTimeline );
 			Layout.liveForm('success', 'trip_elements:update',										Trip.initTimeline );
 			Layout.liveForm('success', 'trip_elements:destroy',										Trip.initTimeline );
+
+			// MoneyIn (Invoice)
+			Layout.liveForm('success', 'money_ins:create',											BoundFields.update );
+			Layout.liveForm('success', 'money_ins:update',											BoundFields.update );
 
 			// Reports:
 			Layout.livePath('success', new RegExp('reports$'),							Report.initForm );
@@ -577,9 +580,13 @@ jQuery(function($) {
 		// Parse error & notice message elements from the xhr response:
 		// Test for messages in data eg: <!--<MESSAGES>--><h2 class="errorMessage">Oops, something odd happened. <br/> <div class='error'>The trip details could not be saved because:<ul><li>TripElement: (Flight) The Flight agent cannot be left blank</li></ul></div></h2><!--</MESSAGES>-->
 		getMessagesFrom: function(data){
-			if( typeof(data) !== 'string' ){ data = $(data).html() }
-			var fragment = ( FIND_MESSAGE_CONTENT.exec(data) || [] )[1] || '';
-			return $('<div>').html(fragment).find(".noticeMessage,.errorMessage");
+			try{
+				if( typeof(data) !== 'string' ){ data = $(data).html() }
+				var fragment = ( FIND_MESSAGE_CONTENT.exec(data) || [] )[1] || '';
+				return $('<div>').html(fragment).find(".noticeMessage,.errorMessage");
+			}catch(e){
+				return $([]);
+			}
 		},
 
 
@@ -3598,10 +3605,45 @@ function initTripInvoiceFormTotals(){
 
 		}
 
-	}
+	};
 
 
 
+	var BoundFields = {
+
+		// Helper to apply any new field values to other elements bound to the same field:
+		// Fields are identified by custom data-resource and data-field attributes.
+		// Any "INPUT[data-resource][data-field]" in the loaded html is assumed to be a source of data.
+		// Any "[data-bound][data-resource][data-field]" on the page is assumed to be bound to the data (if resource & field match source).
+		update : function(ui){
+
+			var $updates = $( ui.panel || ui.target ).find("INPUT[data-resource][data-field]");
+
+			if( $updates.length ){
+
+				// Locate all the bound elements on the page: (Potentially SLOW!)
+				var $candidates  = $("SPAN,INPUT").filter("[data-bound]");
+
+				// Update all fields bound to the updated data:
+				$updates.each(function(){
+
+					var $this    = $(this);
+					var resource = $this.attr('data-resource');
+					var field    = $this.attr('data-field');
+					var value    = $this.val();
+					var selector = "[data-resource='{r}'][data-field='{f}']".replace("{r}",resource).replace("{f}",field);
+
+					$candidates.filter(selector).not(this)
+						.not('INPUT,TEXTAREA').text(value).end()	// Set bound text elements.
+						.filter('INPUT,TEXTAREA').val(value);		// Set bound value elements.
+
+				});
+
+			}
+
+		}
+
+	};
 
 
 

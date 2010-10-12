@@ -121,6 +121,7 @@ class Client
   def country_name;      self.country.name; end
   def mailing_zone_name; self.country && self.country.mailing_zone.name; end
   def areas_of_interest; self.countries_names.join(', '); end
+  def total_spend;       self.attribute_get(:total_spend) || 0; end # Override to avoid nil
 
 	alias :interests_ids  :countries_ids
 	alias :interests_ids= :countries_ids=
@@ -191,14 +192,11 @@ class Client
     # Might as well assume marketing source is same as original source if necessary: (Helpful when someone uses this field for reposrting)
     self.source ||= self.original_source
 
+    # Recalculate client total_spend:
+    self.update_total_spend
+    
   end
 
-  before :update do
-    #datePattern = /^[0-3][0-9][-\/][0-1][0-9][-\/][1-2][0-9]{3}$/
-    #self.birth_date = nil #unless self.birth_date.to_s =~ datePattern
-    #self.passport_issue_date = nil #unless self.passport_issue_date.to_s =~ datePattern
-    #self.passport_expiry_date = nil #unless self.passport_expiry_date.to_s =~ datePattern
-  end 
 
   after :create do
 
@@ -359,6 +357,18 @@ class Client
   # Helper to identify clients that have only just been added to the database:
   def created_today?
     self.new? || ( self.created_at && self.created_at.jd == Date.today.jd ) || false
+  end
+
+
+  # Recalculate total_spend by adding up all invoice totals:
+  def update_total_spend
+    self.total_spend = self.money_ins.sum(:amount) || 0   # Allow for sum returns nil when there are no items.
+  end
+
+  # Recalculate and SAVE total_spend by adding up all invoice totals:
+  def update_total_spend!
+    self.update_total_spend()
+    self.save!
   end
 
 

@@ -24,7 +24,7 @@ class Document
   property :name,				            String,  :required => true, :length => 255, :default => 'Document'
 	property :file_name,	            String,  :required => true, :length => 500, :default => ''
   property :document_type_id,	      Integer, :required => true
-  property :client_id,	            Integer  #required unless trip.tour_template? See validation below. # The person this document was created for. Others may have access to it too through trip.
+  property :client_id,	            Integer  #required unless trip.tour_template? See validocdation below. # The person this document was created for. Others may have access to it too through trip.
   property :company_id,	            Integer, :required => true
   property :trip_id,		            Integer, :required => false
   property :user_id,		            Integer, :required => false  # Not applicable for legacy database1 user_names because they are not in users list.
@@ -479,12 +479,18 @@ class Document
       # This did not seem to update the row. No idea why! Had to resort to direct update instead:
       #self.doc_builder_output = output.join("\n")
       #self.save!
-      doc = Document.get(self.id)
-      doc.doc_builder_output = output.join("\n")
-      doc.save!
+
+      # Trouble is, the direct update caused datamapper to notice that it's data was out of date:
   		# sql_statement = "EXEC sp_document_update_job_status ?, ?, ?"
       # repository.adapter.execute( sql_statement, self.id, nil, "\n#{ output.join("\n") }" )
-      self.reload
+      # Note sure this works any better either!
+      if( doc = Document.get(self.id) )
+        doc.doc_builder_output = output.join("\n")
+        doc.save!
+        self.reload
+      else
+        Document.logger.info "Unable to log progress to doc record because it does not exist #{ self.id }"
+      end
       
 
       IO.popen(shell_command) do |readme|
