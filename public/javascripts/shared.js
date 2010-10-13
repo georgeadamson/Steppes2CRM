@@ -442,7 +442,7 @@ jQuery(function($) {
 		// Initialise FORM SUBMIT handlers:
 		initFormsHandler : function(){
 
-			// Initialise handler for auto-submitting picklists:
+			// Initialise handler for auto-submitting PICKLISTS:
 			$('SELECT.auto-submit, :checkbox.auto-submit, FORM.auto-submit SELECT, FORM.auto-submit :checkbox').live('change keydown', function(e){
 
 				// Ignore all key strokes except <Enter> key: (to select an item in the list)
@@ -450,7 +450,7 @@ jQuery(function($) {
 				$(this).closest('FORM').trigger('submit',this);
 			})
 
-			// Initialise handler for auto-linking picklists that need to be posted like a form:
+			// Initialise handler for auto-linking PICKLISTS that need to be posted like a form:
 			$('SELECT[data-method]').live('change keydown', function(e){
 
 				// Ignore all key strokes except <Enter> key: (to select an item in the list)
@@ -460,7 +460,7 @@ jQuery(function($) {
 				if( !$(this).val() ){ return }
 
 				var $list  = $(this), $item = $list.find('OPTION:selected'),
-					method = $list.attr('data-method'),
+					method = $list.attr('data-method'),													// POST, GET, PUT or DELETE
 				    target = Layout.getTargetOf($list),
 					href   = $item.attr('data-href') || $list.attr('data-href') || $list.val();			// Read custom url from item or list element.
 					href   = href.replace( '{value}', $item.val() ).replace( '{text}', $item.text() ),	// Interpolate {placeholders} with values.
@@ -474,7 +474,7 @@ jQuery(function($) {
 
 			})
 
-			// Initialise common form handler:
+			// Initialise common FORM handler:
 			$('FORM:not(.noajax)').live('submit', function(e, source){
 
 				// The source argument will only be present when triggered by SELECT.auto-submit:
@@ -496,7 +496,7 @@ jQuery(function($) {
 				// Stop interfering right now if form is generating a file to download:
 				if( ALLOW_DOWNLOAD_OF[ext] || $button.is('.download, .ajaxDownload') || $form.is('.download, .ajaxDownload') ){ return }
 
-				// By setting up the ajaxSubmit here, each of the callbacks can refer to the $form using a closure:
+				// By setting up the AJAX SUBMIT here, each of the callbacks can refer to the $form using a closure:
 				$form.ajaxSubmit({
 
 					url       : url,
@@ -592,12 +592,12 @@ jQuery(function($) {
 
 		// Prepare multiple callbacks by creating an anonymous function to run each in turn:
 		// Important: This returns one function that accepts arguments and passes them to each callback function.
-		wrapCallbacks : function( callbacks, evenWhenOnlyOne ){
+		wrapCallbacks : function( callbacks, always ){
 
 			// Ensure we really are dealing with an array of functions: (Saves time later)
 			callbacks = $.grep( $.makeArray(callbacks), function(fn){ return $.isFunction(fn) } );
 
-			if( callbacks.length > 1 || evenWhenOnlyOne ){
+			if( callbacks.length > 1 || always ){
 				return function(args){
 					var self = this; args = Array.prototype.slice.call(arguments);
 					$.each(callbacks, function(i,fn){ fn.apply(self,args) });
@@ -612,11 +612,13 @@ jQuery(function($) {
 		// Helper for deriving the ui-target element of a link or button etc:
 		getTargetOf : function(elem){
 
-			// Allow for when a label is clicked to trigger a submit: (We have to use closest() because elem may be a text node inside a label)
-			var id, $elem = $(elem), label_for = $elem.closest('LABEL').attr('for');
+			// Allow for when a label is clicked to trigger a submit: (Allow for label or a text node inside label)
+			var id, $elem = $(elem), label_for = $elem.parent('LABEL').andSelf().attr('for');
 			if( label_for ){ $elem = $( '#' + label_for ) }
 			
 			var $form  = $elem.closest('FORM');
+
+			// Do our best to read the custom target from the element or the form:
 			var target = $elem.find('OPTION:selected').attr('data-target')
 				|| $elem.attr('data-target') || $elem.attr('rel') || $elem.attr('data-rel')	// Note: "data-rel" is depricated. "rel" only applies to links and should be depricated.
 				|| ( $elem.is(':submit') && $form.attr('data-target') )
@@ -638,8 +640,9 @@ jQuery(function($) {
 
 			$form = $($form).closest('FORM');
 
+			//  You can test this regex at http://rubular.com/r/7pWDd4CNyb The following comment breaks it down for you:
 			//  regex:     path     /  controller  / id (if followed by edit, delete, ?, # or $END)      / action                             ?  params        # hash  $END
-			var regex  = /(.*?(?:^|\/)([a-z_]+)(?:\/([0-9]+)(?=(?:\/edit|\/delete|\/?\?|\/?#|\/?$)))?(?:\/(index|new|edit|delete))?)\/?(?:(?:\?)([^#]*))?(?:(?:#)(.*))?$/i,	// Test on http://rubular.com/r/7pWDd4CNyb
+			var regex  = /(.*?(?:^|\/)([a-z_]+)(?:\/([0-9]+)(?=(?:\/edit|\/delete|\/?\?|\/?#|\/?$)))?(?:\/(index|new|edit|delete))?)\/?(?:(?:\?)([^#]*))?(?:(?:#)(.*))?$/i,
 			    method = $form.find("INPUT[name='_method']").val() || $form.attr('method') || 'post',
 			    href   = $form.attr('action') || '',
 			    match  = href.match(regex) || [],
@@ -651,7 +654,7 @@ jQuery(function($) {
 					action		: match[4] || '',		// Controller action name: index|new|edit|delete.
 					param		: match[5] || '',		// AKA Query or search string. Everything after the "?" until the hash or end of string.
 					hash		: match[6] || '',		// Everything after the "#".
-					resource	: Layout.singularize(match[2]),	// The name of the controller, just in front of the id or action. Eg "trip"
+					resource	: Layout.singularize(match[2]),	// The name of the controller, just in front of the last id or action. Eg "trip"
 					params		: {},					// Hash of url parameters. Will be populated from form.param string.
 					method		: method.toLowerCase(),	// The restful method name: get|post|put|delete.
 					href		: href,					// The entire path including any query string and hash etc.
@@ -671,7 +674,7 @@ jQuery(function($) {
 				case form.method == 'post'   &&  !form.id : form.action = 'create' ; break;	// clients/    (submit "new" form to create)
 				case form.method == 'put'    && !!form.id : form.action = 'update' ; break;	// clients/123 (submit "edit" form to update)
 				case form.method == 'delete' && !!form.id : form.action = 'destroy'; break;	// clients/123 (submit "delete" form to destroy)
-				case form.method == 'get'    && !!form.id : form.action = 'show'   ; break;	// clients/123 ("show" & "index" are irrelevant for a form!)
+				case form.method == 'get'    && !!form.id : form.action = 'show'   ; break;	// clients/123 ("show" & "index" should be irrelevant for a form!)
 				case form.method == 'get'    &&  !form.id : form.action = 'index'  ; break;	// clients/ or clients/index
 				default                                   : form.action = '';
 			}
@@ -3124,7 +3127,7 @@ function initTripInvoiceFormTotals(){
 		initShow : function(ui){
 
 			// Ensure the new tripPageTabsContent element has an indentifier:
-			var tabPanelContainerID = $( '.tripPageTabsContent', ui.panel ).id();
+			var tabPanelContainerID = $( '.tripPageTabsContent', ui.panel || ui.target ).id();
 
 			// Initialise the trip's tabs:
 			$( 'UL.tripPageTabsNav', ui.panel ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
