@@ -216,7 +216,7 @@ class Trip
         elem.adults   = self.adults   if elem.adults   != self.adults  
         elem.children = self.children if elem.children != self.children
         elem.infants  = self.infants  if elem.infants  != self.infants 
-        #elem.singles  = self.singles  # <-- TODO: Get unit tests to work with this.
+        elem.singles  = self.singles  # <-- TODO: Get unit tests to work with this.
         #elem.save!      if elem.dirty? #&& !elem.new? && !elem.destroyed? && elem.valid? && elem.supplier_id
         
       end

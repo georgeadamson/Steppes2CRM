@@ -100,18 +100,21 @@
 
 	end
 	
-	
+
+	# Helpful info to show by the single supp field: (n/a or number of singles)
+	single_supp_info = element.singles.to_i.zero? ? '(n/a)' : "(x#{ element.singles })"
+				
 	
 	
 	# Custom field labels for Flights (1):
 	if element.flight?
-		supplierLabel		= 'Flight with' 
-		startDateLabel	= 'Departure date' 
+		supplierLabel		= 'Flight with'
+		startDateLabel	= 'Departure date'
 		endDateLabel		= 'Arrival date'
 		
 		# Custom field labels for Accommodation (4):
 	elsif element.is_accomm?
-		supplierLabel		= 'Accomm' 
+		supplierLabel		= 'Accomm'
 		startDateLabel	= 'Check-in'
 		endDateLabel		= 'Check-out'
 		
@@ -123,9 +126,9 @@
 		
 		# Default field labels:
 	else
-		supplierLabel		= 'Supplier'
+		supplierLabel		= 'Misc supplier'
 		startDateLabel	= 'First day'
-		endDateLabel		= 'Last day'		
+		endDateLabel		= 'Last day'
 	end
 	
 	
@@ -220,33 +223,23 @@
 	</tr>
 
 
-	<% if element.is_accomm? %><!-- Extra fields for ACCOMMODATION only: -->
+	<% if element.is_accomm? %><!-- Extra fields for ACCOMM/GROUND only: -->
 	<tr class="tableRow">
 
-		<td colspan="2"><%= text_field :room_type, :label => 'Room type', :class => 'tableCell whenAccomm width2Fields' %></td>
-		<td><%= select :meal_plan, :label=>"Meal plan", :class => 'tableCell whenAccomm widthHalfField', :selected => element.meal_plan, :collection => %w[BB HB FB RO], :prompt => "n/a" %></td>
+		<td><%= text_field :room_type,		:label => 'Room type',	:class => 'tableCell whenAccomm width1Field' %></td>
+		<td><%= select :meal_plan,				:label => 'Meal plan',	:class => 'tableCell whenAccomm widthHalfField', :selected => element.meal_plan, :collection => %w[BB HB FB RO], :prompt => "n/a" %></td>
 
-		<%#= text_field :singles, :label=>"Singles", :class=>"tableCell whenAccomm whenGround widthHalfField spinbox spinboxMax" + @element.trip.singles.to_s %>
-	
 		<%#= text_field :single_rooms, :label => 'Single rooms', :class => 'tableCell whenAccomm widthHalfField spinbox' %>
-		<%#= text_field :twin_rooms,   :label => 'Twin rooms', :class => 'tableCell whenAccomm widthHalfField spinbox' %>
-		<%#= text_field :triple_rooms, :label => 'Triple rooms', :class => 'tableCell whenAccomm widthHalfField spinbox' %>
+		<%#= text_field :twin_rooms,			:label => 'Twin rooms',		:class => 'tableCell whenAccomm widthHalfField spinbox' %>
+		<%#= text_field :triple_rooms,		:label => 'Triple rooms', :class => 'tableCell whenAccomm widthHalfField spinbox' %>
 
 		<%#= text_field :cost_per_triple, :label => 'Cost per triple room', :maxlength => 4, :class => 'tableCell whenAccomm widthHalfField spinbox spinboxMax money' %>
 		<%#= text_field :cost_by_room,    :label => 'Cost by room',         :maxlength => 4, :class => 'tableCell whenAccomm widthHalfField spinbox spinboxMax money' %>
+		<%#
+		%>
 
 	</tr>
-	<% end%>
-
-	<tr class="tableRow"><!-- Description and notes: -->
-		<td colspan="2" class="tableCell">
-			<%= text_area :description, :label => 'Description<br/><small>May appear in client correspondence</small>', :class => 'tableColSpan2 width2Fields' %>
-		</td>
-
-		<td colspan="2" class="tableCell">
-			<%= text_area :notes, :label => 'Notes<br/><small>For our internal use only</small>', :class => 'tableColSpan2 width2Fields' %>
-		</td>	
-	</tr>
+	<% end %>
 
 	<!-- THIS FUNCTIONALITY HAS BEEN DISABLED until a future release: (Remove "hidden" class to reactivate this) -->
 	<tr class="tableRow unlessAllTravellers hidden"><!-- Number of travellers in subgroup: -->
@@ -254,6 +247,7 @@
 		<td><%= text_field :adults,   :label=>"Number of adults", :class=>"tableCell whenAdults unlessAllTravellers widthHalfField spinbox spinboxMax" + @element.trip.adults.to_s %></td>
 		<td><%= text_field :children, :label=>"Children", :class=>"tableCell whenChildren unlessAllTravellers widthHalfField spinbox spinboxMax" + @element.trip.children.to_s %></td>
 		<td><%= text_field :infants,  :label=>"Infants", :class=>"tableCell whenInfants unlessAllTravellers widthHalfField spinbox spinboxMax" + @element.trip.infants.to_s %></td>
+		<%= hidden_field :singles %>
 	</tr>
 
 	<tr class="tableRow"><!-- Net costs per traveller: -->
@@ -274,9 +268,9 @@
 
 	</tr>
 
-	<tr class="tableRow whenFlight"><!-- Business supplements: -->
+	<tr class="tableRow xwhenFlight whenAccomm"><!-- Business supplements: -->
 		<td>
-			<div class="formField twoFields">
+			<div class="formField twoFields whenFlight">
 				<%= orig_text_field :name=>"biz_supp_margin", :value=>10, :label=>"Biz supp margin", :readonly=>"readonly", :disabled=>"disabled", :class=>"widthHalfField spinbox spinboxMin spinboxMax spinboxStep0.1 spinboxBigStep10" %>
 				<select name="trip_element[biz_supp_margin_type]" id="trip_element_biz_supp_margin_type" readonly="readonly" disabled="disabled" class="widthHalfField">
 					<option value="%" selected="selected">%</option>
@@ -284,25 +278,31 @@
 			</div>
 		</td>
 		<td>
-			<%= text_field :single_supp,           :label=>"Single supplement", :maxlength=>7, :class=>"tableCell whenAccomm whenGround xwidthHalfField spinbox spinboxMax money" %>
-			<%= text_field :biz_supp_per_adult,    :label=>"Adult biz supp",		:maxlength=>7, :class=>"tableCell whenFlight whenAdults xwidthHalfField spinbox spinboxMax money" %>
+			<%= text_field :biz_supp_per_adult,  :label => 'Adult biz supp',	:maxlength=>7, :class=>"tableCell whenFlight whenAdults xwidthHalfField spinbox spinboxMax money" %>
 		</td>
-		<td><%= text_field :biz_supp_per_child,  :label=>"Child biz supp",		:maxlength=>7, :class=>"tableCell whenFlight whenChildren xidthHalfField spinbox spinboxMax money" %></td>
-		<td><%= text_field :biz_supp_per_infant, :label=>"Infant biz supp",		:maxlength=>7, :class=>"tableCell whenFlight whenInfants xwidthHalfField spinbox spinboxMax money" %></td>
+		<td>
+			<%= text_field :biz_supp_per_child,  :label => 'Child biz supp',	:maxlength=>7, :class=>"tableCell whenFlight whenChildren xidthHalfField spinbox spinboxMax money" %>
+		</td>
+		<td>
+			<%= text_field :biz_supp_per_infant, :label => 'Infant biz supp',	:maxlength=>7, :class=>"tableCell whenFlight whenInfants xwidthHalfField spinbox spinboxMax money" %>
+		</td>
 		<!--<td><div class="formField hidden">
 			<%#= orig_text_field :name=>"averageBizSuppPP", :label=>"Average Biz Supp pp", :class=>"tableCell whenFlight widthHalfField money" %>
 		</div></td>-->
 	</tr>
 
-	<tr class="tableRow"><!-- Currency and exchange rate: -->
+	<tr class="tableRow"><!-- Currency, exchange rate, taxes and SINGLE SUPP: -->
 		<td><div class="formField">
 			<%= orig_select :name => 'currency', :label => 'Currency', :class => 'tableCell', :readonly=>'readonly', :selected => element.supplier && element.supplier.currency.id.to_s, :collection => ExchangeRate.all(:order=>:name), :value_method => :id, :text_method => :name_and_rate %></td>
 		</div></td>
 		<td>
-			<%= text_field :exchange_rate, :label => 'Exchange rate', :class => 'widthHalfField exchange_rate decimal', :readonly => !allow_modify_exchange_rate %>
+			<%= text_field :exchange_rate,			 :label => 'Exchange rate', :class => 'widthHalfField exchange_rate decimal', :readonly => !allow_modify_exchange_rate %>
 		</td>
 		<td>
-			<%= text_field :taxes, :label => 'Taxes/fees pp<small><br/>Margin n/a</small>', :class => 'widthHalfField exchange_rate decimal' %>
+			<%= text_field :taxes,							 :label => 'Taxes/fees pp<small><br/>Margin n/a</small>', :class => 'widthHalfField exchange_rate decimal' %>
+		</td>
+		<td>
+			<%= text_field :single_supp,				 :label => "Single supp #{ tag :small, single_supp_info }", :class => 'tableCell whenAccomm whenGround xwidthHalfField spinbox spinboxMax money', :maxlength=>7 %>
 		</td>
 		<!--<td><div class="xformField whenAllTravellers link">
 			<label for="<%= nested_resource(element,true) %>is_subgroup">Define a subgroup</label>
@@ -326,15 +326,28 @@
 	</tr>-->
 
 	<tr class="tableRow"><!-- Total prices: BE WARY OF WHICH FIELDS ARE LOCAL vs GBP! -->
+	
 		<td><div class="formField total">
 			<%= orig_text_field :id=>"trip_element_total_margin", :label=>"Elem GBP margin", :class=>"total", :readonly=>"readonly" %>
 		</div></td>
-		<td><%= text_field :total_cost, :label=>"Element GBP cost", :class=>"total", :readonly=>"readonly" %></td>
+		<td><%= text_field :total_cost, :label=>"Elem GBP cost", :class=>"total", :readonly=>"readonly" %></td>
+		
 		<!-- Gross fields have been hidden because the client-side calculation may be misleading: -->
-		<td class="hidden"><%= text_field :total_price, :label=>"Element gross", :class=>"total", :readonly=>"readonly", :disabled=>"disabled" %></td>
-		<td class="hidden"><div class="formField total">
-			<%= orig_text_field :name=>"total_price_gbp", :label=>"Element GBP", :class=>"total", :readonly=>"readonly", :disabled=>"disabled" %>
+		<td class="hidden"><%= text_field :total_price, :label=>"Elem gross", :class=>"total", :readonly=>"readonly", :disabled=>"disabled" %></td>
+		<td class="xhidden"><div class="formField total">
+			<%= orig_text_field :name=>"total_price_gbp", :label=>"Elem GBP price", :class=>"total", :readonly=>"readonly", :disabled=>"disabled" %>
 		</div></td>
+	</tr>
+
+	<!-- Description and notes: -->
+	<tr class="tableRow">
+		<td colspan="2" class="tableCell">
+			<%= text_area :description, :label => 'Description<br/><small>May appear in client correspondence</small>', :class => 'tableColSpan2 width2Fields' %>
+		</td>
+
+		<td colspan="2" class="tableCell">
+			<%= text_area :notes, :label => 'Notes<br/><small>For our internal use only</small>', :class => 'tableColSpan2 width2Fields' %>
+		</td>	
 	</tr>
 
 </table>
