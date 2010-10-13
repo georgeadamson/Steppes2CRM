@@ -2800,16 +2800,17 @@ function initKeyPressFilters(){
 
 
 
-function initTripElementFormTotals(){
-
-	// Update TripElement totals when these fields change:
-	$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
-		.live( 'change', onTripElementFieldChange )
-		//.live( 'click', onTripElementFieldChange )
-	;
-
-}
+	function initTripElementFormTotals(){
 		
+		// Update TripElement totals when these fields change:
+		// Warning: We just bind one event here. Binding more tends to slow down the responsiveness of the ui.
+		// Warning: If you change this code, verify that the form initialisation still works: See TripElement.initForm
+		$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
+			.live( 'change', onTripElementFieldChange )
+		;
+
+	}
+
 	// Called to update TripElement totals whenever user makes changes in TripElement form: (And each time it is loaded by ajax)
 	function onTripElementFieldChange(){
 
@@ -3332,7 +3333,7 @@ function initTripInvoiceFormTotals(){
 			$target.hide().html(options.data);
 			initSpinboxes($target);
 			initDatepickers($target);
-			$target.find("[name='trip_element[supplier_id]']").trigger('click');	// Refresh calculated fields.
+			$target.find("[name='trip_element[supplier_id]']").trigger('change');	// Refresh calculated fields.
 
 			$target.animate({ height:'show', opacity:1 }, 'fast');
 
