@@ -849,6 +849,19 @@ DL.accordion.width3fields { width:60em; }
 	}
 
 	/* Hide fields that are not relevent for some tripElement types: */
+	.tripElementForm.isFlight .whenAccomm:not(.whenFlight),
+	.tripElementForm.isFlight .whenGround:not(.whenFlight),
+	.tripElementForm.isFlight .whenMisc:not(.whenFlight),
+	.tripElementForm.isAccomm .whenFlight:not(.whenAccomm),
+	.tripElementForm.isAccomm .whenGround:not(.whenAccomm),
+	.tripElementForm.isAccomm .whenMisc:not(.whenAccomm),
+	.tripElementForm.isGround .whenAccomm:not(.whenGround),
+	.tripElementForm.isGround .whenFlight:not(.whenGround),
+	.tripElementForm.isGround .whenMisc:not(.whenGround),
+	.tripElementForm.isMisc   .whenFlight:not(.whenMisc),
+	.tripElementForm.isMisc   .whenAccomm:not(.whenMisc),
+	.tripElementForm.isMisc   .whenGround:not(.whenMisc)
+	/* Depricated:
 	.tripElementForm.isFlight .whenAccomm,
 	.tripElementForm.isFlight .whenGround,
 	.tripElementForm.isFlight .whenMisc,
@@ -860,7 +873,9 @@ DL.accordion.width3fields { width:60em; }
 	.tripElementForm.isGround .whenMisc,
 	.tripElementForm.isMisc .whenFlight,
 	.tripElementForm.isMisc .whenAccomm,
-	.tripElementForm.isMisc .whenGround {
+	.tripElementForm.isMisc .whenGround
+	*/
+	{
 		display:none;
 	}
 

@@ -41,17 +41,18 @@
 
 	<tr>
 
-		<td colspan="3">
+		<td colspan="2">
 			<!-- "Trip title" when first version or "Version name" when subsequent versions: -->
 			<%= text_field :name,  :label => name_field_label, :class => 'summary width2Fields' %>
 		</td>
+		<td><%= text_field	:adults,			:label => 'Adults',				:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin1' %></td>
 
 	</tr>
 
 	<tr>
-		<td><%= text_field	:start_date,	:label => 'Start date',		:value => @trip.start_date.formatted(:uidate), :class => 'date dtstart', :fieldClass => 'fieldFlowHoriz' %></td>
-		<td><%= select			:user_id,			:label => 'Handled by',	  :selected => @trip.user_id.to_s, :collection => user_list, :value_method => :id, :text_method => :display_name, :prompt => '- Choose user' %></td>
-		<td><%= text_field	:adults,			:label => 'Adults',				:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin1' %></td>
+		<td><%= text_field	:start_date,	:label => 'Start date',	:value => @trip.start_date.formatted(:uidate), :class => 'date dtstart', :fieldClass => 'fieldFlowHoriz' %></td>
+		<td><%= select			:user_id,			:label => 'Handled by',	:selected => @trip.user_id.to_s, :collection => user_list, :value_method => :id, :text_method => :display_name, :prompt => '- Choose user' %></td>
+		<td><%= text_field	:children,		:label => 'Children',		:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
 
 		<!-- Total count of trip members: -->
 		<!--<td rowspan="4">
@@ -65,20 +66,20 @@
 	<tr>
 		<td><%= text_field	:end_date,		:label => 'End date',		:value => @trip.end_date.formatted(:uidate), :class => 'date dtend', :fieldClass => 'fieldFlowHoriz' %></td>
 		<td><%= select			:company_id,	:label => 'Invoice as', :collection => Company.all(:is_active=>true), :value_method => :id, :text_method => :name, :prompt => '- Choose company' %></td>
-		<td><%= text_field	:children,		:label => 'Children',		:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
+		<td><%= text_field	:infants,			:label => 'Infants',		:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
 	</tr>
 
 	<tr>
 		<td><%= text_field								:label => 'PNR numbers',	:name => 'trip[pnr_numbers]',	:value => @trip.pnr_numbers.join(', ').upcase , :title => 'Flights will be added and updated automatically when you provide PNR numbers here. Use a comma between each PNR number', :class => 'uppercase' unless @trip.new? || @trip.tour %></td>
 		<td><%= select			:type_id,			:label => 'Type of trip',	:collection => trip_type_list, :value_method => :id, :text_method => :name %></td>
-		<td><%= text_field	:infants,			:label => 'Infants',			:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
-	</tr>
-	
-	<tr>
-		<td colspan="3">
-			<br/>
+		<td><%= text_field	:singles,			:label => 'Singles',			:readonly => true, :class => 'widthHalfField spinbox', :title => 'Tick clients below to set the number of singles' %></td>
+		</tr>
+		
+		<tr>
+		<td colspan="2">
+		<br/>
 		</td>
-	</tr>
+		</tr>
 	
 	<tr>
 

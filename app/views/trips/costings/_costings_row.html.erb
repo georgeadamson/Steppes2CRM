@@ -24,24 +24,39 @@
 	
 	
 
-if !do_totals -%>
+unless do_totals -%>
 
 	<!-- COSTINGS table row: -->
 	<tr>
-		<%# Description   %><%= tag :td, elem_description %>
-		<%# Margin        %><%= tag :td, tag( :small, "#{ elem.margin }#{ elem.margin_type }" ) %>
-		<%# Rate          %><%= tag :td, tag( :small, elem.exchange_rate )%>
-		<%# Adult local   %><%= tag :td, elem.calc( :daily, :local,  :net,  :per, :adult,  :with_taxes => true ) %>
-		<%# Adult net     %><%= tag :td, elem.calc( :daily, :actual, :net,  :per, :adult,  :with_taxes => true ) %>
-		<%# Adult Gross   %><%= tag :td, elem.calc( :daily, :actual, :gross, :per, :adult,  :with_taxes => true ) %>
-		<%# Child net     %><%= tag :td, elem.calc( :daily, :actual, :net,  :per, :child,  :with_taxes => true ) %>
-		<%# Child Gross   %><%= tag :td, elem.calc( :daily, :actual, :gross, :per, :child,  :with_taxes => true ) %>
-		<%# Infant net    %><%= tag :td, elem.calc( :daily, :actual, :net,  :per, :infant, :with_taxes => true ) %>
-		<%# Infant Gross  %><%= tag :td, elem.calc( :daily, :actual, :gross, :per, :infant, :with_taxes => true ) %>
-		<%# Single net    %><%= tag :td, elem.calc( :daily, :actual, :net,  :per, :single, :with_taxes => true ) %>
-		<%# Single Gross  %><%= tag :td, elem.calc( :daily, :actual, :gross, :per, :single, :with_taxes => true ) %>
-		<%# biz_supp      %><%#=tag :td, elem.calc( :daily, :actual, :net , :per, :adult,  :with_taxes => true,  :biz_supp => true  ) %>
-		<%# with_biz_supp %><%#=tag :td, elem.calc( :daily, :actual, :net , :per, :adult,  :with_taxes => true,  :with_biz_supp => true  ) %>
+		<%# Description   -%>
+		<%= tag :td, elem_description %>
+		<%# Margin        -%>
+		<%= tag :td, tag( :small, "#{ elem.margin }#{ elem.margin_type }" ) %>
+		<%# Rate          -%>
+		<%= tag :td, tag( :small, elem.exchange_rate )%>
+		<%# Adult local   -%>
+		<%= tag :td, elem.calc( :daily, :local,  :net,  :per, :adult,  :with_taxes => true ) %>
+		<%# Adult net     -%>
+		<%= tag :td, elem.calc( :daily, :actual, :net,  :per, :adult,  :with_taxes => true ) %>
+		<%# Adult Gross   -%>
+		<%= tag :td, elem.calc( :daily, :actual, :gross, :per, :adult,  :with_taxes => true ) %>
+		<%# Child net     -%>
+		<%= tag :td, elem.calc( :daily, :actual, :net,  :per, :child,  :with_taxes => true ) %>
+		<%# Child Gross   -%>
+		<%= tag :td, elem.calc( :daily, :actual, :gross, :per, :child,  :with_taxes => true ) %>
+		<%# Infant net    -%>
+		<%= tag :td, elem.calc( :daily, :actual, :net,  :per, :infant, :with_taxes => true ) %>
+		<%# Infant Gross  -%>
+		<%= tag :td, elem.calc( :daily, :actual, :gross, :per, :infant, :with_taxes => true ) %>
+		<%# Single net    -%>
+		<%= tag :td, elem.calc( :daily, :actual, :net,  :per, :single, :with_taxes => true ) %>
+		<%# Single Gross  -%>
+		<%= tag :td, elem.calc( :daily, :actual, :gross, :per, :single, :with_taxes => true ) %>
+		<%# biz_supp      -%>
+		<%#=tag :td, elem.calc( :daily, :actual, :net , :per, :adult,  :with_taxes => true,  :biz_supp => true  ) %>
+		<%# with_biz_supp -%>
+		<%#=tag :td, elem.calc( :daily, :actual, :net , :per, :adult,  :with_taxes => true,  :with_biz_supp => true  ) 
+		%>
 	</tr>
 
 	<!-- COSTINGS table BIZ_SUPP row: -->

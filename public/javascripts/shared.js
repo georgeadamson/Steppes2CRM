@@ -1886,9 +1886,12 @@ return
 
 	};
 
+
+
 	$(".tripElementForm SELECT.tripElementTypeId")
 		.live("click", onTripElementTypeChange)
 		.live("keyup", onTripElementTypeChange);
+
 
 	// Respond to click on tripElement is_subgroup checkbox:
 	$(".tripElementForm INPUT:checkbox[name='trip_element[is_subgroup]']")
@@ -1917,13 +1920,13 @@ return
 
 
 
-	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	
+	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	// Refresh the singles field when user un/ticks single checkboxes:	$(":checkbox:visible[name *= 'is_single']").live('change', function(){			var $form   = $(this).closest('FORM');		var singles = $form.find(":checkbox[name *= is_single]:checked").length;				$form.find("[name = 'trip[singles]']").val(singles);		});	
 
 
-	// Checkbox to expand/collapse display of OLD trips on the TOURS page: */
-	$("#tours_show_old_trips").live('change', function(){
-		$(this).closest('.sectionContainer').find('.tours-list').toggleClass('hide-old-trips');
-	});
+	//	// Checkbox to expand/collapse display of OLD trips on the TOURS page: */
+	//	$("#tours_show_old_trips").live('change', function(){
+	//		$(this).closest('.sectionContainer').find('.tours-list').toggleClass('hide-old-trips');
+	//	});
 
 
 
@@ -2557,7 +2560,7 @@ function initSpinboxes() {
 			$country.filter(':not(:has(OPTION[value=' + UK_COUNTRY_ID + ']))')
 				//.prepend('<option value="6">United Kingdom</option>')
 			.end()
-			.val('6');
+			.val(UK_COUNTRY_ID);
 			
 		})
 
@@ -2581,7 +2584,7 @@ function initSpinboxes() {
 
 
 
-
+// DEPRICATED in favour of faster task-specific code:
 function initMVC(context) {
 
 	// Initialise TripElement calculated totals by faking user interaction and triggering event handler: 
@@ -2724,7 +2727,7 @@ function initKeyPressFilters(){
 	// TODO: Validate pasted values too?
 	$( "INPUT:text.positive" ).live( 'keydown', function(e){
 
-		if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.minus ) ){
+		if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) ){
 			return false;
 		}
 
@@ -2741,8 +2744,8 @@ function initKeyPressFilters(){
 		if( isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
 
 			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
-			if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
-			if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
+			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
+			if( isKeyCodeLikeFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
 
 			return true;
 
@@ -2761,8 +2764,8 @@ function initKeyPressFilters(){
 		if( isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
 
 			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
-			if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
-			if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
+			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
+			if( isKeyCodeLikeFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
 
 			return true;
 
@@ -2777,14 +2780,14 @@ function initKeyPressFilters(){
 	function isKeyCodeInList( keyCode, keyFilters ){
 
 		return !!$.grep( keyFilters || [], function(keyFilter){
-			return isKeyCodeLikeKeyFilter( keyCode, keyFilter )
+			return isKeyCodeLikeFilter( keyCode, keyFilter )
 		}).length;
 
 	};
 
 
 	// Helper for testing whether keyCode matches a specified character code or regex:
-	function isKeyCodeLikeKeyFilter( keyCode, keyFilter ){
+	function isKeyCodeLikeFilter( keyCode, keyFilter ){
 
 		return keyCode === keyFilter || ( keyFilter instanceof RegExp && keyFilter.test( String.fromCharCode(keyCode) ) );
 
@@ -2814,7 +2817,7 @@ function initTripElementFormTotals(){
 		var $all			= $form.find("SELECT,INPUT,TEXTAREA,DIV");
 		var $totals			= $all.filter(".total");						// Fields and DIVs with class of .total
 		var $fields			= $all.filter("SELECT,INPUT,TEXTAREA");			// Form fields
-		var $texts			= $fields.filter("INPUT:text");					// Textboxes only
+		var $texts			= $fields.filter("INPUT:text, INPUT:hidden");	// Textboxes and hiddens only
 		var $lists			= $fields.filter("SELECT");						// Dropdown lists only
 		var $currencyField	= $lists.filter("[name='currency']");
 
@@ -2837,10 +2840,12 @@ function initTripElementFormTotals(){
 		var adults				= numVal("[name='trip_element[adults]']", $texts);
 		var children			= numVal("[name='trip_element[children]']", $texts);
 		var infants				= numVal("[name='trip_element[infants]']", $texts);
+		var singles				= numVal("[name='trip_element[singles]']", $texts);
 		var cost_per_adult		= numVal("[name='trip_element[cost_per_adult]']", $texts);
 		var cost_per_child		= numVal("[name='trip_element[cost_per_child]']", $texts);
 		var cost_per_infant		= numVal("[name='trip_element[cost_per_infant]']", $texts);
-		var exchange_rate		= numVal("[name='trip_element[exchange_rate]']", $texts);
+		var single_supp			= numVal("[name='trip_element[single_supp]']", $texts);
+		var exchange_rate		= numVal("[name='trip_element[exchange_rate]']", $texts) || 1;	// Allow for rates accidentally set to zero.
 		var taxes				= numVal("[name='trip_element[taxes]']", $texts);
 		var margin				= numVal("[name='trip_element[margin]']", $texts);
 		var margin_type			= $lists.filter("[name='trip_element[margin_type]']").val();
@@ -2850,28 +2855,35 @@ function initTripElementFormTotals(){
 		var biz_supp_margin		= numVal("[name='biz_supp_margin']", $texts);
 		var biz_supp_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val();
 
-
-		// Calculate totals etc:
+		// Calculate basic costs: (in local currency)
 		var travellers			= adults + children + infants;
-		var total_std_cost		= adults * cost_per_adult + children * cost_per_child + infants * cost_per_infant;
+		var total_adult_cost	= adults * cost_per_adult;
+		var total_child_cost	= adults * cost_per_child;
+		var total_infant_cost	= adults * cost_per_infant;
+		var total_sgl_supp		= singles * single_supp;
+		var total_std_cost		= total_adult_cost + total_child_cost + total_infant_cost + total_sgl_supp;
 		var total_biz_supp		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
+
+		// Calculate margins, taxes and price: (in local currency)
 		var total_biz_margin	= (biz_supp_margin_type === '%') ? (total_biz_supp * biz_supp_margin / 100) : biz_supp_margin;	// Typically 10%
 		var total_std_margin	= (margin_type === '%') ? (total_std_cost * margin / 100) : margin;
 		var total_margin		= total_std_margin + total_biz_margin;
 		var total_taxes			= taxes * travellers
 		var total_cost			= total_std_cost + total_biz_supp + total_taxes;
 		var total_price			= total_cost + total_margin;
+
+		// Calculate prices: (in GBP)
 		var total_margin_gbp	= total_margin / Math.max(exchange_rate, 0.0001);  //
 		var total_cost_gbp		= total_cost   / Math.max(exchange_rate, 0.0001);  // Avoid divide-by-zero error.
 		var total_price_gbp		= total_price  / Math.max(exchange_rate, 0.0001);  //
 
-		// For better display, round currency values to 2 decimal places and pad pence with zeros where necessary:
-		total_margin	= round(total_margin);
-		total_cost		= round(total_cost);
-		total_price		= round(total_price);
-		total_margin_gbp= round(total_margin_gbp);
-		total_cost_gbp	= round(total_cost_gbp);
-		total_price_gbp	= round(total_price_gbp);
+		// For better display, round and format currency values to 2 decimal places:
+		total_margin			= round(total_margin);
+		total_cost				= round(total_cost);
+		total_price				= round(total_price);
+		total_margin_gbp		= round(total_margin_gbp);
+		total_cost_gbp			= round(total_cost_gbp);
+		total_price_gbp			= round(total_price_gbp);
 
 		// Update fields with new totals etc:
 		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers").filter("INPUT").val(travellers)
@@ -3315,10 +3327,13 @@ function initTripInvoiceFormTotals(){
 			var $tripPage = $(selector);
 			var $target   = $tripPage.find('.tripElementFormContainer');
 
+			// Hide form while initialising elements:
 			$target.hide().html(options.data);
 			initSpinboxes($target);
 			initDatepickers($target);
-			$target.animate({ height: 'show', opacity: 1 }, 'fast');
+			$target.find("[name='trip_element[supplier_id]']").trigger('click');	// Refresh calculated fields.
+
+			$target.animate({ height:'show', opacity:1 }, 'fast');
 
 		}
 	
@@ -3533,7 +3548,6 @@ function initTripInvoiceFormTotals(){
 		initIndex : function(ui){
 			// unused
 			console.log(ui)
-			alert(1)
 		},
 		
 		initForm : function(ui){

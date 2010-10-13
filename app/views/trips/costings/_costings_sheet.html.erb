@@ -38,7 +38,9 @@
 					<%= tag :td, trip.calc( :daily, :actual, :gross,          :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small' %>
 					<%= tag :td, trip.calc( :daily, :actual, :gross,          :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small' %>
 					<%= tag :td, trip.calc( :daily, :actual, :net,            :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small' %>
-					<%#= tag :td, trip.calc( :daily, :actual, :margin,         :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small' %>
+					<%#= 
+						tag :td, trip.calc( :daily, :actual, :margin,         :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small'
+					%>
 					<td></td>
 					<td></td>
 				</tr>
