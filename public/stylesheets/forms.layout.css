@@ -167,7 +167,7 @@ FORM {
 	
 	/* Discard some formField styles when it is in a table: */
 	TABLE .formField,
-	TABLE .formField:last-child {
+	TABLE .formField:last-child:not(:first-child) {
 		margin-bottom:0;
 		padding-bottom:0;
 	}
