@@ -128,6 +128,11 @@ A.mailto, A[href ^= mailto] {
 		background-position:0 0;
 	}
 
+	SPAN.ui-icon.ui-icon-grid {
+		background-image:url(/images/icons/icon.calendar.gif);
+		background-position:0 0;
+	}
+
 
 
 
