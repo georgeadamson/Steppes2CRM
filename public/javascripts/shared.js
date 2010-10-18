@@ -168,6 +168,7 @@ jQuery(function($) {
 			Layout.liveForm('success', 'tours:destroy',									Tour.closeShow, Tour.openIndex );
 
 			// Trips:
+			$("A[href $= '#costing_copy_gross']").live('click', Trip.copyGrossPrice);										// Handle 'Set gross' helper button on Costings Sheet.
 			Layout.livePath('click',   /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.openShow );	// Create new version.
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.initShow );	// Created new version.
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,									Trip.initForm );
@@ -1925,13 +1926,10 @@ return
 
 
 
-	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	//	// Refresh the singles field when user un/ticks single checkboxes:	//	$(":checkbox:visible[name *= 'is_single']").live('change', function(){	//		//		var $form   = $(this).closest('FORM');	//		var singles = $form.find(":checkbox[name *= is_single]:checked").length;	//			//		$form.find("[name = 'trip[singles]']").val(singles);	//		//	});	
+	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	// Depricated because users need to be able to enter number of singles before adding named clients.	//	// Refresh the singles field when user un/ticks single checkboxes:	//	// (ONLY if ticked quantity is greater than the singles box)	//	$(":checkbox:visible[name *= 'is_single']").live('change', function(){	//		var $form    = $(this).closest('FORM');	//		var singles  = $form.find(":checkbox[name *= is_single]:checked").length;	//		var $singles = $form.find("[name = 'trip[singles]']");	//			//		if( singles > parseInt($singles.val()) ){ $singles.val(singles) }	//	});	
 
 
-	//	// Checkbox to expand/collapse display of OLD trips on the TOURS page: */
-	//	$("#tours_show_old_trips").live('change', function(){
-	//		$(this).closest('.sectionContainer').find('.tours-list').toggleClass('hide-old-trips');
-	//	});
+
 
 
 
@@ -2864,8 +2862,8 @@ function initKeyPressFilters(){
 		var biz_supp_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val();
 
 		// Calculate basic costs: (in local currency)
-		var std_margin_mult		= ( 100 - std_margin ) / 100
-		var biz_margin_mult		= ( 100 - biz_margin ) / 100
+		var std_margin_mult		= ( 100 - std_margin ) / 100;	// Eg: 24% means "(100-24)/100" => 0.76
+		var biz_margin_mult		= ( 100 - biz_margin ) / 100;	// (See margin notes below)
 		var travellers			= adults + children + infants;
 		var total_adult_cost	= adults * cost_per_adult;
 		var total_child_cost	= adults * cost_per_child;
@@ -2875,7 +2873,10 @@ function initKeyPressFilters(){
 		var total_biz_cost		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
 
 		// Calculate margins, taxes and price: (in local currency)
-		var total_std_margin	= ( (margin_type          == '%') ? (total_std_cost / std_margin_mult) : std_margin      ) - total_std_cost;
+		// Important: We're calulating Margin and not Markup. There's a difference apparently :)
+		// (Markup would be derived as a percentage of Cost. Eg: 24% on £100 => £124 (then subtract Cost to get Margin)
+		// Margin is derived by calculating Gross using "Cost / margin-multipler". Eg: £100 / 0.76 => £131.6 (then subtract Cost to get Margin)
+		var total_std_margin	= ( (margin_type          == '%') ? (total_std_cost / std_margin_mult) : std_margin      ) - total_std_cost;	// Typically 24%
 		var total_biz_margin	= ( (biz_supp_margin_type == '%') ? (total_biz_cost / biz_margin_mult) : biz_supp_margin ) - total_biz_cost;	// Typically 10%
 		var total_margin		= total_std_margin + total_biz_margin;
 		var total_taxes			= taxes * travellers
@@ -3313,6 +3314,14 @@ function initTripInvoiceFormTotals(){
 
 		showSearchResults : function(options){
 			// Results will be loaded into #trip-search-results
+		},
+
+		// Handler to copy Gross Price pp from adjacent cell into the 'Set gross' textbox:
+		// (This function is bound directly to the event handler so it receives an event object)
+		copyGrossPrice : function(e){
+			var price = $(this).closest('TR').find('.calculated-gross').text() || 0;
+			$(this).closest('TD').find('INPUT[name *= price_per]').val( price );
+			e.stopPropagation();
 		}
 
 	} // End of Trip utilities.
@@ -3367,8 +3376,11 @@ function initTripInvoiceFormTotals(){
 					options.url = options.url + '?limit=500'
 					Layout.load(options.url,options);
 				},
+				close		: function(e,ui){
+					$(this).remove();
+				},
 				buttons		: {
-					'Cancel'		: function(){ $(this).dialog('close').remove() },
+					'Cancel'		: function(){ $(this).dialog('close') },
 					'Save changes'	: function(){ $('FORM:last',this).submit() }	// First form is for searching the second (last) is to perform the copy.
 				}
 			});

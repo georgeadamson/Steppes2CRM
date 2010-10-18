@@ -25,25 +25,38 @@
 					<th>Gross</th>
 					<th class="set-gross">Set gross</th>
 					<th>Profit</th>
-					<th>Margin</th>
+					<th>Sales margin</th>
 				</tr>
 			</thead>
 
 			<tbody>
-				<%= partial 'trips/costings/pricing_row', :trip => trip, :person => :adult  unless trip.adults.zero?   %>
-				<%= partial 'trips/costings/pricing_row', :trip => trip, :person => :child  unless trip.children.zero? %>
-				<%= partial 'trips/costings/pricing_row', :trip => trip, :person => :infant unless trip.infants.zero?  %>
+
+				<!-- Booking fee row: -->
 				<tr>
-					<th class="muted small">Price per person <em>includes</em> this booking fee</th>
+					<th class="muted small">Price per person <em>includes</em> this booking fee:</th>
 					<%= tag :td, trip.calc( :daily, :actual, :gross,          :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small' %>
 					<%= tag :td, trip.calc( :daily, :actual, :gross,          :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small' %>
 					<%= tag :td, trip.calc( :daily, :actual, :net,            :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small' %>
-					<%#= 
-						tag :td, trip.calc( :daily, :actual, :margin,         :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small'
-					%>
-					<td></td>
-					<td></td>
+					<%= tag :td, trip.calc( :daily, :actual, :margin,         :per, :traveller, :booking_fee => true, :to_currency => true ), :class => 'muted small' %>
+					<%= tag :td, trip.calc( :daily, :actual, :percent_margin, :per, :traveller, :booking_fee => true, :decimal_places => 1 ) + '%', :class => 'muted small' %>
 				</tr>
+
+				<!-- Taxes row: -->
+				<tr>
+					<th class="muted small">Price per person <em>includes</em> these taxes:</th>
+					<%= tag :td, trip.calc( :daily, :actual, :gross,          :per, :traveller, :taxes => true, :to_currency => true ), :class => 'muted small' %>
+					<%= tag :td, trip.calc( :daily, :actual, :gross,          :per, :traveller, :taxes => true, :to_currency => true ), :class => 'muted small' %>
+					<%= tag :td, trip.calc( :daily, :actual, :net,            :per, :traveller, :taxes => true, :to_currency => true ), :class => 'muted small' %>
+					<%= tag :td, trip.calc( :daily, :actual, :margin,         :per, :traveller, :taxes => true, :to_currency => true ), :class => 'muted small' %>
+					<%= tag :td, trip.calc( :daily, :actual, :percent_margin, :per, :traveller, :taxes => true, :decimal_places => 1 ) + '%', :class => 'muted small' %>
+				</tr>
+
+				<!-- Adult/Child/Infant/Single pricing: -->
+				<%= partial 'trips/costings/pricing_row', :trip => trip, :person => :adult  unless trip.adults.zero?   %>
+				<%= partial 'trips/costings/pricing_row', :trip => trip, :person => :child  unless trip.children.zero? %>
+				<%= partial 'trips/costings/pricing_row', :trip => trip, :person => :infant unless trip.infants.zero?  %>
+				<%= partial 'trips/costings/pricing_row', :trip => trip, :person => :single unless trip.singles.zero?  %>
+
 			<!--</tbody>-->
 
 			<!--<tfoot class="line-above">
@@ -52,7 +65,7 @@
 			<!--<tfoot>
 				<%#= partial 'trips/costings/pricing_row', :trip => trip, :person => :travellers, :do_totals => true %>
 			</tfoot>-->
-			
+
 		<!--</table>
 
 		<br/><br/>-->
