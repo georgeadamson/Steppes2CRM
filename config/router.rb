@@ -69,6 +69,9 @@ Merb::Router.prepare do
   resources :client_marketings
   resources :users
 
+  # Trip Elements grid builder:
+  match('/clients/:client_id/trips/:trip_id/trip_elements/grid').to(:controller => 'trip_elements', :action => 'grid')
+
   resources :trips do |trip|
     #trip.resources :elements, :controller => :trip_elements
     trip.resources :trip_elements                              # TODO: Depricate this!

@@ -67,11 +67,14 @@
 %>
 <div class="sectionContainer invoice">
 	
+	<!-- TOTAL-SPEND is included here so that js can update total_spend field at top of client page when page loads: -->
+	<%= hidden_field :name => 'client[total_spend]', :'data-resource' => resource(@invoice.client), :'data-field' => 'client[total_spend]', :value => @invoice.client.total_spend.to_currency(:uk) if @invoice.client %>
+
 	<!-- Form submits to trips#update action so make sure it knows to return us to the costings page: -->
 	<%= form_for @invoice, :action => resource( @client, @trip, :money_ins ) do %>
-		
+
 		<%= hidden_field :name => :redirect_to, :value => :costings %>
-		
+
 		<div class="sectionHead costingSheet">
 			<%= partial 'trips/costings/trip_sectionhead_overview', :trip => @trip %>
 		</div>
@@ -79,7 +82,7 @@
 		<div class="sectionBody">
 
 			<div class="paper width3Fields">
-		
+
 				<div class="" style="display:table-row">
 
 					<div class="" style="display:table-cell">
@@ -90,11 +93,11 @@
 						<%= text_field :name => :invoice_date,		:label => 'Invoice date', :value => @invoice.invoice_date.formatted(:uidisplay),	:readonly => true %>
 						<%= hidden_field :invoice_date,						:label => 'Invoice date', :value => @invoice.invoice_date.formatted(:db),					:readonly => true %>
 						<%= hidden_field :due_date,								:label => 'Due date',			:value => @invoice.due_date.formatted(:db),							:readonly => true %>
-						
+
 					</div>
-					
+
 				</div>
-				
+
 				<table cellspacing="0" cellpadding="0" class="invoice">
 					<tbody>
 					
@@ -127,7 +130,7 @@
 							<td colspan="8">
 								<br/>
 								<%# Note we specify narrative explicitly here to ensure pound symbol is displayed correctly: %>
-								<%= text_area @invoice.narrative, :name => 'money_in[narrative]', :label => 'Modify narrative:<br/><br/>', :class => 'width3Fields height4Fields' %>
+								<%= text_area @invoice.narrative, :name => 'money_in[narrative]', :label => 'Narrative: <small>(You may customise this)</small><br/><br/>', :class => 'width3Fields height4Fields labelWidthAuto' %>
 								<br/><br/>
 							</td>
 						</tr>

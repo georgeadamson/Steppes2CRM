@@ -8,25 +8,31 @@ class TripElements < Application
 
   def index
 
-    # The index is the timeline on on the Trip builder tab.
+    # This action renders the timeline on on the Trip builder tab.
 
-    @trip = Trip.get( params[:trip_id] )
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    @trip           = Trip.get( params[:trip_id] )
+    @elements       = @trip.trip_elements
+    
+    display @elements
 
-    @elements ||= @trip.trip_elements
+  end
 
-#    if @trip
-#      @trip.context ||= Client.get( params[:client_id] )
-#      @elements = @trip ? @trip.trip_elements : TripElement.all
-#    else
-#      @elements = TripElement.all
-#    end
+  def grid
+
+    # Provides a spreadsheet-like grid of trip elements to work on:
+
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    @trip           = Trip.get( params[:trip_id] )
+    @elements       = @trip.trip_elements
 
     display @elements
 
   end
 
   def show(id)
-    @element = TripElement.get(id)
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    @element        = TripElement.get(id)
     raise NotFound unless @element
     display @element
   end
@@ -38,6 +44,8 @@ class TripElements < Application
     @trip = Trip.get( params[:trip_id] )
     raise NotFound unless @trip
 
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    
     # Derive tripElementType from params if possible: (Eg: ?type=accomm would be typical we allow for other param names too!)
     element_type = TripElementType.first( :code => params[:type] || params[:type_code] ) ||
                    TripElementType.get( params[:type_id] || params[:element_type_id] || params[:trip_element_type_id] )
@@ -60,10 +68,12 @@ class TripElements < Application
 
 
   def edit(id)
+
     only_provides :html
     @element = TripElement.get(id)
     raise NotFound unless @element
 
+    @client_or_tour         = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
     @element.trip.context ||= Client.get( params[:client_id] ) if @element.trip
 
     display @element
@@ -72,6 +82,8 @@ class TripElements < Application
 
   def create(trip_element)
 
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    
 		# Fetch a reference to the trip itself:
 		@trip = Trip.get(trip_element[:trip_id]) || Trip.get(params[:trip_id]) || Trip.new
 
@@ -142,6 +154,8 @@ class TripElements < Application
     @element = TripElement.get(id)
     raise NotFound unless @element
 
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    
     # Fetch a reference to the trip itself:
     @trip = @element.trip || Trip.get(params[:trip_id]) || Trip.new
 		
@@ -219,6 +233,8 @@ class TripElements < Application
     @element = TripElement.get(id)
     raise NotFound unless @element
 
+    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    
     # Fetch a reference to the trip itself:
     @trip = @element.trip || Trip.get(params[:trip_id]) || Trip.new
 
