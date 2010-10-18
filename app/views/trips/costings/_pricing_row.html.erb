@@ -13,33 +13,35 @@ if !do_totals %>
 	biz_supp_price_method			||= "price_per_#{ person }_biz_supp".to_sym
 	price_per_person_biz_supp	||= trip.method(biz_supp_price_method).call
 	
-	net_per_person_biz_supp     = 
+	applies_to = trip.count_of(person) < trip.pax ? "#{ trip.count_of(person) } of #{ trip.pax }" : 'all'
 	
+	copy_gross = link_to icon(:refresh), '#costing_copy_gross', :title => h("Click to set gross (because I can't be bothered to type it in)"), :class => 'noajax hidden-when-js-disabled'
+
 	-%>
 	
 	<!-- TRIP PRICING per adult/child/infant: -->
 	<!-- "Trip pricing per person  	Gross  	Set gross  	Net  	Profit  	Margin" -->
 	<% with_all_extras_except_biz_supp = { :with_taxes => true, :with_booking_fee => true, :to_currency => true } %>
 	<tr>
-		<%= tag :th, "Price per #{ person.to_s.capitalize }" %>
+		<%= tag :th, "#{ person == :single ? 'Supp' : 'Price' } per #{ person.to_s.capitalize } #{ tag(:small,"(for #{ applies_to } pax)", :class=>'muted') }" %>
 		<%= tag :td, trip.calc( :daily, :actual, :net,            :per, person, :with_taxes => true, :with_booking_fee => true, :to_currency => true ) %>
-		<%= tag :td, trip.calc( :daily, :actual, :gross,          :per, person, :with_taxes => true, :with_booking_fee => true, :to_currency => true ), :class => 'muted' %>
-		<%= tag :td, text_field( price_method, :value => price_per_person.to_currency(:generic), :class => 'widthHalfField' ) %>
-		<%# trip.debug = true %>
+		<%= tag :td, trip.calc( :daily, :actual, :gross,					:per, person, :with_taxes => true, :with_booking_fee => true, :to_currency => true ), :class => 'muted calculated-gross' %>
+		<%= tag :td, "#{ copy_gross } #{ text_field( price_method, :value => price_per_person.to_currency(:generic), :class => 'widthHalfField' ) }" %>
 		<%= tag :td, trip.calc( :daily, :actual, :margin,         :per, person, :with_taxes => true, :with_booking_fee => true, :final_prices => true, :to_currency => true ) %>
-		<%# trip.debug = false %>
 		<%= tag :td, trip.calc( :daily, :actual, :percent_margin, :per, person, :with_taxes => true, :with_booking_fee => true, :final_prices => true, :decimal_places => 1 ) + '%' %>
 	</tr>
 
 	<!-- TRIP PRICING BIZ-SUPP per adult/child/infant: -->
+	<% unless person == :single %>
 	<tr>
-		<%= tag :td, "&nbsp; #{ person.to_s.capitalize } biz-supp" %>
+		<%= tag :td, "&nbsp; Biz-supp per #{ person.to_s.capitalize }" %>
 		<%= tag :td, trip.calc( :total, :actual, :net,            :per, person, :biz_supp => true, :to_currency => true ) %>
-		<%= tag :td, trip.calc( :total, :actual, :gross,          :per, person, :biz_supp => true, :to_currency => true ), :class => 'muted' %>
-		<%= tag :td, text_field( biz_supp_price_method, :value => price_per_person_biz_supp.to_currency(:generic), :class => 'widthHalfField' ) %>
+		<%= tag :td, trip.calc( :total, :actual, :gross,          :per, person, :biz_supp => true, :to_currency => true ), :class => 'muted calculated-gross' %>
+		<%= tag :td, "#{ copy_gross } #{ text_field( biz_supp_price_method, :value => price_per_person_biz_supp.to_currency(:generic), :class => 'widthHalfField' ) }" %>
 		<%= tag :td, trip.calc( :total, :actual, :margin,         :per, person, :biz_supp => true, :final_prices => true, :to_currency => true ) %>
 		<%= tag :td, trip.calc( :total, :actual, :percent_margin, :per, person, :biz_supp => true, :final_prices => true, :decimal_places => 1 ) + '%' %>
 	</tr>
+	<% end %>
 
 	
 <% else -%>

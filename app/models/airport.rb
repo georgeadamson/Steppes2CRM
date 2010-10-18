@@ -30,12 +30,20 @@ class Airport
 		self.code.blank? ? self.name : self.code
 	end
 	
-	# Airport name and code string used for consistent display: (Eg: "Heathrow [LHR]")
+	# Airport NAME and code string used for consistent display: (Eg: "Heathrow [LHR]")
 	def name_and_code
 		name = self.name.blank? ? '(blank airport name)' : self.name
 		code = self.code.blank? ? 'no code'              : self.code
 		return "#{ name } [#{ code }]"  # Beware of using different brackets. Some ui script may expect '[...]' for deriving the code.
 	end
 	alias display_name name_and_code
+	
+	# Airport CODE and name string used for consistent display: (Eg: "LHR [Heathrow]")
+	def code_and_name
+		name = self.name.blank? ? '(blank airport name)' : self.name
+		code = self.code.blank? ? 'no code'              : self.code
+		return "#{ code } [#{ name }]"
+	end
+	alias display_code code_and_name
 	
 end

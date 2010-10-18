@@ -268,13 +268,14 @@
 
 	</tr>
 
-	<tr class="tableRow xwhenFlight whenAccomm"><!-- Business supplements: -->
+	<tr class="tableRow whenFlight whenAccomm"><!-- Business supplements: -->
 		<td>
 			<div class="formField twoFields whenFlight">
-				<%= orig_text_field :name=>"biz_supp_margin", :value=>10, :label=>"Biz supp margin", :readonly=>"readonly", :disabled=>"disabled", :class=>"widthHalfField spinbox spinboxMin spinboxMax spinboxStep0.1 spinboxBigStep10" %>
-				<select name="trip_element[biz_supp_margin_type]" id="trip_element_biz_supp_margin_type" readonly="readonly" disabled="disabled" class="widthHalfField">
+				<%= orig_text_field :biz_supp_margin, :label => 'Biz supp margin', :class => 'widthHalfField spinbox spinboxMin spinboxMax spinboxStep0.1 spinboxBigStep10' %>
+				<%= orig_select     :biz_supp_margin_type, :readonly => 'readonly',              :class => 'widthHalfField', :collection => ['%'] %>
+				<!--<select name="trip_element[biz_supp_margin_type]" id="trip_element_biz_supp_margin_type" readonly="readonly" disabled="disabled" class="widthHalfField">
 					<option value="%" selected="selected">%</option>
-				</select>
+				</select>-->
 			</div>
 		</td>
 		<td>
@@ -302,7 +303,7 @@
 			<%= text_field :taxes,							 :label => 'Taxes/fees pp<small><br/>Margin n/a</small>', :class => 'widthHalfField exchange_rate decimal' %>
 		</td>
 		<td>
-			<%= text_field :single_supp,				 :label => "Single supp #{ tag :small, single_supp_info }", :class => 'tableCell whenAccomm whenGround xwidthHalfField spinbox spinboxMax money', :maxlength=>7 %>
+			<%= text_field :single_supp,				 :label => "Single supp #{ tag :small, single_supp_info }<small><br/>Additional amount</small>", :class => 'tableCell whenAccomm whenGround widthHalfField spinbox spinboxMax money', :maxlength=>7 %>
 		</td>
 		<!--<td><div class="xformField whenAllTravellers link">
 			<label for="<%= nested_resource(element,true) %>is_subgroup">Define a subgroup</label>

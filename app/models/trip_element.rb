@@ -639,15 +639,22 @@ class TripElement
           exchange_rate         = ( currency == :actual && self.exchange_rate != 0 ) ? self.exchange_rate.abs : 1.0
           cost_in_currency      = cost_in_local  / exchange_rate
           
-          if margin_type == '%'
-            # Calculate percent margin per person:
-            margin_in_currency  = ( cost_in_currency  / margin_multipler ) - cost_in_currency
-          elsif options[:taxes] || person == :single
-            # Skip fixed margin on single calculations and taxes:
+          # Skip any margin on taxes and skip fixed margin on single calculations:
+          if options[:taxes] || ( person == :single && margin_type != '%' )
             margin_in_currency  = 0.0
+
+          # Calculate percent margin per person:
+          elsif margin_type == '%'
+            margin_in_currency  = ( cost_in_currency  / margin_multipler ) - cost_in_currency
+
+          #  # Skip fixed margin on single calculations and taxes:
+          #  elsif person == :single || options[:taxes]
+          #    margin_in_currency  = 0.0
+
+          # Otherwise used fixed margin:
           else
-            # Otherwise used fixed margin:
             margin_in_currency  = margin
+
           end
           
           # Calculate net or gross or margin amount:

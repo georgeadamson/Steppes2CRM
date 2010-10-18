@@ -145,11 +145,14 @@ TD { vertical-align:baseline; }
   display:none;
 }
 
-	BODY.js *.hidden-when-js-enabled 
+	BODY.nojs *.js,
+	BODY.nojs *.hidden-when-js-disabled,
+	BODY.js   *.hidden-when-js-enabled
 	{
 		display:none;
 	}
-	BODY.js *.invisible-when-js-enabled 
+	BODY.nojs *.invisible-when-js-disabled,
+	BODY.js   *.invisible-when-js-enabled
 	{
 		visibility:hidden;
 	}

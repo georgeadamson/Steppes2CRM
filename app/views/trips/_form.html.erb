@@ -72,7 +72,7 @@
 	<tr>
 		<td><%= text_field								:label => 'PNR numbers',	:name => 'trip[pnr_numbers]',	:value => @trip.pnr_numbers.join(', ').upcase , :title => 'Flights will be added and updated automatically when you provide PNR numbers here. Use a comma between each PNR number', :class => 'uppercase' unless @trip.new? || @trip.tour %></td>
 		<td><%= select			:type_id,			:label => 'Type of trip',	:collection => trip_type_list, :value_method => :id, :text_method => :name %></td>
-		<td><%= text_field	:singles,			:label => 'Singles',			:readonly => true, :class => 'widthHalfField spinbox', :title => 'Tick clients below to set the number of singles' %></td>
+		<td><%= text_field	:singles,			:label => 'Single supps',			:readonly => false, :class => 'widthHalfField spinbox', :title => 'Tick clients below to set the number of singles' %></td>
 		</tr>
 		
 		<tr>

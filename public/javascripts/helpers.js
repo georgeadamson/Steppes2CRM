@@ -311,7 +311,28 @@ $.fn.extend({
 	},
 
 
-	
+
+
+	// Helpers for traversing tables:
+
+	prevCell : function(selector){
+		return this.pushStack( this.closest('TD,TH').prev(selector) );
+	},
+
+	nextCell : function(selector){
+		return this.pushStack( this.closest('TD,TH').next(selector) );
+	},
+
+	prevCellUp : function(selector){
+		var i = this.closest('TD,TH').attr('cellIndex') || 0;
+		return this.pushStack( this.closest('TR').prev().children(':nth-child(' + (i+1) + ')').filter(selector||'TD,TH') );
+	},
+
+	nextCellDown : function(selector){
+		var i = this.closest('TD,TH').attr('cellIndex') || 0;
+		return this.pushStack( this.closest('TR').next().children(':nth-child(' + (i+1) + ')').filter(selector||'TD,TH') );
+	},
+
 
 
 	// DEPRICATED

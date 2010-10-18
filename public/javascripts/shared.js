@@ -109,7 +109,7 @@ jQuery(function($) {
 			pageUpDown		: /[\x21-\x22]/,
 			pageUp			: 33,
 			pageDown		: 34,
-			arrows			: /[\x25-\x28]/,
+			arrows			: /[\x25-\x28]/,							// Arrow keys.
 			arrowLeft		: 37,
 			arrowUp			: 38,
 			arrowRight		: 39,
@@ -168,6 +168,7 @@ jQuery(function($) {
 			Layout.liveForm('success', 'tours:destroy',									Tour.closeShow, Tour.openIndex );
 
 			// Trips:
+			$("A[href $= '#costing_copy_gross']").live('click', Trip.copyGrossPrice);										// Handle 'Set gross' helper button on Costings Sheet.
 			Layout.livePath('click',   /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.openShow );	// Create new version.
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.initShow );	// Created new version.
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,									Trip.initForm );
@@ -182,6 +183,7 @@ jQuery(function($) {
 
 			// TripElements:
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.hideForm );
+			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.grid );
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.hideForm );
 			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.initForm );
 			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.initForm );
@@ -395,7 +397,7 @@ jQuery(function($) {
 			// Initialise handler for auto-linking picklists:
 			$('SELECT[data-href], SELECT:has(OPTION[data-href]:selected), SELECT[href]').live('change keydown', function(e){										// Note: "href" is depricated.
 
-				// Ignore all key strokes except <Enter> key: (to select an item in the list)
+				// Ignore ALL key strokes except <Enter> key: (to select an item in the list)
 				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
 
 				// Ignore event if the list is expected to submit it's value using form post:
@@ -445,15 +447,16 @@ jQuery(function($) {
 			// Initialise handler for auto-submitting PICKLISTS:
 			$('SELECT.auto-submit, :checkbox.auto-submit, FORM.auto-submit SELECT, FORM.auto-submit :checkbox').live('change keydown', function(e){
 
-				// Ignore all key strokes except <Enter> key: (to select an item in the list)
+				// Ignore ALL key strokes except <Enter> key: (to select an item in the list)
 				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
 				$(this).closest('FORM').trigger('submit',this);
+
 			})
 
 			// Initialise handler for auto-linking PICKLISTS that need to be posted like a form:
 			$('SELECT[data-method]').live('change keydown', function(e){
 
-				// Ignore all key strokes except <Enter> key: (to select an item in the list)
+				// Ignore ALL key strokes except <Enter> key: (to select an item in the list)
 				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
 
 				// Bail out if selected list item has no value: (It's probably just a prompt)
@@ -1923,13 +1926,10 @@ return
 
 
 
-	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	// Refresh the singles field when user un/ticks single checkboxes:	$(":checkbox:visible[name *= 'is_single']").live('change', function(){			var $form   = $(this).closest('FORM');		var singles = $form.find(":checkbox[name *= is_single]:checked").length;				$form.find("[name = 'trip[singles]']").val(singles);		});	
+	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	// Depricated because users need to be able to enter number of singles before adding named clients.	//	// Refresh the singles field when user un/ticks single checkboxes:	//	// (ONLY if ticked quantity is greater than the singles box)	//	$(":checkbox:visible[name *= 'is_single']").live('change', function(){	//		var $form    = $(this).closest('FORM');	//		var singles  = $form.find(":checkbox[name *= is_single]:checked").length;	//		var $singles = $form.find("[name = 'trip[singles]']");	//			//		if( singles > parseInt($singles.val()) ){ $singles.val(singles) }	//	});	
 
 
-	//	// Checkbox to expand/collapse display of OLD trips on the TOURS page: */
-	//	$("#tours_show_old_trips").live('change', function(){
-	//		$(this).closest('.sectionContainer').find('.tours-list').toggleClass('hide-old-trips');
-	//	});
+
 
 
 
@@ -2666,11 +2666,11 @@ function initMVC(context) {
 			// Calculate totals etc:
 			var travellers			= adults + children + infants;
 			var total_std_cost		= adults * cost_per_adult + children * cost_per_child + infants * cost_per_infant;
-			var total_biz_supp		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
-			var total_biz_margin	= (biz_supp_margin_type === '%') ? (total_biz_supp * biz_supp_margin / 100) : biz_supp_margin;	// Typically 10%
+			var total_biz_cost		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
+			var total_biz_margin	= (biz_supp_margin_type === '%') ? (total_biz_cost * biz_supp_margin / 100) : biz_supp_margin;	// Typically 10%
 			var total_std_margin	= (margin_type === '%') ? (total_std_cost * margin / 100) : margin;
 			var total_margin		= total_std_margin + total_biz_margin;
-			var total_cost			= total_std_cost + total_biz_supp + taxes;
+			var total_cost			= total_std_cost + total_biz_cost + taxes;
 			var total_price			= total_cost + total_margin;
 			var total_price_gbp		= total_price / Math.max(exchange_rate, 0.001);  // Prevent divide-by-zero error.
 
@@ -2809,7 +2809,7 @@ function initKeyPressFilters(){
 		// Warning: We just bind one event here. Binding more tends to slow down the responsiveness of the ui.
 		// Warning: If you change this code, verify that the form initialisation still works: See TripElement.initForm
 		$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
-			.live( 'change', onTripElementFieldChange )
+			.live( 'change keyup', onTripElementFieldChange )
 		;
 
 	}
@@ -2852,7 +2852,8 @@ function initKeyPressFilters(){
 		var single_supp			= numVal("[name='trip_element[single_supp]']", $texts);
 		var exchange_rate		= numVal("[name='trip_element[exchange_rate]']", $texts) || 1;	// Allow for rates accidentally set to zero.
 		var taxes				= numVal("[name='trip_element[taxes]']", $texts);
-		var margin				= numVal("[name='trip_element[margin]']", $texts);
+		var std_margin			= numVal("[name='trip_element[margin]']", $texts);
+		var biz_margin			= numVal("[name='trip_element[biz_supp_margin]']", $texts);
 		var margin_type			= $lists.filter("[name='trip_element[margin_type]']").val();
 		var biz_supp_per_adult	= numVal("[name='trip_element[biz_supp_per_adult]']", $texts);
 		var biz_supp_per_child	= numVal("[name='trip_element[biz_supp_per_child]']", $texts);
@@ -2861,20 +2862,25 @@ function initKeyPressFilters(){
 		var biz_supp_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val();
 
 		// Calculate basic costs: (in local currency)
+		var std_margin_mult		= ( 100 - std_margin ) / 100;	// Eg: 24% means "(100-24)/100" => 0.76
+		var biz_margin_mult		= ( 100 - biz_margin ) / 100;	// (See margin notes below)
 		var travellers			= adults + children + infants;
 		var total_adult_cost	= adults * cost_per_adult;
 		var total_child_cost	= adults * cost_per_child;
 		var total_infant_cost	= adults * cost_per_infant;
 		var total_sgl_supp		= singles * single_supp;
 		var total_std_cost		= total_adult_cost + total_child_cost + total_infant_cost + total_sgl_supp;
-		var total_biz_supp		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
+		var total_biz_cost		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
 
 		// Calculate margins, taxes and price: (in local currency)
-		var total_biz_margin	= (biz_supp_margin_type === '%') ? (total_biz_supp * biz_supp_margin / 100) : biz_supp_margin;	// Typically 10%
-		var total_std_margin	= (margin_type === '%') ? (total_std_cost * margin / 100) : margin;
+		// Important: We're calulating Margin and not Markup. There's a difference apparently :)
+		// (Markup would be derived as a percentage of Cost. Eg: 24% on £100 => £124 (then subtract Cost to get Margin)
+		// Margin is derived by calculating Gross using "Cost / margin-multipler". Eg: £100 / 0.76 => £131.6 (then subtract Cost to get Margin)
+		var total_std_margin	= ( (margin_type          == '%') ? (total_std_cost / std_margin_mult) : std_margin      ) - total_std_cost;	// Typically 24%
+		var total_biz_margin	= ( (biz_supp_margin_type == '%') ? (total_biz_cost / biz_margin_mult) : biz_supp_margin ) - total_biz_cost;	// Typically 10%
 		var total_margin		= total_std_margin + total_biz_margin;
 		var total_taxes			= taxes * travellers
-		var total_cost			= total_std_cost + total_biz_supp + total_taxes;
+		var total_cost			= total_std_cost + total_biz_cost + total_taxes;
 		var total_price			= total_cost + total_margin;
 
 		// Calculate prices: (in GBP)
@@ -3308,6 +3314,14 @@ function initTripInvoiceFormTotals(){
 
 		showSearchResults : function(options){
 			// Results will be loaded into #trip-search-results
+		},
+
+		// Handler to copy Gross Price pp from adjacent cell into the 'Set gross' textbox:
+		// (This function is bound directly to the event handler so it receives an event object)
+		copyGrossPrice : function(e){
+			var price = $(this).closest('TR').find('.calculated-gross').text() || 0;
+			$(this).closest('TD').find('INPUT[name *= price_per]').val( price );
+			e.stopPropagation();
 		}
 
 	} // End of Trip utilities.
@@ -3340,10 +3354,44 @@ function initTripInvoiceFormTotals(){
 
 			$target.animate({ height:'show', opacity:1 }, 'fast');
 
+		},
+
+		grid : function(options){
+
+			// We've intercepted a link so prevent default code from handling it:
+			options.event.stopImmediatePropagation();
+
+			// Re-use existing dialog or create new: 
+			$('#trip-elements-grid').parents('.ui-dialog').add('<div>').first()
+			.html('Opening...')
+			.dialog({
+				modal		: true,
+				title		: icon('grid') + ' Quickie trip builder',
+				minHeight	: 500,
+				maxHeight	: 500,
+				width		: 750,
+				open		: function(e,ui){
+					ui.panel = this;
+					options.target = '#' + $(ui.panel).id();
+					options.url = options.url + '?limit=500'
+					Layout.load(options.url,options);
+				},
+				close		: function(e,ui){
+					$(this).remove();
+				},
+				buttons		: {
+					'Cancel'		: function(){ $(this).dialog('close') },
+					'Save changes'	: function(){ $('FORM:last',this).submit() }	// First form is for searching the second (last) is to perform the copy.
+				}
+			});
+
 		}
-	
+
 	} // End of TripElement utilities.
 	
+
+
+
 
 
 	// Note: Tours are known as Groups in the UI.
