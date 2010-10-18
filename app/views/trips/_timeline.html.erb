@@ -14,6 +14,7 @@
 <div class="sectionContainer sectionContainerTop noSectionHead">
 
 	<div class="sectionBody timelineContent">
+	
 	<dl class="timelineContentWide days<%= days.length %>">
 
 		<dd class="timelineScale">
@@ -24,7 +25,14 @@
 				<span class="date"><%= day.date.strftime('%a %d') %></span>
 			</li>
 			<% end %>
-		</ul>
+			</ul>
+
+			<%= if Merb.environment == 'development'
+				begin
+					link_to icon(:grid, :style => 'height:20px;width:20px;'), "#{ resource(@client_or_tour, trip, :trip_elements) }/grid", :title => 'Quickie trip!', :style => 'left:0em;position:absolute;top:1.25em;'
+				end
+			end %>
+
 		</dd>
 
 		<dt class="timelineSwimlaneHead isFlight">
