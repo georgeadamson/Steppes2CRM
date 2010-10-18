@@ -192,8 +192,9 @@ jQuery(function($) {
 			Layout.liveForm('success', 'trip_elements:destroy',										Trip.initTimeline );
 
 			// MoneyIn (Invoice)
-			Layout.liveForm('success', 'money_ins:create',											BoundFields.update );
-			Layout.liveForm('success', 'money_ins:update',											BoundFields.update );
+			Layout.livePath('success', new RegExp('money_ins/new'),									MoneyIn.initForm );
+			Layout.liveForm('success', 'money_ins:create',											MoneyIn.initForm, BoundFields.update );
+			Layout.liveForm('success', 'money_ins:update',											MoneyIn.initForm, BoundFields.update );
 
 			// Reports:
 			Layout.livePath('success', new RegExp('reports$'),							Report.initForm );
@@ -3675,6 +3676,17 @@ function initTripInvoiceFormTotals(){
 	};
 
 
+	var MoneyIn = {
+	
+		initForm : function(options){
+
+			// Ensure form displays correct label next to the amount textbox: (Context dependent on Main/Supp/Credit)
+			$(options.panel || options.target).find( "SELECT[name='money_in[name]']" ).trigger('change');
+
+		}
+	
+	};
+
 
 	var BoundFields = {
 
@@ -3711,6 +3723,10 @@ function initTripInvoiceFormTotals(){
 		}
 
 	};
+
+
+
+
 
 
 
