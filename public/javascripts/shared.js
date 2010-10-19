@@ -66,7 +66,7 @@ jQuery(function($) {
 		POSTCODE_LOOKUP_DELAY_BEFORE_AJAX	= 200,				// Slight delay before searching for the keywords being typed in postcode search box.
 
 		// Delay before generating the overview just below the timeline when the Trip Builder tab is opened:
-		TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW	= 3000,
+		TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW	= 2000,
 
 		// Regexes for parsing content from ajax html responses:
 		FIND_DATA_CONTENT				= /<!--<DATA>-->([\s\S]*)<!--<\/DATA>-->/,
@@ -182,13 +182,13 @@ jQuery(function($) {
 			Layout.liveForm('success', 'trips:destroy',													Trip.onDestroySuccess );
 
 			// TripElements:
-			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.hideForm );
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.grid );
+			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.hideForm );
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.hideForm );
-			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.initForm );
-			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.initForm );
-			Layout.liveForm('success', 'trip_elements:create',										Trip.initTimeline );
-			Layout.liveForm('success', 'trip_elements:update',										Trip.initTimeline );
+			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.showForm, TripElement.initForm );
+			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.showForm, TripElement.initForm );
+			Layout.liveForm('success', 'trip_elements:create',										TripElement.initForm, Trip.initTimeline );
+			Layout.liveForm('success', 'trip_elements:update',										TripElement.initForm, Trip.initTimeline );
 			Layout.liveForm('success', 'trip_elements:destroy',										Trip.initTimeline );
 
 			// MoneyIn (Invoice)
@@ -3344,19 +3344,28 @@ function initTripInvoiceFormTotals(){
 
 		},
 
-		initForm : function(options){
+		showForm : function(options){
 
-			var selector  = ".tripPage[id $= trips{id}]".replace('{id}', options.trip_id);
+			var selector  = ".tripPage[id $= trips{id}]".replace('{id}', options.trip_id || ( options.form && options.form.trip_id ) );
 			var $tripPage = $(selector);
 			var $target   = $tripPage.find('.tripElementFormContainer');
 
-			// Hide form while initialising elements:
+			// Add form to page but hide it while initialising elements:
 			$target.hide().html(options.data);
+
+			$target.animate({ height:'show', opacity:1 }, 'fast');
+
+		},
+
+		initForm : function(options){
+
+			var selector  = ".tripPage[id $= trips{id}]".replace('{id}', options.trip_id || ( options.form && options.form.trip_id ) );
+			var $tripPage = $(selector);
+			var $target   = $tripPage.find('.tripElementFormContainer');
+
 			initSpinboxes($target);
 			initDatepickers($target);
 			$target.find("[name='trip_element[supplier_id]']").trigger('change');	// Refresh calculated fields.
-
-			$target.animate({ height:'show', opacity:1 }, 'fast');
 
 		},
 

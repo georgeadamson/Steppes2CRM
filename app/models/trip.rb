@@ -900,7 +900,6 @@ class Trip
               gross -= booking_fee
             end
 
-            puts person, booking_fee, taxes, gross, margin
             result = margin / gross * 100 unless gross.zero?
             puts "#{@@indent} Percent_margin: #{result} (#{margin} / #{gross} * 100) options: #{ options.inspect }" if ( options[:debug] )
 
