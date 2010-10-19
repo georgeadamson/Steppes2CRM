@@ -130,14 +130,17 @@ class MoneyIn
   # Note: This model calls self.calc_defaults() when initialising.
   
   before :valid? do
-    
+
     self.name               = DEFAULT_NEW_MAIN_INVOICE_NAME if self.name.blank?
     self.user             ||= self.trip && self.trip.user
     
-    # Ensure submitted currency strings such as "123.00" are valid decimals:
+    # Ensure submitted currency strings such as "" or "123.00" are valid decimals:
     self.amount             = self.amount.to_f
     self.amount_received    = self.amount_received.to_f
     self.adjustment_amount  = self.adjustment_amount.to_f
+    self.single_supp_amount = self.single_supp_amount.to_f
+    self.biz_supp_amount    = self.biz_supp_amount.to_f
+    self.total_amount       = self.total_amount.to_f
     
   end
   
