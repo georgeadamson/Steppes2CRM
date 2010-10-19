@@ -3249,7 +3249,9 @@ function initTripInvoiceFormTotals(){
 				var index     = options.form.tour_id ? 2 : 4;				// Choose tab position depending on whether trip is for Client or Tour.
 
 				$tabs.tabs('add', url, trip_name, index);
-				//$tabs.tabs('select', index);
+				
+				// TODO: Find out why we had to resort to a timeout to select the new tab!
+				window.setTimeout( function(){ $tabs.tabs('select', index); }, 2000 );
 
 			}
 
