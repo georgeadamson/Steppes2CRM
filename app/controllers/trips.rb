@@ -114,7 +114,7 @@ class Trips < Application
     tour    = Tour.get( params[:tour_id] )
     client  = Client.get( params[:client_id] ) || session.user.most_recent_client
     @client_or_tour = tour || client
-    
+puts @trip.inspect
     original_version  = Trip.get( params[:version_of_trip_id] )
     is_new_version    = !original_version.nil?
     
@@ -159,14 +159,14 @@ class Trips < Application
       
     # A whole new trip:
     else
-      
+
 		  # Ensure current client is on this new trip:
       @trip.trip_clients.new( :client_id => client.id )
       @trip.user    ||= session.user
       @trip.company ||= @trip.user && @trip.user.company
       
       message[:notice]  = "This new trip will be added to the database when you save it"
-      
+
     end
     
 		# When client is the only one on the trip, make sure it is the primary contact etc:
@@ -234,7 +234,7 @@ class Trips < Application
       
       message[:notice] = "Trip was created successfully"
 
-      # Populate our new trip with elements etc from another trip if specified:
+      # COPY TRIP: Populate our new trip with elements etc from another trip if specified:
       if do_copy_trip_id
 
         @trip.do_copy_trip do_copy_trip_id
@@ -254,11 +254,11 @@ class Trips < Application
 
       end
 
-      if request.ajax?
+      #if request.ajax?
         display @trip, :show
-      else
-        redirect resource( @client_or_tour, @trip, :edit ), :message => message
-      end
+      #else
+      #  redirect resource( @client_or_tour, @trip, :edit ), :message => message
+      #end
       
     else
 
@@ -266,24 +266,24 @@ class Trips < Application
       collect_error_messages_for @trip, :trip_clients
       collect_error_messages_for @trip, :countries
 
-      @trip.model.relationships.each do | name, association |
-        
-        if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
-          
-          #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
-          if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
-            collect_error_messages_for @trip, name.to_sym
-          elsif rel
-            collect_child_error_messages_for @trip, rel
-          end
-          
-        end
-        
-      end
+#      @trip.model.relationships.each do | name, association |
+#        
+#        if @trip.respond_to?(name) #&& name.to_sym != :version_of_trips
+#          
+#          #if ( rel = @trip.send(name) ) && ( association.is_a?(DataMapper::Associations::ManyToOne) || association.is_a?(DataMapper::Associations::OneToOne) )
+#          if ( rel = @trip.method(name).call ) && rel.respond_to?(:each)
+#            collect_error_messages_for @trip, name.to_sym
+#          elsif rel
+#            collect_child_error_messages_for @trip, rel
+#          end
+#          
+#        end
+#        
+#      end
 
-			message[:notice] = 'aarrh'
-      message[:error] = error_messages_for( @trip, :header => 'The trip details could not be created because:' )
+      message[:error] = "There was a problem saving the new trip. \n #{ error_messages_for @trip, :header => 'The trip could not be created because:' }"
       render :new
+
     end
     
   end
@@ -325,7 +325,7 @@ class Trips < Application
         #@trip_version.copy_attributes_from @trip, { :is_active_version => true, :user => session.user }
         @trip_version = @trip.new_version( :is_active_version => true, :user => session.user )
         
-        if @trip_version.become_active_version!( :save, :save_versions )
+        if @trip_version.save! && @trip_version.become_active_version!( :save, :save_versions )
 
           @trip = @trip_version
           message[:notice] = "A new version has been created and is now the active version of this trip."

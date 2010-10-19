@@ -362,8 +362,8 @@ class Trip
       # Attempt to correct trip with no primary client!
       if primaries.empty? && ( first_trip_client = self.trip_clients.first( :order => [:id] ) )
         first_trip_client.is_primary = true
-        first_trip_client.save!
-        primaries.reload
+        first_trip_client.save! unless self.new?
+        primaries.reload        unless self.new?
       end
 
       return primaries
@@ -521,7 +521,7 @@ class Trip
     def become_active_version!( save_self = false, save_others = true )
       
       self.is_active_version = true
-      self.save! if save_self && self.dirty?
+      self.save! if save_self && self.dirty? && !self.new?
       self.make_other_versions_inactive! save_others
 
     end
@@ -532,7 +532,7 @@ class Trip
 
       if self.is_active_version && self.version_of_trip_id && self.id
         other_versions = self.versions.all( :id.not => self.id ).each{ |v| v.is_active_version = false }
-        other_versions.save! if save_others
+        other_versions.save! if save_others && !self.new?
         return other_versions
       end
 
@@ -1238,12 +1238,12 @@ class Trip
 
         elem.exchange_rate = elem.supplier.currency.rate if elem.supplier && elem.supplier.currency
         elem.update_prices
-        elem.save! if save
+        elem.save! if save && !self.new?
 
       end
 
       result = self.update_prices
-      self.save! if save
+      self.save! if save && !self.new?
       return result
 
     end
