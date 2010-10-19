@@ -65,7 +65,7 @@ class TripElement
   property :biz_supp_per_adult,		BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
   property :biz_supp_per_child,		BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
   property :biz_supp_per_infant,	BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
-  property :biz_supp_margin,			BigDecimal, :precision=> 6, :scale	  => 2,	:default => '10', :required	=> true
+  property :biz_supp_margin,			BigDecimal, :precision=> 6, :scale	  => 2,	:default => lambda{ |elem,prop| CRM[:default_margin] || 24 }, :required	=> true
   property :biz_supp_margin_type, String,     :length		=> 1,			            :default => '%'
   
   property :is_subgroup,					Boolean,		:default	=> false							# Only set when number of adults/children/infants must differ from main trip.
@@ -189,6 +189,9 @@ class TripElement
   # Clean up properties etc (without affecting related objects!)
   before :valid? do
     
+    # Ensure we are not stumped when empty string is submitted accidentally for a new element:
+    self.id = nil if self.id.blank?
+
     self.handler_id = nil unless handler_id.to_i > 0
     
     # Always save flight number in upper case:
