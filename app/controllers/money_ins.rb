@@ -50,7 +50,7 @@ class MoneyIns < Application
 
     @money_in = MoneyIn.new(money_in)
     @money_in.generate_doc_later = true
-    
+
     if @money_in.save
 
       message[:notice] = "Invoice record was created successfully"
