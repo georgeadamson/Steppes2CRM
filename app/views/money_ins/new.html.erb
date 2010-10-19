@@ -141,19 +141,19 @@
 						<tr>
 							<td colspan="7">Single supplement:</td>
 							<td>
-								&pound;<%= text_field :name => :single_supp_amount, :value => @invoice.single_supp_amount.to_currency(:generic), :class => 'widthHalfField', :readonly => true %>
+								&pound;<%= text_field :single_supp_amount, :value => @invoice.single_supp_amount.to_currency(:generic), :class => 'widthHalfField', :readonly => true %>
 							</td>
 						</tr>
 						<tr>
 							<td colspan="7">Business class supplement:</td>
 								<td>
-								&pound;<%= text_field :name => :biz_supp_amount, :value => @invoice.biz_supp_amount.to_currency(:generic), :class => 'widthHalfField', :readonly => true %>
+								&pound;<%= text_field :biz_supp_amount, :value => @invoice.biz_supp_amount.to_currency(:generic), :class => 'widthHalfField', :readonly => true %>
 							</td>
 						</tr>
 						<tr>
 							<td colspan="7">Invoice total:</td>
 							<td>
-								&pound;<%= text_field :name => :total_amount, :value => @invoice.total_amount.to_currency(:generic), :class => 'widthHalfField', :readonly => true %>
+								&pound;<%= text_field :total_amount, :value => @invoice.total_amount.to_currency(:generic), :class => 'widthHalfField', :readonly => true %>
 							</td>
 						</tr>
 
