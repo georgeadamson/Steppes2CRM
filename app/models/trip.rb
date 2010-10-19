@@ -115,6 +115,7 @@ class Trip
     accepts_nested_attributes_for :countries  # See http://github.com/snusnu/dm-accepts_nested_attributes
     accepts_nested_attributes_for :trip_countries
     accepts_nested_attributes_for :trip_clients, :allow_destroy => true
+    accepts_nested_attributes_for :trip_elements
     
     # Handlers for has n through associations: 
     accepts_ids_for :clients		        # ONLY used for providing a clients_names attribute, not for receiving clients_ids!

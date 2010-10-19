@@ -51,6 +51,8 @@
 					<%= tag :td, trip.calc( :daily, :actual, :percent_margin, :per, :traveller, :taxes => true, :decimal_places => 1 ) + '%', :class => 'muted small' %>
 				</tr>
 
+				<tr><td>&nbsp;</td></tr>
+
 				<!-- Adult/Child/Infant/Single pricing: -->
 				<%= partial 'trips/costings/pricing_row', :trip => trip, :person => :adult  unless trip.adults.zero?   %>
 				<%= partial 'trips/costings/pricing_row', :trip => trip, :person => :child  unless trip.children.zero? %>

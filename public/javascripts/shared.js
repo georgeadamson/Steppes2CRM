@@ -2958,7 +2958,7 @@ function initTripInvoiceFormTotals(){
 		var $texts	= $fields.filter("INPUT:text");					// Textboxes only
 		var $lists	= $fields.filter("SELECT");						// Dropdown lists only
 
-		var total   = numVal("[name='total_amount']",		$texts);
+		var total   = numVal("[name='money_in[total_amount]']",		$texts);
 		var deposit = numVal("[name='money_in[deposit]']",	$texts);
 
 		$texts.filter("[name='money_in[amount]']").val( total - deposit );
@@ -3326,7 +3326,7 @@ function initTripInvoiceFormTotals(){
 		// (This function is bound directly to the event handler so it receives an event object)
 		copyGrossPrice : function(e){
 			var price = $(this).closest('TR').find('.calculated-gross').text() || 0;
-			$(this).closest('TD').find('INPUT[name *= price_per]').val( price );
+			$(this).closest('TD').find('INPUT[name *= price_per]').val( parseInt(price) );
 			e.stopPropagation();
 		}
 
@@ -3405,7 +3405,11 @@ function initTripInvoiceFormTotals(){
 	} // End of TripElement utilities.
 	
 
-
+	// Respond to CLIPBOARD PASTE into the amadeus textbox:
+	$('#amadeus-paste').live('paste', function(e){
+		var $textbox = $(this);
+		window.setTimeout( function(){ alert($textbox.val()) }, 0 );
+	})
 
 
 
