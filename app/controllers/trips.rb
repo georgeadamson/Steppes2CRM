@@ -454,8 +454,10 @@ puts @trip.inspect
     else
 
       collect_error_messages_for @trip
+      collect_error_messages_for @trip, :elements
 			message[:error] = "Oops, something odd happened. In all the excitement I kinda got lost.\n(The usual suspects are elements without a supplier or handler). \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
       print "\n /trips/#{ id }/update FAILED !!!\n #{ message[:error] } #{ @trip.errors.inspect }\n"
+      @trip.elements.each{|e| e.valid?; puts e.errors.inspect }
       render :show
 
     end

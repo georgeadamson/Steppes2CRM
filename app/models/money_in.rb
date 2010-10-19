@@ -449,17 +449,17 @@ class MoneyIn
     return case trip.company_id
       
     when 1 #Steppes East
-      "Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers, sightseeing with private English speaking guide and entrance fees - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
+      "Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers, sightseeing with private English speaking guide and entrance fees - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
     when 4 #Steppes Latin America
-      "Re. Destination #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
+      "Re. Destination #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
       #when 2 #Steppes Africa
-      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
+      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
       #when 3 #Discovery Initiatives
-      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
+      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
       #when 5 #Steppes Travel (English)
-      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
+      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
     else
-      "Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
+      "Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
       
     end
     
