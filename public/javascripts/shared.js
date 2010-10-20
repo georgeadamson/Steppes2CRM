@@ -2866,10 +2866,10 @@ function initKeyPressFilters(){
 		var std_margin_mult		= ( 100 - std_margin ) / 100;	// Eg: 24% means "(100-24)/100" => 0.76
 		var biz_margin_mult		= ( 100 - biz_margin ) / 100;	// (See margin notes below)
 		var travellers			= adults + children + infants;
-		var total_adult_cost	= adults * cost_per_adult;
-		var total_child_cost	= adults * cost_per_child;
-		var total_infant_cost	= adults * cost_per_infant;
-		var total_sgl_supp		= singles * single_supp;
+		var total_adult_cost	= adults   * cost_per_adult;
+		var total_child_cost	= children * cost_per_child;
+		var total_infant_cost	= infants  * cost_per_infant;
+		var total_sgl_supp		= singles  * single_supp;
 		var total_std_cost		= total_adult_cost + total_child_cost + total_infant_cost + total_sgl_supp;
 		var total_biz_cost		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
 
