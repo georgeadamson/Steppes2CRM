@@ -122,7 +122,7 @@ class Trip
     accepts_ids_for :pnrs						    # Pnr numbers are accessed via trip.pnrs_names (or pnr_numbers alias)
     
     attr_accessor :debug
-    attr_accessor :do_copy_trip_id         # Specifies a trip to copy details from.
+    attr_accessor :do_copy_trip_id         # Specify a trip to copy details from.
     attr_accessor :do_copy_trip_clients    # Allows clients to be copied from another trip.      Use with do_copy_trip_id.
     attr_accessor :do_copy_trip_elements   # Allows elements to be cloned from another trip.     Use with do_copy_trip_id.
     attr_accessor :do_copy_trip_itinerary  # Allows elements etc to be cloned from another trip. Use with do_copy_trip_id.
@@ -153,7 +153,9 @@ class Trip
       
       if saved_as_normal && self.version_of_trip_id.to_i == 0 && self.id.to_i > 0
         self.version_of_trip_id = self.id
-        return self.save!
+        saved_special = self.save!
+        #self.dirty? = false if saved_special
+        return saved_special
       end
       
       return saved_as_normal
@@ -202,28 +204,9 @@ class Trip
       self.is_active_version = true if @new_active_version_id && @new_active_version_id == self.id
       
       # Copy details from another trip if required:
-      if self.do_copy_trip_id && other_trip = Trip.get(self.do_copy_trip_id)
-
-        # Copy Clients from other_trip:
-        if self.do_copy_trip_clients
-          self.copy_clients_from other_trip
-          self.do_copy_trip_clients = nil     # Clear flag to prevent duplication if saved again.
-        end
-
-        # Copy Countries from other_trip:
-        if self.do_copy_trip_countries
-          self.copy_countries_from other_trip
-          self.do_copy_trip_countries = nil   # Clear flag to prevent duplication if saved again.
-        end
-
-        # Copy Trip Elements from other_trip:
-        # Important: PNR Flight elements are cloned as standard flights (without booking_code)
-        if self.do_copy_trip_elements
-          self.copy_elements_from other_trip, :adjust_dates => true, :discard_booking_code => true
-          self.do_copy_trip_elements = nil    # Clear flag to prevent duplication if saved again.
-        end
-
-      end
+      # Warning: Relying on this hook can cause save to fail if copied elements are invalid.
+      # Note: This clears the do_copy_trip_xxxx flags to prevent copies from being created again accidentally.
+      self.do_copy_trip if self.do_copy_trip_id
 
       # Ensure all trip elements still have valid numbers of adults/children/infants
       # (Also see TripElement before :save)
@@ -268,14 +251,14 @@ class Trip
       # If necessary, update the "is_active_version" flag on all other versions of same trip:
       if self.is_active_version || ( (@new_active_version_id ||= nil) && @new_active_version_id == self.id )
       
-        self.be_the_only_active_version!
-
+        self.make_other_versions_inactive!
+        
       elsif @new_active_version_id && ( active_version = self.versions.get(@new_active_version_id) )
-
+        
         # Ensure the chosen active_version is updated:
         active_version.update!( :is_active_version => true )
-        active_version.be_the_only_active_version!
-
+        active_version.make_other_versions_inactive!
+        
       end
       @new_active_version_id = nil
       
@@ -324,7 +307,7 @@ class Trip
           end
           
         end
-
+        
         
         # Refresh our change-tracking flags:
         @pnr_numbers_have_changed     = false
@@ -332,40 +315,40 @@ class Trip
         
       end
       
-
+      
       # Create flight followups if the trip is now confirmed:
       if self.confirmed?
         self.flights.each{ |flight| flight.create_task() }
       end
       
-
+      
       @avoid_triggering_after_save_hook_recursively = false
       
       #end
       
     end
     
-
+    
     after :destroy do
-
+      
       if self == self.version_of_trip
-
+        
         # TODO: Also delete all versions of this trip!
-
+        
       elsif self.is_active_version
-
+        
         # Make the original version the active version:
         self.version_of_trip.update!( :is_active_version => true )
-        self.version_of_trip.be_the_only_active_version!
-
+        self.version_of_trip.make_other_versions_inactive!
+        
       end
-
+      
       # Delete associated trip_elements too:
       TripElement.all( :trip_id => self.id ).destroy
-
+      
     end
-
-
+    
+    
     
     # Derived properties and helpers...
     
@@ -492,7 +475,7 @@ class Trip
     
     # Helper to return a string of client names: (Used in reports)
     def primary_clients_names
-      self.clients.all( TripClient.is_primary => true ).map{|c| "#{ c.fullname } #{ c.postcode }" }.join(',')
+      self.clients.all( TripClient.is_primary => true ).map{|c| "#{ c.fullname } #{ c.postcode }" }.join(', ')
     end
     
     # Helper to return a list of all versions of this trip:
@@ -517,36 +500,25 @@ class Trip
     
     
     # Helper to set is_active_version on this trip, and unset is_active_version on the other versions:
-    # Warning: This may run update! on self and all versions:
-    def become_active_version!
-
+    # Warning: This may call save! on self and all versions:
+    def become_active_version!( save_self = false, save_others = true )
+      
       self.is_active_version = true
-      self.be_the_only_active_version!
-      
-      #  unless self.new? || self.version_of_trip_id.to_i == 0
-      #    
-      #    unless self.is_active_version
-      #      self.is_active_version = true
-      #      self.save!
-      #    end
-      #    
-      #    # Update the is_active_version flag on all versions of same trip:
-      #    Trip.all( :version_of_trip_id => self.version_of_trip_id, :is_active_version => true, :id.not => self.id ).each do |version|
-      #      version.update!( :is_active_version => false )
-      #    end
-      #    
-      #  end
-      #  
-      #  return self
-      
+      self.save! if save_self && self.dirty?
+      self.make_other_versions_inactive! save_others
+
     end
     
     # Helper to unset the "is_active_version" flag on all other trips sharing the same version_of_trip_id:
     # Warning: This has does nothing if self has not been saved yet.
-    def be_the_only_active_version!
+    def make_other_versions_inactive!( save_others = true )
+
       if self.is_active_version && self.version_of_trip_id && self.id
-        return self.versions.all( :id.not => self.id ).each{ |version| version.is_active_version = false }.save!
-      end 
+        other_versions = self.versions.all( :id.not => self.id ).each{ |v| v.is_active_version = false }
+        other_versions.save! if save_others
+        return other_versions
+      end
+
     end
     
     # Friendly DSL method to fetch collection of specific types of money_in records:
@@ -1301,37 +1273,82 @@ class Trip
     end
     
     
+    # Helper to generate a new version of this trip:
+    def new_version( custom_attributes = {} )
+
+      version = Trip.new
+      cloned  = version.copy_attributes_from self, custom_attributes
+
+      return version if cloned
+
+    end
+
+
+
+    # Helper to copy details from another trip if required:
+    # Warning: Relying on this hook can cause save to fail if copied elements are invalid.
+    # Note: This clears the do_copy_trip_xxxx flags to prevent copies from being created again accidentally.
+    def do_copy_trip( from_trip_id = nil )
+
+      from_trip_id ||= self.do_copy_trip_id
+
+      # Copy details from another trip if required:
+      if from_trip_id && other_trip = Trip.get(from_trip_id)
+
+        # Copy Clients from other_trip:
+        if self.do_copy_trip_clients
+          self.copy_clients_from other_trip
+          self.do_copy_trip_clients = nil     # Clear flag to prevent duplication if saved again.
+        end
+
+        # Copy Countries from other_trip:
+        if self.do_copy_trip_countries
+          self.copy_countries_from other_trip
+          self.do_copy_trip_countries = nil   # Clear flag to prevent duplication if saved again.
+        end
+
+        # Copy Trip Elements from other_trip:
+        # Important: PNR Flight elements are cloned as standard flights (without booking_code)
+        if self.do_copy_trip_elements
+          self.copy_elements_from other_trip, :adjust_dates => true, :delete_booking_code => true
+          self.do_copy_trip_elements = nil    # Clear flag to prevent duplication if saved again.
+        end
+
+      end
+
+    end
+
+
     
     # Helper for CLONING a trip along with it's assigned clients, countries and new clones of the trip_elements:
-    def copy_attributes_from( master, custom_attributes = {} )
+    def copy_attributes_from( master, custom_attributes = nil )
       
       if master
         
         clone    = self
-        new_name = master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }"
-        type_id  = master.tour_template? ? TripType::FIXED_DEP       : master.type_id # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
-        
-        clone.attributes = master.attributes.merge(
+
+        attributes = {
           :id       => nil,
-          :name     => new_name,
-          :type_id  => type_id
-        )
+          :name     => master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }",
+          :type_id  => master.tour_template? ? TripType::FIXED_DEP       : master.type_id   # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
+        }
+
+        clone.attributes = master.attributes.merge(attributes)
+
+        #new_name = master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }"
+        #type_id  = master.tour_template? ? TripType::FIXED_DEP       : master.type_id # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
+        #  :id       => nil,
+        #  :name     => new_name,
+        #  :type_id  => type_id
+        #)
         
-        # Copy trip clients and countries:
-        #master.clients.each{ |client| clone.clients << client }
-        #master.countries.each{ |country| clone.countries << country }
-        self.copy_clients_from master
-        self.copy_countries_from master
-        
-        # Clone the trip elements: (Without changing their dates)
-        #  master.trip_elements.each do |master_elem|
-        #    attrs =  master_elem.attributes.merge( :id => nil )
-        #    clone.trip_elements << TripElement.new(attrs)
-        #  end
-        self.copy_elements_from master
+        # Copy clients and countries and elements:
+        clone.copy_clients_from master
+        clone.copy_elements_from master
+        clone.copy_countries_from master
 
         # Override defaults with any attributes explicitly specified in this method's arguments:
-        clone.attributes = custom_attributes || {}
+        clone.attributes = custom_attributes if custom_attributes
       
         return clone.attributes
         
@@ -1339,38 +1356,70 @@ class Trip
       
     end
     
-    def copy_clients_from( master, clone = self)
-      master.clients.each{ |client| clone.clients << client }
+
+    def copy_clients_from( master, clone = nil )
+
+      clone ||= self
+
+      master.trip_clients.each do |c|
+
+        attributes = c.attributes.merge( :id => nil, :status_id => TripClientStatus::UNCONFIRMED )
+        conditions = { :client_id => c.client_id }
+        clone.trip_clients.first_or_new( conditions, attributes )
+    
+      end
+
     end
     
-    def copy_countries_from( master, clone = self)
-      master.countries.each{ |country| clone.countries << country }
+
+    def copy_countries_from( master, clone = nil )
+
+      clone ||= self
+
+      master.trip_countries.each do |c|
+
+        attributes = c.attributes.merge( :id => nil  )
+        conditions = { :country_id => c.country_id }
+        clone.trip_countries.first_or_new( conditions, attributes )
+
+      end
+
     end
 
 
     # Helper for cloning elements from another trip:
     # Options:
     #    :adjust_dates true to ensure first element is at start of trip)
-    #    :discard_booking_code true to skip any PNR Numbers associated with flights.
-    def copy_elements_from(master, options = nil )
+    #    :delete_booking_code true to skip any PNR Numbers associated with flights.
+    def copy_elements_from( master, options = nil )
 
       # Apply defaults for omitted options:
-      defaults  = { :adjust_dates => false, :clone => self, :type_id => nil, :discard_booking_code => false }
+      defaults  = { :adjust_dates => false, :clone => self, :type_id => nil, :delete_booking_code => false }
       options   = defaults.merge( options || {} )
       clone     = options[:clone]
-      type_id   = options[:type_id].to_i > 0 ? options[:type_id] : nil
+      type_id   = options[:type_id].to_i > 0 ? options[:type_id].to_i : nil
 
       master.trip_elements.each do |master_elem|
 
-        attrs       =  master_elem.attributes.merge( :id => nil )
-        attrs.delete(:booking_code) if options[:discard_booking_code]
-        clone_elem  = TripElement.new(attrs)
+        #attrs       =  master_elem.attributes.merge( :id => nil )
+        #attrs.delete(:booking_code) if options[:delete_booking_code]
+        #clone_elem  = TripElement.new(attrs)
 
-        # If required, use the .day helper to set the elem.start_date relative to trip.start_date:
-        clone_elem.day = master_elem.day if options[:adjust_dates]
+        # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
+        #clone_elem.day = master_elem.day if options[:adjust_dates]
 
         # Add cloned element to the trip (unless type_id was specified and matches element type)
-        clone.trip_elements << clone_elem if !type_id || master_elem.type_id == type_id  
+        #clone.trip_elements << clone_elem 
+        if !type_id || master_elem.type_id == type_id
+
+          attrs       =  master_elem.attributes.merge( :id => nil )
+          attrs.delete(:booking_code) if options[:delete_booking_code]
+          clone_elem = clone.trip_elements.new(attrs)
+
+          # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
+          clone_elem.day = master_elem.day if options[:adjust_dates]
+
+        end
 
       end
 

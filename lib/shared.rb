@@ -43,7 +43,7 @@ def refresh_cached_hash_of(list_name)
 		$cached[hash_name][item.id] = item.name
 	}
 
-	print "\n Finished running: refresh_cached_hash_of(#{ list_name }) \n"
+	print " Finished running: refresh_cached_hash_of(#{ list_name }) \n"
 	
 	return $cached[hash_name]
 	
