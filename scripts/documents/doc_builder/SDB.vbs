@@ -705,6 +705,8 @@ Sub FindAndReplaceFields(strTagType, objFields, boolIsList, boolIgnoreDateField)
 
 	Dim strTagName
 	Dim strFieldData
+	Dim loopLimit
+	loopLimit = 50
 	
 	On Error Resume Next
 	
@@ -719,8 +721,10 @@ Sub FindAndReplaceFields(strTagType, objFields, boolIsList, boolIgnoreDateField)
 	objSelection.Find.MatchWildCards = true	
 	
 	'Do each field until it is not found any more
-	Do Until objSelection.Find.Execute("\{" & strTagType & ".*\}") = False 'keep finding user fields until there are no more
-		
+	Do Until objSelection.Find.Execute("\{" & strTagType & ".*\}") = False Or loopLimit = 0 'keep finding user fields until there are no more
+
+		loopLimit = loopLimit - 1
+
 		'replace the selection with the correct field from the table
 		strTagName = Replace(Replace(objSelection.Text, "{" & strTagType & ".", ""), "}", "")
 	
@@ -822,7 +826,12 @@ Sub FindAndReplaceFields(strTagType, objFields, boolIsList, boolIgnoreDateField)
 	Loop
 	
 	CheckError "Unable to find and replace fields of type " & strTagType, False
-	
+
+	If loopLimit = 0 Then
+		Err.Raise 10006
+		Err.Description = "Looped too many times looking for tags"
+		CheckError "Forcibly quitting long-running loop in FindAndReplaceFields function. (Possible cause may be incorrect use of {" & strTagType & "} tags in template: " & strTemplateFileName & ")", True
+	End If
 
 End Sub
 
@@ -1039,6 +1048,8 @@ End Sub
 Sub ParseLists
 
 	Dim strListName
+	Dim loopLimit
+	loopLimit = 20
 	
 	On Error Resume Next
 	
@@ -1048,8 +1059,9 @@ Sub ParseLists
 	objSelection.Find.MatchWildCards = True	
 	objSelection.HomeKey wdStory	
 
-	Do Until objSelection.Find.Execute("\{list_of_*\}") = False 'keep finding lists until there are no more
+	Do Until objSelection.Find.Execute("\{list_of_*\}") = False Or loopLimit = 0 'keep finding lists until there are no more
 
+		loopLimit = loopLimit - 1
 		strListName = Mid(objSelection.Text, 2, Len(objSelection.Text) - 2)
 		objSelection.Text = "" 'this means there will not be more than one attempt to parse each instance of the list
 
@@ -1075,6 +1087,13 @@ Sub ParseLists
 	Loop
 		
 	CheckError "Unable to parse lists", False
+
+	If loopLimit = 0 Then
+		Err.Raise 10006
+		Err.Description = "Looped too many times looking for tags"
+		CheckError "Forcibly quitting long-running loop in ParseLists function. (Possible cause may be incorrect use of {list_of...} tags in template: " & strTemplateFileName & ")", True
+	End If
+
 	
 End Sub
 
@@ -1135,6 +1154,8 @@ Sub ParseMiscTags
 
 	Dim strTagName
 	Dim strFieldData
+	Dim loopLimit
+	loopLimit = 50
 	
 	On Error Resume Next
 	
@@ -1145,7 +1166,9 @@ Sub ParseMiscTags
 	
 	'Do each date_today field until it is not found any more
 	objSelection.HomeKey wdStory
-	Do Until objSelection.Find.Execute("\{today_*\}") = False 'keep finding today fields until there are no more
+	Do Until objSelection.Find.Execute("\{today_*\}") = False Or loopLimit = 0 'keep finding today fields until there are no more
+
+		loopLimit = loopLimit - 1
 
 		If InStr(objSelection.Text, "_time") > 0 Then
 
@@ -1172,11 +1195,17 @@ Sub ParseMiscTags
 		CheckError "Unable to parse misc tags " & objSelection.Text, False
 
 		objSelection.HomeKey wdStory
-
+		
 	Loop
 	
 	CheckError "Unable to parse misc tags ", False
-	
+
+	If loopLimit = 0 Then
+		Err.Raise 10006
+		Err.Description = "Looped too many times looking for tags"
+		CheckError "Forcibly quitting long-running loop in ParseMiscTags function. (Possible cause may be incorrect use of {today...} tags in template: " & strTemplateFileName & ")", True
+	End If
+
 End Sub
 
 '--- Report Success ---
