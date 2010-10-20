@@ -3322,7 +3322,8 @@ function initTripInvoiceFormTotals(){
 		// Handler to copy Gross Price pp from adjacent cell into the 'Set gross' textbox:
 		// (This function is bound directly to the event handler so it receives an event object)
 		copyGrossPrice : function(e){
-			var price = $(this).closest('TR').find('.calculated-gross').text() || 0;
+			var price = parseFloat( $(this).closest('TR').find('.calculated-gross').text() || 0 );
+			if( parseInt(price) != price ){ price += 1 }	// Ensure decimals will always ROUND-UP (add 1 because parseInt rounds down)
 			$(this).closest('TD').find('INPUT[name *= price_per]').val( parseInt(price) );
 			e.stopPropagation();
 		}
