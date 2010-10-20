@@ -387,7 +387,8 @@ class MoneyIn
   
   # Helper to count how many clients this invoice is paying for:
   def travellers
-    return self.clients.length
+    #return self.clients.length   # Number of named clients.
+    return self.trip.travellers   # Number on the trip.
   end
   
   
@@ -449,17 +450,17 @@ class MoneyIn
     return case trip.company_id
       
     when 1 #Steppes East
-      "Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers, sightseeing with private English speaking guide and entrance fees - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
+      "Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers, sightseeing with private English speaking guide and entrance fees - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
     when 4 #Steppes Latin America
-      "Re. Destination #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
+      "Re. Destination #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
       #when 2 #Steppes Africa
-      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
+      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
       #when 3 #Discovery Initiatives
-      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
+      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
       #when 5 #Steppes Travel (English)
-      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
+      #	"Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
     else
-      "Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } in total."
+      "Re. Holiday to #{ destinations } #{ trip.date_summary } including international flights, domestic flights and accommodation with meals as specified, all transfers - all details as per the attached itinerary @ #{ price_per_person.to_currency(:uk) } per person."
       
     end
     
