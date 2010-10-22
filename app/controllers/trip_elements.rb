@@ -117,7 +117,7 @@ class TripElements < Application
     #@element = @trip.trip_elements.new(trip_element)
     @element = TripElement.new(trip_element)
 
-    if @element.save
+    if @element.save(:complete)
 
 			message[:notice] = "The new #{ @element.element_type.name } element has been added to your trip"
 
@@ -197,7 +197,7 @@ class TripElements < Application
 
     @element.attributes = trip_element
 
-    if @element.valid? && @element.save! # <-- Note use of exclamation mark !
+    if @element.valid?(:complete) && @element.save! # <-- Note use of exclamation mark. See following comments!
 
       # Because of the number of before/after:save hooks on elements and trips we must do this manually.
       # (This fixes a bug where trips with pnrs keep reloading all elements before their attributes get saved!)

@@ -58,9 +58,10 @@
 		<% end %>
 
     <ul class="tripPageTabsNav">
-			<%# TODO: Get resource(client_or_tour,trip,:builder) etc to work instead of explicitly assembling urls here: %>
+			<%# TODO: Get resource(client_or_tour,trip,:builder) etc to work instead of explicitly assembling urls here:
+			%>
       <li class="dummy hidden"><a href="#<%= nested_resource(trip,true) %>dummy"></a></li>
-      <li class="ui-tabs-selected">
+      <li class="ui-tabs-selected" style="margin-left:3em;"><!-- Indent to make space for elements-grid button -->
 				  <a href="<%= resource( client_or_tour, trip, :edit ) %>"			>Trip summary</a></li>
       <li><a href="<%= resource( client_or_tour, trip ) %>/builder"			>Trip builder</a></li>
       <li><a href="<%= resource( client_or_tour, trip ) %>/itinerary"		>Itinerary preview</a></li>
@@ -70,6 +71,13 @@
       <!--<li class="hidden"><a href="#<%= nested_resource(client_or_tour,trip,true) %>charities"  >Charities</a></li>-->
 			<!-- TODO: Make tabs work without needing at least one non-ajax tab! -->
     </ul>
+
+		<!-- Link to Quickie trip builder (for pasting flight data from Amadeus) -->
+		<%= unless Merb.environment == 'production'
+			begin
+				link_to icon(:grid, :style => 'height:20px;width:20px;'), "#{ resource(@client_or_tour, trip, :trip_elements) }/grid", :title => 'Quickie trip!', :style => 'left:0em;position:absolute;top:4em;'
+			end
+		end %>
 
   </div>
 	<!-- end of _tripPage sectionHead -->
