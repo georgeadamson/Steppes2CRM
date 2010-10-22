@@ -1,14 +1,19 @@
 <%
 
 	@elements	= @elements.all( :type_id => TripElementType::FLIGHT )
+	@trip     = @elements.first && @elements.first.trip || Trip.get(params[:trip_id])
 	
-	airports	= Airport.all(  Airport.country.companies.id => @trip.company_id.to_s, :order => [:code,:name] )
+	airports	= Airport.all( Airport.country.companies.id => @trip.company_id.to_s, :order => [:code,:name] )
 	airports.reload
+	
+	field_prefix = 'trip[trip_elements_attributes]'
 	
 %>
 
-<div style="padding:2em;background-color:#000;-moz-box-shadow:5px 5px 10px #000;height:25em;overflow-y:auto;">
+<div style="padding:2em;background-color:#000;-moz-box-shadow:5px 5px 10px #000;height:25em;margin:2em;overflow-y:auto;">
 
+	<%= form_for @trip, :action => nested_resource(@client_or_tour, @trip) do %>
+		
 	<table id="trip-elements-grid" cellspacing="0" cellpadding="0">
 
 		<thead>
@@ -17,86 +22,29 @@
 				<th colspan="1">Flight</th>
 				<th colspan="3">Depart</th>
 				<th colspan="3">Arrive</th>
-				<th colspan="1">Supplier</th>
-				<th colspan="1">Agent</th>
+				<!--<th colspan="1">Supplier</th>-->
+				<!--<th colspan="1">Agent</th>-->
 			</tr>
 		</thead>
 		
 		<tbody>
 
-			<% @elements.each do |element| %>
-			
-				<%= fields_for element do %>
-				<tr>
+			<% @elements.each_with_index do |trip_element,i| %>
 
-					<td>
-						<%= icon :flight     %>
-						<%= hidden_field :id %>
-					</td>
-					<td>
-						<%= text_field :flight_code, :class => 'widthHalfField', :title => 'Flight number' if element.flight? %>
-					</td>
-
-					<td>
-						<%= select :depart_airport_id, :selected => element.depart_airport_id.to_s, :collection => airports.all(:id=>element.depart_airport_id), :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr?, :value_method => :id, :text_method => :display_code, :class => 'airport widthHalfField', :prompt => '---  Choose', :title => 'Departure airport' if element.flight? %>
-					</td>
-					<td>
-					<%= text_field :start_date, :value => element.start_date.formatted(:uidate), :class => 'date', :title => 'Departure date' %>
-					</td>
-					<td>
-						<%= text_field :start_date, :value => element.start_date.formatted(:uitime), :class => 'time widthHalfField', :title => 'Departure time' %>
-					</td>
-
-					<td>
-						<%= select :arrive_airport_id, :selected => element.arrive_airport_id.to_s, :collection => airports.all(:id=>element.arrive_airport_id), :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr?, :value_method => :id, :text_method => :display_code, :class => 'airport widthHalfField', :prompt => '---  Choose', :title => 'Arrival airport' if element.flight? %>
-					</td>
-					<td>
-						<%= text_field :end_date,   :value => element.end_date.formatted(:uidate), :class => 'date', :title => 'Arrival date' %>
-					</td>
-					<td>
-						<%= text_field :end_date,   :value => element.end_date.formatted(:uitime), :class => 'time widthHalfField', :title => 'Arrival time' %>
-					</td>
-
-				</tr>
-				<% end =%>
+				<%= partial 'trip_elements/grid_row', :trip_element => trip_element, :field_index => i, :field_prefix => field_prefix %>
 
 			<% end %>
 
-				<!-- Blank row for adding flights: (Also used as template for each new row) -->
-				<tr>
-
-					<td>
-						<%= icon :add %>
-					</td>
-					<td>
-						<%= text_field	:name => :flight_code, :class => 'widthHalfField', :title => 'Flight number' %>
-					</td>
-
-					<td>
-						<%= select			:name => :depart_airport_id, :collection => airports.all, :value_method => :id, :text_method => :display_code, :class => 'airport widthHalfField', :prompt => '---  Choose', :title => 'Departure airport' %>
-					</td>
-					<td>
-					<%= text_field		:name => :start_date, :value => Time.now.formatted(:uidate), :class => 'date', :title => 'Departure date' %>
-					</td>
-					<td>
-						<%= text_field	:name => :start_date, :value => Time.now.formatted(:uitime), :class => 'time widthHalfField', :title => 'Departure time' %>
-					</td>
-
-					<td>
-						<%= select			:name => :arrive_airport_id, :collection => airports.all, :value_method => :id, :text_method => :display_code, :class => 'airport widthHalfField', :prompt => '---  Choose', :title => 'Arrival airport' %>
-					</td>
-					<td>
-						<%= text_field	:name => :end_date,   :value => Time.now.formatted(:uidate), :class => 'date', :title => 'Arrival date' %>
-					</td>
-					<td>
-						<%= text_field	:name => :end_date,   :value => Time.now.formatted(:uitime), :class => 'time widthHalfField', :title => 'Arrival time' %>
-					</td>
-
-				</tr>
+			<!-- BLANK ROW for adding flights: (Also used as template for each new row) -->
+			<script type="text/html" id="trip-elements-grid-row-template">
+				<%= partial 'trip_elements/grid_row', :trip_element => @trip.flights.new, :field_index => :new, :field_prefix => field_prefix %>
+			</script>
 
 		</tbody>
 
 	</table>
+
+	<% end =%>
 
 </div>
 
@@ -147,7 +95,14 @@
 	#trip-elements-grid .formField SELECT.airport:focus { clip:rect(auto,auto,auto,auto); }
 	
 	#trip-elements-grid .formField SELECT.airport OPTION:first-child { color:#f00; }
+
+	/* BUTTONS: */
+	#trip-elements-grid               .delete { visibility:hidden; }
+	#trip-elements-grid               .add    { visibility:hidden; }
+	#trip-elements-grid TR:last-child .add    { visibility:visible; }
 	
+	
+	/* PASTE AMADEUAS TEXT: */
 	#amadeus-paste {
 		background:#fff url(images/icons/icon.amadeus.a.medium.gif) no-repeat right top;
 		font-family:"Lucida Sans Unicode","Lucida Grande",monospace;

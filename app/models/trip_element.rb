@@ -9,18 +9,20 @@ class TripElement
   
   # Note: Flights without a handler can only be added by a PNR.
   
-  FLIGHT  = TripElementType::FLIGHT  unless defined?(FLIGHT)
-  HANDLER = TripElementType::HANDLER unless defined?(HANDLER)
-  ACCOMM  = TripElementType::ACCOMM  unless defined?(ACCOMM)
-  GROUND  = TripElementType::GROUND  unless defined?(GROUND)
-  MISC    = TripElementType::MISC    unless defined?(MISC)
+  FLIGHT  = TripElementType::FLIGHT  unless defined? FLIGHT
+  HANDLER = TripElementType::HANDLER unless defined? HANDLER
+  ACCOMM  = TripElementType::ACCOMM  unless defined? ACCOMM
+  GROUND  = TripElementType::GROUND  unless defined? GROUND
+  MISC    = TripElementType::MISC    unless defined? MISC
   
+  # This is just to improve readaibility!
+  YES_BUT_SEE_MANUAL_VALIDATION_BELOW = false unless defined? YES_BUT_SEE_MANUAL_VALIDATION_BELOW
   
   property :id,                   Serial
   property :type_id,							Integer,		:required	=> true,	:default	=> FLIGHT  					# tripElementType ID	(1=Flight, 4=Accomm, 5=Ground, 8=Misc)
   property :misc_type_id,					Integer,		:default	=> 1																		# tripElementMiscType ID
   property :trip_id,							Integer,		:required	=> true,	:index		=> true							# trip ID
-  property :supplier_id,					Integer,		:required	=> true																	# supplier ID for Suppliers
+  property :supplier_id,					Integer,		:required	=> YES_BUT_SEE_MANUAL_VALIDATION_BELOW	# supplier ID for Suppliers
   property :handler_id,						Integer																												# supplier ID for FlightHandlers (Supplier trip_element_type_id=2)
   property :name,									String,			:default	=> 'Trip element'
   property :description,					String,			:length		=> 600,		:default	=> ''
@@ -149,16 +151,23 @@ class TripElement
   :message =>   "The Arrival Airport code was not recognised. (Try examining the PNR and ensure the airport has an Airport Code defined in the System Admin pages)"
 	
   
+  # Require HANDLER on flight NOT created automatically by a PNR:
+  #validates_present :handler_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? },
+  validates_present :handler_id,
+    :if      => Proc.new {|elem| elem.flight? && !elem.bound_to_pnr? },
+    :when    => [:complete],
+    :message => "The Flight agent cannot be left blank"
+  
   # Require SUPPLIER on element NOT created automatically by a PNR:
-  validates_present :supplier_id, :unless => Proc.new {|elem| elem.bound_to_pnr? }
+  validates_present :supplier_id,
+    :unless  => Proc.new {|elem| elem.bound_to_pnr? },
+    :when    => [:complete]
   
   # Require SUPPLIER (airline) on flight created automatically by a PNR:
-  validates_present :supplier_id, :if => Proc.new {|elem| elem.bound_to_pnr? },
-  :message => "The Airline code was not recognised. (Try examining the PNR and ensure the airline has an Airline Code defined in the System Admin pages)"
-  
-  # Require HANDLER on flight NOT created automatically by a PNR:
-  validates_present :handler_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? },
-  :message => "The Flight agent cannot be left blank"
+  validates_present :supplier_id,
+    :if      => Proc.new {|elem| elem.bound_to_pnr? },
+    :when    => [:complete],
+    :message => "The Airline code was not recognised. (Try examining the PNR and ensure the airline has an Airline Code defined in the System Admin pages)"
   
   
   # Ugly workaround for the way datamapper returns datetime properties!
@@ -329,20 +338,93 @@ class TripElement
   
   # Merge start_time with the start_date field: (Typically applies to Flight elements only)
   def start_time=(hh_mm);
+    self.start_date = set_time( :start_date, hh_mm ) || self.start_date
+  end
+
+  # Merge end_time with the end_date field: (Typically applies to Flight elements only)
+  def end_time=(hh_mm)
+    self.end_date = set_time( :end_date, hh_mm ) || self.end_date
+  end
+
+  # Helper for merging a time onto a datetime object:
+  def set_time( attr, hh_mm )
     unless hh_mm.blank?
-			d = self.start_date
-			t = DateTime.strptime(hh_mm, '%H:%M')
-			self.start_date = DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
+      
+      if ( hh_mm = clean_time(hh_mm) )
+      
+	      d = self.attribute_get(attr).to_time
+	      t = DateTime.strptime(hh_mm, '%H:%M')
+	      return self.attribute_set attr, DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
+      
+      end
+
+    end
+  end
+
+  # TODO NEXT: start/end_date=(dd_mm_yyyy) methods; Allow for time;
+
+  def start_date=(dd_mm_yyyy)
+    set_date :start_date, dd_mm_yyyy
+  end
+
+  def end_date=(dd_mm_yyyy)
+    set_date :end_date, dd_mm_yyyy
+  end
+
+  def set_date( attr, dd_mm_yyyy )
+
+    if ( dd_mm_yyyy = clean_date(dd_mm_yyyy) )
+
+      d = dd_mm_yyyy.to_date                    # Use new day, month and year but
+      t = self.attribute_get(attr) # retain existing hour and minute.
+      return self.attribute_set attr, DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
+
+    end
+
+  end
+
+
+  # Helper to return a valid date from dodgy user-entered text:
+  # Note: this does not test for dates with invalid digits eg "32/13/2010"
+  def clean_date(dd_mm_yyyy)
+
+		if dd_mm_yyyy.blank?
+			
+			dd_mm_yyyy = nil
+      
+    elsif dd_mm_yyyy.is_a? String
+      
+			# Convert 2-digit year to 4 digits: 01-02-30 => "01-02-2030"
+			dd_mm_yyyy.strip!
+			dd_mm_yyyy.sub!(/^([0-3]?[0-9][\-\/][0-1]?[0-9][\-\/])([4-9][0-9])$/){|m| $1+'19'+$2} # Don't know why alternative syntax did not work: .sub!(/[\-\/]([4-9][0-9])$/, "\119\2") # See http://ruby-doc.org/core/classes/String.html#M000816
+			dd_mm_yyyy.sub!(/^([0-3]?[0-9][\-\/][0-1]?[0-9][\-\/])([0-3][0-9])$/){|m| $1+'20'+$2}
+			
+			begin
+				# Try to parse date string into format ready for database: (dd/mm/yyyy => yyyy/mm/dd)
+				valid_date = Date.strptime( dd_mm_yyyy, '%d/%m/%Y' )
+			rescue
+				# Ignore invalid date. It'll be picked up by the validations. 
+        valid_date = nil
+			end
+			
 		end
+    
+    return valid_date
+
   end
   
-  # Merge end_time with the end_date field: (Typically applies to Flight elements only)
-  def end_time=(hh_mm);
-    unless hh_mm.blank?
-			d = self.end_date
-			t = DateTime.strptime(hh_mm, '%H:%M')
-			self.end_date = DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
-		end
+  
+  # Helper to return a valid time string from dodgy user-entered text:
+  # Note: this does not test for times with invalid digits eg "25:66"
+  def clean_time(hh_mm)
+
+    hh_mm = hh_mm.to_s.gsub(/[^0-9]/,'')            # Remove ALL non-digit characters
+    hh_mm = hh_mm.rjust(2,'0') if hh_mm.length < 2  # Convert single digit into "01" or "02" etc.
+    hh_mm = hh_mm.slice(0..3).ljust(4,'0')          # Pad with zeros if necessary to make a 4-digit string.
+    hh_mm = hh_mm.insert(2,':')                     # Put colon back into the middle. # if hh_mm =~ /^[0-9]{4}$/
+
+    return hh_mm
+
   end
   
 	def date_summary

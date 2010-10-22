@@ -182,10 +182,11 @@ jQuery(function($) {
 			Layout.liveForm('success', 'trips:destroy',													Trip.onDestroySuccess );
 
 			// TripElements:
-			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.grid );
+			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.openGrid );
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.hideForm );
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.hideForm );
 			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.showForm, TripElement.initForm );
+			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.initGrid );
 			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.showForm, TripElement.initForm );
 			Layout.liveForm('success', 'trip_elements:create',										TripElement.initForm, Trip.initTimeline );
 			Layout.liveForm('success', 'trip_elements:update',										TripElement.initForm, Trip.initTimeline );
@@ -428,6 +429,7 @@ jQuery(function($) {
 				// If FILE DOWNLOAD, skip the clever stuff and let the browser do it's thing:
 				if( $link.parents('UL').is('.ui-tabs-nav') ){ return }
 				if( ALLOW_DOWNLOAD_OF[ext] || $link.is('.download') || $(this).is('.ajaxDownload') ){ return }
+				if( $link.is("[class *= 'datepicker']") ||  $link.parent().is("[class *= 'datepicker']") ){ return }
 
 				// Derive a {resource}_id property for each resource in the path: (Eg: "clients/1/trips/2" => {client_id:1, trip_id:2}
 				$.extend( options, Layout.getResourceIDsFrom(path) );
@@ -2373,23 +2375,50 @@ return
 
 
 // Helper to activate any datepickers:
-function initDatepickers() {
+function initDatepickers(context) {
 
-	$("INPUT.date")
+	// context argument may be a LivePath options hash or an element/selector:
+	context = ( context && ( context.panel || context.target ) ) || context;
 
-		//.filter(":not(.daterange)")
-		.datepicker({
-			//closeText: "Cancel",
-			dateFormat: "dd/mm/yy",
+	var defaults = {
+		dateFormat: "dd/mm/yy",
+		showButtonPanel: false,
+		showOtherMonths: false,
+		selectOtherMonths: false,	// TODO: This would be handy but our custom css needs fixing first!
+		changeYear: true,
+		changeMonth: true,
+		minDate: "-90y",
+		maxDate: "+5y",
+		yearRange: "-90:+5"
+	}
+
+	$("INPUT.date:not(.hasDatepicker)", context)
+
+		// Birthday fields:
+		.filter('.dob')
+		.datepicker( $.extend( {}, defaults, {
 			minDate: "-90y",
+			maxDate: "+1y",
+			yearRange: "-90:+1"
+		}) )
+		.end()
+
+		// Trip and element date fields:
+		.filter('.trip-date')
+		.datepicker( $.extend( {}, defaults, {
+			minDate: "-1y",
 			maxDate: "+5y",
-			//numberOfMonths  : 2,
-			showButtonPanel: true,
-			showOtherMonths: false,
-			changeYear: true,
-			changeMonth: true,
-			yearRange: "-90:+5"
-		});
+			yearRange: "-1:+5"
+		}) )
+		.end()
+
+		// Other date fields:
+		.not('.trip-date, .dob')
+		.datepicker(
+			defaults
+		)
+
+	;
 
 	// Cannot use daterange picker yet because it does not have collision detection:
 	// http://www.filamentgroup.com/lab/date_range_picker_using_jquery_ui_16_and_jquery_ui_css_framework/
@@ -3369,7 +3398,7 @@ function initTripInvoiceFormTotals(){
 
 		},
 
-		grid : function(options){
+		openGrid : function(options){
 
 			// We've intercepted a link so prevent default code from handling it:
 			options.event.stopImmediatePropagation();
@@ -3398,16 +3427,18 @@ function initTripInvoiceFormTotals(){
 				}
 			});
 
+		},
+
+		initGrid : function(options){
+		
+			// TODO: Also apply datepickers to pasted rows.
+			// initDatepickers(options.target);
+		
 		}
+
 
 	} // End of TripElement utilities.
 	
-
-	// Respond to CLIPBOARD PASTE into the amadeus textbox:
-	$('#amadeus-paste').live('paste', function(e){
-		var $textbox = $(this);
-		window.setTimeout( function(){ alert($textbox.val()) }, 0 );
-	})
 
 
 
