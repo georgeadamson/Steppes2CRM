@@ -103,3 +103,33 @@ Date.add_format(:filedatetime,'%d-%m-%Y_%H-%M')	# "dd-mm-yyyy_hh-mm"
 	
 	Numeric::Transformer.add_format(new_currency_format)
   
+
+
+# Helper object used for adding a fake 'prompt' item at the top of a bound pick list:
+# Use this when you need a prompt with an actual value (default value is 0)
+# Sample usage: supplier_prompt = FakeListItem.new('-- Please choose')
+#               select :collection => suppliers.all.unshift(supplier_prompt), ...
+class FakeListItem
+
+  attr_accessor :id
+  attr_accessor :name
+
+  # Mimic methods that the select helper's :text_method may try to access:
+  alias :value         :id
+  alias :display_name  :name
+  alias :fullname      :name
+  alias :name_and_code :name
+  alias :code_and_name :name
+
+  # Fake some other attributes that the select helper may try to access:
+  attr_accessor :saved?
+  attr_accessor :readonly?
+  attr_accessor :attributes
+  attr_accessor :collection
+
+  def initialize( name = '- Please choose', id = 0 )
+    @id   = id
+    @name = name
+  end
+
+end
