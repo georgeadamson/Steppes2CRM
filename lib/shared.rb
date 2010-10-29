@@ -115,17 +115,20 @@ class FakeListItem
   attr_accessor :name
 
   # Mimic methods that the select helper's :text_method may try to access:
-  alias :value         :id
-  alias :display_name  :name
-  alias :fullname      :name
-  alias :name_and_code :name
-  alias :code_and_name :name
-
-  # Fake some other attributes that the select helper may try to access:
+  alias :value                  :id
+  alias :display_name           :name
+  alias :fullname               :name
+  alias :code_and_name          :name
+  alias :name_and_code          :name
+  alias :name_and_currency      :name
+  alias :name_code_and_currency :name
+  
+  # Fake some other methods that the select helper may try to access:
   attr_accessor :saved?
   attr_accessor :readonly?
   attr_accessor :attributes
   attr_accessor :collection
+  def map; return [yield(self)]; end
 
   def initialize( name = '- Please choose', id = 0 )
     @id   = id
