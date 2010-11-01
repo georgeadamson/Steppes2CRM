@@ -14,15 +14,15 @@ class TripElement
   ACCOMM  = TripElementType::ACCOMM  unless defined? ACCOMM
   GROUND  = TripElementType::GROUND  unless defined? GROUND
   MISC    = TripElementType::MISC    unless defined? MISC
-  
-  # This is just to improve readaibility!
+
+  # This is just a simple boolean flag but it helps to document the code!
   YES_BUT_SEE_MANUAL_VALIDATION_BELOW = false unless defined? YES_BUT_SEE_MANUAL_VALIDATION_BELOW
   
   property :id,                   Serial
   property :type_id,							Integer,		:required	=> true,	:default	=> FLIGHT  					# tripElementType ID	(1=Flight, 4=Accomm, 5=Ground, 8=Misc)
   property :misc_type_id,					Integer,		:default	=> 1																		# tripElementMiscType ID
   property :trip_id,							Integer,		:required	=> true,	:index		=> true							# trip ID
-  property :supplier_id,					Integer,		:required	=> YES_BUT_SEE_MANUAL_VALIDATION_BELOW	# supplier ID for Suppliers
+  property :supplier_id,					Integer,		:required	=> true,  :auto_validation => false	    # supplier ID for Suppliers
   property :handler_id,						Integer																												# supplier ID for FlightHandlers (Supplier trip_element_type_id=2)
   property :name,									String,			:default	=> 'Trip element'
   property :description,					String,			:length		=> 600,		:default	=> ''
