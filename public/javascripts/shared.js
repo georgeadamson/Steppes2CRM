@@ -1820,10 +1820,11 @@ return
 
 	// Handle events on the new/edit photo popup:
 
-	$("SELECT.imgFilename").live("change", onImgFileChange).triggerHandler("change");
-	$("SELECT.imgFilename").live("keyup", onImgFileChange);
-	$("SELECT.imgFolder").live("change", onImgFolderChange);
-	$("SELECT.imgFolder").live("keyup", onImgFolderChange);
+	// Depricated until needed:
+	//	$("SELECT.imgFilename").live("change", onImgFileChange).triggerHandler("change");
+	//	$("SELECT.imgFilename").live("keyup", onImgFileChange);
+	//	$("SELECT.imgFolder").live("change", onImgFolderChange);
+	//	$("SELECT.imgFolder").live("keyup", onImgFolderChange);
 
 	// Respond when user chooses a different IMAGE FOLDER:
 	function onImgFolderChange() {
@@ -2404,7 +2405,7 @@ function initDatepickers(context) {
 		.end()
 
 		// Trip and element date fields:
-		.filter('.trip-date')
+		.filter('.travel-date')
 		.datepicker( $.extend( {}, defaults, {
 			minDate: "-1y",
 			maxDate: "+5y",
@@ -2413,7 +2414,7 @@ function initDatepickers(context) {
 		.end()
 
 		// Other date fields:
-		.not('.trip-date, .dob')
+		.not('.travel-date, .dob')
 		.datepicker(
 			defaults
 		)
@@ -2831,19 +2832,6 @@ function initKeyPressFilters(){
 
 
 
-
-
-	function initTripElementFormTotals(){
-		
-		// Update TripElement totals when these fields change:
-		// Warning: We just bind one event here. Binding more tends to slow down the responsiveness of the ui.
-		// Warning: If you change this code, verify that the form initialisation still works: See TripElement.initForm
-		$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
-			.live( 'change keyup', onTripElementFieldChange )
-		;
-
-	}
-
 	// Called to update TripElement totals whenever user makes changes in TripElement form: (And each time it is loaded by ajax)
 	function onTripElementFieldChange(){
 
@@ -2947,6 +2935,25 @@ function initKeyPressFilters(){
 
 
 
+	function initTripElementFormTotals(){
+
+		// Update TripElement totals when these fields change:
+		// Warning: If you change this code, verify that the form initialisation still works: See TripElement.initForm
+		// By testing for general name likeness first, we waste less cpu time when event is triggered on unrelated fields:
+		$( "INPUT[name *= 'trip_element'], SELECT[name *= 'trip_element']" ).live( 'change keyup', function(e){
+			if( $(this).is("SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']") ){
+				onTripElementFieldChange.call(this,e);
+			}
+		});
+		// The following equivalent code was slower becaue it required jQuery to check many names every time event was triggered.
+		//	$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
+		//		.live( 'change keyup', onTripElementFieldChange )
+		//	;
+
+	}
+
+
+
 
 
 // Update Trip Invoice amount when these fields change:
@@ -2954,8 +2961,7 @@ function initTripInvoiceFormTotals(){
 
 	// Update Trip Invoice amount when these fields change:
 	$( "INPUT[name='money_in[deposit]']" )
-		.live( 'keyup', onTripInvoiceFieldChange )
-		.live( 'click', onTripInvoiceFieldChange );
+		.live( 'click keyup', onTripInvoiceFieldChange );
 
 	$( "SELECT[name='money_in[name]']" )
 		.live( 'change', onTripInvoiceTypeChange );
@@ -3409,16 +3415,17 @@ function initTripInvoiceFormTotals(){
 			.dialog({
 				modal		: true,
 				title		: icon('grid') + ' Quickie trip builder',
-				minHeight	: 500,
-				maxHeight	: 500,
-				width		: 750,
+				minHeight	: 450,
+				maxHeight	: 450,
+				width		: 950,
 				open		: function(e,ui){
 					ui.panel = this;
 					options.target = '#' + $(ui.panel).id();
-					options.url = options.url + '?limit=500'
+					options.url = options.url + '?limit=100'
 					Layout.load(options.url,options);
 				},
 				close		: function(e,ui){
+					// Prevent odd things happening later by removing dialog from DOM:
 					$(this).remove();
 				},
 				buttons		: {
@@ -3430,8 +3437,8 @@ function initTripInvoiceFormTotals(){
 		},
 
 		initGrid : function(options){
-		
-			// TODO: Also apply datepickers to pasted rows.
+
+			// TODO: This works but we must also apply datepickers to pasted rows.
 			// initDatepickers(options.target);
 		
 		}

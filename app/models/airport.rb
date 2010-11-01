@@ -16,6 +16,9 @@ class Airport
   has n, :trip_elements, :child_key => [:arrive_airport_id]		# tripElement.arriveAirport
   has n, :touchdowns																					# tripElement.touchdowns	???
 	
+  # Set the default sort order:
+  default_scope(:default).update( :order => [:name,:code] )
+  
 	before :save do
 		self.code.upcase!
 	end

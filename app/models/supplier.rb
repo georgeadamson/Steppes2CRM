@@ -4,6 +4,7 @@ class Supplier
   # IMPORTANT: Flight Handlers (AKA Flight Agents) from the old Database are now Supplier Type 2.
   
   FLIGHT  = 1 unless defined?(FLIGHT)
+  AIRLINE = 1 unless defined?(AIRLINE)
   HANDLER = 2 unless defined?(HANDLER)
   ACCOMM  = 4 unless defined?(ACCOMM)
   GROUND  = 5 unless defined?(GROUND)
@@ -82,6 +83,10 @@ class Supplier
 	#accepts_nested_attributes_for :companies
 
 
+  # Set the default sort order:
+  default_scope(:default).update( :order => [:name,:code] )
+
+
 	validates_is_unique :name, :scope => [ :type_id, :currency_id ],
 		:message => 'A supplier of this type already exists with the same name and currency'
 
@@ -111,9 +116,13 @@ class Supplier
 
 
 
+  # Convenience method to return id and name:
+	def id_and_name
+		return [ self.id, self.display_name ]
+	end
 
 
-	# Supplier name and currenc`y string: (Eg: "British Airways [GBP]")
+	# Supplier name and currency string: (Eg: "British Airways [GBP]")
 	def name_and_currency
 
 		# Populate currencies lookup if not already loaded:
@@ -129,10 +138,40 @@ class Supplier
 
 	alias display_name name_and_currency
 
-	def id_and_name
-		return [ self.id, self.display_name ]
+
+	# Supplier name and code and currency string: (Eg: "British Airways (BA) [GBP]")
+	def name_code_and_currency
+
+		supplier_name = self.name.blank? ? '(blank supplier name)' : self.name
+		supplier_code = self.code.blank? ? 'no code'               : self.code
+		currency_name	= cached(:exchange_rates_hash)[self.currency_id] || ''
+
+		return "#{ supplier_name }#{ ' - ' + supplier_code unless supplier_code.blank? }#{ ' [' + currency_name + ']' unless currency_name.blank? }"
+
 	end
+
 	
+	# Supplier NAME and CODE string used for consistent display: (Eg: "British Airways [BA]")
+  # Typically only used for airlines.
+  # BEWARE of using different brackets. Some ui script may expect '[...]' for deriving supplier code.
+  # NOTE the use of double-space ("  ") to safely tell the UI where additional formatting may be added.
+	def name_and_code
+		name = self.name.blank? ? '(blank supplier name)' : self.name
+		code = self.code.blank? ? 'no code'               : self.code
+		return "#{ name }  [#{ code }]"
+	end
+
+	# Supplier CODE and name string used for consistent display: (Eg: "BA [British Airways]")
+  # Typically only used for airlines.
+  # BEWARE of using different brackets. Some ui script may expect '[...]' for deriving supplier name.
+  # NOTE the use of double-space ("  ") to safely tell the UI where additional formatting may be added.
+	def code_and_name
+		name = self.name.blank? ? '(blank supplier name)' : self.name
+		code = self.code.blank? ? 'no code'               : self.code
+		return "#{ code }  [#{ name }]"
+	end
+	alias display_code code_and_name
+
 	
 
 	# Helpers for testing what type of supplier this is: 

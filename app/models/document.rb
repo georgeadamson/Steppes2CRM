@@ -19,12 +19,12 @@ class Document
   RUNNING   = 1 unless defined? RUNNING  
   FAILED    = 2 unless defined? FAILED   
   SUCCEEDED = 3 unless defined? SUCCEEDED
-  
+
   property :id,					            Serial
   property :name,				            String,  :required => true, :length => 255, :default => 'Document'
 	property :file_name,	            String,  :required => true, :length => 500, :default => ''
   property :document_type_id,	      Integer, :required => true
-  property :client_id,	            Integer  #required unless trip.tour_template? See validocdation below. # The person this document was created for. Others may have access to it too through trip.
+  property :client_id,	            Integer, :required => true, :auto_validation => false # See validation below. # The person this document was created for. Others may have access to it too through trip.
   property :company_id,	            Integer, :required => true
   property :trip_id,		            Integer, :required => false
   property :user_id,		            Integer, :required => false  # Not applicable for legacy database1 user_names because they are not in users list.
@@ -33,7 +33,7 @@ class Document
   # Fields used only during document generation:
   property :document_status_id,     Integer, :required => true,  :default => PENDING  # 0=Pending, 1=Running, 2=Failed, 3=Succeeded
   property :document_template_id,   Integer, :required => true,  :default => 1  # DEPRICATED?
-  property :document_template_file, String,  :required => true,  :default => '', :length => 255
+  property :document_template_file, String,  :required => true,  :default => '', :auto_validation => false, :length => 255
   property :parameters,             Text,    :required => true,  :default => '' # Xml. Parameters are provided in xml for the Steppes Document Builder to use when querying for data.
   
   property :doc_builder_output,     Text,    :required => false, :default => '' # String for feedback from the generation process.

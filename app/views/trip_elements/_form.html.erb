@@ -84,7 +84,7 @@
 		if element.flight?
 
 			# Add "Show all" option to the handlers list:
-			href = resource( :suppliers, :list => 'option', :type_id => 2 )		# 2=Handlers (aka Flight agents)
+			href = resource( :suppliers, :list => 'option', :type_id => Supplier::HANDLER )		# 2=Handlers (aka Flight agents)
 			handlers_list << [ href, '+ Show more...' ]
 			
 			# When airports are not already in the lists then add them:

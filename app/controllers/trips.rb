@@ -435,8 +435,9 @@ puts @trip.inspect
       end
       
       # Warn about missing suppliers: (This should not be possible!)
-      unless ( incomplete_elements = @trip.elements.all( :supplier => nil ) ).empty?
-        message[:notice] << "\n Warning: #{ incomplete_elements.count } elements have no supplier. Rather a crucial omission"
+      incomplete_elements = @trip.elements.all( :supplier_id => nil ) && @trip.elements.all( :supplier_id => 0 )
+      unless incomplete_elements.empty?
+        message[:notice] << "\n Warning: #{ incomplete_elements.length } elements have no supplier. I'm going to tell your mum"
       end
       
       # Warning about pax-count mismatch:
