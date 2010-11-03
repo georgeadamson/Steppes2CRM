@@ -90,7 +90,10 @@
 	<td>
 		<%= button "#{ icon(:delete) } Delete", :class => 'delete ui-priority-secondary ui-state-default', :title => 'Remove this flight' unless trip_element.bound_to_pnr? %>
 		<!--<%= link_to icon(:add),    '#trip-element-add',    :class => 'add',    :title => 'Add another flight' %>-->
-		<small class="deleted message">(Flight will be deleted)</small>
+		<small class="deleted message" title="Flight will be deleted when you click save">
+			Flight will be deleted.
+			<a href="#undo" class="undo delete">Undo</a>
+		</small>
 	</td>
 
 </tr>

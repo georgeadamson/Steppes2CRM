@@ -2,6 +2,7 @@
 	// Helpers and utitities for handling TRIP_ELEMENTS.
 
 
+	// Handle DELETE:
 	$('#trip-elements-grid BUTTON.delete').live('click', function(e){
 
 		var $row = $(this).closest('TR');
@@ -9,14 +10,27 @@
 		if( $row.is('.create') ){
 			$row.remove();
 		}else{
-			$row.addClass('delete').removeClass('create update')	// Alter the display and
-			.find("INPUT[name *= delete]").removeAttr('disabled');	// enable the delete field.
+			$row.addClass('delete').removeClass('create update')		// Alter the display and
+				.find("INPUT[name *= delete]").removeAttr('disabled');	// enable the delete field.
 		}
 
 		e.stopImmediatePropagation();
 		return false;
 
 	});
+
+		// Handle UNDO delete:
+		$('#trip-elements-grid TR.delete .undo').live('click', function(e){
+
+			var $row = $(this).closest('TR');
+
+			$row.addClass('update').removeClass('delete')						// Alter the display and
+				.find("INPUT[name *= delete]").attr({ disabled:'disabled' });	// disabled the delete field.
+
+			e.stopImmediatePropagation();
+			return false;
+
+		});
 
 
 	// Respond to CLIPBOARD PASTE into the amadeus textbox:
