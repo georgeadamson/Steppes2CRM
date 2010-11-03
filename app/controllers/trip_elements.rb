@@ -87,7 +87,7 @@ class TripElements < Application
 		# Fetch a reference to the trip itself:
 		@trip = Trip.get(trip_element[:trip_id]) || Trip.get(params[:trip_id]) || Trip.new
 
-		accept_valid_date_fields_for trip_element, [ :start_date, :end_date, :booking_expiry ]
+		#accept_valid_date_fields_for trip_element, [ :start_date, :end_date, :booking_expiry ]
 
     # Make assumptions for missing dates:
     # Depricated: Leave this job to for the model to sort out.
@@ -160,7 +160,7 @@ class TripElements < Application
     @trip = @element.trip || Trip.get(params[:trip_id]) || Trip.new
 		
 		trip_element[:updated_by] = session.user.login
-		accept_valid_date_fields_for trip_element, [ :start_date, :end_date, :booking_expiry ]
+		#accept_valid_date_fields_for trip_element, [ :start_date, :end_date, :booking_expiry ]
 
     # Ensure we're not accidentally overriding dates and times etc on PNR Flights:
     if @element.bound_to_pnr?
