@@ -11,7 +11,7 @@
 			$row.remove();
 		}else{
 			$row.addClass('delete').removeClass('create update')		// Alter the display and
-				.find("INPUT[name *= delete]").removeAttr('disabled');	// enable the delete field.
+				.find("INPUT[name *= delete]").removeAttr('disabled');	// enable the field that instructs server to delete flight.
 		}
 
 		e.stopImmediatePropagation();
@@ -19,21 +19,22 @@
 
 	});
 
-		// Handle UNDO delete:
-		$('#trip-elements-grid TR.delete .undo').live('click', function(e){
 
-			var $row = $(this).closest('TR');
+	// Bonus feature: Allow UNDO delete: (On deleted rows that have not yet been submitted)
+	$('#trip-elements-grid TR.delete .undo').live('click', function(e){
 
-			$row.addClass('update').removeClass('delete')						// Alter the display and
-				.find("INPUT[name *= delete]").attr({ disabled:'disabled' });	// disabled the delete field.
+		var $row = $(this).closest('TR');
 
-			e.stopImmediatePropagation();
-			return false;
+		$row.addClass('update').removeClass('delete')						// Alter the display and
+			.find("INPUT[name *= delete]").attr({ disabled:'disabled' });	// disable the field that instructs server to delete flight.
 
-		});
+		e.stopImmediatePropagation();
+		return false;
+
+	});
 
 
-	// Respond to CLIPBOARD PASTE into the amadeus textbox:
+	// Respond to CLIPBOARD PASTE in the amadeus textbox:
 	// For some reason the pasted text is not available, so we use timeout to give textbox a chance to accept it.
 	$('#amadeus-paste').live('paste', function(e){
 
@@ -80,16 +81,24 @@
 	//               " 10  BA 249 Y 15JAN 6 LHRGIG HK1       5  1210 2150   *1A/E*  "
 	function parsePastedAmadeusText(rawAmadeus){
 
-		var flights, isValidAirlineCode = /^([A-Z][A-Z]|[A-Z][0-9]|[0-9][A-Z])$/;
-		var lookupMonthNumber = {'JAN':1,'FEB':2,'MAR':3,'APR':4,'MAY':5,'JUN':6,'JUL':7,'AUG':8,'SEP':9,'OCT':10,'NOV':11,'DEC':12};
+		var flights,
+			isValidAirlineCode = /^([A-Z][A-Z]|[A-Z][0-9]|[0-9][A-Z])$/,
+			lookupMonthNumber  = {'JAN':1,'FEB':2,'MAR':3,'APR':4,'MAY':5,'JUN':6,'JUL':7,'AUG':8,'SEP':9,'OCT':10,'NOV':11,'DEC':12};
 		rawAmadeus = rawAmadeus || '';
 
 		// Separate raw amadesus text into lines and discard any that do not look like flight data:
-		// We use a regex to identify lines beginning with a number and containing times like "0650 0929".
 		flights = rawAmadeus.toUpperCase().split(/\n/);
-		flights = $.grep(flights, function(line){ return /^\s(\s|[0-9])[0-9]\s{2}.*[0-9]{4}\s[0-9]{4}/.test(line) });
-		console.log(flights);
 
+		// Discard any rows that do not look like flight data:
+		// We use a regex to identify lines beginning with a line-number and containing times like "0650 0929".
+		flights = $.grep(flights, function(line){ return /^\s*[1-9][0-9]?\s\s.*[0-9]{4}\s[0-9]{4}/.test(line) });
+
+		// Allow for lazy user's copy-and-paste by ensuring the line begins with the expected number of spaces:
+		// This is necessary because we will locate each value by it's position in the line.
+		// (Typically only applies to first line. Prefix must be 2 spaces when line-number is single digit or 1 space when it is 2 digits)
+		flights = $.map( flights, function(line){ return line.replace( /^\s*([1-9]\s)/, '  $1' ).replace( /^\s*([1-9][0-9]\s)/, ' $1' ) });
+
+		console.log(flights, flights[0]);
 		// Parse explicit attributes from raw amadeus line into a hash of properties for each flight:
 		// Note we use Number() because parseInt() would parse '09' as 0 instead of 9.
 		flights = $.map(flights, function(line){
