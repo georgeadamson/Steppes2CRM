@@ -383,7 +383,7 @@ jQuery(function($) {
 
 				// Trigger the callback passing a pimped-up copy of the options hash:
 				if( form.controller == controller && form.action == action && $.isFunction(callback) ){
-					console.log('Triggering liveForm:', type, form.path, pattern, callback );
+					console.log('Triggering liveForm:', type, form.path, pattern, callback, 'with options:', options );
 					var args = $.extend( {}, options, { form:form, pattern:pattern, data:data, type:type, event:e } );
 					callback(args);
 				}
@@ -3294,14 +3294,29 @@ function initTripInvoiceFormTotals(){
 
 		onUpdateSuccess : function(options){
 
-			if(options && options.form && options.form.id && options.form.target){
+			var form = options && options.form;
 
-				var $panel   = $(options.form.target);
+			// Derive the target element manually when form was submitted from the FLIGHTS GRID:
+			// Eg: Trip page id "#clients2138590478trips119673"
+			if( form.params && form.params.grid && form.path ){
+				
+				form.target = '#' + form.path.replace('/','','g');
+				
+				$(form.target).replaceWith(options.data);
+				Trip.initShow(options);
+				TripElement.closeGridDialog();
+				
+			}
+
+			// Otherwise handle a normal trip update:
+			else if( form && form.id && form.target ){
+
+				var $panel   = $(form.target);
 				var tripName = $panel.find("INPUT[name='trip[name]']").val();
 
 				if(tripName){
 					var $tabs = $panel.parents('.clientPage').find('.ui-tabs:first');
-					var regex = new RegExp('/trips/' + options.form.trip_id);	// Eg: /\/trips\/1234/
+					var regex = new RegExp('/trips/' + form.trip_id);	// Eg: /\/trips\/1234/
 					var ui    = $tabs.tabs('url',regex);
 					$(ui.tab).text(tripName);	// TODO: This seems correct but UI is not changing!
 				}
@@ -3410,30 +3425,34 @@ function initTripInvoiceFormTotals(){
 			options.event.stopImmediatePropagation();
 
 			// Re-use existing dialog or create new: 
-			$('#trip-elements-grid').parents('.ui-dialog').add('<div>').first()
-			.html('Opening...')
-			.dialog({
-				modal		: true,
-				title		: icon('grid') + ' Quickie trip builder',
-				minHeight	: 450,
-				maxHeight	: 450,
-				width		: 950,
-				open		: function(e,ui){
-					ui.panel = this;
-					options.target = '#' + $(ui.panel).id();
-					options.url = options.url + '?limit=100'
-					Layout.load(options.url,options);
-				},
-				close		: function(e,ui){
-					// Prevent odd things happening later by removing dialog from DOM:
-					$(this).remove();
-				},
-				buttons		: {
-					'Cancel'		: function(){ $(this).dialog('close') },
-					'Save changes'	: function(){ $('FORM:last',this).submit() }	// First form is for searching the second (last) is to perform the copy.
-				}
-			});
+			$('#trip-elements-grid').closest('.ui-dialog-content').add('<div>').first()
+				.html('Opening...')
+				.dialog({
+					modal		: true,
+					title		: icon('grid') + ' Quickie trip builder',
+					minHeight	: 450,
+					maxHeight	: 450,
+					width		: 950,
+					open		: function(e,ui){
+						ui.panel = this;
+						options.target = '#' + $(ui.panel).id();
+						options.url = options.url + '?limit=100'
+						Layout.load(options.url,options);
+					},
+					close		: function(e,ui){
+						// Prevent odd effects later by removing dialog from DOM:
+						$(this).remove();
+					},
+					buttons		: {
+						'Cancel'		: function(){ console.log(this,$(this)); TripElement.closeGridDialog() },
+						'Save changes'	: function(){ $('FORM:last',this).submit() }
+					}
+				})
+			;
+		},
 
+		closeGridDialog : function(){
+			$('#trip-elements-grid').closest('.ui-dialog-content').dialog('close');
 		},
 
 		initGrid : function(options){

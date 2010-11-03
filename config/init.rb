@@ -40,8 +40,7 @@ end
 
 Merb::BootLoader.after_app_loads do
   # This will get executed after your app's classes have been loaded.
-  #DataObjects::Mysql.logger = DataObjects::Logger.new('log/dm.log', 0)
-  #DataObjects::Sqlite3.logger = DataObjects::Logger.new(Merb.log_file, 0) 
+  #DataObjects::Sqlserver.logger = DataObjects::Logger.new(STDOUT, 0) 
   DataObjects::Sqlserver.logger = DataObjects::Logger.new('log/dm.log', 0) 
 end
 
