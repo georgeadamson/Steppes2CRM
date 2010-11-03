@@ -8,11 +8,11 @@
 	#company_countries = CompanyCountry.all.reload
 	#countries 				= Country.all.reload
 	airports					= Airport.all( Airport.country.companies.id => @trip.company_id.to_s, :order => [:code,:name] ).reload
-	airlines					= Supplier.all( :type_id => Supplier::FLIGHT, :order => [:name,:code] ).reload
+	airlines					= Supplier.all( :type_id => Supplier::FLIGHT,  :order => [:name,:code] ).reload
 	handlers					= Supplier.all( :type_id => Supplier::HANDLER, :order => [:name] ).reload
 	
 	field_prefix = 'trip[trip_elements_attributes]'
-	puts '----- after'
+
 %>
 
 <div style="padding:2em;background-color:#000;-moz-box-shadow:5px 5px 10px #000;height:20em;margin:2em;overflow-y:auto;">
@@ -20,135 +20,51 @@
 	<!-- The grid param lets client-side script know where the form was submitted from: -->
 	<%= form_for @trip, :action => nested_resource( @client_or_tour, @trip, :grid => true ) do %>
 
-	<!-- This field is only present as a workaround for when empty form (with no flights) is submitted: -->
-	<%= hidden_field :id %>
+		<!-- This field is only present as a workaround for when user submits empty form with no flights: -->
+		<%= hidden_field :id %>
 
-	<table id="trip-elements-grid" cellspacing="0" cellpadding="0">
+		<table id="trip-elements-grid" cellspacing="0" cellpadding="0">
 
-		<thead>
-			<tr>
-				<th></th>
-				<th>Flight</th>
-				<th colspan="3">Depart</th>
-				<th colspan="3">Arrive</th>
-				<th>Airline</th>
-				<th>Agent</th>
-			</tr>
-		</thead>
+			<thead>
+				<tr>
+					<th></th>
+					<th>Flight</th>
+					<th colspan="3">Depart</th>
+					<th colspan="3">Arrive</th>
+					<th>Supplier/Airline</th>
+					<th>Agent</th>
+				</tr>
+			</thead>
 
-		<tbody>
+			<tbody>
 
-			<% @elements.each_with_index do |trip_element,i| %>
+				<% @elements.each_with_index do |trip_element,i| %>
 
-				<%= partial 'trip_elements/grid_row', :trip_element => trip_element, :field_index => i, :field_prefix => field_prefix, :airports => airports, :airlines => airlines, :handlers => handlers %>
+					<%= partial 'trip_elements/grid_row', :trip_element => trip_element, :field_index => i, :field_prefix => field_prefix, :airports => airports, :airlines => airlines, :handlers => handlers %>
 
-			<% end %>
+				<% end %>
 
-			<!-- BLANK ROW for adding flights: (Also used as template for each new row) -->
-			<script type="text/html" id="trip-elements-grid-row-template">
-				<%= partial 'trip_elements/grid_row', :trip_element => @trip.flights.new, :field_index => :new, :field_prefix => field_prefix, :airports => airports, :airlines => airlines, :handlers => handlers %>
-			</script>
+				<tr class="message none">
+					<td></td>
+					<td colspan="20">
+						<small class="message">
+							<%= icon :info %>
+							This trip has no flights. You can paste flight lines from Amadeus into the box below.
+						<small>
+					</td>
+				</tr>
 
-		</tbody>
+				<script type="text/html" id="trip-elements-grid-row-template">
+					<!-- BLANK ROW TEMPLATE for adding flights: -->
+					<%= partial 'trip_elements/grid_row', :trip_element => @trip.flights.new, :field_index => :new, :field_prefix => field_prefix, :airports => airports, :airlines => airlines, :handlers => handlers %>
+				</script>
 
-	</table>
+			</tbody>
+
+		</table>
 
 	<% end =%>
 
 </div>
 
-	<textarea id="amadeus-paste">Paste Amadeus text here to add flights...</textarea>
-
-<style type="text/css">
-
-	#trip-elements-grid THEAD TH { color:#fff; }
-
-	#trip-elements-grid TBODY TD { padding:0 0.2em 0 0; }
-
-
-	TABLE#trip-elements-grid { background-color:#000; }
-
-	#trip-elements-grid TBODY TD,
-	#trip-elements-grid TBODY TD .formField INPUT,
-	#trip-elements-grid TBODY TD .formField SELECT {
-		background-color:transparent;
-		color:yellow;
-		font-family:"Lucida Sans Unicode","Lucida Grande",monospace;
-		outline:medium none;
-	}
-	
-	#trip-elements-grid TBODY TD .formField INPUT:focus,
-	#trip-elements-grid TBODY TD .formField SELECT:focus {
-		background-color:#fff;
-		color:#000;
-	}
-		
-	#trip-elements-grid TBODY TD:nth-child(1) { padding-right:1em; }
-	#trip-elements-grid TBODY TD:nth-child(5) { padding-right:2em; }
-
-	#trip-elements-grid .formField { min-height:auto; padding:0.1em; }
-	
-	#trip-elements-grid .formField LABEL { display:none; }
-
-	#trip-elements-grid .formField SELECT { height:1.5em; }
-	
-	#trip-elements-grid .formField INPUT.date  { width:8em; }
-	#trip-elements-grid .formField INPUT.time  { width:3.2em; }
-	
-	#trip-elements-grid .formField .widthHalfField { margin-right:0; }
-
-	/* Use 'clip' to hide AIRLINE dropdown-arrow until user hovers or focuses on it: */
-	#trip-elements-grid .formField.airport { position:relative; top:0.8em; height:1.5em; width:3.8em; }
-	#trip-elements-grid .formField SELECT.airport { position:absolute; clip:rect(auto,2.4em,auto,auto); width:100%; }
-	#trip-elements-grid .formField SELECT.airport:hover,
-	#trip-elements-grid .formField SELECT.airport:focus { clip:rect(auto,auto,auto,auto); }
-
-	/* Use 'clip' to hide SUPPLIER dropdown-arrow until user hovers or focuses on it: */
-	#trip-elements-grid .formField.supplier { position:relative; top:0.8em; height:1.5em; width:8em; }
-	#trip-elements-grid .formField SELECT.supplier { position:absolute; clip:rect(auto,6.6em,auto,auto); width:100%; }
-	#trip-elements-grid .formField SELECT.supplier:hover,
-	#trip-elements-grid .formField SELECT.supplier:focus { clip:rect(auto,auto,auto,auto); }
-
-	/* Use 'clip' to hide HANDLER dropdown-arrow until user hovers or focuses on it: */
-	#trip-elements-grid .formField.handler { position:relative; top:0.8em; height:1.5em; width:8em; }
-	#trip-elements-grid .formField SELECT.handler { position:absolute; clip:rect(auto,6.6em,auto,auto); width:100%; }
-	#trip-elements-grid .formField SELECT.handler:hover,
-	#trip-elements-grid .formField SELECT.handler:focus { clip:rect(auto,auto,auto,auto); }
-
-	/* Attempt to colour-code the prompt at the top of the list: (Has no effect in most browsers!) */
-	#trip-elements-grid .formField SELECT.airport  OPTGROUP OPTION:first-child,
-	#trip-elements-grid .formField SELECT.handler  OPTGROUP OPTION:first-child,
-	#trip-elements-grid .formField SELECT.supplier OPTGROUP OPTION:first-child { /* color:red; */ }
-
-
-	/* ICONS: (Only show icon when it's class matches the row class "create/update/delete") */
-	#trip-elements-grid TR.update .ui-icon.create,
-	#trip-elements-grid TR.delete .ui-icon.create,
-	#trip-elements-grid TR.create .ui-icon.update,
-	#trip-elements-grid TR.delete .ui-icon.update,
-	#trip-elements-grid TR.create .ui-icon.delete,
-	#trip-elements-grid TR.update .ui-icon.delete { display:none; }
-
-	/* MESSAGES: (Only show tip when it's class matches the row class "create/update/delete") */
-	#trip-elements-grid TR        .message,
-	#trip-elements-grid TR        .message A.undo { color:#fff; white-space:nowrap; }
-	#trip-elements-grid TR.create .message.deleted,
-	#trip-elements-grid TR.update .message.deleted { display:none; }
-	
-
-	/* Special style for row flagged for DELETE: */
-	#trip-elements-grid TR.delete INPUT,
-	#trip-elements-grid TR.delete SELECT { text-decoration:line-through; }
-	#trip-elements-grid TR.delete BUTTON.delete { display:none; }
-
-	
-	/* PASTE AMADEUS TEXT: */
-	#amadeus-paste {
-		background:#fff url(/images/icons/icon.amadeus.a.medium.gif) no-repeat left top;
-		font-family:"Lucida Sans Unicode","Lucida Grande",monospace;
-		margin-top:2em;
-		padding-left:38px;	/* Indent so as not to overlap background logo. */
-		width:100%;
-	}
-	
-</style>
+<textarea id="amadeus-paste">Paste Amadeus lines here to add flights...</textarea>
