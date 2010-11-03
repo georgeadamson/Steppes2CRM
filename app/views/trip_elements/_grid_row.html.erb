@@ -3,8 +3,8 @@
 	
 	trip_element	||= TripElement.new		# New element is used when rendering a new-row template.
 
-	company_countries ||= CompanyCountry.all.reload
-	countries					||= Country.all.reload
+	#company_countries ||= CompanyCountry.all.reload
+	#countries					||= Country.all.reload
 	airports					||= Airport.all( :order => [:code,:name] )
 	airlines					||= Supplier.all( :type_id => Supplier::FLIGHT,  :order => [:name,:code] )
 	handlers					||= Supplier.all( :type_id => Supplier::HANDLER, :order => [:name] )

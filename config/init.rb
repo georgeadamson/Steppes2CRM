@@ -26,7 +26,7 @@ Merb::Config.use do |c|
 
   c[:use_mutex]      = false
   c[:session_store]  = 'datamapper'	# can also be 'cookie', 'memory', 'memcache', 'container', 'datamapper'
-  c[:session_expiry] = 1209600			# Seconds: 1209600 = 2weeks
+  c[:session_expiry] = 2419200			# Seconds: 604800 = 1week, 2419200 = 4weeks
 
   # cookie session store configuration
   c[:session_secret_key] = '016283bfb73ac35d7c55b4bfedd3814864c035fd' # required for cookie session store

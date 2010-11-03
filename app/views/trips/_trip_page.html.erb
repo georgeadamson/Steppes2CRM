@@ -75,7 +75,7 @@
 		<!-- Link to Quickie trip builder (for pasting flight data from Amadeus) -->
 		<%= unless Merb.environment == 'production'
 			begin
-				link_to icon(:grid, :style => 'height:20px;width:20px;'), "#{ resource(@client_or_tour, trip, :trip_elements) }/grid", :title => 'Quickie trip!', :style => 'left:0em;position:absolute;top:4em;'
+				link_to icon(:grid), "#{ resource(@client_or_tour, trip, :trip_elements) }/grid", :title => 'Quickie trip!', :style => 'left:0em;position:absolute;top:4em;'
 			end
 		end %>
 
