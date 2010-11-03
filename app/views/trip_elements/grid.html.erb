@@ -3,23 +3,26 @@
 	@elements	= @elements.all( :type_id => TripElementType::FLIGHT )
 	@trip     = @elements.first && @elements.first.trip || Trip.get(params[:trip_id])
 	
-	airports	= Airport.all( Airport.country.companies.id => @trip.company_id.to_s, :order => [:code,:name] )
-	airports.reload
-
-	airlines	= Supplier.all( :type_id => Supplier::FLIGHT, :order => [:name,:code] )
-	airlines.reload
-
-	handlers	= Supplier.all( :type_id => Supplier::HANDLER, :order => [:name] )
-	handlers.reload
+	# Attempt to eager-load data for the pick lists: (TODO Find a better technique that does not run each select twice!)
+	# Alas Despite these efforts, DM still runs a query for each airport country.
+	#company_countries = CompanyCountry.all.reload
+	#countries 				= Country.all.reload
+	airports					= Airport.all( Airport.country.companies.id => @trip.company_id.to_s, :order => [:code,:name] ).reload
+	airlines					= Supplier.all( :type_id => Supplier::FLIGHT, :order => [:name,:code] ).reload
+	handlers					= Supplier.all( :type_id => Supplier::HANDLER, :order => [:name] ).reload
 	
 	field_prefix = 'trip[trip_elements_attributes]'
-	
+	puts '----- after'
 %>
 
 <div style="padding:2em;background-color:#000;-moz-box-shadow:5px 5px 10px #000;height:20em;margin:2em;overflow-y:auto;">
 
+	<!-- The grid param lets client-side script know where the form was submitted from: -->
 	<%= form_for @trip, :action => nested_resource( @client_or_tour, @trip, :grid => true ) do %>
-		
+
+	<!-- This field is only present as a workaround for when empty form (with no flights) is submitted: -->
+	<%= hidden_field :id %>
+
 	<table id="trip-elements-grid" cellspacing="0" cellpadding="0">
 
 		<thead>
@@ -32,7 +35,7 @@
 				<th>Agent</th>
 			</tr>
 		</thead>
-		
+
 		<tbody>
 
 			<% @elements.each_with_index do |trip_element,i| %>

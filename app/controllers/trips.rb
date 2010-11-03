@@ -114,7 +114,7 @@ class Trips < Application
     tour    = Tour.get( params[:tour_id] )
     client  = Client.get( params[:client_id] ) || session.user.most_recent_client
     @client_or_tour = tour || client
-puts @trip.inspect
+
     original_version  = Trip.get( params[:version_of_trip_id] )
     is_new_version    = !original_version.nil?
     
