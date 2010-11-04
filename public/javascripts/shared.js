@@ -2379,7 +2379,7 @@ return
 function initDatepickers(context) {
 
 	// context argument may be a LivePath options hash or an element/selector:
-	context = ( context && ( context.panel || context.target ) ) || context;
+	context = ( context && ( context.panel || context.target ) ) || context || document;
 
 	var defaults = {
 		dateFormat: "dd/mm/yy",
@@ -2433,6 +2433,10 @@ function initDatepickers(context) {
 	//})
 
 };
+
+// Make initDatepickers available globally: (Eg: For use in trip_elements.js. TODO: Find a tidier solution)
+window.initDatepickers = initDatepickers;
+
 
 
 // Initialise Spinbox fields: (Assumes jquery.spinbox.css is loaded and spinbox-sprite image is available to mimic buttons)
@@ -3457,9 +3461,9 @@ function initTripInvoiceFormTotals(){
 
 		initGrid : function(options){
 
-			// TODO: This works but we must also apply datepickers to pasted rows.
-			// initDatepickers(options.target);
-		
+			// This works but we must also apply datepickers whenever rows are added dynamically:
+			initDatepickers(options.target);
+
 		}
 
 
