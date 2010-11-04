@@ -192,6 +192,7 @@
 			var $row = newFlightRow(flight, 'new'+index, templateHtml);
 
 			$row.appendTo($table);
+			initDatepickers($row);
 
 		});
 
