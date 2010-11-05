@@ -14,7 +14,7 @@ class TripElement
   ACCOMM  = TripElementType::ACCOMM  unless defined? ACCOMM
   GROUND  = TripElementType::GROUND  unless defined? GROUND
   MISC    = TripElementType::MISC    unless defined? MISC
-
+  
   # This is just a simple boolean flag but it helps to document the code!
   YES_BUT_SEE_MANUAL_VALIDATION_BELOW = false unless defined? YES_BUT_SEE_MANUAL_VALIDATION_BELOW
   
@@ -28,8 +28,8 @@ class TripElement
   property :description,					String,			:length		=> 600,		:default	=> ''
   property :notes,								String,			:length		=> 600,		:lazy			=> true,  :default => ''	# Formerly "DetailNotes" and "OptionNotes" (now merged)
   
-  property :start_date,						DateTime,		:required	=> true,	:default	=> lambda{ |elem,prop| Date.today }				# Formerly departTime & flightDate
-  property :end_date,							DateTime,		:required	=> true,	:default	=> lambda{ |elem,prop| Date.today + 1 }		# Formerly arriveTime
+  property :start_date,						DateTime,		:required	=> true,	:default	=> lambda{ |elem,prop| ( elem.trip && elem.trip.start_date || Date.today )     }  # Formerly departTime & flightDate
+  property :end_date,							DateTime,		:required	=> true,	:default	=> lambda{ |elem,prop| ( elem.trip && elem.trip.start_date || Date.today ) + 1 }	# Formerly arriveTime
   
   property :adults,								Integer,		:default	=> 1
   property :children,							Integer,		:default	=> 0
@@ -82,6 +82,8 @@ class TripElement
 	property :arrive_airport_id,		Integer
 	property :depart_terminal,			String,			:length		=> 10
 	property :arrive_terminal,			String,			:length		=> 10
+  
+  property :master_trip_element_id,	Integer,  :required => false  # Used when element is bound to a group tour and cannot be modified!
   
   property :created_at,						DateTime
   property :updated_at,						DateTime
@@ -154,20 +156,20 @@ class TripElement
   # Require HANDLER on flight NOT created automatically by a PNR:
   #validates_present :handler_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? },
   validates_present :handler_id,
-    :if      => Proc.new {|elem| elem.flight? && !elem.bound_to_pnr? },
-    :when    => [:complete],
-    :message => "The Flight agent cannot be left blank"
+  :if      => Proc.new {|elem| elem.flight? && !elem.bound_to_pnr? },
+  :when    => [:complete],
+  :message => "The Flight agent cannot be left blank"
   
   # Require SUPPLIER on element NOT created automatically by a PNR:
   validates_present :supplier_id,
-    :unless  => Proc.new {|elem| elem.bound_to_pnr? },
-    :when    => [:complete]
+  :unless  => Proc.new {|elem| elem.bound_to_pnr? },
+  :when    => [:complete]
   
   # Require SUPPLIER (airline) on flight created automatically by a PNR:
   validates_present :supplier_id,
-    :if      => Proc.new {|elem| elem.bound_to_pnr? },
-    :when    => [:complete],
-    :message => "The Airline code was not recognised. (Try examining the PNR and ensure the airline has an Airline Code defined in the System Admin pages)"
+  :if      => Proc.new {|elem| elem.bound_to_pnr? },
+  :when    => [:complete],
+  :message => "The Airline code was not recognised. (Try examining the PNR and ensure the airline has an Airline Code defined in the System Admin pages)"
   
   
   # Ugly workaround for the way datamapper returns datetime properties!
@@ -182,7 +184,7 @@ class TripElement
   # (Eg: These may be used when creating a followup task for a flight)
   attr_accessor :user
   attr_accessor :client
-
+  
   
 	#  validates_with_block :arrive_airport_id do
 	#  
@@ -193,15 +195,16 @@ class TripElement
 	#		end
 	#  
 	#  end
-    
-
+  
+  
   # Clean up properties etc (without affecting related objects!)
   before :valid? do
     
     # Ensure we are not stumped when empty string is submitted accidentally for a new element:
     self.id = nil if self.id.blank?
-
-    self.handler_id = nil unless handler_id.to_i > 0
+    
+    self.supplier_id ||= 0
+    self.handler_id    = nil unless handler_id.to_i > 0
     
     # Always save flight number in upper case:
     self.flight_code.upcase! if self.flight?
@@ -212,23 +215,25 @@ class TripElement
       self.start_date	||= DateTime.parse( trip.start_date ) unless self.bound_to_pnr?
       self.end_date		||= self.start_date + 1               unless self.bound_to_pnr?
       
-      self.adults				= trip.adults   if self.adults.nil?   || self.adults   != trip.adults   # TODO: Handle subgroups
-      self.children			= trip.children if self.children.nil? || self.children != trip.children #
-      self.infants			= trip.infants  if self.infants.nil?  || self.infants  != trip.infants  #
+      # TODO: Handle subgroups instead of assuming the same numbers as the trip itself:
+      self.adults				= trip.adults   if self.adults.nil?   || self.adults   != trip.adults   
+      self.children			= trip.children if self.children.nil? || self.children != trip.children
+      self.infants			= trip.infants  if self.infants.nil?  || self.infants  != trip.infants
       self.adults				= 0 if self.adults   < 0
       self.children			= 0 if self.children < 0
       self.infants			= 0 if self.infants  < 0
       self.adults				= trip.adults    if self.adults   > trip.adults
       self.children			= trip.children  if self.children > trip.children
       self.infants			= trip.infants   if self.infants  > trip.infants
-      self.is_subgroup	= ( self.adults < trip.adults || children < trip.children || infants < trip.infants )
+      
+      self.is_subgroup	   = ( self.adults < trip.adults || self.children < trip.children || self.infants < trip.infants )
       self.arrive_next_day = self.flight? && ( self.start_date.day != self.end_date.day )
       
     end
-
+    
   end
-
-
+  
+  
   
   # Silently tidy up invalid attributes before saving:
   before :save do
@@ -243,9 +248,9 @@ class TripElement
     
     # Generate a followup reminder for this flight *if* the trip is confirmed:
     self.create_task if self.flight? && self.trip.confirmed?
-
+    
   end
-
+  
   
   after :save do
     
@@ -322,7 +327,8 @@ class TripElement
 	# Check-in time is n hours before start_date time: (Requires app setting CRM[:check_in_period] )
 	# (Typically applies to Flight elements only)
 	def check_in_time
-		( self.start_date.to_time - ( CRM[:check_in_period] || 2 ).hours ).formatted(:uitime) if self.start_date
+    check_in_period = CRM[:check_in_period] || 2
+		( self.start_date.to_time - check_in_period.hours ).formatted(:uitime) if self.start_date
 	end
   
 	# Return the time portion of start_date: (Typically applies to Flight elements only)
@@ -337,61 +343,75 @@ class TripElement
   
   
   # Merge start_time with the start_date field: (Typically applies to Flight elements only)
-  def start_time=(hh_mm);
-    self.start_date = set_time( :start_date, hh_mm ) || self.start_date
+  def start_time=(hh_mm)
+    self.start_date ||= self.trip.start_date if self.trip
+    self.start_date   = set_time( :start_date, hh_mm ) || self.start_date
   end
-
+  
   # Merge end_time with the end_date field: (Typically applies to Flight elements only)
   def end_time=(hh_mm)
-    self.end_date = set_time( :end_date, hh_mm ) || self.end_date
+    self.end_date ||= self.trip.end_date if self.trip
+    self.end_date   = set_time( :end_date, hh_mm ) || self.end_date
   end
-
-  # Helper for merging a time onto a datetime object:
+  
+  def start_date=(dd_mm_yyyy)
+    set_date :start_date, dd_mm_yyyy
+  end
+  
+  def end_date=(dd_mm_yyyy)
+    set_date :end_date, dd_mm_yyyy
+  end
+  
+  
+  # Helper for merging a TIME onto a datetime object:
   def set_time( attr, hh_mm )
     unless hh_mm.blank?
       
       if ( hh_mm = clean_time(hh_mm) )
-      
+        
 	      d = self.attribute_get(attr).to_time
 	      t = DateTime.strptime(hh_mm, '%H:%M')
 	      return self.attribute_set attr, DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
-      
+        
       end
-
+      
     end
   end
-
-  # TODO NEXT: start/end_date=(dd_mm_yyyy) methods; Allow for time;
-
-  def start_date=(dd_mm_yyyy)
-    set_date :start_date, dd_mm_yyyy
-  end
-
-  def end_date=(dd_mm_yyyy)
-    set_date :end_date, dd_mm_yyyy
-  end
-
+  
+  
+  # Helper for merging a DATE onto a datetime object:
   def set_date( attr, dd_mm_yyyy )
 
     if ( dd_mm_yyyy = clean_date(dd_mm_yyyy) )
+    
+      d = dd_mm_yyyy.to_date        # Use new day, month and year but
+      t = self.attribute_get(attr)  # retain existing hour and minute.
 
-      d = dd_mm_yyyy.to_date                    # Use new day, month and year but
-      t = self.attribute_get(attr) # retain existing hour and minute.
+      t = dd_mm_yyyy.to_datetime if self.new? && t.hour == 0 && t.min == 0
+
       return self.attribute_set attr, DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
-
+      
     end
-
+    
   end
-
-
+  
+  
   # Helper to return a valid date from dodgy user-entered text:
   # Note: this does not test for dates with invalid digits eg "32/13/2010"
   def clean_date(dd_mm_yyyy)
 
 		if dd_mm_yyyy.blank?
 			
-			dd_mm_yyyy = nil
-      
+			valid_date = nil
+
+    elsif dd_mm_yyyy.is_a?(DateTime) || dd_mm_yyyy.is_a?(Date)
+
+      valid_date = dd_mm_yyyy
+
+    elsif dd_mm_yyyy.is_a?(Time)
+
+      valid_date = dd_mm_yyyy.to_datetime
+
     elsif dd_mm_yyyy.is_a? String
       
 			# Convert 2-digit year to 4 digits: 01-02-30 => "01-02-2030"
@@ -410,26 +430,26 @@ class TripElement
 		end
     
     return valid_date
-
+    
   end
   
   
   # Helper to return a valid time string from dodgy user-entered text:
   # Note: this does not test for times with invalid digits eg "25:66"
   def clean_time(hh_mm)
-
+    
     hh_mm = hh_mm.to_s.gsub(/[^0-9]/,'')            # Remove ALL non-digit characters
     hh_mm = hh_mm.rjust(2,'0') if hh_mm.length < 2  # Convert single digit into "01" or "02" etc.
     hh_mm = hh_mm.slice(0..3).ljust(4,'0')          # Pad with zeros if necessary to make a 4-digit string.
     hh_mm = hh_mm.insert(2,':')                     # Put colon back into the middle. # if hh_mm =~ /^[0-9]{4}$/
-
+    
     return hh_mm
-
+    
   end
   
 	def date_summary
 		# Eg: "Sun 4th May to Thu 5th Jun 2008"
-		sameYear  = (self.start_date.year  == self.end_date.year ? '' : ' %Y')    # Only show start year when different.
+		sameYear  = (self.start_date.year  == self.end_date.year ? '' : ' %Y')  # Only show start year when different.
 		sameMonth = (self.start_date.month == self.end_date.month ? '' : ' %b') # Only show start month when different.
 		return self.start_date.strftime_ordinalized('%a %d' + sameMonth + sameYear) + " to " + self.end_date.strftime_ordinalized('%a %d %b %Y')
 	end
@@ -440,10 +460,10 @@ class TripElement
   
   # Generate a followup for this flight *if* the trip is confirmed:
   def create_task(force = false)
-
+    
     # Check whether there's already a followup for this flight:
     task = self.tasks.first
-
+    
     if !task && self.flight? && ( force || self.trip.confirmed? )
       
       # This logic is based on the legacy database view named "vw_FlightOptionTask"
@@ -451,7 +471,7 @@ class TripElement
       user      = self.user   || trip.user
       client    = self.client || ( trip.respond_to?(:context) && trip.context.is_a?(Client) && trip.context ) || user.most_recent_client || trip.clients.first( Client.trip_clients.is_primary => true ) || trip.clients.first
       due_date  = self.booking_reminder && self.booking_reminder.to_date != self.start_date.to_date ? self.booking_reminder.to_date : self.start_date.to_date - ( CRM[:flight_reminder_period] || 60 )
-
+      
       # Automatically create a followup task for this flight:
       task   = Task.new(
         :name             => "Followup flight option for #{ trip.title } ",   # self.summary
@@ -462,7 +482,7 @@ class TripElement
         :client           => client,
         :trip_element_id  => self.id
       )
-
+      
       if task.save!
         self.tasks.reload
       else
@@ -470,13 +490,13 @@ class TripElement
         task.valid?
         Merb.logger.error "ERROR: Could not create flight followup automatically because: #{ task.errors.inspect }"
       end
-
+      
     end
-
+    
     return task
-
+    
   end
-
+  
   
   
 	# Helpers for handling DAYS...
@@ -492,30 +512,30 @@ class TripElement
   
   # Set start_date as number of days since start of trip: (And preserve it's duration)
   def day=(number)
-
+    
     # PNR flights cannot be modified:
     return if self.bound_to_pnr?
-
+    
     # Decrement number by 1 because number is a 1-based index (but day1 has offset of 0, day2 is offset 1 etc)
     # (The element.day getter method does the opposite by adding 1 to the offset)
     number -= 1 if number > 0
-
+    
     duration        = ( self.end_date - self.start_date ).to_i
     orig_start_time = self.start_date
     orig_end_time   = self.end_date
-
+    
     self.start_date = ( self.trip.start_date.to_time + number.days                 ).to_datetime
     self.end_date   = ( self.trip.start_date.to_time + number.days + duration.days ).to_datetime
-
+    
     # Set flight times back the way they were:
     # TODO: Find a simpler way to set hour/minute.
     if self.flight?
       self.start_date = DateTime.civil(self.start_date.year, self.start_date.month, self.start_date.day, orig_start_time.hour, orig_start_time.min)
       self.end_date   = DateTime.civil(self.end_date.year,   self.end_date.month,   self.end_date.day,   orig_end_time.hour,   orig_end_time.min)
     end
-
+    
   end
-
+  
   # Duration of trip element in days:
   def days                                                                  
     result = ( Date.parse(self.end_date.to_s) - Date.parse(self.start_date.to_s) ).to_i
@@ -727,19 +747,19 @@ class TripElement
           # Skip any margin on taxes and skip fixed margin on single calculations:
           if options[:taxes] || ( person == :single && margin_type != '%' )
             margin_in_currency  = 0.0
-
-          # Calculate percent margin per person:
+            
+            # Calculate percent margin per person:
           elsif margin_type == '%'
             margin_in_currency  = ( cost_in_currency  / margin_multipler ) - cost_in_currency
-
-          #  # Skip fixed margin on single calculations and taxes:
-          #  elsif person == :single || options[:taxes]
-          #    margin_in_currency  = 0.0
-
-          # Otherwise used fixed margin:
+            
+            #  # Skip fixed margin on single calculations and taxes:
+            #  elsif person == :single || options[:taxes]
+            #    margin_in_currency  = 0.0
+            
+            # Otherwise used fixed margin:
           else
             margin_in_currency  = margin
-
+            
           end
           
           # Calculate net or gross or margin amount:
@@ -752,7 +772,7 @@ class TripElement
           
           # When returning biz_supp or taxes we must not multiply by the number of days:
           days = 1 if !days || days.zero? || options[:biz_supp] || options[:taxes]
-
+          
           result  = per_person_amount
           result *= person_count.abs if per_or_all == :all
           result *= days # :daily => 1, :total => self.days, otherwise specify number of days.
@@ -852,18 +872,18 @@ class TripElement
     
   end
   
-
+  
   # Helper for displaying a readable summary of this element:
   def summary
-
+    
     # WARNING: This bombs during task_spec tests! Seems to be somethiing to do with self.element_type
-
+    
     units = self.accomm? ? 'nights' : 'days'
     type  = self.element_type && self.element_type.name
     supplier  = self.supplier && self.supplier.name
-
+    
     text = "#{self.days} #{units}: #{type} - #{supplier} #{self.name} #{self.description}"
-
+    
     if self.flight?
       text << " ("
       text << "Departs #{ self.depart_airport.display_name }"   if self.depart_airport
@@ -874,11 +894,11 @@ class TripElement
     else
       text << " #{ self.date_summary }"
     end
-
+    
     return text
     
   end
-
+  
   
   
   # Helper for re-calculating the trip.total_cost property: (Formerly known as total_spend)
@@ -887,9 +907,9 @@ class TripElement
     
     options = { :as_decimal => true, :with_all_extras => true, :days => :daily }.merge( options || {} )
     options.merge!( :to_currency => false, :string_format => false ) if options[:as_decimal]
-
+    
     #puts self.total_cost, self.calc( :total, :actual, :net, :for_all, :travellers, options )
-
+    
     return self.calc( options[:days], :actual, :net, :for_all, :travellers, options )
     
   end

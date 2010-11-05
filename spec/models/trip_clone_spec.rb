@@ -1,6 +1,8 @@
 require File.join( File.dirname(__FILE__), '..', "spec_helper" )
 require File.join( File.dirname(__FILE__), '..', "spec_data" )
 
+# All these tests deal with copying trips and their elements etc.
+
 # This tests the copy-trip functionalty.
 # To run this: jruby -X-C -S rake spec SPEC=spec/models/trip_clone_spec.rb
 

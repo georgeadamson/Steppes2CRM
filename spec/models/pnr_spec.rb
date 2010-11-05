@@ -519,6 +519,10 @@ describe Pnr do
       end
           
       it "should not apply flight elements when airline (supplier) is not recognosed" do
+
+        # This test has been retired since we decided to default supplier_id to zero.
+        pending
+
         Supplier.first( :code => 'BA' ).destroy!
         @trip.pnrs << @pnr
         @trip.save
@@ -537,6 +541,10 @@ describe Pnr do
       #  in the System Admin pages)"]}
     	
       it "should report 1 error when an airline (supplier) is not recognosed" do
+
+        # This test has been retired since we decided to default supplier_id to zero.
+        pending
+
         Supplier.first( :code => 'BA' ).destroy!
         #@trip.pnrs << @pnr
         @trip.pnr_numbers = [@pnr.number]
@@ -740,9 +748,10 @@ describe Pnr do
         
         # Assumes @trip and @pnr ready in database.
 
-        new_data      = updated_pnr_attributes[:data]
-        new_day       = Pnr.parse_amadeus_record(new_data )[:flights][0][:arrive_date].day
-        old_day       = Pnr.parse_amadeus_record(@pnr.data)[:flights][0][:arrive_date].day
+        new_data  = updated_pnr_attributes[:data]
+        old_day   = Pnr.parse_amadeus_record(@pnr.data)[:flights][0][:arrive_date].day
+        new_day   = Pnr.parse_amadeus_record(new_data )[:flights][0][:arrive_date].day
+        new_day.should_not == old_day   # Just a sanity check that our test data is not misleading.
         
         # Apply the 'older' pnr to the trip:
         @trip.pnrs << @pnr
@@ -751,16 +760,48 @@ describe Pnr do
         @trip.reload
         @trip.flights[0].end_date.day.should == old_day
 
-        # Update the pnr with new data data to trigger update of trip's flight elements:
+        # Update the pnr with new data to trigger update of trip's flight elements:
         @pnr.data! new_data
         @pnr.save
         @pnr.refresh_trip_flights
-        @trip.reload
 
+        @trip.reload
         @trip.flights[0].end_date.day.should == new_day
         
       end
    
+   
+      it "should not affect flight costs when PNR is updated" do
+        
+        # Assumes @trip and @pnr ready in database.
+
+        new_data  = updated_pnr_attributes[:data]
+        
+        # Apply the 'older' pnr to the trip:
+        @trip.pnrs << @pnr
+        @trip.save
+        @trip.reload
+
+        # Set fields so we can verify that prices are not being affected:
+        @trip.flights[0].cost_per_adult = 100
+        @trip.flights[0].update_prices
+        @trip.flights[0].save!
+        total_cost_before  = @trip.flights[0].total_cost
+        total_price_before = @trip.flights[0].total_price
+
+        # Update the pnr with new data to trigger update of trip's flight elements:
+        @pnr.data! new_data
+        @pnr.save
+        @pnr.refresh_trip_flights
+
+        @trip.reload
+        @trip.flights[0].cost_per_adult.should == 100
+        @trip.flights[0].total_cost.should   be_close total_cost_before,  0.01
+        @trip.flights[0].total_price.should  be_close total_price_before, 0.01
+
+      end
+
+
       it "should UPDATE trip flights when PNR FILE is updated" do
         
         # Assumes @trip and @pnr ready in database.
