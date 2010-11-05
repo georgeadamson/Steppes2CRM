@@ -105,11 +105,11 @@ class TripElements < Application
     #		trip_element["start_date"] << " #{ trip_element["start_time"].strip }" unless trip_element["start_date"].blank? || trip_element["start_time"].blank?
     #		trip_element["end_date"]   << " #{ trip_element["end_time"].strip   }" unless trip_element["end_date"].blank?   || trip_element["end_time"].blank?
     #	end
-
-    # TODO: Handle this in the model!
-    # Best not to assume that date and time fields will always be set in a helpful order so REMOVE TIME ATTRIBUTES to prevent confusion:
-		trip_element.delete("start_time")
-		trip_element.delete("end_time")
+    #
+    #  # TODO: Handle this in the model!
+    #  # Best not to assume that date and time fields will always be set in a helpful order so REMOVE TIME ATTRIBUTES to prevent confusion:
+    #  trip_element.delete("start_time")
+    #  trip_element.delete("end_time")
 		
 		trip_element[:created_by] = session.user.login
 		trip_element[:updated_by] = session.user.login

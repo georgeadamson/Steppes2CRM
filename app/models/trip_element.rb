@@ -387,7 +387,7 @@ class TripElement
       d = dd_mm_yyyy.to_date        # Use new day, month and year but
       t = self.attribute_get(attr)  # retain existing hour and minute.
 
-      t = dd_mm_yyyy.to_datetime if self.new? && t.hour == 0 && t.min == 0
+      t = dd_mm_yyyy.to_time.to_datetime if self.new? && t.hour == 0 && t.min == 0
 
       return self.attribute_set attr, DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
       
