@@ -1,6 +1,6 @@
 <%
 
-	@elements	= @elements.all( :type_id => TripElementType::FLIGHT )
+	@elements	= @elements.all( :type_id => TripElementType::FLIGHT, :order => [:start_date, :id] )
 	@trip     = @elements.first && @elements.first.trip || Trip.get(params[:trip_id])
 	
 	# Attempt to eager-load data for the pick lists: (TODO Find a better technique that does not run each select twice!)
