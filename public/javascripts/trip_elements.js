@@ -5,6 +5,9 @@
 	// Handle DELETE:
 	$('#trip-elements-grid BUTTON.delete').live('click', function(e){
 
+		// Ignore this click if it was triggered by pressing <Enter> on another field: (Let it bubble to submit form save)
+		if( this != document.activeElement ){ return }
+
 		var $row = $(this).closest('TR');
 
 		if( $row.is('.create') ){
