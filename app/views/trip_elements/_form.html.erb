@@ -33,20 +33,31 @@
 	
 	# Fetch list of suppliers that we will put in the pick list:
 	if show_minimal_lists
+	
 		# EDIT: Prepare minimal list when page is fetched via ajax, allowing much faster load time.
 		airports						= airports.all(  :id => [ element.depart_airport_id, element.arrive_airport_id, 0 ] )
 		handlers						= handlers.all(  :id => element.handler_id )
 		suppliers						= suppliers.all( :id => element.supplier_id || 0 )
+		
 	else
+	
 		# NEW: Prepare array for populating the SUPPLIERS dropdown list: (Filtered by trip_element_type: Flight, Accomm etc)
 		# Only filter by countries if we have some to filter on and if those countries have suppliers assigned:
 		airports						= airports.all
 		handlers						= handlers.all( Supplier.companies.id => element.trip.company_id )
 		suppliers						= suppliers.all( :type_id => element.element_type.id, Supplier.companies.id => element.trip.company_id )
-		unless element.flight? || element.trip.countries_ids.empty?
-			country_suppliers = suppliers.all( Supplier.country.id => element.trip.countries_ids )
+		countries_ids				= element.trip.countries_ids
+
+		# Filter accomm/ground/misc supplier list by country unless none have been specified for the trip:
+		unless element.flight? || countries_ids.empty?
+			
+			# Also include any countries that have an asterisk in their country code:
+			countries_ids     = countries_ids << Country.first( :code.like => '%*%' ).id
+			country_suppliers = suppliers.all( Supplier.country.id => countries_ids )
 			suppliers					= country_suppliers if country_suppliers.length > 0
+
 		end
+		
 	end
 
 	
@@ -193,7 +204,7 @@
 				<%= text_field :booking_code,				:label => 'PNR number',		:class => 'tableCell whenFlight', :readonly => true, :disabled => true, :value => element_pnr_value %>
 			</td>
 			<td><%#= text_field :booking_line_number,	:label => 'PNR line',	:class => 'tableCell whenFlight widthHalfField', :readonly => true, :disabled => true %></td>
-			<td><%#= text_field :booking_expiry,	:label => 'PNR expiry',   :value => element.booking_expiry.formatted(:uidate),   :class => 'tableCell whenFlight date', :readonly => true, :disabled => true %></td>
+			<td><%#= text_field :booking_expiry,	:label => 'PNR expiry',   :value => element.booking_expiry.formatted(:uidate),   :class => 'tableCell whenFlight date travel-date', :readonly => true, :disabled => true %></td>
 
 		</tr>
 	<% end %>
@@ -202,8 +213,8 @@
 
 		<%# June 2010 - Deactivated datepicker plugin because it causes CPU meltdown! %>
 
-		<td><%= text_field :start_date, :label => startDateLabel,   :value => element.start_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell xdate daterange daterangeStart dtstart', :title => "#{ startDateLabel } format dd/mm/yyyy", :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? %></td>
-		<td><%= text_field :start_time, :label => 'Departure time', :value => element.start_date.formatted(:uitime), :maxlength => 5 , :class => 'tableCell whenFlight time dtstart', :title => 'Departure time format hh:mm', :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
+		<td><%= text_field :start_date, :label => startDateLabel,   :value => element.start_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell date start-date travel-date daterange daterangeStart dtstart', :title => "#{ startDateLabel } format dd/mm/yyyy", :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? %></td>
+		<td><%= text_field :start_time, :label => 'Departure time', :value => element.start_date.formatted(:uitime), :maxlength => 5 , :class => 'tableCell whenFlight time start-time dtstart', :title => 'Departure time format hh:mm', :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
 
 		<!-- Extra field for Flights only: -->
 		<td><%= select :depart_airport_id,  :label => 'From airport', :class => 'tableCell whenFlight', :selected => element.depart_airport.id.to_s, :collection => depart_airports_list, :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
@@ -214,8 +225,8 @@
 
 		<%# June 2010 - Deactivated datepicker plugin because it causes CPU meltdown! %>
 
-		<td><%= text_field :end_date, :label => endDateLabel,   :value => element.end_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell xdate daterange daterangeEnd dtend', :title => "#{ endDateLabel } format dd/mm/yyyy", :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? %></td>
-		<td><%= text_field :end_time, :label => 'Arrival time', :value => element.end_date.formatted(:uitime), :maxlength => 5,  :class => 'tableCell whenFlight time dtend', :title => 'Arrival time format hh:mm', :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
+		<td><%= text_field :end_date, :label => endDateLabel,   :value => element.end_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell date end-date travel-date daterange daterangeEnd dtend', :title => "#{ endDateLabel } format dd/mm/yyyy", :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? %></td>
+		<td><%= text_field :end_time, :label => 'Arrival time', :value => element.end_date.formatted(:uitime), :maxlength => 5,  :class => 'tableCell whenFlight time end-time dtend', :title => 'Arrival time format hh:mm', :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
 
 		<!-- Extra field for Flights only: -->
 		<td><%= select :arrive_airport_id, :label => 'To airport', :class => 'tableCell whenFlight', :selected => element.arrive_airport.id.to_s, :collection => arrive_airports_list, :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
