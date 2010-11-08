@@ -1,6 +1,6 @@
 <%
 
-	heading = case @trip.type_id 
+	heading = case @trip.kind_id 
 		when TripType::TOUR_TEMPLATE then "Create new group dates for #{ @client_or_tour.shortname }"
 		
 	  when TripType::FIXED_DEP then "Create a client's custom copy of #{ @client_or_tour.shortname }"

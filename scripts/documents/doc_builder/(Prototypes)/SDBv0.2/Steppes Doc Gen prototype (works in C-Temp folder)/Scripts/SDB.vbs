@@ -390,7 +390,7 @@ Sub populate_list_of_flights()
 						"	LEFT JOIN airports ad ON te.depart_airport_id = ad.id " & _
 						"	LEFT JOIN airports aa ON te.arrive_airport_id = aa.id " & _
 						"WHERE te.trip_id = " & strTripId & _
-						"	AND te.type_id = 1 " & _
+						"	AND te.kind_id = 1 " & _
 						"ORDER BY te.start_date "
 	
 	' Loop through the records creating a table row for each day
@@ -502,11 +502,11 @@ Sub populate_list_of_daily_activities()
 		'			- not sure supplier_location is is right for heading item for accom
 		strDayDate = GetSQLFriendlyDate(objDatesFields.Item("day_date"))
 		
-		strItemsSql = 	"SELECT te.type_id" & _
+		strItemsSql = 	"SELECT te.kind_id" & _
 						"		, te.start_date" & _
 						"		, te.end_date" & _
 						"		, ISNULL(s.name, '') AS supplier_name" & _
-						"		, CASE WHEN te.type_id = 1 " & _
+						"		, CASE WHEN te.kind_id = 1 " & _
 						"				THEN 'Fly ' + ad.name + '/' + aa.name + CASE WHEN arrive_next_day = 1 " & _
 						"															THEN ' (overnight)' " & _
 						"															ELSE '' " & _
@@ -525,8 +525,8 @@ Sub populate_list_of_daily_activities()
 						"	AND ((DATEADD(Day, DATEDIFF(Day, 0, te.start_date), 0) <= '" & strDayDate & "' " & _
 						"	AND te.end_date > '" & strDayDate & "') " & _
 						"	OR (te.end_date < te.start_date AND DATEADD(Day, DATEDIFF(Day, 0, te.start_date), 0) = '" & strDayDate & "')) " & _
-						"	AND (te.type_id = 1 OR te.type_id = 4 OR te.type_id = 5) " & _
-						"ORDER BY DATEADD(Day, DATEDIFF(Day, 0, te.start_date), 0), te.type_id"
+						"	AND (te.kind_id = 1 OR te.kind_id = 4 OR te.kind_id = 5) " & _
+						"ORDER BY DATEADD(Day, DATEDIFF(Day, 0, te.start_date), 0), te.kind_id"
 						
 		'wscript.echo strItemsSql				
 						
@@ -718,7 +718,7 @@ ParseTags "trip", "SELECT t.*  " & vbCrlf & _
 					"		, tv1.name AS title  " & vbCrlf & _
 					"		, ISNULL((SELECT TOP 1 a.name FROM trip_elements te " & vbCrlf & _
 					"			LEFT JOIN airports a ON te.depart_airport_id = a.id " & vbCrlf & _
-					"		WHERE te.type_id = 1 " & vbCrlf & _
+					"		WHERE te.kind_id = 1 " & vbCrlf & _
 					"			AND te.trip_id = t.id " & vbCrlf & _
 					"		ORDER BY te.start_date), '') AS first_flight_depart_airport_name" & vbCrlf & _
 					"		, ISNULL((SELECT STUFF(( SELECT DISTINCT ', ' + cl.fullname " & vbCrlf & _

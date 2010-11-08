@@ -30,10 +30,10 @@
 			<legend class="ui-helper-hidden"><%= supplier.name %></legend>
 
 			<%= hidden_field :type_id %>
-			<%= text_field									:label => 'Type',							:name => :supplier_type_name, :value => supplier.type.supplier_type_name, :readonly => :readonly %>
-			<%= text_field :code,						:label => 'Airline code',			:maxlength => @properties[:code].length, :class => 'widthHalfField uppercase' if supplier.type_id == 1 %>
+			<%= text_field									:label => 'Type',							:name => :supplier_type_name, :value => supplier.kind.supplier_type_name, :readonly => :readonly %>
+			<%= text_field :code,						:label => 'Airline code',			:maxlength => @properties[:code].length, :class => 'widthHalfField uppercase' if supplier.kind_id == 1 %>
 
-			<%= text_field :name,						:label => "#{ supplier.type.supplier_type_name } name",		:maxlength => @properties[:name].length, :class => 'width2Fields' %>
+			<%= text_field :name,						:label => "#{ supplier.kind.supplier_type_name } name",		:maxlength => @properties[:name].length, :class => 'width2Fields' %>
 			<%= text_field :location,				:label => 'Location',					:maxlength => @properties[:location].length, :class => 'width2Fields' if supplier.accomm? %>
 			<%#= text_field :image_file,			:label => 'Image',						:maxlength => @properties[:image_file].length, :class => 'width2Fields' if supplier.accomm? %>
 			<%= select :image_file,					:label => 'Image',						:selected => supplier.image_file,       :collection => image_filenames, :class => 'width2Fields', :prompt => '- Choose an image to use in Itineraries' if supplier.accomm? %>

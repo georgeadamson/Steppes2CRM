@@ -534,7 +534,7 @@ describe TripElement do
       it "should NOT calculate TOTAL ACTUAL GROSS  ALL travellers BIZ SUPP on non-flight elements" do
         
         # Make test element a non-flight element:
-        @elem.type_id = 4 # 4=Accommodation
+        @elem.kind_id = 4 # 4=Accommodation
         
         # a fairly complex calc scenario:
         @elem.calc( :total, :actual, :gross, :all, :travellers, @biz_supp_options ).should match_currency 0.0
@@ -709,7 +709,7 @@ describe TripElement do
       it "should NOT calculate TOTAL ACTUAL GROSS  ALL travellers + BIZ SUPP on non-flight elements" do
         
         # Make test element a non-flight element:
-        @elem.type_id = 4 # 4=Accommodation
+        @elem.kind_id = 4 # 4=Accommodation
         
         adult_total  = @gross_per_adult  / @flight.exchange_rate * @flight.adults   * @flight.days
         child_total  = @gross_per_child  / @flight.exchange_rate * @flight.children * @flight.days
@@ -1298,7 +1298,7 @@ describe TripElement do
       it "should calculate TOTAL ACTUAL GROSS  ALL travellers + BIZ SUPP + TAXES (but ignore biz_supp on non-flight elements))" do
         
         # Make test element a non-flight element:
-        @elem.type_id = 4 # 4=Accommodation
+        @elem.kind_id = 4 # 4=Accommodation
         
         adult_total           = @gross_per_adult  / @flight.exchange_rate * @flight.adults   * @flight.days
         child_total           = @gross_per_child  / @flight.exchange_rate * @flight.children * @flight.days

@@ -143,7 +143,7 @@ class Clients < Application
   def new
     only_provides :html
     @client = Client.new
-    @client.type ||= ClientType.first # <-- TODO: This workaround should not be necessary!
+    @client.kind ||= ClientType.first # <-- TODO: This workaround should not be necessary!
     display @client
   end
 

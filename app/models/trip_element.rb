@@ -177,7 +177,7 @@ class TripElement
   
 	#  validates_with_block :arrive_airport_id do
 	#  
-	#		if self.type_id == 1 && !self.pnr_number.blank?
+	#		if self.kind_id == 1 && !self.pnr_number.blank?
 	#			return [ false, "The Arrival Airport code was not recognised. (Try examining PNR #{ self.pnr_number } and add the airport code #{ @arrive_airport_code } to the appropriate airport in the System Admin page)" ]
 	#		else
 	#			return true
@@ -447,13 +447,13 @@ class TripElement
 		if @overlaps.nil?
       
 			@overlaps = []
-			type_id		= self.type_id if type_id      === true	# Fiter by same type if type_id is true
+			type_id		= self.kind_id if type_id      === true	# Fiter by same type if type_id is true
 			type_id		= false        if type_id.to_i ==  0			# Do not filter at all if type_id is false or non numeric.
       
 			# This technique matches fields returned from a single query, preventing multiple queries for each day:
 			self.trip.trip_elements.all( :order => [ :start_date, :id ] ).each do |elem|
         
-				@overlaps << elem if (  type_id == false || elem.type_id == type_id ) \
+				@overlaps << elem if (  type_id == false || elem.kind_id == type_id ) \
         &&
         (
           # if dates overlap or match exactly:
@@ -472,7 +472,7 @@ class TripElement
 			#
 			#	@overlaps.each do |elem|
 			#
-			#		@overlaps.delete(elem) if ( type_id == false || elem.type_id == type_id ) &&
+			#		@overlaps.delete(elem) if ( type_id == false || elem.kind_id == type_id ) &&
 			#				( elem.start_date.jd <  self.end_date.jd && elem.end_date.jd >  self.start_date.jd ) ||
 			#				( elem.start_date.jd == self.end_date.jd && elem.end_date.jd == self.start_date.jd )
 			#
@@ -500,7 +500,7 @@ class TripElement
 		#
 		#	# Filter by element type if necessary:
 		#	if type_id
-		#		type_id = self.type_id if type_id == true
+		#		type_id = self.kind_id if type_id == true
 		#		return @overlaps.all( :type_id => type_id )
 		#	else
 		#		return @overlaps
@@ -708,11 +708,11 @@ class TripElement
 	# General helpers...
   
 	# Helpers for testing what type of element this is: 
-	def is_flight;  return self.type_id == FLIGHT;  end
-	def is_handler; return self.type_id == HANDLER; end
-	def is_accomm;  return self.type_id == ACCOMM;  end
-	def is_ground;  return self.type_id == GROUND;  end
-	def is_misc;    return self.type_id == MISC;    end
+	def is_flight;  return self.kind_id == FLIGHT;  end
+	def is_handler; return self.kind_id == HANDLER; end
+	def is_accomm;  return self.kind_id == ACCOMM;  end
+	def is_ground;  return self.kind_id == GROUND;  end
+	def is_misc;    return self.kind_id == MISC;    end
   alias flight?   is_flight
   alias handler?  is_handler
   alias agent?    is_handler  # TODO: Depricate this? (Because it can be confused with ground agent)

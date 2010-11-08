@@ -84,8 +84,8 @@ describe Task do
       main_invoice.save.should be_true
       main_invoice.trip.status_id.should == Trip::CONFIRMED
       Task.all.should have(2).tasks
-      Task.all[0].type_id.should == TaskType::FLIGHT_REMINDER
-      Task.all[1].type_id.should == TaskType::FLIGHT_REMINDER
+      Task.all[0].kind_id.should == TaskType::FLIGHT_REMINDER
+      Task.all[1].kind_id.should == TaskType::FLIGHT_REMINDER
       
   end
 

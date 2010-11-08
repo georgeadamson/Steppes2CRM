@@ -40,13 +40,13 @@ BEGIN
 
 		-- Default to fetch all elements for the day:
 
-		SELECT te.type_id
+		SELECT te.kind_id
 				, @date AS [display_date]
 				, te.start_date
 				, te.end_date
 				, ISNULL(s.name, '') AS [supplier_name]
 				
-				--, CASE WHEN te.type_id = 1 
+				--, CASE WHEN te.kind_id = 1 
 				--		THEN 'Fly ' + ad.name + '/' + aa.name + CASE WHEN arrive_next_day = 1 
 				--													THEN ' (overnight)' 
 				--													ELSE '' 
@@ -64,17 +64,17 @@ BEGIN
 						END AS [supplier_image_file]
 						
 				, CASE
-					WHEN te.type_id = @ACCOMM   THEN ISNULL(te.room_type,'')
+					WHEN te.kind_id = @ACCOMM   THEN ISNULL(te.room_type,'')
 					ELSE ''
 					END  AS [room_type]
 
 				, CASE
-					WHEN te.type_id = @ACCOMM   THEN ISNULL(te.meal_plan,'')
+					WHEN te.kind_id = @ACCOMM   THEN ISNULL(te.meal_plan,'')
 					ELSE ''
 					END  AS [meal_plan_code]
 				
 				, CASE
-					WHEN te.type_id  != @ACCOMM THEN ''
+					WHEN te.kind_id  != @ACCOMM THEN ''
 					WHEN te.meal_plan = 'BB'    THEN 'Bed and breakfast'
 					WHEN te.meal_plan = 'FB'    THEN 'Full board'
 					WHEN te.meal_plan = 'HB'    THEN 'Half board'
@@ -84,7 +84,7 @@ BEGIN
 
 				-- flight_summary: (Eg: Depart Heathrow on the British Airways flight to Madrid)
 				, CASE
-					WHEN te.type_id  != @FLIGHT THEN ISNULL(s.location, '')
+					WHEN te.kind_id  != @FLIGHT THEN ISNULL(s.location, '')
 					
 					ELSE 'Depart '     + ISNULL(ad.name,'')	-- depart_airport
 					   + ' on the '    + ISNULL(s.name, '') -- airline
@@ -95,7 +95,7 @@ BEGIN
 
 				-- accommodation_summary: (Eg: Overnight at Hotel das Cataratas on a Bed and breakfast basis)
 				, CASE
-					WHEN te.type_id  != @ACCOMM THEN ''
+					WHEN te.kind_id  != @ACCOMM THEN ''
 					
 					ELSE 'Overnight at '  + ISNULL(s.name, '')
 					
@@ -129,9 +129,9 @@ BEGIN
 			AND ((DATEADD(Day, DATEDIFF(Day, 0, te.start_date), 0) <= @date
 			AND te.end_date > @date) 
 			OR (te.end_date < te.start_date AND DATEADD(Day, DATEDIFF(Day, 0, te.start_date), 0) = @date)) 
-			--AND (te.type_id = 1 OR te.type_id = 4 OR te.type_id = 5)
-			AND te.type_id IN( @FLIGHT, @ACCOMM )
-		ORDER BY DATEADD(Day, DATEDIFF(Day, 0, te.start_date), 0), te.type_id
+			--AND (te.kind_id = 1 OR te.kind_id = 4 OR te.kind_id = 5)
+			AND te.kind_id IN( @FLIGHT, @ACCOMM )
+		ORDER BY DATEADD(Day, DATEDIFF(Day, 0, te.start_date), 0), te.kind_id
 
 
 	END ELSE BEGIN

@@ -55,7 +55,7 @@
 
 				<!-- SUPPLIER name: -->
 				<tr class="supplier">
-					<% supplier_type = supplier.type.supplier_type_name || supplier.type.name %>
+					<% supplier_type = supplier.kind.supplier_type_name || supplier.kind.name %>
 					<td><strong><%= supplier.name %></strong> - <%= supplier_type %> - <%= supplier.country.name %></td>
 					<td></td>
 					<td><%= total_cost_of_supplier %></td>

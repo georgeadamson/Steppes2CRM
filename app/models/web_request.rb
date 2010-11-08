@@ -94,7 +94,7 @@ class WebRequest
  
       # Attempt to derive the web_request_type_id from the web form name:
       web_request_type = WebRequestType.first( :form_name => self.name )
-      self.type_id = web_request_type.id unless web_request_type.nil?
+      self.kind_id = web_request_type.id unless web_request_type.nil?
 
     end
 

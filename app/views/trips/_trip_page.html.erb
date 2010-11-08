@@ -46,7 +46,7 @@
 		<%= hidden_field :name => 'trip_name',	:value => trip.name		%>
 		<%= hidden_field :name => 'trip_title',	:value => trip.title	%>
 
-		<% unless trip.type_id == TripType::TOUR_TEMPLATE %>
+		<% unless trip.kind_id == TripType::TOUR_TEMPLATE %>
 			<!-- This picklist has a custom href attribute used for deriving the resource url of the chosen version.
 					 Eg: When href="/clients/1234/trips/{value}" and selected value="1122" then url is derived as "/clients/1234/trips/1122"
 			-->

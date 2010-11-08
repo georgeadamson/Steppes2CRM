@@ -21,7 +21,7 @@ class Suppliers < Application
   def new
     only_provides :html
     @supplier = Supplier.new()
-    @supplier.type_id = params[:type_id] || 1
+    @supplier.kind_id = params[:type_id] || 1
     display @supplier
   end
 

@@ -94,7 +94,7 @@ class Trip
     alias orig_version_of_trip version_of_trip
     def version_of_trip; return self.orig_version_of_trip || self; end  # Allow for trips with missing version_of_trip
     
-    belongs_to :tour 		      # Only applies when this trip.type is TOUR_TEMPLATE or FIXED_DEP.
+    belongs_to :tour 		      # Only applies when this trip.kind is TOUR_TEMPLATE or FIXED_DEP.
     belongs_to :user 		      # Handled by / Prepared by.
     belongs_to :company		    # Handled by / Cost centre / Invoice to.
     belongs_to :type,   :model => "TripType",  :child_key => [:type_id]			# 1=Tailor made
@@ -141,8 +141,8 @@ class Trip
     
     
     # TODO!
-    #validates_absence_of  :tour_id, :if => Proc.new{ |trip| trip.type_id != TOUR_TEMPLATE }
-    #validates_presence_of :tour_id, :if => Proc.new{ |trip| trip.type_id == TOUR_TEMPLATE }
+    #validates_absence_of  :tour_id, :if => Proc.new{ |trip| trip.kind_id != TOUR_TEMPLATE }
+    #validates_presence_of :tour_id, :if => Proc.new{ |trip| trip.kind_id == TOUR_TEMPLATE }
     
     
     # OVERRIDE standard save method to workaround a bug where save! has no effect inside the "after :save" hook
@@ -165,13 +165,13 @@ class Trip
 
       # Convert blank string to nil on fields that expect IDs:
       self.user_id    = nil if self.user_id.blank?
-      self.type_id    = nil if self.type_id.blank?
+      self.kind_id    = nil if self.kind_id.blank?
       self.company_id = nil if self.company_id.blank?
       
       self.name								||= "Untitled trip"
       self.status_id					||= Trip::UNCONFIRMED
       self.tour_id              = nil if self.tour_id.to_i == 0
-      self.type_id              = TripType::TOUR_TEMPLATE if self.tour && !self.fixed_dep? && !self.tour_template?
+      self.kind_id              = TripType::TOUR_TEMPLATE if self.tour && !self.fixed_dep? && !self.tour_template?
       self.version_of_trip_id ||= 0	# Cannot be nil. If zero, this will be set to the trip's own new id after save.
 
       # Swap start and end dates if start date is later than end date:
@@ -422,7 +422,7 @@ class Trip
           # Special clause to exclude the checkout day of accommodation elements otherwise we see an extra day for each:
           # Except where check out day is same as check-in day because it's probably a day-room.
           # (Note: We use SQL FLOOR to compare on dates only, excluding the time just in case it varies)
-          #:conditions			=> [ "NOT ( trip_elements.type_id = #{ TripElement::ACCOMM } AND CAST(FLOOR(CAST( trip_elements.end_date AS float)) AS datetime) = ? AND FLOOR(CAST( trip_elements.start_date AS float)) < FLOOR(CAST( trip_elements.end_date AS float)) )", date ]
+          #:conditions			=> [ "NOT ( trip_elements.kind_id = #{ TripElement::ACCOMM } AND CAST(FLOOR(CAST( trip_elements.end_date AS float)) AS datetime) = ? AND FLOOR(CAST( trip_elements.start_date AS float)) < FLOOR(CAST( trip_elements.end_date AS float)) )", date ]
           
         )
         
@@ -431,7 +431,7 @@ class Trip
         end
         # For some reason this equivalent delete_if syntax does not work:
         #	elements.delete_if{ |elem|
-        #		return elem.type_id == TripElement::ACCOMM && elem.end_date.jd == date.jd && elem.start_date.jd < elem.end_date.jd
+        #		return elem.kind_id == TripElement::ACCOMM && elem.end_date.jd == date.jd && elem.start_date.jd < elem.end_date.jd
         #	}
         
         
@@ -461,10 +461,10 @@ class Trip
     def days_overrun;		return self.days(true); end
     
     # Handy shortcuts for common attributes:
-    def tailor_made?;     return self.type_id   == TripType::TAILOR_MADE;   end
-    def private_group?;   return self.type_id   == TripType::PRIVATE_GROUP; end # Depricated?
-    def tour_template?;   return self.type_id   == TripType::TOUR_TEMPLATE; end
-    def fixed_dep?;       return self.type_id   == TripType::FIXED_DEP;     end
+    def tailor_made?;     return self.kind_id   == TripType::TAILOR_MADE;   end
+    def private_group?;   return self.kind_id   == TripType::PRIVATE_GROUP; end # Depricated?
+    def tour_template?;   return self.kind_id   == TripType::TOUR_TEMPLATE; end
+    def fixed_dep?;       return self.kind_id   == TripType::FIXED_DEP;     end
     def unconfirmed?;     return self.status_id == TripState::UNCONFIRMED;  end
     def confirmed?;       return self.status_id == TripState::CONFIRMED;    end
     def completed?;       return self.status_id == TripState::COMPLETED;    end
@@ -1255,7 +1255,7 @@ class Trip
         :id           => self.id,
         :name         => self.name,
         :status       => self.status,
-        :type         => self.type,
+        :type         => self.kind,
         :travellers   => self.travellers,
         :clients      => clients
       }
@@ -1302,7 +1302,7 @@ class Trip
         
         clone    = self
         new_name = master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }"
-        type_id  = master.tour_template? ? TripType::FIXED_DEP       : master.type_id # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
+        type_id  = master.tour_template? ? TripType::FIXED_DEP       : master.kind_id # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
         
         clone.attributes = master.attributes.merge(
           :id       => nil,
@@ -1363,7 +1363,7 @@ class Trip
         clone_elem.day = master_elem.day if options[:adjust_dates]
 
         # Add cloned element to the trip (unless type_id was specified and matches element type)
-        clone.trip_elements << clone_elem if !type_id || master_elem.type_id == type_id  
+        clone.trip_elements << clone_elem if !type_id || master_elem.kind_id == type_id  
 
       end
 
@@ -1373,7 +1373,7 @@ class Trip
     
     def initialize(*)
       super
-      self.type_id    ||= TripType::TAILOR_MADE
+      self.kind_id    ||= TripType::TAILOR_MADE
       self.status_id  ||= TripState::UNCONFIRMED
       self.debug      ||= false
       @orig_pnr_numbers_before_save = self.pnr_numbers

@@ -92,10 +92,10 @@ class ReportField
 		#model_class, prop_name = field.last_part_of_name()
     model_class, prop_name = self.last_part_of_name()
 		
-    #data_type = model_class.properties[prop_name].type
+    #data_type = model_class.properties[prop_name].kind
 		#return data_type ? data_type.split(':').pop : nil
     
-    return model_class.properties[prop_name].type
+    return model_class.properties[prop_name].kind
     
 	end
   

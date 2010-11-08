@@ -6,7 +6,7 @@
 	name_field_label = @trip.is_first_version ? 'Trip title' : 'Version name'
 	
 	# Customise the list of trip_type options:
-	trip_type_list = case @trip.type_id
+	trip_type_list = case @trip.kind_id
 		when TripType::TOUR_TEMPLATE then TripType.all( :id => TripType::TOUR_TEMPLATE )
 		when TripType::FIXED_DEP     then TripType.all( :id => TripType::FIXED_DEP )
 		else                              TripType.all( :id => [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP ] )
@@ -29,9 +29,9 @@
 <%= hidden_field :tour_id,							:value => @trip.tour_id || params[:tour_id] %>
 <%#= hidden_field :name => 'client_id',	:value => @trip.context.id %>
 
-<% case when @trip.type_id == TripType::TOUR_TEMPLATE %>
+<% case when @trip.kind_id == TripType::TOUR_TEMPLATE %>
 	<h4 style="margin:0 0 1em 9em;">This trip is a template for a group: <em><%= @trip.tour ? @trip.tour.name : 'that has been deleted!' %></em></h4>
-<% when @trip.type_id == TripType::FIXED_DEP %>
+<% when @trip.kind_id == TripType::FIXED_DEP %>
 	<h4 style="margin:0 0 1em 9em;">This fixed departure was based on a group template: <em><%= @trip.tour ? link_to( @trip.tour.name, resource(@trip.tour) ) : 'that has been deleted!' %></em></h4>
 <% end %>
 

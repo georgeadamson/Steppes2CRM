@@ -136,7 +136,7 @@ class Trips < Application
     # New template-trip for a Tour:
     elsif params[:tour_id]
       
-      @trip.type_id     = TripType::TOUR_TEMPLATE
+      @trip.kind_id     = TripType::TOUR_TEMPLATE
       @trip.tour_id     = @client_or_tour.id
       @trip.company_id  = @client_or_tour.company_id
       @trip.user_id   ||= session.user.id

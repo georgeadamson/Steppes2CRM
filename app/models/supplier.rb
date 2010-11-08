@@ -87,7 +87,7 @@ class Supplier
 
 	# Enforce uniqueness of Airline codes:
 	validates_is_unique :name, :scope => [ :type_id, :code ],
-		:if => Proc.new {|supplier| supplier.type_id == 1 },
+		:if => Proc.new {|supplier| supplier.kind_id == 1 },
 		:message => 'An airline already exists with the same airline code'
 
 	validates_with_method :require_one_or_more_companies
@@ -136,11 +136,11 @@ class Supplier
 	
 
 	# Helpers for testing what type of supplier this is: 
-	def is_flight;  return self.type_id == FLIGHT;  end
-	def is_handler; return self.type_id == HANDLER; end
-	def is_accomm;  return self.type_id == ACCOMM;  end
-	def is_ground;  return self.type_id == GROUND;  end
-	def is_misc;    return self.type_id == MISC;    end
+	def is_flight;  return self.kind_id == FLIGHT;  end
+	def is_handler; return self.kind_id == HANDLER; end
+	def is_accomm;  return self.kind_id == ACCOMM;  end
+	def is_ground;  return self.kind_id == GROUND;  end
+	def is_misc;    return self.kind_id == MISC;    end
   alias flight?   is_flight
   alias handler?  is_handler
   alias agent?    is_handler  # TODO: Depricate this? (Because it can be confused with ground agent)

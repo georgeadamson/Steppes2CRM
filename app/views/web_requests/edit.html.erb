@@ -99,7 +99,7 @@
 					<%= text_field :name => :status,								:label => 'This Request is',:value => @web_request.status.name,							:readonly => true,	:class => 'width1Field ' %> 
 					<%= text_field :name => :client,								:label => 'Requested by',		:value => ( @web_request.client  ? @web_request.client.match_name : 'Client not processed yet' ),		:readonly => true,	:class => 'width2Fields' %> 
 					<%= text_field :name => :company,								:label => 'Allocated to',		:value => ( @web_request.company ? @web_request.company.name      : 'Company not allocated yet' ),	:readonly => true,	:class => 'width2Fields ' %> 
-					<%= text_field :name => :form_name,							:label => 'Web site',				:value => ( @web_request.type && @web_request.type.name || @web_request.name ),											:readonly => true,	:class => 'width2Fields ' %> 
+					<%= text_field :name => :form_name,							:label => 'Web site',				:value => ( @web_request.kind && @web_request.kind.name || @web_request.name ),											:readonly => true,	:class => 'width2Fields ' %> 
 
 					<% if !@web_request.xml_text.blank? %>
 

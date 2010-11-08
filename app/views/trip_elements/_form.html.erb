@@ -78,7 +78,7 @@
 	# If required, add a "Show all" option in pick lists: (it can be clicked to load the complete list)
 	if show_minimal_lists
 		
-		href = resource( :suppliers, :list => 'option', :type_id => element.type_id )
+		href = resource( :suppliers, :list => 'option', :type_id => element.kind_id )
 		suppliers_list << [ href, '+ Show more...' ]
 
 		if element.flight?

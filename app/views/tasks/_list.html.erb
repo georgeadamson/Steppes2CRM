@@ -10,7 +10,7 @@
 					else                            icon(:clock, :title => "Status: #{ task.status.name }")
 				end
 				
-				task_type = task.type.name || '(Unspecified reminder)'
+				task_type = task.kind.name || '(Unspecified reminder)'
 
 				task_url  = resource(task.client, task, :edit)
 			-%>
