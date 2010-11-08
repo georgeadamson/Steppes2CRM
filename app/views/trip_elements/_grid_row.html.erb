@@ -116,7 +116,7 @@
 			<a href="#undo" class="undo delete" title="Click to change your mind!">Undo</a>
 		</small>
 
-		<%= tag :small, "PNR #{ trip_element.booking_code } line #{ trip_element.booking_line_number.to_s.rjust(2,'0') }", :class => 'locked message' unless trip_element.booking_code.blank? %>
+		<%= tag :small, "PNR #{ tag :em, trip_element.booking_code } line #{ trip_element.booking_line_number.to_s.rjust(2,'0') }", :class => 'locked message' unless trip_element.booking_code.blank? %>
 
 	</td>
 
