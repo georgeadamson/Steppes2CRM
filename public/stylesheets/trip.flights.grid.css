@@ -79,10 +79,11 @@ TABLE#trip-elements-grid { background-color:#000; }
 /* MESSAGES: (Only show tip when it's class matches the row class "create/update/delete") */
 #trip-elements-grid TR        .message,
 #trip-elements-grid TR        .message A.undo { color:#fff; white-space:nowrap; }
+#trip-elements-grid TR        .message EM     { font-size:1.2em; font-style:normal; }
 #trip-elements-grid TR:not(.delete) .message.deleted { display:none; }
 
 /* NO-FLIGHTS message: */
-#trip-elements-grid TR.message.none                        .message { display:none; margin-top:2em; color:yellow; }
+#trip-elements-grid TR.message.none                        .message          { display:none; margin-top:2em; color:yellow; }
 #trip-elements-grid TR.message.none                        .message .ui-icon { background-color:yellow; }
 #trip-elements-grid TR.message.none:first-child:last-child .message { display:block; }
 #trip-elements-grid TR.message.none                        TD { visibility:hidden; }
