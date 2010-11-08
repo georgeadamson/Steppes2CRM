@@ -17,7 +17,7 @@ class TripElement
   
   
   property :id,                   Serial
-  property :kind_id,							Integer,		:required	=> true,	:default	=> FLIGHT  					# tripElementType ID	(1=Flight, 4=Accomm, 5=Ground, 8=Misc)
+  property :kind_id,							Integer,		:required	=> true,	:default	=> FLIGHT , :field => "type_id" 					# tripElementType ID	(1=Flight, 4=Accomm, 5=Ground, 8=Misc)
   property :misc_type_id,					Integer,		:default	=> 1																		# tripElementMiscType ID
   property :trip_id,							Integer,		:required	=> true,	:index		=> true							# trip ID
   property :supplier_id,					Integer,		:required	=> true																	# supplier ID for Suppliers

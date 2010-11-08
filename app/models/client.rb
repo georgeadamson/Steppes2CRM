@@ -46,7 +46,7 @@ class Client
 
   # Defaults for the belongs_to fields below:
   property :marketing_id,					Integer, :default => 1, :lazy => [:all], :required => true		# Marketing preferences (email, post etc)
-  property :kind_id,							Integer, :default => 2, :lazy => [:all], :required => true    #(Default to ClientType.first(:name=>"Client").id)
+  property :kind_id,							Integer, :default => 2, :lazy => [:all], :required => true, :field => "type_id"    #(Default to ClientType.first(:name=>"Client").id)
   property :original_source_id,		Integer, :default => 1, :lazy => [:all], :required => true
   property :source_id,						Integer, :default => 1, :lazy => [:all]
 

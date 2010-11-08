@@ -48,7 +48,7 @@ class Trip
     property :price_per_infant_biz_supp,	BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
     property :price_per_single_supp,		  BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
     
-    property :kind_id,						        Integer,	  :default  => TripType::TAILOR_MADE, :required => true
+    property :kind_id,						        Integer,	  :default  => TripType::TAILOR_MADE, :required => true, :field => "type_id"
     property :status_id,					        Integer,	  :default  => TripState::UNCONFIRMED	  # 1=Unconfirmed, 2=Confirmed, 3=Completed, 4=Abandonned, 5=Canceled
     property :deleted,						        Boolean,	  :default  => false
     property :tour_id,						        Integer,	  :required => false        # Only required when type_id = TOUR_TEMPLATE

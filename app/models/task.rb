@@ -9,7 +9,7 @@ class Task
   property :id,                 Serial
   property :name,               String, :required => false, :length => 500  # Formerly TaskNotes.
   property :due_date,           Date,   :required => true  # Formerly DateTimeDue.
-  property :kind_id,            Integer,:required => true  # Formerly TaskTypeID.
+  property :kind_id,            Integer,:required => true , :field => "type_id" # Formerly TaskTypeID.
   property :status_id,          Integer,:required => true, :default => TaskStatus::OPEN # Formerly TaskResultID.
   property :client_id,          Integer,:required => true  # Formerly ClientID.
   property :contact_client_id,  Integer,:required => true, :default => lambda{ |task,prop| task.client_id }  # Formerly ContactID.

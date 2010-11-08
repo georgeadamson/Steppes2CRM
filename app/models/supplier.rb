@@ -12,7 +12,7 @@ class Supplier
   property :id,						      Serial
   property :name,					      String,		:required => true,	:default => 'New supplier'
   property :code,					      String,		:length		=> 3,			:default => ''	# Typically only used for Airline codes
-  property :kind_id,			      Integer,	:required => true,	:default => 1   # 1=Airline, 2=FlightAgent, 4=Accomm, 5=Ground, 8=Misc
+  property :kind_id,			      Integer,	:required => true,	:default => 1, :field => "type_id"   # 1=Airline, 2=FlightAgent, 4=Accomm, 5=Ground, 8=Misc
   property :currency_id,	      Integer,	:required => true
   property :linked_supplier_id,	Integer                                       # Applies to Accommodation only. Maps to a Ground Agent. TODO: Use for Airlines too?
   property :country_id,		      Integer,	:required => true,	:message => 'A country has not been chosen for this supplier'
