@@ -531,7 +531,7 @@ describe Trip do
         "company_id"=>"1", 
         "children"=>"0", 
         "pnr_numbers"=>"5ICOAT, 5ISDWP", 
-        "type_id"=>"1", 
+        "kind_id"=>"1", 
         "infants"=>"0", 
         "countries_ids"=> ["563", "49", "555"]
       }

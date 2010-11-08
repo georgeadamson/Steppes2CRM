@@ -145,7 +145,7 @@ describe Client do
       "marketing_id"=>"2", 
       "original_source_id"=>"1", 
       "source_id"=>"1", 
-      "type_id"=>"1", 
+      "kind_id"=>"1", 
       "interests_ids"=>[1]
     }
     @client.save.should be_true

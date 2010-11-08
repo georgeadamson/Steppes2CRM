@@ -89,7 +89,7 @@ class TripElements < Application
     
     # TODO: Handle this in the model!
     # For FLIGHT elements we must merge the date and time field strings:
-		if trip_element["type_id"].to_i == TripElementType::FLIGHT
+		if trip_element["kind_id"].to_i == TripElementType::FLIGHT
 			trip_element["start_date"] << " #{ trip_element["start_time"].strip }" unless trip_element["start_date"].blank? || trip_element["start_time"].blank?
 			trip_element["end_date"]   << " #{ trip_element["end_time"].strip   }" unless trip_element["end_date"].blank?   || trip_element["end_time"].blank?
 		end
@@ -167,7 +167,7 @@ class TripElements < Application
 
       # TODO: Handle this in the model!
 		  # For FLIGHT elements we must merge the date and time field strings:
-		  if trip_element["type_id"].to_i == TripElementType::FLIGHT
+		  if trip_element["kind_id"].to_i == TripElementType::FLIGHT
 			  trip_element["start_date"] << " #{ trip_element["start_time"].strip }" unless trip_element["start_date"].blank? || trip_element["start_time"].blank?
 			  trip_element["end_date"]   << " #{ trip_element["end_time"].strip   }" unless trip_element["end_date"].blank?   || trip_element["end_time"].blank?
 		  end
