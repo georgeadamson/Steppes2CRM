@@ -21,7 +21,7 @@ describe Pnr do
 		
 #		Airport.first_or_new(  { :code => 'LHR' }, { :name => 'London Heathrow', :code => 'LHR', :country_id => 1, :city => 'London' } ).save!
 #		Airport.first_or_new(  { :code => 'GIG' }, { :name => 'Rio de Janeiro',  :code => 'GIG', :country_id => 1, :city => 'Rio' } ).save!
-#		Supplier.first_or_new( { :code => 'BA'  }, { :name => 'British Airways', :code => 'BA',  :country_id => 1, :currency_id => 1, :type_id => 1 } ).save!
+#		Supplier.first_or_new( { :code => 'BA'  }, { :name => 'British Airways', :code => 'BA',  :country_id => 1, :currency_id => 1, :kind_id => 1 } ).save!
 		
 		
 		# Remove any old test PNRs from database:
@@ -450,7 +450,7 @@ describe Pnr do
   		
 	      # Ensure we have suppliers and airports to reference: (Otherwise PNR flights cannot be saved)
 	      company = Company.first_or_create()
-	      @supplier = Supplier.first_or_create( {:type_id => 1, :code => 'BA' }, { :name => 'British Airways', :code => 'BA',  :country_id => 1, :type_id => 1, :currency_id => 1, :companies_ids => [company.id] } ) #unless Supplier.first( :type_id => 1, :code => 'BA' )
+	      @supplier = Supplier.first_or_create( {:kind_id => 1, :code => 'BA' }, { :name => 'British Airways', :code => 'BA',  :country_id => 1, :kind_id => 1, :currency_id => 1, :companies_ids => [company.id] } ) #unless Supplier.first( :kind_id => 1, :code => 'BA' )
 	      @airportA = Airport.first_or_create(  { :code => 'LHR' }, { :name => 'London Heathrow', :code => 'LHR', :country_id => 1, :city => 'London' } )  # unless Airport.first( :code => 'LHR' )
 	      @airportB = Airport.first_or_create(  { :code => 'GIG' }, { :name => 'Rio de Janeiro',  :code => 'GIG', :country_id => 1, :city => 'Rio'    } )  # unless Airport.first( :code => 'GIG' )
 
@@ -709,9 +709,9 @@ describe Pnr do
 	  
 	      # Ensure we have all the lookup tables we need:
 	      company = Company.first_or_create()
-	      Supplier.create( :name => 'British Airways', :code => 'BA',  :country_id => 1, :type_id => 1, :currency_id => 1, :companies_ids => [company.id] ) unless Supplier.first( :type_id => 1, :code => 'BA' )
-	      Supplier.create( :name => 'LAN',             :code => 'LA',  :country_id => 1, :type_id => 1, :currency_id => 1, :companies_ids => [company.id] ) unless Supplier.first( :type_id => 1, :code => 'LA' )
-	      Supplier.create( :name => 'Kenya Airways',   :code => 'KQ',  :country_id => 1, :type_id => 1, :currency_id => 1, :companies_ids => [company.id] ) unless Supplier.first( :type_id => 1, :code => 'KQ' )
+	      Supplier.create( :name => 'British Airways', :code => 'BA',  :country_id => 1, :kind_id => 1, :currency_id => 1, :companies_ids => [company.id] ) unless Supplier.first( :kind_id => 1, :code => 'BA' )
+	      Supplier.create( :name => 'LAN',             :code => 'LA',  :country_id => 1, :kind_id => 1, :currency_id => 1, :companies_ids => [company.id] ) unless Supplier.first( :kind_id => 1, :code => 'LA' )
+	      Supplier.create( :name => 'Kenya Airways',   :code => 'KQ',  :country_id => 1, :kind_id => 1, :currency_id => 1, :companies_ids => [company.id] ) unless Supplier.first( :kind_id => 1, :code => 'KQ' )
 	      Airport.create(  :name => 'London Heathrow', :code => 'LHR', :country_id => 1, :city => 'London' )  unless Airport.first( :code => 'LHR' )
 	      Airport.create(  :name => 'Rio de Janeiro',  :code => 'GIG', :country_id => 1, :city => 'Rio' )     unless Airport.first( :code => 'GIG' )
       

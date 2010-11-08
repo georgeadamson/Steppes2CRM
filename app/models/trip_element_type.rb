@@ -14,7 +14,7 @@ class TripElementType
   property :is_linked_supplier, Boolean,  :default => false
   property :order_by,           Integer
 
-  has n, :suppliers,      :child_key => [:type_id]
-  has n, :trip_elements,  :child_key => [:type_id]
+  has n, :suppliers,      :child_key => [:kind_id]
+  has n, :trip_elements,  :child_key => [:kind_id]
 
 end

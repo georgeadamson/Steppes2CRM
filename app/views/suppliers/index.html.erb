@@ -7,9 +7,9 @@
 
 	# Otherwise generate standard index html...
 
-	type_id = params[:type_id]
+	type_id = params[:kind_id]
 
-	@suppliers = @suppliers.all( :type_id => type_id ) if type_id.to_i > 0
+	@suppliers = @suppliers.all( :kind_id => type_id ) if type_id.to_i > 0
 	@suppliers.all(:limit=>100)
 	
 	# Make the display more friendly by customising the text for Airlines or Accommodation etc:
@@ -21,4 +21,4 @@
 	@suppliers.each{ |supplier| supplier_list << [ supplier.id, supplier.display_name ] }
 
 -%>
-<%= partial 'system/index', :collection => @suppliers, :url_params => { :type_id => type_id }, :single_label => type_name %>
+<%= partial 'system/index', :collection => @suppliers, :url_params => { :kind_id => type_id }, :single_label => type_name %>

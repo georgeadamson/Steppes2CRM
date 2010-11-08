@@ -8,7 +8,7 @@ class TaskType
   property :id,   Serial
   property :name, String, :required => true, :unique => true
   
-  has n, :tasks, :child_key => [:type_id]
+  has n, :tasks, :child_key => [:kind_id]
 
   # Set the default sort order:
   default_scope(:default).update(:order => [:name])

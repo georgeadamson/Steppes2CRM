@@ -9,6 +9,6 @@ class TripType
   property :id, Serial
   property :name, String
 
-  has n, :trips, :child_key => [:type_id]
+  has n, :trips, :child_key => [:kind_id]
 
 end

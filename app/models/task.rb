@@ -9,7 +9,7 @@ class Task
   property :id,                 Serial
   property :name,               String, :required => false, :length => 500  # Formerly TaskNotes.
   property :due_date,           Date,   :required => true  # Formerly DateTimeDue.
-  property :type_id,            Integer,:required => true  # Formerly TaskTypeID.
+  property :kind_id,            Integer,:required => true  # Formerly TaskTypeID.
   property :status_id,          Integer,:required => true, :default => TaskStatus::OPEN # Formerly TaskResultID.
   property :client_id,          Integer,:required => true  # Formerly ClientID.
   property :contact_client_id,  Integer,:required => true, :default => lambda{ |task,prop| task.client_id }  # Formerly ContactID.
@@ -21,7 +21,7 @@ class Task
   property :closed_notes,       String, :required => false, :length => 500 # Formerly ClosingNotes.
   property :created_on,         Date
 
-  belongs_to :type,   :model => "TaskType",   :child_key => [:type_id]
+  belongs_to :kind,   :model => "TaskType",   :child_key => [:kind_id]
   belongs_to :status, :model => "TaskStatus", :child_key => [:status_id]
   belongs_to :contact_client, :model => "Client", :child_key => [:contact_client_id]
   belongs_to :client

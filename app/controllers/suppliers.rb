@@ -7,7 +7,7 @@ class Suppliers < Application
   def index
 
 		@suppliers = Supplier.all( :order => [:name] )
-		@suppliers = @suppliers.all( :type_id => params[:type_id] ) if params[:type_id].to_i > 0
+		@suppliers = @suppliers.all( :kind_id => params[:kind_id] ) if params[:kind_id].to_i > 0
 
     display @suppliers
   end
@@ -21,7 +21,7 @@ class Suppliers < Application
   def new
     only_provides :html
     @supplier = Supplier.new()
-    @supplier.kind_id = params[:type_id] || 1
+    @supplier.kind_id = params[:kind_id] || 1
     display @supplier
   end
 

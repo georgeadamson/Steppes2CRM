@@ -43,7 +43,7 @@ class BrochureRequests < Application
         message[:notice] = "Brochure Merge has been run for #{ succeeded } brochure requests"
 
         download_name = "BrochureMerge.docx"
-        return send_file( merge_path, :filename => download_name, :type => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
+        return send_file( merge_path, :filename => download_name, :kind => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
         
       else # params[:submit] =~ /Clear merge/
 
@@ -72,7 +72,7 @@ class BrochureRequests < Application
     #    document      = @brochure_request.document
     #    download_name = "Copy of #{ document.doc_path }"
     #
-    #    send_file( document.doc_path, :filename => download_name, :type => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
+    #    send_file( document.doc_path, :filename => download_name, :kind => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
     #
     #  end
 

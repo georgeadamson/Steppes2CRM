@@ -53,7 +53,7 @@ def valid_client_attributes
     :name               => 'Client 1',
     :forename           => 'Test',
     :marketing_id       => 1,
-    :type_id            => 1,
+    :kind_id            => 1,
     :original_source_id => 1,
     :address_client_id  => 1
   }
@@ -122,7 +122,7 @@ end
 def valid_flight_attributes
   {
     :name                 => 'Test flight',
-    :type_id              => 1,
+    :kind_id              => 1,
     :supplier_id          => 1,
     :handler_id           => 1,
     :exchange_rate        => 0.8,
@@ -272,7 +272,7 @@ alias valid_pnr_attributes2 updated_pnr_attributes
   def valid_brochure_request_attributes
 
     title    = Title.first_or_create(   { :name => 'Mr'  },  :name => 'Mr' )
-    client   = Client.first_or_create(  { :name => 'Client 1'  }, { :title => title, :name => 'Client 1', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
+    client   = Client.first_or_create(  { :name => 'Client 1'  }, { :title => title, :name => 'Client 1', :forename => 'Test', :marketing_id => 1, :kind_id => 1, :original_source_id => 1, :address_client_id => 1 } )
     company  = Company.first || Company.first_or_create( { :initials => 'tst' }, { :initials => 'tst' } )
 
     initials = company.initials

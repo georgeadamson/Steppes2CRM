@@ -153,7 +153,7 @@ class BrochureRequest
       task = Task.new(
         :name                 => "Follow up brochure #{ "sent on #{ self.generated_date.formatted(:uidate) }" if self.generated_date } ",
         :status_id            => TaskStatus::OPEN,
-        :type_id              => TaskType::BROCHURE_FOLLOWUP,
+        :kind_id              => TaskType::BROCHURE_FOLLOWUP,
         :due_date             => due_date,
         :user                 => self.user,
         :client               => self.client,

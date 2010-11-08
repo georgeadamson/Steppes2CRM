@@ -7,7 +7,7 @@ class Tour
   property :company_id, Integer,  :required => true
 
   belongs_to  :company
-  has n,      :trips, :type_id => TripType::TOUR_TEMPLATE    # The condition excludes FIXED_DEP trips that are the client's copy of a TOUR_TEMPLATE.
+  has n,      :trips, :kind_id => TripType::TOUR_TEMPLATE    # The condition excludes FIXED_DEP trips that are the client's copy of a TOUR_TEMPLATE.
   
   # These aliases just simplify common code that was originally written to handle client model:
   alias shortname    name

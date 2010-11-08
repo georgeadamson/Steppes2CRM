@@ -130,7 +130,7 @@
 			flight[:arrive_airport_id] = arrive_airport ? arrive_airport.id : nil
 			
 			# Lookup airline in our database:
-			airline = Supplier.first( :type_id => 1, :code => flight[:airline_code] )
+			airline = Supplier.first( :kind_id => 1, :code => flight[:airline_code] )
 			flight[:airline_id] = airline ? airline.id : nil
 			
 			flights << flight

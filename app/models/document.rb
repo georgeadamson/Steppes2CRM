@@ -843,7 +843,7 @@ class Document
   def self.doc_builder_letter_templates( attrs = {} )
     
     defaults = {
-      :type     => '*',           # Eg: Specify 'Trip' for 'SE_TripLetter_xyz.doc'.
+      :kind     => '*',           # Eg: Specify 'Trip' for 'SE_TripLetter_xyz.doc'.
       :prefix   => '[a-z][a-z]',  # Default to any company prefix.
       :ext      => :doc,          # Default to files with .doc extensions only.
       :pattern  => nil            # Override all of the above with your own pattern matching ideas.
@@ -851,7 +851,7 @@ class Document
     
     attrs = defaults.merge(attrs)
     
-    letter_type = attrs[:type]    || '*'
+    letter_type = attrs[:kind]    || '*'
     letter_type = letter_type.to_s.gsub( /General|Letter/i, '' )
     
     prefix      = attrs[:prefix]  || '[a-z][a-z]'

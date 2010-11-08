@@ -32,7 +32,7 @@ class Documents < Application
 #        if @document.generate_pdf( output_details )
 #
 #          download_name = "Copy of #{ @document.pdf_path }"
-#          send_file( @document.pdf_path, :filename => download_name, :type => 'application/pdf', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
+#          send_file( @document.pdf_path, :filename => download_name, :kind => 'application/pdf', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
 #          
 #          # Delete the pdf file so we don't litter the file system with unnecessary docs:
 #          #@document.delete_file! :pdf
@@ -49,7 +49,7 @@ class Documents < Application
 #
 #        download_name = "Copy of #{ @document.doc_path }"
 #
-#        send_file( @document.doc_path, :filename => download_name, :type => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
+#        send_file( @document.doc_path, :filename => download_name, :kind => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
 #      
 #      end
 #
@@ -63,7 +63,7 @@ class Documents < Application
 #      doc_path          = CRM[:doc_folder_path] / temp / file_name
 #      download_name     = "Copy of #{ file_name }"
 #
-#      send_file( doc_path, :filename => download_name, :type => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
+#      send_file( doc_path, :filename => download_name, :kind => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
 #
 #    end
 #
@@ -84,7 +84,7 @@ class Documents < Application
       if @document.generate_pdf( output_details )
 
         download_name = "Copy of #{ @document.pdf_path }"
-        send_file( @document.pdf_path, :filename => download_name, :type => 'application/pdf', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
+        send_file( @document.pdf_path, :filename => download_name, :kind => 'application/pdf', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
         
         # Delete the pdf file so we don't litter the file system with unnecessary docs:
         #@document.delete_file! :pdf
@@ -101,7 +101,7 @@ class Documents < Application
 
       download_name = "Copy of #{ @document.doc_path }"
 
-      send_file( @document.doc_path, :filename => download_name, :type => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
+      send_file( @document.doc_path, :filename => download_name, :kind => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
 
     else # :html
 

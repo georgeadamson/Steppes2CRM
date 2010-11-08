@@ -48,7 +48,7 @@ class Trip
     property :price_per_infant_biz_supp,	BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
     property :price_per_single_supp,		  BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
     
-    property :type_id,						        Integer,	  :default  => TripType::TAILOR_MADE, :required => true
+    property :kind_id,						        Integer,	  :default  => TripType::TAILOR_MADE, :required => true
     property :status_id,					        Integer,	  :default  => TripState::UNCONFIRMED	  # 1=Unconfirmed, 2=Confirmed, 3=Completed, 4=Abandonned, 5=Canceled
     property :deleted,						        Boolean,	  :default  => false
     property :tour_id,						        Integer,	  :required => false        # Only required when type_id = TOUR_TEMPLATE
@@ -97,7 +97,7 @@ class Trip
     belongs_to :tour 		      # Only applies when this trip.kind is TOUR_TEMPLATE or FIXED_DEP.
     belongs_to :user 		      # Handled by / Prepared by.
     belongs_to :company		    # Handled by / Cost centre / Invoice to.
-    belongs_to :type,   :model => "TripType",  :child_key => [:type_id]			# 1=Tailor made
+    belongs_to :kind,   :model => "TripType",  :child_key => [:kind_id]			# 1=Tailor made
     belongs_to :status, :model => "TripState", :child_key => [:status_id]   # 1=Unconfirmed, 2=Confirmed, 3=complete, 4=Canceled, 5=Abandonned.
     #belongs_to :tripPackage	  # Formerly known as Group Title etc .
     
@@ -373,11 +373,11 @@ class Trip
     def primaries;		return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_primary		=> true ); end
     def invoicables;	return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_invoicable	=> true ); end
     
-    def flights;	return self.trip_elements.all( :type_id => TripElement::FLIGHT,  :order => [:start_date, :id] ); end
-    def handlers; return self.trip_elements.all( :type_id => TripElement::HANDLER, :order => [:start_date, :id] ); end	# AKA Flight agents
-    def accomms;	return self.trip_elements.all( :type_id => TripElement::ACCOMM,  :order => [:start_date, :id] ); end
-    def grounds;	return self.trip_elements.all( :type_id => TripElement::GROUND,  :order => [:start_date, :id] ); end
-    def miscs;		return self.trip_elements.all( :type_id => TripElement::MISC,    :order => [:start_date, :id] ); end
+    def flights;	return self.trip_elements.all( :kind_id => TripElement::FLIGHT,  :order => [:start_date, :id] ); end
+    def handlers; return self.trip_elements.all( :kind_id => TripElement::HANDLER, :order => [:start_date, :id] ); end	# AKA Flight agents
+    def accomms;	return self.trip_elements.all( :kind_id => TripElement::ACCOMM,  :order => [:start_date, :id] ); end
+    def grounds;	return self.trip_elements.all( :kind_id => TripElement::GROUND,  :order => [:start_date, :id] ); end
+    def miscs;		return self.trip_elements.all( :kind_id => TripElement::MISC,    :order => [:start_date, :id] ); end
     
     # TODO!
     def booking_ref
@@ -417,7 +417,7 @@ class Trip
           
           :start_date.lt	=> date + 1,	# Elements beginning on or before date.
           :end_date.gte		=> date,	# Elements ending on or after date.
-          :order					=> [:type_id, :start_date, :id]
+          :order					=> [:kind_id, :start_date, :id]
           
           # Special clause to exclude the checkout day of accommodation elements otherwise we see an extra day for each:
           # Except where check out day is same as check-in day because it's probably a day-room.
@@ -441,11 +441,11 @@ class Trip
           :date			=> date,
           :percent	=> 100 * i / total_days,		# Percentage through entire trip.
           :elements	=> elements.all,
-          :flights	=> elements.all( :type_id => TripElement::FLIGHT ),
-          :agents		=> elements.all( :type_id => TripElement::HANDLER ),
-          :accomms	=> elements.all( :type_id => TripElement::ACCOMM ),
-          :grounds	=> elements.all( :type_id => TripElement::GROUND ),
-          :miscs		=> elements.all( :type_id => TripElement::MISC )
+          :flights	=> elements.all( :kind_id => TripElement::FLIGHT ),
+          :agents		=> elements.all( :kind_id => TripElement::HANDLER ),
+          :accomms	=> elements.all( :kind_id => TripElement::ACCOMM ),
+          :grounds	=> elements.all( :kind_id => TripElement::GROUND ),
+          :miscs		=> elements.all( :kind_id => TripElement::MISC )
         )
         
         result << day 
@@ -1255,7 +1255,7 @@ class Trip
         :id           => self.id,
         :name         => self.name,
         :status       => self.status,
-        :type         => self.kind,
+        :kind         => self.kind,
         :travellers   => self.travellers,
         :clients      => clients
       }
@@ -1307,7 +1307,7 @@ class Trip
         clone.attributes = master.attributes.merge(
           :id       => nil,
           :name     => new_name,
-          :type_id  => type_id
+          :kind_id  => type_id
         )
         
         # Copy trip clients and countries:
@@ -1348,10 +1348,10 @@ class Trip
     def copy_elements_from(master, options = nil )
 
       # Apply defaults for omitted options:
-      defaults  = { :adjust_dates => false, :clone => self, :type_id => nil, :discard_booking_code => false }
+      defaults  = { :adjust_dates => false, :clone => self, :kind_id => nil, :discard_booking_code => false }
       options   = defaults.merge( options || {} )
       clone     = options[:clone]
-      type_id   = options[:type_id].to_i > 0 ? options[:type_id] : nil
+      type_id   = options[:kind_id].to_i > 0 ? options[:kind_id] : nil
 
       master.trip_elements.each do |master_elem|
 

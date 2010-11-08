@@ -101,8 +101,8 @@ describe Tour do
 
     # Just to be absolutely sure:
     Trip.all( :tour_id => @tour.id ).should have(2).trips
-    Trip.all( :tour_id => @tour.id, :type_id => TripType::TOUR_TEMPLATE ).should have(1).trip
-    Trip.all( :tour_id => @tour.id, :type_id => TripType::FIXED_DEP     ).should have(1).trip
+    Trip.all( :tour_id => @tour.id, :kind_id => TripType::TOUR_TEMPLATE ).should have(1).trip
+    Trip.all( :tour_id => @tour.id, :kind_id => TripType::FIXED_DEP     ).should have(1).trip
     
   end
 

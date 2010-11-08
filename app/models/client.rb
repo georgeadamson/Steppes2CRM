@@ -46,7 +46,7 @@ class Client
 
   # Defaults for the belongs_to fields below:
   property :marketing_id,					Integer, :default => 1, :lazy => [:all], :required => true		# Marketing preferences (email, post etc)
-  property :type_id,							Integer, :default => 2, :lazy => [:all], :required => true    #(Default to ClientType.first(:name=>"Client").id)
+  property :kind_id,							Integer, :default => 2, :lazy => [:all], :required => true    #(Default to ClientType.first(:name=>"Client").id)
   property :original_source_id,		Integer, :default => 1, :lazy => [:all], :required => true
   property :source_id,						Integer, :default => 1, :lazy => [:all]
 
@@ -60,8 +60,8 @@ class Client
   property :updated_by,           String
   
   belongs_to :titlename,        :model => "Title",            :child_key => [:title_id]
-  #belongs_to :type,             :model => "ClientType",       :child_key => [:type_id]
-  belongs_to :client_type,      :model => "ClientType",       :child_key => [:type_id]
+  #belongs_to :kind,             :model => "ClientType",       :child_key => [:kind_id]
+  belongs_to :client_type,      :model => "ClientType",       :child_key => [:kind_id]
   belongs_to :source,           :model => "ClientSource",     :child_key => [:source_id]
   belongs_to :original_source,  :model => "ClientSource",     :child_key => [:original_source_id]
   belongs_to :marketing,        :model => "ClientMarketing",  :child_key => [:marketing_id]
@@ -317,13 +317,13 @@ class Client
 
   # All the client's trips that are the current active version of each of the client's trips: (ie ignore "other" versions)
   # Note how we cache @active_trips to prevent unecessary db trips as each trip is accessed:
-  # Added :type_id filter 01-Sep-2010 GA.
+  # Added :kind_id filter 01-Sep-2010 GA.
   def active_trips
-    return @active_trips ||= self.trips.all( :is_active_version => true, :type_id.not => TripType::TOUR_TEMPLATE )
+    return @active_trips ||= self.trips.all( :is_active_version => true, :kind_id.not => TripType::TOUR_TEMPLATE )
   end
 
   def fixed_deps( tour_id = nil )
-    deps = self.active_trips.all( :type_id => TripType::FIXED_DEP )
+    deps = self.active_trips.all( :kind_id => TripType::FIXED_DEP )
     return tour_id ? deps.all( :tour_id => tour_id ) : deps
   end
 

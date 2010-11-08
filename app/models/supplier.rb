@@ -12,7 +12,7 @@ class Supplier
   property :id,						      Serial
   property :name,					      String,		:required => true,	:default => 'New supplier'
   property :code,					      String,		:length		=> 3,			:default => ''	# Typically only used for Airline codes
-  property :type_id,			      Integer,	:required => true,	:default => 1   # 1=Airline, 2=FlightAgent, 4=Accomm, 5=Ground, 8=Misc
+  property :kind_id,			      Integer,	:required => true,	:default => 1   # 1=Airline, 2=FlightAgent, 4=Accomm, 5=Ground, 8=Misc
   property :currency_id,	      Integer,	:required => true
   property :linked_supplier_id,	Integer                                       # Applies to Accommodation only. Maps to a Ground Agent. TODO: Use for Airlines too?
   property :country_id,		      Integer,	:required => true,	:message => 'A country has not been chosen for this supplier'
@@ -61,7 +61,7 @@ class Supplier
  
   belongs_to :address
   belongs_to :country
-  belongs_to :type,		          :model => "TripElementType",	:child_key => [:type_id]
+  belongs_to :kind,		          :model => "TripElementType",	:child_key => [:kind_id]
   belongs_to :currency,         :model => "ExchangeRate",			:child_key => [:currency_id]
   belongs_to :linked_supplier,  :model => "Supplier",         :child_key => [:linked_supplier_id] # AKA Default handler for Accommodation. TODO: Use for Airlines too?
   belongs_to :bank_currency,    :model => "ExchangeRate",     :child_key => [:bank_currency_id]
@@ -82,11 +82,11 @@ class Supplier
 	#accepts_nested_attributes_for :companies
 
 
-	validates_is_unique :name, :scope => [ :type_id, :currency_id ],
+	validates_is_unique :name, :scope => [ :kind_id, :currency_id ],
 		:message => 'A supplier of this type already exists with the same name and currency'
 
 	# Enforce uniqueness of Airline codes:
-	validates_is_unique :name, :scope => [ :type_id, :code ],
+	validates_is_unique :name, :scope => [ :kind_id, :code ],
 		:if => Proc.new {|supplier| supplier.kind_id == 1 },
 		:message => 'An airline already exists with the same airline code'
 

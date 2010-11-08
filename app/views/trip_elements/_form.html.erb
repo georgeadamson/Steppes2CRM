@@ -25,7 +25,7 @@
 	
 	# Prepare array for populating the AIRPORTS dropdown list:
 	airports		= Airport.all(  Airport.country.companies.id => element.trip.company_id.to_s, :order => [:name] )
-	handlers		= Supplier.all( :type_id => 2, Supplier.companies.id => element.trip.company_id, :order => [:name] )
+	handlers		= Supplier.all( :kind_id => 2, Supplier.companies.id => element.trip.company_id, :order => [:name] )
 	suppliers		= Supplier.all( :order => [:name] )
 	
 	# Set a flag to indicate that this is not the full list:
@@ -42,7 +42,7 @@
 		# Only filter by countries if we have some to filter on and if those countries have suppliers assigned:
 		airports						= airports.all
 		handlers						= handlers.all( Supplier.companies.id => element.trip.company_id )
-		suppliers						= suppliers.all( :type_id => element.element_type.id, Supplier.companies.id => element.trip.company_id )
+		suppliers						= suppliers.all( :kind_id => element.element_type.id, Supplier.companies.id => element.trip.company_id )
 		unless element.flight? || element.trip.countries_ids.empty?
 			country_suppliers = suppliers.all( Supplier.country.id => element.trip.countries_ids )
 			suppliers					= country_suppliers if country_suppliers.length > 0
@@ -78,13 +78,13 @@
 	# If required, add a "Show all" option in pick lists: (it can be clicked to load the complete list)
 	if show_minimal_lists
 		
-		href = resource( :suppliers, :list => 'option', :type_id => element.kind_id )
+		href = resource( :suppliers, :list => 'option', :kind_id => element.kind_id )
 		suppliers_list << [ href, '+ Show more...' ]
 
 		if element.flight?
 
 			# Add "Show all" option to the handlers list:
-			href = resource( :suppliers, :list => 'option', :type_id => 2 )		# 2=Handlers (aka Flight agents)
+			href = resource( :suppliers, :list => 'option', :kind_id => 2 )		# 2=Handlers (aka Flight agents)
 			handlers_list << [ href, '+ Show more...' ]
 			
 			# When airports are not already in the lists then add them:
@@ -143,7 +143,7 @@
 
 	<%= hidden_field :trip_id %>
 	<%= hidden_field :id if element.id.to_i > 0 %><!-- This is required by UI to know which trip element the form is for -->
-	<%= select :type_id, :label => '(Element type)', :class => 'tripElementTypeId hidden', :selected => element.element_type.id.to_s, :collection => TripElementType.all( :is_linked_supplier=>false, :order=>[:order_by] ), :value_method => :id, :text_method => :name %>
+	<%= select :kind_id, :label => '(Element type)', :class => 'tripElementTypeId hidden', :selected => element.element_type.id.to_s, :collection => TripElementType.all( :is_linked_supplier=>false, :order=>[:order_by] ), :value_method => :id, :text_method => :name %>
 
 	<!--<div class="fieldset">-->
 

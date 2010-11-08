@@ -17,7 +17,7 @@ class TripElement
   
   
   property :id,                   Serial
-  property :type_id,							Integer,		:required	=> true,	:default	=> FLIGHT  					# tripElementType ID	(1=Flight, 4=Accomm, 5=Ground, 8=Misc)
+  property :kind_id,							Integer,		:required	=> true,	:default	=> FLIGHT  					# tripElementType ID	(1=Flight, 4=Accomm, 5=Ground, 8=Misc)
   property :misc_type_id,					Integer,		:default	=> 1																		# tripElementMiscType ID
   property :trip_id,							Integer,		:required	=> true,	:index		=> true							# trip ID
   property :supplier_id,					Integer,		:required	=> true																	# supplier ID for Suppliers
@@ -126,7 +126,7 @@ class TripElement
   belongs_to :trip
   belongs_to :supplier
   belongs_to :handler,				:model => 'Supplier',							:child_key => [:handler_id]  # AKA Flight Agent, Flight Handler
-  belongs_to :element_type,		:model => 'TripElementType',			:child_key => [:type_id]
+  belongs_to :element_type,		:model => 'TripElementType',			:child_key => [:kind_id]
   belongs_to :misc_type,			:model => 'TripElementMiscType',	:child_key => [:misc_type_id]
   belongs_to :depart_airport,	:model => 'Airport',							:child_key => [:depart_airport_id]
   belongs_to :arrive_airport,	:model => 'Airport',							:child_key => [:arrive_airport_id]
@@ -371,7 +371,7 @@ class TripElement
       task   = Task.new(
         :name             => "Followup flight option for #{ trip.title } ",   # self.summary
         :status_id        => TaskStatus::OPEN,
-        :type_id          => TaskType::FLIGHT_REMINDER,
+        :kind_id          => TaskType::FLIGHT_REMINDER,
         :due_date         => due_date,
         :user             => user,
         :client           => client,
@@ -501,7 +501,7 @@ class TripElement
 		#	# Filter by element type if necessary:
 		#	if type_id
 		#		type_id = self.kind_id if type_id == true
-		#		return @overlaps.all( :type_id => type_id )
+		#		return @overlaps.all( :kind_id => type_id )
 		#	else
 		#		return @overlaps
 		#	end
@@ -900,7 +900,7 @@ class TripElement
     @prevElem ||= nil
     @nextElem ||= nil
     
-    self.trip && self.trip.trip_elements.all( :order => [ :type_id, :start_date, :id ] ).each do |elem|
+    self.trip && self.trip.trip_elements.all( :order => [ :kind_id, :start_date, :id ] ).each do |elem|
       
       # The order of these commands is significant:
       @nextElem = elem if foundSelf && !@nextElem

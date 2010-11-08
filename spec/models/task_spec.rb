@@ -8,7 +8,7 @@ def valid_task_attributes
     :due_date   => '2010-02-01',
     :user_id    => 1,
     :client_id  => 1,
-    :type_id    => 1
+    :kind_id    => 1
   }
 end
 
@@ -24,7 +24,7 @@ describe Task do
     @world_region = WorldRegion.first_or_create( { :name => 'Dummy Region' }, { :name => 'Dummy Region' } )
     @mailing_zone = MailingZone.first_or_create( { :name => 'Dummy Zone'   }, { :name => 'Dummy Zone'   } )
     @title        = Title.create( :name => 'Mr' )
-    @client       = Client.first_or_create(  { :name => 'Client 1'  }, { :title => @title, :name => 'Client 1', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
+    @client       = Client.first_or_create(  { :name => 'Client 1'  }, { :title => @title, :name => 'Client 1', :forename => 'Test', :marketing_id => 1, :kind_id => 1, :original_source_id => 1, :address_client_id => 1 } )
     
     seed_lookup_tables()
 

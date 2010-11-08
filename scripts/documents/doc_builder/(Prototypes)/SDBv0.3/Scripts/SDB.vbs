@@ -334,9 +334,9 @@ Sub InitialiseDocument
 
 	' Replace various document settings for performance reasons		
 	boolInitialWordPagination = objWord.Options.Pagination 
-	intInitialWordViewType = objWord.ActiveWindow.View.kind
+	intInitialWordViewType = objWord.ActiveWindow.View.Type
 	objWord.Options.Pagination = False
-	objWord.ActiveWindow.View.kind = wdNormalView 
+	objWord.ActiveWindow.View.Type = wdNormalView 
 	
 	' Create a global selection object
 	Set objSelection = objWord.Selection
@@ -354,7 +354,7 @@ Sub FinaliseDocument
 
 	' Restore the default settings
 	objWord.Options.Pagination = boolInitialWordPagination 
-	objWord.ActiveWindow.View.kind = intInitialWordViewType
+	objWord.ActiveWindow.View.Type = intInitialWordViewType
 	
 	' Save as proper name
 	objTemplate.SaveAs(strDocumentFileName) 'Note that this DOES NOT add doc if there isnt one in the job table field - not assuming that is what is wanted

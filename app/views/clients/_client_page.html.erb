@@ -1,6 +1,6 @@
 <!-- _clientPage: -->
 <%
-	active_trips = client.active_trips.all( :type_id.not => TripType::TOUR_TEMPLATE, :order => [ :status_id, :start_date.desc, :created_at.desc ] )
+	active_trips = client.active_trips.all( :kind_id.not => TripType::TOUR_TEMPLATE, :order => [ :status_id, :start_date.desc, :created_at.desc ] )
 -%>
 <div class="sectionContainer noSectionFoot clientPage">
 
@@ -50,7 +50,7 @@
 							</li>
 
 							<%# When client is listed on a TOUR, show link(s) to create new fixed-dep based on the tour-template(s): %>
-							<% client.trips.all( :type_id => TripType::TOUR_TEMPLATE ).each do |tour_template| 
+							<% client.trips.all( :kind_id => TripType::TOUR_TEMPLATE ).each do |tour_template| 
 
 								# Don't show "New Fixed Dep" link if one has already been created from the tour_template:
 								if client.fixed_deps( tour_template.tour_id ).count == 0 %>

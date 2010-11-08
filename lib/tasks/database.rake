@@ -159,7 +159,7 @@ namespace :db do
 		Supplier.create(
 			:id => row[0],
 			:name => row[1],
-			:type => TripElementType.get( row[2] )
+			:kind => TripElementType.get( row[2] )
 		)
 	end
 

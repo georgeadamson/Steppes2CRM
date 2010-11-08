@@ -323,7 +323,7 @@ class Pnr
       begin
 			  # Lookup the AIRLINE (supplier) in our database: (airline_id is just an alias for supplier_id)
 			  airline_code	= data[5].slice(0,2).strip
-			  airline				= airline_code.blank? ? nil : Supplier.first( :type_id => 1, :code => airline_code )
+			  airline				= airline_code.blank? ? nil : Supplier.first( :kind_id => 1, :code => airline_code )
       rescue Exception => details
         errors << "Unable to parse airline_code (from #{data}) #{details}"
       end
@@ -709,7 +709,7 @@ class Pnr
 		
 		return {
 			
-			:type_id								=> 1,																				# trip_element_type: Flight
+			:kind_id								=> 1,																				# trip_element_type: Flight
 			:supplier_id						=> pnr_flight_record[:airline_id],
 			
 			:booking_code						=> pnr_flight_record[:pnr_number],					# Only elements created from a PNR will have a booking_code (PNR Number).

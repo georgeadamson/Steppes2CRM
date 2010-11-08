@@ -23,7 +23,7 @@ class Images < Application
     raise NotFound unless @image && !@image.path.blank? && File.exist?( folder / @image.path )
 
     path = folder / @image.path
-    send_file( path, :type => 'image/jpeg', :disposition => 'inline' )
+    send_file( path, :kind => 'image/jpeg', :disposition => 'inline' )
     #display @image, :layout => false
 
   end

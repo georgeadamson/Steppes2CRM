@@ -23,7 +23,7 @@
 <br/>
 <%= hidden_field	:client_id %>
 <%= select				:user_id,						:label => 'Remind',							:selected => task.user_id.to_s,		:collection => users,							:class => '', :value_method => :id, :text_method => :display_name %>
-<%= select				:type_id,						:label => 'about a',						:selected => task.kind_id.to_s,		:collection => TaskType.all,			:class => '', :value_method => :id, :text_method => :name %>
+<%= select				:kind_id,						:label => 'about a',						:selected => task.kind_id.to_s,		:collection => TaskType.all,			:class => '', :value_method => :id, :text_method => :name %>
 <%= select				:contact_client_id,	:label => 'for',								:selected => task.contact_client_id.to_s, :collection => clients,		:class => 'width2Fields', :value_method => :id, :text_method => :display_name %>
 <%= text_field		:due_date,					:label => 'Due by',							:maxlength => 10, :value => task.due_date.formatted(:uidate),				:class => 'xdate' %>
 <%= text_area			:notes,							:label => 'Notes',							:maxlength => @properties[:name].length,														:class => 'width2Fields' %>

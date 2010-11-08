@@ -9,5 +9,5 @@
 <!-- When creating a client the "Recent source" field is hidden and will default to same as "Original source": -->
 <%= select :original_source_id, :label=>"Original source",		:selected=> client.original_source_id.to_s, :collection => ClientSource.all(:order=>[:name]), :value_method => :id, :text_method => :name, :prompt => '(Please choose)', :disabled => original_source_readonly %>
 <%= select :source_id,					:label=>"Recent source",			:selected=> client.source_id.to_s, :collection => ClientSource.all(:order=>[:name]), :value_method => :id, :text_method => :name unless client.new? %>
-<%= select :type_id,						:label=>"Client type",				:selected=> client.kind_id.to_s, :collection => ClientType.all(:order=>[:name]), :value_method => :id, :text_method => :name %>
+<%= select :kind_id,						:label=>"Client type",				:selected=> client.kind_id.to_s, :collection => ClientType.all(:order=>[:name]), :value_method => :id, :text_method => :name %>
 <%= select :interests,					:label=>"<small>(#{client.interests.length})</small> Areas of interest",	:selected => client.interests_ids.all_to_s, :collection => Country.all( :order => [:name] ), :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[interests_ids][]', :title => 'Hold down Ctrl to select multiple countries', :class => 'height4Fields' %>

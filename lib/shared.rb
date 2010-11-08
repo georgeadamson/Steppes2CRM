@@ -21,11 +21,11 @@ $cached = {
 }
 
 
-#$cached[:airlines]= $cached[:suppliers].all( :type_id => 1 )
-#$cached[:agents]	= $cached[:suppliers].all( :type_id => 2 )
-#$cached[:accomms]	= $cached[:suppliers].all( :type_id => 4 )
-#$cached[:grounds] = $cached[:suppliers].all( :type_id => 5 )
-#$cached[:miscs]		= $cached[:suppliers].all( :type_id => 8 )
+#$cached[:airlines]= $cached[:suppliers].all( :kind_id => 1 )
+#$cached[:agents]	= $cached[:suppliers].all( :kind_id => 2 )
+#$cached[:accomms]	= $cached[:suppliers].all( :kind_id => 4 )
+#$cached[:grounds] = $cached[:suppliers].all( :kind_id => 5 )
+#$cached[:miscs]		= $cached[:suppliers].all( :kind_id => 8 )
 
 
 # This utility repopulates cached hashes of lookup tables: (Eg: generates $cached[:trips_states_hash] from $cached[:trips_states] )

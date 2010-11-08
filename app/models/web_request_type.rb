@@ -6,7 +6,7 @@ class WebRequestType
   property :form_name,  String,   :required => true,  :unique   => true
   property :is_active,  Boolean,  :required => true,  :default  => true
 
-  has n, :web_requests, :child_key => [:type_id]
+  has n, :web_requests, :child_key => [:kind_id]
   
   alias active? is_active
 

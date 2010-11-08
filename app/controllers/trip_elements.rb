@@ -39,8 +39,8 @@ class TripElements < Application
     raise NotFound unless @trip
 
     # Derive tripElementType from params if possible: (Eg: ?type=accomm would be typical we allow for other param names too!)
-    element_type = TripElementType.first( :code => params[:type] || params[:type_code] ) ||
-                   TripElementType.get( params[:type_id] || params[:element_type_id] || params[:trip_element_type_id] )
+    element_type = TripElementType.first( :code => params[:kind] || params[:kind_code] ) ||
+                   TripElementType.get( params[:kind_id] || params[:element_type_id] || params[:trip_element_type_id] )
 
     # Initialise new element's attributes:
     @element = @trip.trip_elements.new

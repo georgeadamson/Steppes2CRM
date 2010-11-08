@@ -17,9 +17,9 @@ describe TripElement do
     @country1     = Country.first_or_create( { :name => 'Country 1' }, { :code => 'C1', :name => 'Country 1', :companies_ids => [@company.id], :world_region_id => @world_region.id, :mailing_zone_id => @mailing_zone.id } )
     @country2     = Country.first_or_create( { :name => 'Country 2' }, { :code => 'C2', :name => 'Country 2', :companies_ids => [@company.id], :world_region_id => @world_region.id, :mailing_zone_id => @mailing_zone.id } )
     @country3     = Country.first_or_create( { :name => 'Country 3' }, { :code => 'C3', :name => 'Country 3', :companies_ids => [@company.id], :world_region_id => @world_region.id, :mailing_zone_id => @mailing_zone.id } )
-    @client1      = Client.first_or_create(  { :name => 'Client 1'  }, {  :title => @title, :name => 'Client 1', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
-    @client2      = Client.first_or_create(  { :name => 'Client 2'  }, {  :title => @title, :name => 'Client 2', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
-    @client3      = Client.first_or_create(  { :name => 'Client 3'  }, {  :title => @title, :name => 'Client 3', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
+    @client1      = Client.first_or_create(  { :name => 'Client 1'  }, {  :title => @title, :name => 'Client 1', :forename => 'Test', :marketing_id => 1, :kind_id => 1, :original_source_id => 1, :address_client_id => 1 } )
+    @client2      = Client.first_or_create(  { :name => 'Client 2'  }, {  :title => @title, :name => 'Client 2', :forename => 'Test', :marketing_id => 1, :kind_id => 1, :original_source_id => 1, :address_client_id => 1 } )
+    @client3      = Client.first_or_create(  { :name => 'Client 3'  }, {  :title => @title, :name => 'Client 3', :forename => 'Test', :marketing_id => 1, :kind_id => 1, :original_source_id => 1, :address_client_id => 1 } )
     @trip_element_type = TripElementType.first_or_create( { :code => 'flight' }, { :name => 'Flight', :code => 'flight' } )
 
     # Prepare options for use when calling the .calc method:
