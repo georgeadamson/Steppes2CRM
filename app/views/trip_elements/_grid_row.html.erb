@@ -65,11 +65,10 @@
 		<%= icon :add,    :class => 'create ui-icon-round', :title => 'This flight will be added to the trip when you click Save changes' %>
 		<%= icon :flight, :class => 'update ui-icon-round', :title => 'Any changes you make to this flight will be saved when you click Save changes' %>
 		<%= icon :delete, :class => 'delete ui-icon-round', :title => 'This flight will be deleted from the trip when you click Save changes' %>
-		<%= icon :locked, :class => 'locked ui-icon-round', :title => 'This flight is defined by a PNR so some fields may not be modified' %>
+		<%= icon :locked, :class => 'locked ui-icon-round', :title => 'This flight is defined by a PNR so some fields cannot be modified' %>
 
-		<%= hidden_field :id,         :name => "#{ field_prefix }][id]",											  :disabled => trip_element.bound_to_pnr? %>
-		<!--<%= hidden_field :supplier_id, :name => "#{ field_prefix }][supplier_id]", :value => 0, :disabled => trip_element.bound_to_pnr? %>-->
-		<!--<%= hidden_field :handler_id,  :name => "#{ field_prefix }][handler_id]",  :value => 0, :disabled => trip_element.bound_to_pnr? %>-->
+		<%= hidden_field :id,         :name => "#{ field_prefix }][id]" unless trip_element.new? %>
+
 		<!-- Field to mark flight for DELETE. Remains disabled until user chooses delete: -->
 		<%= hidden_field              :name => "#{ field_prefix }][_delete]",     :value => 1, :disabled => true unless trip_element.bound_to_pnr? || trip_element.new?  %>
 	</td>
