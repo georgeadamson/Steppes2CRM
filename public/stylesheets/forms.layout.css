@@ -388,8 +388,10 @@ INPUT.date.hasDatepicker:focus {
 	background-repeat:no-repeat;
 	cursor:text;
 }
-
-
+	INPUT.date.hasDatepicker[disabled],
+	INPUT.date.hasDatepicker[readonly] {
+		background-image:none;
+	}
 
 
 

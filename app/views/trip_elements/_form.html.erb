@@ -196,7 +196,7 @@
 		<tr class="tableRow"><!-- FLIGHT INFO: -->
 
 			<%
-				element_pnr_value   = !element.bound_to_pnr? ? 'n/a' : "#{ element.booking_code }#{ ' (line %03d)' % element.booking_line_number unless element.booking_line_number.blank? }"
+				element_pnr_value   = !element.bound_to_pnr? ? 'n/a' : "#{ element.booking_code }#{ ' (line %02d)' % element.booking_line_number unless element.booking_line_number.blank? }"
 				element_pnr_tooltip = "Imported from PNR AIR File #{ Pnr.first_or_new( :name => element.booking_code ).file_name } - You can provide the PNR number on the Trip summary page"
 			%>
 			<td><%= text_field :flight_code,			:label => 'Flight code',	:class => 'tableCell whenFlight uppercase', :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? %></td>
