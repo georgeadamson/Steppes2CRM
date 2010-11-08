@@ -57,20 +57,21 @@
 
 <%= fields_for trip_element do %>
 
-	<tr class="<%= trip_element.new? ? 'create' : 'update' %>">
+	<tr class="<%= trip_element.new? ? 'create' : ( trip_element.bound_to_pnr? ? 'locked' : 'update' ) %>">
 	
 	<!-- Flight id & code: -->
 	<td>
 		<!-- Only one of these icons will be displayed, depending on TR.classname: -->
-		<%= icon :add,    :class => 'create', :title => 'This flight will be added to the trip when you click Save changes' %>
-		<%= icon :flight, :class => 'update', :title => 'Any changes you make to this flight will be saved when you click Save changes' %>
-		<%= icon :delete, :class => 'delete', :title => 'This flight will be deleted from the trip when you click Save changes' %>
+		<%= icon :add,    :class => 'create ui-icon-round', :title => 'This flight will be added to the trip when you click Save changes' %>
+		<%= icon :flight, :class => 'update ui-icon-round', :title => 'Any changes you make to this flight will be saved when you click Save changes' %>
+		<%= icon :delete, :class => 'delete ui-icon-round', :title => 'This flight will be deleted from the trip when you click Save changes' %>
+		<%= icon :locked, :class => 'locked ui-icon-round', :title => 'This flight is defined by a PNR so some fields may not be modified' %>
 
-		<%= hidden_field :id,          :name => "#{ field_prefix }][id]",											  :disabled => trip_element.bound_to_pnr? %>
+		<%= hidden_field :id,         :name => "#{ field_prefix }][id]",											  :disabled => trip_element.bound_to_pnr? %>
 		<!--<%= hidden_field :supplier_id, :name => "#{ field_prefix }][supplier_id]", :value => 0, :disabled => trip_element.bound_to_pnr? %>-->
 		<!--<%= hidden_field :handler_id,  :name => "#{ field_prefix }][handler_id]",  :value => 0, :disabled => trip_element.bound_to_pnr? %>-->
 		<!-- Field to mark flight for DELETE. Remains disabled until user chooses delete: -->
-		<%= hidden_field               :name => "#{ field_prefix }][_delete]",     :value => 1, :disabled => true unless trip_element.bound_to_pnr? || trip_element.new?  %>
+		<%= hidden_field              :name => "#{ field_prefix }][_delete]",     :value => 1, :disabled => true unless trip_element.bound_to_pnr? || trip_element.new?  %>
 	</td>
 	<td>
 		<%= text_field	:flight_code, :name => "#{ field_prefix }][flight_code]", :class => 'widthHalfField', :title => 'Flight number', :disabled => trip_element.bound_to_pnr? if trip_element.flight? %>
@@ -115,6 +116,8 @@
 			Will be deleted.
 			<a href="#undo" class="undo delete" title="Click to change your mind!">Undo</a>
 		</small>
+
+		<%= tag :small, "PNR #{ trip_element.booking_code } line #{ trip_element.booking_line_number.to_s.rjust(2,'0') }", :class => 'locked message' unless trip_element.booking_code.blank? %>
 
 	</td>
 

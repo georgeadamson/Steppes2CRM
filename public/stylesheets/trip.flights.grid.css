@@ -60,12 +60,14 @@ TABLE#trip-elements-grid { background-color:#000; }
 
 
 /* ICONS: (Only show icon when it's class matches the row class "create/update/delete") */
-#trip-elements-grid TR.update .ui-icon.create,
-#trip-elements-grid TR.delete .ui-icon.create,
-#trip-elements-grid TR.create .ui-icon.update,
-#trip-elements-grid TR.delete .ui-icon.update,
-#trip-elements-grid TR.create .ui-icon.delete,
-#trip-elements-grid TR.update .ui-icon.delete { display:none; }
+#trip-elements-grid TR:not(.create) .ui-icon.create,
+#trip-elements-grid TR:not(.update) .ui-icon.update,
+#trip-elements-grid TR:not(.delete) .ui-icon.delete,
+#trip-elements-grid TR:not(.locked) .ui-icon.locked { display:none; }
+
+#trip-elements-grid TR        		.ui-icon.locked { background-color:#1A61A9; }	/* Amadeus blue */
+#trip-elements-grid TR        		.ui-icon.update { background-color:#98B4E2; }	/* Trip-Builder Flight blue */
+#trip-elements-grid TR        		.ui-icon-round  { -moz-box-shadow:-0px -0px 1px rgba(255, 255, 255, 0.5); }
 
 
 /* Special style for row flagged for DELETE: */
@@ -77,12 +79,11 @@ TABLE#trip-elements-grid { background-color:#000; }
 /* MESSAGES: (Only show tip when it's class matches the row class "create/update/delete") */
 #trip-elements-grid TR        .message,
 #trip-elements-grid TR        .message A.undo { color:#fff; white-space:nowrap; }
-#trip-elements-grid TR.create .message.deleted,
-#trip-elements-grid TR.update .message.deleted { display:none; }
+#trip-elements-grid TR:not(.delete) .message.deleted { display:none; }
 
 /* NO-FLIGHTS message: */
 #trip-elements-grid TR.message.none                        .message { display:none; margin-top:2em; color:yellow; }
-#trip-elements-grid TR.message.none                        .message .ui-icon { background-color:yellow; -moz-border-radius:8px; -opera-border-radius:8px; -webkit-border-radius:8px; -ms-border-radius:8px; border-radius:8px; }
+#trip-elements-grid TR.message.none                        .message .ui-icon { background-color:yellow; }
 #trip-elements-grid TR.message.none:first-child:last-child .message { display:block; }
 #trip-elements-grid TR.message.none                        TD { visibility:hidden; }
 #trip-elements-grid TR.message.none:first-child:last-child TD { visibility:visible; }

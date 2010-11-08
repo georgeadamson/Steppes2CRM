@@ -17,7 +17,7 @@
 
 			<% if element.bound_to_pnr? %>
 				
-				<div class="left"> &nbsp; <%= icon :info %> This flight is defined by a PNR so some fields cannot be modified</div>
+				<div class="left"> &nbsp; <%= icon :locked, :class => 'ui-icon-round' %> This flight is defined by a PNR so some fields may not be modified</div>
 
 			<% else %>
 

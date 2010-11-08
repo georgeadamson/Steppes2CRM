@@ -62,7 +62,9 @@ A.mailto, A[href ^= mailto] {
 
 
 
+/* Special icon shapes: */
 
+	.ui-icon-round { -moz-border-radius:8px; -opera-border-radius:8px; -webkit-border-radius:8px; -ms-border-radius:8px; border-radius:8px; }
 
 
 
