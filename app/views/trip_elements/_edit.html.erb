@@ -22,7 +22,7 @@
 			<% else %>
 
 				<!-- This cunning "Delete" label looks like a button but actually activates the delete button below: -->
-				<%= tag :label, 'Delete this element', :for => delete_button_id, :class => 'ui-priority-secondary ui-state-default left' %>
+				<%= tag :label, "#{ icon :delete } Delete this element", :for => delete_button_id, :class => 'ui-priority-secondary ui-state-default left' %>
 				
 			<% end -%>
 
