@@ -2415,7 +2415,7 @@ return
 // Helper to activate any datepickers:
 function initDatepickers(context) {
 
-	// context argument may be a LivePath options hash or an element/selector:
+	// context argument may be a LivePath options hash or an element or a selector:
 	context = ( context && ( context.panel || context.target ) ) || context || document;
 
 	var defaults = {
@@ -2428,33 +2428,56 @@ function initDatepickers(context) {
 		minDate: "-90y",
 		maxDate: "+5y",
 		yearRange: "-90:+5"
-	}
+	};
 
+	var for_dob = $.extend( {}, defaults, {
+		minDate: "-90y",
+		maxDate: "+1y",
+		yearRange: "-90:+1"
+	});
+
+	var for_travel = $.extend( {}, defaults, {
+		minDate: "-1y",
+		maxDate: "+5y",
+		yearRange: "-1:+5"
+	});
+
+	// Init the various types of datepickers with relevant settings:
+	// Note: The datepicker plugin adds the class 'hasDatepicker' to each field.
 	$("INPUT.date:not(.hasDatepicker)", context)
 
-		// Birthday fields:
-		.filter('.dob')
-		.datepicker( $.extend( {}, defaults, {
-			minDate: "-90y",
-			maxDate: "+1y",
-			yearRange: "-90:+1"
-		}) )
-		.end()
+		// Workaround: The datepicker assumes every target field has a unique id.
+		// Because of our heavy use of tabs containing similar pages we cannot guarantee this.
+		// This loop ensures any duplicated IDs are fixed before we proceed (along with any associated LABEL)
+		.each(function(){
+
+			var id				= $(this).attr('id'),
+				dupeIDsSelector	= "INPUT[id='{id}']".replace('{id}',id),
+				$others			= $(dupeIDsSelector).not(this);
+
+			// Give all date elements a unique ID if their current ID is duplicated in the DOM:
+			$others.each(function(){
+				var uniqueID = id + '_' + (guid++);
+				$(this).attr('id',uniqueID)
+					.siblings("LABEL[for='" + id + "']").attr('for',uniqueID);
+			});
+
+		})
 
 		// Trip and element date fields:
 		.filter('.travel-date')
-		.datepicker( $.extend( {}, defaults, {
-			minDate: "-1y",
-			maxDate: "+5y",
-			yearRange: "-1:+5"
-		}) )
+			.datepicker(for_travel)
+		.end()
+
+		// Birthday fields:
+		.filter('.dob')
+			.datepicker(for_dob)
 		.end()
 
 		// Other date fields:
 		.not('.travel-date, .dob')
-		.datepicker(
-			defaults
-		)
+			.datepicker(defaults)
+		.end()
 
 	;
 
