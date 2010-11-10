@@ -3,9 +3,9 @@ source 'http://rubygems.org'
 # Top tip: use "jruby -S bundle check" to verify dependencies.
 
 # dependencies are generated using a strict version, don't forget to edit the gem versions when upgrading.
-merb_gems_version = "1.1.2"  # "1.0.15" "1.1.0"
-dm_gems_version   = "1.0.2"  # "0.10.2" "0.10.3"
-do_gems_version   = "0.10.2"  # "0.10.1" "0.10.2"
+merb_gems_version = "1.0.15"  # "1.0.15" "1.1.0"
+dm_gems_version   = "0.10.2"  # "0.10.2" "0.10.3"
+do_gems_version   = "0.10.1"  # "0.10.1" "0.10.2"
 
 gem "merb-core", merb_gems_version 
 gem "merb-action-args", merb_gems_version
@@ -14,9 +14,9 @@ gem "merb-assets", merb_gems_version
 gem "merb-helpers", merb_gems_version 
 gem "merb-mailer", merb_gems_version  
 gem "merb-slices", merb_gems_version  
-gem "merb-auth-core", "1.1.1"
-gem "merb-auth-more", "1.1.1"
-gem "merb-auth-slice-password", "1.1.1"
+gem "merb-auth-core", merb_gems_version
+gem "merb-auth-more", merb_gems_version
+gem "merb-auth-slice-password", merb_gems_version
 gem "merb-param-protection", merb_gems_version
 gem "merb-exceptions", merb_gems_version
 gem "merb_datamapper", merb_gems_version
@@ -39,6 +39,3 @@ gem "uuidtools", "2.1.1"
 gem "merb-cache",       merb_gems_version
 gem "merb-action-args", merb_gems_version
 gem "mongrel",			"1.1.5"
-
-# Added to get merb console running
-gem "dm-sqlserver-adapter", dm_gems_version
