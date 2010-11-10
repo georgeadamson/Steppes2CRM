@@ -75,12 +75,12 @@
       </h4>
 
 			<dl class="fields hideLabels ellipsis">
-        <% if !client.address1.empty? %><dt>Number/name</dt><dd><%= client.address1 %></dd><% end %>
-        <% if !client.address2.empty? %><dt>Locality</dt><dd><%= client.address2 %></dd><% end %>
-        <% if !client.address3.empty? %><dt>Region</dt><dd><%= client.address3 %></dd><% end %>
-        <% if !client.address4.empty? %><dt>Town/city</dt><dd><%= client.address4 %></dd><% end %>
-        <% if !client.address5.empty? %><dt>County</dt><dd><%= client.address5 %></dd><% end %>
-        <% if !client.postcode.empty? %><dt>Postcode</dt><dd class="postcode"><%= client.postcode %></dd><% end %>
+        <% if !client.address1.blank? %><dt>Number/name</dt><dd><%= client.address1 %></dd><% end %>
+        <% if !client.address2.blank? %><dt>Locality</dt><dd><%= client.address2 %></dd><% end %>
+        <% if !client.address3.blank? %><dt>Region</dt><dd><%= client.address3 %></dd><% end %>
+        <% if !client.address4.blank? %><dt>Town/city</dt><dd><%= client.address4 %></dd><% end %>
+        <% if !client.address5.blank? %><dt>County</dt><dd><%= client.address5 %></dd><% end %>
+        <% if !client.postcode.blank? %><dt>Postcode</dt><dd class="postcode"><%= client.postcode %></dd><% end %>
         <dt>Country</dt><dd><%= client.country && client.country.name %></dd>
         <dt>Mailing zone</dt><dd>Zone: <%= client.country && client.country.mailing_zone && client.country.mailing_zone.name %></dd>
       </dl>
@@ -91,11 +91,11 @@
       <h4>Contact details <%#= link_to "Edit", resource(client, :edit)+"#contacts" if client.id %></h4>
       <dl class="fields ellipsis">
         <% if client.tel_home %><dt>Home</dt><dd><%= client.tel_home %></dd><% end %>
-        <% if !client.tel_work.empty? %><dt>Work</dt><dd><%= client.tel_work %></dd><% end %>
-        <% if !client.tel_mobile1.empty? %><dt>Mobile</dt><dd><%= client.tel_mobile1 %></dd><% end %>
-        <% if !client.tel_mobile2.empty? %><dt>Mobile</dt><dd><%= client.tel_mobile2 %></dd><% end %>
-        <% if !client.email1.empty? %><dt>Email</dt><dd><%= link_to client.email1, "mailto:#{ client.email1 + mail_params }", :title => client.email1 %></dd><% end %>
-        <% if !client.email2.empty? %><dt>Other email</dt><dd><%= link_to client.email2, "mailto:#{ client.email2 + mail_params }", :title => client.email2 %></dd><% end %>
+        <% if !client.tel_work.blank? %><dt>Work</dt><dd><%= client.tel_work %></dd><% end %>
+        <% if !client.tel_mobile1.blank? %><dt>Mobile</dt><dd><%= client.tel_mobile1 %></dd><% end %>
+        <% if !client.tel_mobile2.blank? %><dt>Mobile</dt><dd><%= client.tel_mobile2 %></dd><% end %>
+        <% if !client.email1.blank? %><dt>Email</dt><dd><%= link_to client.email1, "mailto:#{ client.email1 + mail_params }", :title => client.email1 %></dd><% end %>
+        <% if !client.email2.blank? %><dt>Other email</dt><dd><%= link_to client.email2, "mailto:#{ client.email2 + mail_params }", :title => client.email2 %></dd><% end %>
      </dl>
     </div>
 
@@ -117,11 +117,11 @@
 				-->
 				<dt>Preferences</dt>
 				<dd>
-					<% unless client.notes_frequent_flyer.empty? %><em>Frequent flyer number:</em> <%= client.notes_frequent_flyer %>,<% end %>
-					<% unless client.notes_airline.empty? %><em>Airline:</em> <%= client.notes_airline %>, <% end %>
-					<% unless client.notes_seating.empty? %><em>Seating:</em> <%= client.notes_seating %>, <% end %>
-					<% unless client.notes_food.empty? %><em>Meals:</em> <%= client.notes_food %>, <% end %>
-					<% unless client.notes_general.empty? %><em>Other:</em> <%= client.notes_general %><% end %>
+					<% unless client.notes_frequent_flyer.blank? %><em>Frequent flyer number:</em> <%= client.notes_frequent_flyer %>,<% end %>
+					<% unless client.notes_airline.blank? %><em>Airline:</em> <%= client.notes_airline %>, <% end %>
+					<% unless client.notes_seating.blank? %><em>Seating:</em> <%= client.notes_seating %>, <% end %>
+					<% unless client.notes_food.blank? %><em>Meals:</em> <%= client.notes_food %>, <% end %>
+					<% unless client.notes_general.blank? %><em>Other:</em> <%= client.notes_general %><% end %>
 				</dd>
       </dl>
     </div>

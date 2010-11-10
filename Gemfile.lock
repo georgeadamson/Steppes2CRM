@@ -17,7 +17,7 @@ specs:
   - abstract: 
       version: 1.0.0
   - addressable: 
-      version: 2.2.0
+      version: 2.2.2
   - data_objects: 
       version: 0.10.1
   - extlib: 

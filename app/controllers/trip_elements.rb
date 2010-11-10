@@ -87,29 +87,29 @@ class TripElements < Application
 		# Fetch a reference to the trip itself:
 		@trip = Trip.get(trip_element[:trip_id]) || Trip.get(params[:trip_id]) || Trip.new
 
-		accept_valid_date_fields_for trip_element, [ :start_date, :end_date, :booking_expiry ]
+		#accept_valid_date_fields_for trip_element, [ :start_date, :end_date, :booking_expiry ]
 
-    # Make assumptions for missing dates:
-    # Depricated: Leave this job to for the model to sort out.
-    #trip_element["start_date"] ||= @trip.start_date.to_s
-    #trip_element["end_date"]   ||= ( Date.strptime( trip_element["start_date"] ) + 1 ).to_s
-
-    # TODO: Handle this in the model!
-    # Some users leave out the colon from flight times so add it if necessary: (Eg '1315' => '13:15')
-    trip_element["start_time"] = trip_element["start_time"].to_s.insert(2,':') if trip_element["start_time"].to_s =~ /^[0-9]{4}$/
-    trip_element["end_time"  ] = trip_element["end_time"  ].to_s.insert(2,':') if trip_element["end_time"  ].to_s =~ /^[0-9]{4}$/
-    
-    # TODO: Handle this in the model!
-    # For FLIGHT elements we must merge the date and time field strings:
-		if trip_element["type_id"].to_i == TripElementType::FLIGHT
-			trip_element["start_date"] << " #{ trip_element["start_time"].strip }" unless trip_element["start_date"].blank? || trip_element["start_time"].blank?
-			trip_element["end_date"]   << " #{ trip_element["end_time"].strip   }" unless trip_element["end_date"].blank?   || trip_element["end_time"].blank?
-		end
-
-    # TODO: Handle this in the model!
-    # Best not to assume that date and time fields will always be set in a helpful order so REMOVE TIME ATTRIBUTES to prevent confusion:
-		trip_element.delete("start_time")
-		trip_element.delete("end_time")
+    #  # Make assumptions for missing dates:
+    #  # Depricated: Leave this job to for the model to sort out.
+    #  #trip_element["start_date"] ||= @trip.start_date.to_s
+    #  #trip_element["end_date"]   ||= ( Date.strptime( trip_element["start_date"] ) + 1 ).to_s
+    #
+    #  # TODO: Handle this in the model!
+    #  # Some users leave out the colon from flight times so add it if necessary: (Eg '1315' => '13:15')
+    #  trip_element["start_time"] = trip_element["start_time"].to_s.insert(2,':') if trip_element["start_time"].to_s =~ /^[0-9]{4}$/
+    #  trip_element["end_time"  ] = trip_element["end_time"  ].to_s.insert(2,':') if trip_element["end_time"  ].to_s =~ /^[0-9]{4}$/
+    #  
+    #  # TODO: Handle this in the model!
+    #  # For FLIGHT elements we must merge the date and time field strings:
+    #	if trip_element["type_id"].to_i == TripElementType::FLIGHT
+    #		trip_element["start_date"] << " #{ trip_element["start_time"].strip }" unless trip_element["start_date"].blank? || trip_element["start_time"].blank?
+    #		trip_element["end_date"]   << " #{ trip_element["end_time"].strip   }" unless trip_element["end_date"].blank?   || trip_element["end_time"].blank?
+    #	end
+    #
+    #  # TODO: Handle this in the model!
+    #  # Best not to assume that date and time fields will always be set in a helpful order so REMOVE TIME ATTRIBUTES to prevent confusion:
+    #  trip_element.delete("start_time")
+    #  trip_element.delete("end_time")
 		
 		trip_element[:created_by] = session.user.login
 		trip_element[:updated_by] = session.user.login
@@ -117,7 +117,7 @@ class TripElements < Application
     #@element = @trip.trip_elements.new(trip_element)
     @element = TripElement.new(trip_element)
 
-    if @element.save
+    if @element.save(:complete)
 
 			message[:notice] = "The new #{ @element.element_type.name } element has been added to your trip"
 
@@ -160,7 +160,7 @@ class TripElements < Application
     @trip = @element.trip || Trip.get(params[:trip_id]) || Trip.new
 		
 		trip_element[:updated_by] = session.user.login
-		accept_valid_date_fields_for trip_element, [ :start_date, :end_date, :booking_expiry ]
+		#accept_valid_date_fields_for trip_element, [ :start_date, :end_date, :booking_expiry ]
 
     # Ensure we're not accidentally overriding dates and times etc on PNR Flights:
     if @element.bound_to_pnr?
@@ -174,22 +174,22 @@ class TripElements < Application
     # Try to tidy up start/end_date (and start/end_time) on anything other than a PNR flight element:
     else
 
-      # TODO: Handle this in the model!
-      # Some users leave out the colon from flight times so add it if necessary: (Eg '1315' => '13:15')
-      trip_element["start_time"] = trip_element["start_time"].to_s.insert(2,':') if trip_element["start_time"].to_s =~ /^[0-9]{4}$/
-      trip_element["end_time"  ] = trip_element["end_time"  ].to_s.insert(2,':') if trip_element["end_time"  ].to_s =~ /^[0-9]{4}$/
-
-      # TODO: Handle this in the model!
-		  # For FLIGHT elements we must merge the date and time field strings:
-		  if trip_element["type_id"].to_i == TripElementType::FLIGHT
-			  trip_element["start_date"] << " #{ trip_element["start_time"].strip }" unless trip_element["start_date"].blank? || trip_element["start_time"].blank?
-			  trip_element["end_date"]   << " #{ trip_element["end_time"].strip   }" unless trip_element["end_date"].blank?   || trip_element["end_time"].blank?
-		  end
-
-      # TODO: Handle this in the model!
-		  # Best not to assume that date and time fields will always be set in a helpful order so remove time attributes to prevent confusion:
-		  trip_element.delete("start_time")
-		  trip_element.delete("end_time")
+      #  # TODO: Handle this in the model!
+      #  # Some users leave out the colon from flight times so add it if necessary: (Eg '1315' => '13:15')
+      #  trip_element["start_time"] = trip_element["start_time"].to_s.insert(2,':') if trip_element["start_time"].to_s =~ /^[0-9]{4}$/
+      #  trip_element["end_time"  ] = trip_element["end_time"  ].to_s.insert(2,':') if trip_element["end_time"  ].to_s =~ /^[0-9]{4}$/
+      #
+      #  # TODO: Handle this in the model!
+      #  # For FLIGHT elements we must merge the date and time field strings:
+      #  if trip_element["type_id"].to_i == TripElementType::FLIGHT
+      #	  trip_element["start_date"] << " #{ trip_element["start_time"].strip }" unless trip_element["start_date"].blank? || trip_element["start_time"].blank?
+      #	  trip_element["end_date"]   << " #{ trip_element["end_time"].strip   }" unless trip_element["end_date"].blank?   || trip_element["end_time"].blank?
+      #  end
+      #
+      #  # TODO: Handle this in the model!
+      #  # Best not to assume that date and time fields will always be set in a helpful order so remove time attributes to prevent confusion:
+      #  trip_element.delete("start_time")
+      #  trip_element.delete("end_time")
 
     end
 
@@ -197,7 +197,7 @@ class TripElements < Application
 
     @element.attributes = trip_element
 
-    if @element.valid? && @element.save! # <-- Note use of exclamation mark !
+    if @element.valid?(:complete) && @element.save! # <-- Note use of exclamation mark. See following comments!
 
       # Because of the number of before/after:save hooks on elements and trips we must do this manually.
       # (This fixes a bug where trips with pnrs keep reloading all elements before their attributes get saved!)

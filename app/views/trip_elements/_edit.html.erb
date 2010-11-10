@@ -17,12 +17,12 @@
 
 			<% if element.bound_to_pnr? %>
 				
-				<div class="left"> &nbsp; <%= icon :info %> This flight is defined by a PNR so some fields cannot be modified</div>
+				<div class="left"> &nbsp; <%= icon :locked, :class => 'ui-icon-round' %> This flight is defined by a PNR so some fields may not be modified</div>
 
 			<% else %>
 
 				<!-- This cunning "Delete" label looks like a button but actually activates the delete button below: -->
-				<%= tag :label, 'Delete this element', :for => delete_button_id, :class => 'ui-priority-secondary ui-state-default left' %>
+				<%= tag :label, "#{ icon :delete } Delete this element", :for => delete_button_id, :class => 'ui-priority-secondary ui-state-default left' %>
 				
 			<% end -%>
 

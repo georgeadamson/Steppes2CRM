@@ -62,7 +62,9 @@ A.mailto, A[href ^= mailto] {
 
 
 
+/* Special icon shapes: */
 
+	.ui-icon-round { -moz-border-radius:8px; -opera-border-radius:8px; -webkit-border-radius:8px; -ms-border-radius:8px; border-radius:8px; }
 
 
 
@@ -130,7 +132,7 @@ A.mailto, A[href ^= mailto] {
 
 	SPAN.ui-icon.ui-icon-grid {
 		background-image:url(/images/icons/icon.calendar.gif);
-		background-position:0 0;
+		background-position:-2px -2px;
 	}
 
 
