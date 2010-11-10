@@ -50,7 +50,7 @@ class MoneyIns < Application
 
     @money_in = MoneyIn.new(money_in)
     @money_in.generate_doc_later = true
-    
+
     if @money_in.save
 
       message[:notice] = "Invoice record was created successfully"
@@ -67,9 +67,9 @@ class MoneyIns < Application
       end
 
       #if request.ajax?
-        render :index
+        render :new
       #else
-        redirect nested_resource( @money_in.client, @money_in.trip, :money_ins, :new ), :message => message
+      #  redirect nested_resource( @money_in.client, @money_in.trip, :money_ins, :new ), :message => message
       #end
 
     else

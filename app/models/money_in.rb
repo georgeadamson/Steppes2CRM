@@ -130,14 +130,17 @@ class MoneyIn
   # Note: This model calls self.calc_defaults() when initialising.
   
   before :valid? do
-    
+
     self.name               = DEFAULT_NEW_MAIN_INVOICE_NAME if self.name.blank?
     self.user             ||= self.trip && self.trip.user
     
-    # Ensure submitted currency strings such as "123.00" are valid decimals:
+    # Ensure submitted currency strings such as "" or "123.00" are valid decimals:
     self.amount             = self.amount.to_f
     self.amount_received    = self.amount_received.to_f
     self.adjustment_amount  = self.adjustment_amount.to_f
+    self.single_supp_amount = self.single_supp_amount.to_f
+    self.biz_supp_amount    = self.biz_supp_amount.to_f
+    self.total_amount       = self.total_amount.to_f
     
   end
   
@@ -207,7 +210,10 @@ class MoneyIn
   after :save do
     
     # Trip becomes CONFIRMED when MAIN INVOICE is created:
-    self.trip.update( :status_id => Trip::CONFIRMED ) if self.trip && self.trip.unconfirmed? && self.main_invoice? && self.total_requested > 0
+    self.trip.update!( :status_id => Trip::CONFIRMED ) if self.trip && self.trip.unconfirmed? && self.main_invoice? && self.total_requested > 0
+    
+    # Recalculate client total_spend:
+    self.client.update_total_spend!
     
   end
   
@@ -381,7 +387,8 @@ class MoneyIn
   
   # Helper to count how many clients this invoice is paying for:
   def travellers
-    return self.clients.length
+    #return self.clients.length   # Number of named clients.
+    return self.trip.travellers   # Number on the trip.
   end
   
   

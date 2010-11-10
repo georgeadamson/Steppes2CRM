@@ -18,7 +18,7 @@ if( !console.log    ){ console.log = function(){} };
 	if( !$.fn.delay ){
 
 		$.fn.delay = function(time, type){
-			time = $.fx && $.fx.speeds && $.fx.speeds[time] || time || 600;
+			time = $.fx && $.fx.speeds && $.fx.speeds[time] || parseInt(time) || 600;
 			type = type || "fx";
 			return this.queue(type, function() {
 				var elem = this;
@@ -58,7 +58,7 @@ jQuery(function($) {
 		AJAX_TIMEOUT					= 30000,			// Milliseconds.
 
 		// Settings for client-search:
-		CLIENT_SEARCH_MAX_ROWS			= 15,				// Will be sent as &limit=n parameter when searching for clients via ajax.
+		CLIENT_SEARCH_MAX_ROWS			= 20,				// Will be sent as &limit=n parameter when searching for clients via ajax.
 		CLIENT_SEARCH_DELAY_BEFORE_AJAX	= 500,				// Slight delay before searching for the keywords being typed in client search box.
 
 		// Settings for postcode-lookup:
@@ -66,7 +66,7 @@ jQuery(function($) {
 		POSTCODE_LOOKUP_DELAY_BEFORE_AJAX	= 200,				// Slight delay before searching for the keywords being typed in postcode search box.
 
 		// Delay before generating the overview just below the timeline when the Trip Builder tab is opened:
-		TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW	= 3000,
+		TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW	= 2000,
 
 		// Regexes for parsing content from ajax html responses:
 		FIND_DATA_CONTENT				= /<!--<DATA>-->([\s\S]*)<!--<\/DATA>-->/,
@@ -92,11 +92,10 @@ jQuery(function($) {
 
 		// IMPORTANT: These Lookups must match codes in the corresponding TripElementTypes database table!
 		lookupTripElementType = { 1:'flight', 2:'flightagent', 4:'accomm', 5:'ground', 8:'misc' },
-		
-		COMMA							= ',',
-		
-		KEY = {
 
+		COMMA							= ',',
+
+		KEY = {
 			digits			: /[0-9]|[\x60-\x69]/,						// Allows for number-pad digits too.
 			integer			: /[0-9]|[\x60-\x69]|[\x6D]/,				// Same as digits but allow minus (-) too.
 			'decimal'		: /[0-9]|[\x60-\x69]|[\x6D]|[\xBE\x6E]/,	// Same as digits but allow minus (-) and dot (.) too.
@@ -110,7 +109,7 @@ jQuery(function($) {
 			pageUpDown		: /[\x21-\x22]/,
 			pageUp			: 33,
 			pageDown		: 34,
-			arrows			: /[\x25-\x28]/,
+			arrows			: /[\x25-\x28]/,							// Arrow keys.
 			arrowLeft		: 37,
 			arrowUp			: 38,
 			arrowRight		: 39,
@@ -139,7 +138,7 @@ jQuery(function($) {
 
 			// Bind custom 'hashchange' event:
 			$(document).bind('hashchange', Layout.reload);
-		
+
 			Layout.initLinksHandler();
 			Layout.initFormsHandler();
 
@@ -152,11 +151,11 @@ jQuery(function($) {
 			Layout.livePath('success', new RegExp('clients/new'),						Client.initForm );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)$'),					Client.initShow );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/edit'),				Client.initForm );
-			Layout.livePath('success', new RegExp('clients/([0-9]+)/summary'),			Client.initForm );
+			Layout.livePath('success', new RegExp('clients/([0-9]+)/summary'),			Client.initForm, BoundFields.update );
 			Layout.livePath('success', new RegExp('clients/([0-9]+)/trips$'),			Client.initForm );	// When user clicks to see all trips on client summary page.
 			Layout.livePath('success', /[\?\&]open_client_id=([0-9]+)/,					Client.openShow );	// Eg: web_requests?open_client_id=2138587702
 			Layout.liveForm('success', 'clients:create',								Client.openShow );	// After creating a new client.
-			Layout.liveForm('success', 'clients:update',								Client.initForm );
+			Layout.liveForm('success', 'clients:update',								Client.initForm, BoundFields.update );
 
 			// Tours:
 			Layout.livePath('click',   /tours\/([0-9]+)$/,								Tour.openShow );	//openTourTab
@@ -169,6 +168,7 @@ jQuery(function($) {
 			Layout.liveForm('success', 'tours:destroy',									Tour.closeShow, Tour.openIndex );
 
 			// Trips:
+			$("A[href $= '#costing_copy_gross']").live('click', Trip.copyGrossPrice);										// Handle 'Set gross' helper button on Costings Sheet.
 			Layout.livePath('click',   /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.openShow );	// Create new version.
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.initShow );	// Created new version.
 			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,									Trip.initForm );
@@ -182,13 +182,19 @@ jQuery(function($) {
 			Layout.liveForm('success', 'trips:destroy',													Trip.onDestroySuccess );
 
 			// TripElements:
+			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.grid );
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.hideForm );
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.hideForm );
-			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.initForm );
-			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.initForm );
-			Layout.liveForm('success', 'trip_elements:create',										Trip.initTimeline );
-			Layout.liveForm('success', 'trip_elements:update',										Trip.initTimeline );
+			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.showForm, TripElement.initForm );
+			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.showForm, TripElement.initForm );
+			Layout.liveForm('success', 'trip_elements:create',										TripElement.initForm, Trip.initTimeline );
+			Layout.liveForm('success', 'trip_elements:update',										TripElement.initForm, Trip.initTimeline );
 			Layout.liveForm('success', 'trip_elements:destroy',										Trip.initTimeline );
+
+			// MoneyIn (Invoice)
+			Layout.livePath('success', new RegExp('money_ins/new'),									MoneyIn.initForm );
+			Layout.liveForm('success', 'money_ins:create',											MoneyIn.initForm, BoundFields.update );
+			Layout.liveForm('success', 'money_ins:update',											MoneyIn.initForm, BoundFields.update );
 
 			// Reports:
 			Layout.livePath('success', new RegExp('reports$'),							Report.initForm );
@@ -392,7 +398,7 @@ jQuery(function($) {
 			// Initialise handler for auto-linking picklists:
 			$('SELECT[data-href], SELECT:has(OPTION[data-href]:selected), SELECT[href]').live('change keydown', function(e){										// Note: "href" is depricated.
 
-				// Ignore all key strokes except <Enter> key: (to select an item in the list)
+				// Ignore ALL key strokes except <Enter> key: (to select an item in the list)
 				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
 
 				// Ignore event if the list is expected to submit it's value using form post:
@@ -439,25 +445,26 @@ jQuery(function($) {
 		// Initialise FORM SUBMIT handlers:
 		initFormsHandler : function(){
 
-			// Initialise handler for auto-submitting picklists:
+			// Initialise handler for auto-submitting PICKLISTS:
 			$('SELECT.auto-submit, :checkbox.auto-submit, FORM.auto-submit SELECT, FORM.auto-submit :checkbox').live('change keydown', function(e){
 
-				// Ignore all key strokes except <Enter> key: (to select an item in the list)
+				// Ignore ALL key strokes except <Enter> key: (to select an item in the list)
 				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
 				$(this).closest('FORM').trigger('submit',this);
+
 			})
 
-			// Initialise handler for auto-linking picklists that need to be posted like a form:
+			// Initialise handler for auto-linking PICKLISTS that need to be posted like a form:
 			$('SELECT[data-method]').live('change keydown', function(e){
 
-				// Ignore all key strokes except <Enter> key: (to select an item in the list)
+				// Ignore ALL key strokes except <Enter> key: (to select an item in the list)
 				if( e.type == 'keydown' && e.keyCode != KEY.enter ){ return }
 
 				// Bail out if selected list item has no value: (It's probably just a prompt)
 				if( !$(this).val() ){ return }
 
 				var $list  = $(this), $item = $list.find('OPTION:selected'),
-					method = $list.attr('data-method'),
+					method = $list.attr('data-method'),													// POST, GET, PUT or DELETE
 				    target = Layout.getTargetOf($list),
 					href   = $item.attr('data-href') || $list.attr('data-href') || $list.val();			// Read custom url from item or list element.
 					href   = href.replace( '{value}', $item.val() ).replace( '{text}', $item.text() ),	// Interpolate {placeholders} with values.
@@ -471,7 +478,7 @@ jQuery(function($) {
 
 			})
 
-			// Initialise common form handler:
+			// Initialise common FORM handler:
 			$('FORM:not(.noajax)').live('submit', function(e, source){
 
 				// The source argument will only be present when triggered by SELECT.auto-submit:
@@ -493,7 +500,7 @@ jQuery(function($) {
 				// Stop interfering right now if form is generating a file to download:
 				if( ALLOW_DOWNLOAD_OF[ext] || $button.is('.download, .ajaxDownload') || $form.is('.download, .ajaxDownload') ){ return }
 
-				// By setting up the ajaxSubmit here, each of the callbacks can refer to the $form using a closure:
+				// By setting up the AJAX SUBMIT here, each of the callbacks can refer to the $form using a closure:
 				$form.ajaxSubmit({
 
 					url       : url,
@@ -577,20 +584,24 @@ jQuery(function($) {
 		// Parse error & notice message elements from the xhr response:
 		// Test for messages in data eg: <!--<MESSAGES>--><h2 class="errorMessage">Oops, something odd happened. <br/> <div class='error'>The trip details could not be saved because:<ul><li>TripElement: (Flight) The Flight agent cannot be left blank</li></ul></div></h2><!--</MESSAGES>-->
 		getMessagesFrom: function(data){
-			if( typeof(data) !== 'string' ){ data = $(data).html() }
-			var fragment = ( FIND_MESSAGE_CONTENT.exec(data) || [] )[1] || '';
-			return $('<div>').html(fragment).find(".noticeMessage,.errorMessage");
+			try{
+				if( typeof(data) !== 'string' ){ data = $(data).html() }
+				var fragment = ( FIND_MESSAGE_CONTENT.exec(data) || [] )[1] || '';
+				return $('<div>').html(fragment).find(".noticeMessage,.errorMessage");
+			}catch(e){
+				return $([]);
+			}
 		},
 
 
 		// Prepare multiple callbacks by creating an anonymous function to run each in turn:
 		// Important: This returns one function that accepts arguments and passes them to each callback function.
-		wrapCallbacks : function( callbacks, evenWhenOnlyOne ){
+		wrapCallbacks : function( callbacks, always ){
 
 			// Ensure we really are dealing with an array of functions: (Saves time later)
 			callbacks = $.grep( $.makeArray(callbacks), function(fn){ return $.isFunction(fn) } );
 
-			if( callbacks.length > 1 || evenWhenOnlyOne ){
+			if( callbacks.length > 1 || always ){
 				return function(args){
 					var self = this; args = Array.prototype.slice.call(arguments);
 					$.each(callbacks, function(i,fn){ fn.apply(self,args) });
@@ -605,11 +616,13 @@ jQuery(function($) {
 		// Helper for deriving the ui-target element of a link or button etc:
 		getTargetOf : function(elem){
 
-			// Allow for when a label is clicked to trigger a submit: (We have to use closest() because elem may be a text node inside a label)
-			var id, $elem = $(elem), label_for = $elem.closest('LABEL').attr('for');
+			// Allow for when a label is clicked to trigger a submit: (Allow for label or a text node inside label)
+			var id, $elem = $(elem), label_for = $elem.parent('LABEL').andSelf().attr('for');
 			if( label_for ){ $elem = $( '#' + label_for ) }
 			
 			var $form  = $elem.closest('FORM');
+
+			// Do our best to read the custom target from the element or the form:
 			var target = $elem.find('OPTION:selected').attr('data-target')
 				|| $elem.attr('data-target') || $elem.attr('rel') || $elem.attr('data-rel')	// Note: "data-rel" is depricated. "rel" only applies to links and should be depricated.
 				|| ( $elem.is(':submit') && $form.attr('data-target') )
@@ -631,8 +644,9 @@ jQuery(function($) {
 
 			$form = $($form).closest('FORM');
 
+			//  You can test this regex at http://rubular.com/r/7pWDd4CNyb The following comment breaks it down for you:
 			//  regex:     path     /  controller  / id (if followed by edit, delete, ?, # or $END)      / action                             ?  params        # hash  $END
-			var regex  = /(.*?(?:^|\/)([a-z_]+)(?:\/([0-9]+)(?=(?:\/edit|\/delete|\/?\?|\/?#|\/?$)))?(?:\/(index|new|edit|delete))?)\/?(?:(?:\?)([^#]*))?(?:(?:#)(.*))?$/i,	// Test on http://rubular.com/r/7pWDd4CNyb
+			var regex  = /(.*?(?:^|\/)([a-z_]+)(?:\/([0-9]+)(?=(?:\/edit|\/delete|\/?\?|\/?#|\/?$)))?(?:\/(index|new|edit|delete))?)\/?(?:(?:\?)([^#]*))?(?:(?:#)(.*))?$/i,
 			    method = $form.find("INPUT[name='_method']").val() || $form.attr('method') || 'post',
 			    href   = $form.attr('action') || '',
 			    match  = href.match(regex) || [],
@@ -644,7 +658,7 @@ jQuery(function($) {
 					action		: match[4] || '',		// Controller action name: index|new|edit|delete.
 					param		: match[5] || '',		// AKA Query or search string. Everything after the "?" until the hash or end of string.
 					hash		: match[6] || '',		// Everything after the "#".
-					resource	: Layout.singularize(match[2]),	// The name of the controller, just in front of the id or action. Eg "trip"
+					resource	: Layout.singularize(match[2]),	// The name of the controller, just in front of the last id or action. Eg "trip"
 					params		: {},					// Hash of url parameters. Will be populated from form.param string.
 					method		: method.toLowerCase(),	// The restful method name: get|post|put|delete.
 					href		: href,					// The entire path including any query string and hash etc.
@@ -664,7 +678,7 @@ jQuery(function($) {
 				case form.method == 'post'   &&  !form.id : form.action = 'create' ; break;	// clients/    (submit "new" form to create)
 				case form.method == 'put'    && !!form.id : form.action = 'update' ; break;	// clients/123 (submit "edit" form to update)
 				case form.method == 'delete' && !!form.id : form.action = 'destroy'; break;	// clients/123 (submit "delete" form to destroy)
-				case form.method == 'get'    && !!form.id : form.action = 'show'   ; break;	// clients/123 ("show" & "index" are irrelevant for a form!)
+				case form.method == 'get'    && !!form.id : form.action = 'show'   ; break;	// clients/123 ("show" & "index" should be irrelevant for a form!)
 				case form.method == 'get'    &&  !form.id : form.action = 'index'  ; break;	// clients/ or clients/index
 				default                                   : form.action = '';
 			}
@@ -1882,9 +1896,12 @@ return
 
 	};
 
+
+
 	$(".tripElementForm SELECT.tripElementTypeId")
 		.live("click", onTripElementTypeChange)
 		.live("keyup", onTripElementTypeChange);
+
 
 	// Respond to click on tripElement is_subgroup checkbox:
 	$(".tripElementForm INPUT:checkbox[name='trip_element[is_subgroup]']")
@@ -1913,13 +1930,10 @@ return
 
 
 
-	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	
+	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	// Depricated because users need to be able to enter number of singles before adding named clients.	//	// Refresh the singles field when user un/ticks single checkboxes:	//	// (ONLY if ticked quantity is greater than the singles box)	//	$(":checkbox:visible[name *= 'is_single']").live('change', function(){	//		var $form    = $(this).closest('FORM');	//		var singles  = $form.find(":checkbox[name *= is_single]:checked").length;	//		var $singles = $form.find("[name = 'trip[singles]']");	//			//		if( singles > parseInt($singles.val()) ){ $singles.val(singles) }	//	});	
 
 
-	// Checkbox to expand/collapse display of OLD trips on the TOURS page: */
-	$("#tours_show_old_trips").live('change', function(){
-		$(this).closest('.sectionContainer').find('.tours-list').toggleClass('hide-old-trips');
-	});
+
 
 
 
@@ -2553,7 +2567,7 @@ function initSpinboxes() {
 			$country.filter(':not(:has(OPTION[value=' + UK_COUNTRY_ID + ']))')
 				//.prepend('<option value="6">United Kingdom</option>')
 			.end()
-			.val('6');
+			.val(UK_COUNTRY_ID);
 			
 		})
 
@@ -2577,7 +2591,7 @@ function initSpinboxes() {
 
 
 
-
+// DEPRICATED in favour of faster task-specific code:
 function initMVC(context) {
 
 	// Initialise TripElement calculated totals by faking user interaction and triggering event handler: 
@@ -2656,11 +2670,11 @@ function initMVC(context) {
 			// Calculate totals etc:
 			var travellers			= adults + children + infants;
 			var total_std_cost		= adults * cost_per_adult + children * cost_per_child + infants * cost_per_infant;
-			var total_biz_supp		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
-			var total_biz_margin	= (biz_supp_margin_type === '%') ? (total_biz_supp * biz_supp_margin / 100) : biz_supp_margin;	// Typically 10%
+			var total_biz_cost		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
+			var total_biz_margin	= (biz_supp_margin_type === '%') ? (total_biz_cost * biz_supp_margin / 100) : biz_supp_margin;	// Typically 10%
 			var total_std_margin	= (margin_type === '%') ? (total_std_cost * margin / 100) : margin;
 			var total_margin		= total_std_margin + total_biz_margin;
-			var total_cost			= total_std_cost + total_biz_supp + taxes;
+			var total_cost			= total_std_cost + total_biz_cost + taxes;
 			var total_price			= total_cost + total_margin;
 			var total_price_gbp		= total_price / Math.max(exchange_rate, 0.001);  // Prevent divide-by-zero error.
 
@@ -2720,7 +2734,7 @@ function initKeyPressFilters(){
 	// TODO: Validate pasted values too?
 	$( "INPUT:text.positive" ).live( 'keydown', function(e){
 
-		if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.minus ) ){
+		if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) ){
 			return false;
 		}
 
@@ -2737,8 +2751,8 @@ function initKeyPressFilters(){
 		if( isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
 
 			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
-			if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
-			if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
+			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
+			if( isKeyCodeLikeFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
 
 			return true;
 
@@ -2757,8 +2771,8 @@ function initKeyPressFilters(){
 		if( isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
 
 			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
-			if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
-			if( isKeyCodeLikeKeyFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
+			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
+			if( isKeyCodeLikeFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
 
 			return true;
 
@@ -2773,14 +2787,14 @@ function initKeyPressFilters(){
 	function isKeyCodeInList( keyCode, keyFilters ){
 
 		return !!$.grep( keyFilters || [], function(keyFilter){
-			return isKeyCodeLikeKeyFilter( keyCode, keyFilter )
+			return isKeyCodeLikeFilter( keyCode, keyFilter )
 		}).length;
 
 	};
 
 
 	// Helper for testing whether keyCode matches a specified character code or regex:
-	function isKeyCodeLikeKeyFilter( keyCode, keyFilter ){
+	function isKeyCodeLikeFilter( keyCode, keyFilter ){
 
 		return keyCode === keyFilter || ( keyFilter instanceof RegExp && keyFilter.test( String.fromCharCode(keyCode) ) );
 
@@ -2793,15 +2807,17 @@ function initKeyPressFilters(){
 
 
 
-function initTripElementFormTotals(){
-
-	// Update TripElement totals when these fields change:
-	$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
-		.live( 'keyup', onTripElementFieldChange )
-		.live( 'click', onTripElementFieldChange );
-
-}
+	function initTripElementFormTotals(){
 		
+		// Update TripElement totals when these fields change:
+		// Warning: We just bind one event here. Binding more tends to slow down the responsiveness of the ui.
+		// Warning: If you change this code, verify that the form initialisation still works: See TripElement.initForm
+		$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
+			.live( 'change keyup', onTripElementFieldChange )
+		;
+
+	}
+
 	// Called to update TripElement totals whenever user makes changes in TripElement form: (And each time it is loaded by ajax)
 	function onTripElementFieldChange(){
 
@@ -2810,7 +2826,7 @@ function initTripElementFormTotals(){
 		var $all			= $form.find("SELECT,INPUT,TEXTAREA,DIV");
 		var $totals			= $all.filter(".total");						// Fields and DIVs with class of .total
 		var $fields			= $all.filter("SELECT,INPUT,TEXTAREA");			// Form fields
-		var $texts			= $fields.filter("INPUT:text");					// Textboxes only
+		var $texts			= $fields.filter("INPUT:text, INPUT:hidden");	// Textboxes and hiddens only
 		var $lists			= $fields.filter("SELECT");						// Dropdown lists only
 		var $currencyField	= $lists.filter("[name='currency']");
 
@@ -2833,12 +2849,15 @@ function initTripElementFormTotals(){
 		var adults				= numVal("[name='trip_element[adults]']", $texts);
 		var children			= numVal("[name='trip_element[children]']", $texts);
 		var infants				= numVal("[name='trip_element[infants]']", $texts);
+		var singles				= numVal("[name='trip_element[singles]']", $texts);
 		var cost_per_adult		= numVal("[name='trip_element[cost_per_adult]']", $texts);
 		var cost_per_child		= numVal("[name='trip_element[cost_per_child]']", $texts);
 		var cost_per_infant		= numVal("[name='trip_element[cost_per_infant]']", $texts);
-		var exchange_rate		= numVal("[name='trip_element[exchange_rate]']", $texts);
+		var single_supp			= numVal("[name='trip_element[single_supp]']", $texts);
+		var exchange_rate		= numVal("[name='trip_element[exchange_rate]']", $texts) || 1;	// Allow for rates accidentally set to zero.
 		var taxes				= numVal("[name='trip_element[taxes]']", $texts);
-		var margin				= numVal("[name='trip_element[margin]']", $texts);
+		var std_margin			= numVal("[name='trip_element[margin]']", $texts);
+		var biz_margin			= numVal("[name='trip_element[biz_supp_margin]']", $texts);
 		var margin_type			= $lists.filter("[name='trip_element[margin_type]']").val();
 		var biz_supp_per_adult	= numVal("[name='trip_element[biz_supp_per_adult]']", $texts);
 		var biz_supp_per_child	= numVal("[name='trip_element[biz_supp_per_child]']", $texts);
@@ -2846,28 +2865,40 @@ function initTripElementFormTotals(){
 		var biz_supp_margin		= numVal("[name='biz_supp_margin']", $texts);
 		var biz_supp_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val();
 
-
-		// Calculate totals etc:
+		// Calculate basic costs: (in local currency)
+		var std_margin_mult		= ( 100 - std_margin ) / 100;	// Eg: 24% means "(100-24)/100" => 0.76
+		var biz_margin_mult		= ( 100 - biz_margin ) / 100;	// (See margin notes below)
 		var travellers			= adults + children + infants;
-		var total_std_cost		= adults * cost_per_adult + children * cost_per_child + infants * cost_per_infant;
-		var total_biz_supp		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
-		var total_biz_margin	= (biz_supp_margin_type === '%') ? (total_biz_supp * biz_supp_margin / 100) : biz_supp_margin;	// Typically 10%
-		var total_std_margin	= (margin_type === '%') ? (total_std_cost * margin / 100) : margin;
+		var total_adult_cost	= adults   * cost_per_adult;
+		var total_child_cost	= children * cost_per_child;
+		var total_infant_cost	= infants  * cost_per_infant;
+		var total_sgl_supp		= singles  * single_supp;
+		var total_std_cost		= total_adult_cost + total_child_cost + total_infant_cost + total_sgl_supp;
+		var total_biz_cost		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
+
+		// Calculate margins, taxes and price: (in local currency)
+		// Important: We're calulating Margin and not Markup. There's a difference apparently :)
+		// (Markup would be derived as a percentage of Cost. Eg: 24% on £100 => £124 (then subtract Cost to get Margin)
+		// Margin is derived by calculating Gross using "Cost / margin-multipler". Eg: £100 / 0.76 => £131.6 (then subtract Cost to get Margin)
+		var total_std_margin	= ( (margin_type          == '%') ? (total_std_cost / std_margin_mult) : std_margin      ) - total_std_cost;	// Typically 24%
+		var total_biz_margin	= ( (biz_supp_margin_type == '%') ? (total_biz_cost / biz_margin_mult) : biz_supp_margin ) - total_biz_cost;	// Typically 10%
 		var total_margin		= total_std_margin + total_biz_margin;
 		var total_taxes			= taxes * travellers
-		var total_cost			= total_std_cost + total_biz_supp + total_taxes;
+		var total_cost			= total_std_cost + total_biz_cost + total_taxes;
 		var total_price			= total_cost + total_margin;
+
+		// Calculate prices: (in GBP)
 		var total_margin_gbp	= total_margin / Math.max(exchange_rate, 0.0001);  //
 		var total_cost_gbp		= total_cost   / Math.max(exchange_rate, 0.0001);  // Avoid divide-by-zero error.
 		var total_price_gbp		= total_price  / Math.max(exchange_rate, 0.0001);  //
 
-		// For better display, round currency values to 2 decimal places and pad pence with zeros where necessary:
-		total_margin	= round(total_margin);
-		total_cost		= round(total_cost);
-		total_price		= round(total_price);
-		total_margin_gbp= round(total_margin_gbp);
-		total_cost_gbp	= round(total_cost_gbp);
-		total_price_gbp	= round(total_price_gbp);
+		// For better display, round and format currency values to 2 decimal places:
+		total_margin			= round(total_margin);
+		total_cost				= round(total_cost);
+		total_price				= round(total_price);
+		total_margin_gbp		= round(total_margin_gbp);
+		total_cost_gbp			= round(total_cost_gbp);
+		total_price_gbp			= round(total_price_gbp);
 
 		// Update fields with new totals etc:
 		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers").filter("INPUT").val(travellers)
@@ -2927,7 +2958,7 @@ function initTripInvoiceFormTotals(){
 		var $texts	= $fields.filter("INPUT:text");					// Textboxes only
 		var $lists	= $fields.filter("SELECT");						// Dropdown lists only
 
-		var total   = numVal("[name='total_amount']",		$texts);
+		var total   = numVal("[name='money_in[total_amount]']",		$texts);
 		var deposit = numVal("[name='money_in[deposit]']",	$texts);
 
 		$texts.filter("[name='money_in[amount]']").val( total - deposit );
@@ -3106,7 +3137,7 @@ function initTripInvoiceFormTotals(){
 		initShow : function(ui){
 
 			// Ensure the new tripPageTabsContent element has an indentifier:
-			var tabPanelContainerID = $( '.tripPageTabsContent', ui.panel ).id();
+			var tabPanelContainerID = $( '.tripPageTabsContent', ui.panel || ui.target ).id();
 
 			// Initialise the trip's tabs:
 			$( 'UL.tripPageTabsNav', ui.panel ).parent().tabs({	// (See http://jqueryui.com/demos/tabs)
@@ -3221,7 +3252,9 @@ function initTripInvoiceFormTotals(){
 				var index     = options.form.tour_id ? 2 : 4;				// Choose tab position depending on whether trip is for Client or Tour.
 
 				$tabs.tabs('add', url, trip_name, index);
-				//$tabs.tabs('select', index);
+				
+				// TODO: Find out why we had to resort to a timeout to select the new tab!
+				window.setTimeout( function(){ $tabs.tabs('select', index); }, 2000 );
 
 			}
 
@@ -3287,6 +3320,15 @@ function initTripInvoiceFormTotals(){
 
 		showSearchResults : function(options){
 			// Results will be loaded into #trip-search-results
+		},
+
+		// Handler to copy Gross Price pp from adjacent cell into the 'Set gross' textbox:
+		// (This function is bound directly to the event handler so it receives an event object)
+		copyGrossPrice : function(e){
+			var price = parseFloat( $(this).closest('TR').find('.calculated-gross').text() || 0 );
+			if( parseInt(price) != price ){ price += 1 }	// Ensure decimals will always ROUND-UP (add 1 because parseInt rounds down)
+			$(this).closest('TD').find('INPUT[name *= price_per]').val( parseInt(price) );
+			e.stopPropagation();
 		}
 
 	} // End of Trip utilities.
@@ -3305,21 +3347,71 @@ function initTripInvoiceFormTotals(){
 
 		},
 
-		initForm : function(options){
+		showForm : function(options){
 
-			var selector  = ".tripPage[id $= trips{id}]".replace('{id}', options.trip_id);
+			var selector  = ".tripPage[id $= trips{id}]".replace('{id}', options.trip_id || ( options.form && options.form.trip_id ) );
 			var $tripPage = $(selector);
 			var $target   = $tripPage.find('.tripElementFormContainer');
 
+			// Add form to page but hide it while initialising elements:
 			$target.hide().html(options.data);
+
+			$target.animate({ height:'show', opacity:1 }, 'fast');
+
+		},
+
+		initForm : function(options){
+
+			var selector  = ".tripPage[id $= trips{id}]".replace('{id}', options.trip_id || ( options.form && options.form.trip_id ) );
+			var $tripPage = $(selector);
+			var $target   = $tripPage.find('.tripElementFormContainer');
+
 			initSpinboxes($target);
 			initDatepickers($target);
-			$target.animate({ height: 'show', opacity: 1 }, 'fast');
+			$target.find("[name='trip_element[supplier_id]']").trigger('change');	// Refresh calculated fields.
+
+		},
+
+		grid : function(options){
+
+			// We've intercepted a link so prevent default code from handling it:
+			options.event.stopImmediatePropagation();
+
+			// Re-use existing dialog or create new: 
+			$('#trip-elements-grid').parents('.ui-dialog').add('<div>').first()
+			.html('Opening...')
+			.dialog({
+				modal		: true,
+				title		: icon('grid') + ' Quickie trip builder',
+				minHeight	: 500,
+				maxHeight	: 500,
+				width		: 750,
+				open		: function(e,ui){
+					ui.panel = this;
+					options.target = '#' + $(ui.panel).id();
+					options.url = options.url + '?limit=500'
+					Layout.load(options.url,options);
+				},
+				close		: function(e,ui){
+					$(this).remove();
+				},
+				buttons		: {
+					'Cancel'		: function(){ $(this).dialog('close') },
+					'Save changes'	: function(){ $('FORM:last',this).submit() }	// First form is for searching the second (last) is to perform the copy.
+				}
+			});
 
 		}
-	
+
 	} // End of TripElement utilities.
 	
+
+	// Respond to CLIPBOARD PASTE into the amadeus textbox:
+	$('#amadeus-paste').live('paste', function(e){
+		var $textbox = $(this);
+		window.setTimeout( function(){ alert($textbox.val()) }, 0 );
+	})
+
 
 
 	// Note: Tours are known as Groups in the UI.
@@ -3529,7 +3621,6 @@ function initTripInvoiceFormTotals(){
 		initIndex : function(ui){
 			// unused
 			console.log(ui)
-			alert(1)
 		},
 		
 		initForm : function(ui){
@@ -3601,7 +3692,57 @@ function initTripInvoiceFormTotals(){
 
 		}
 
-	}
+	};
+
+
+	var MoneyIn = {
+	
+		initForm : function(options){
+
+			// Ensure form displays correct label next to the amount textbox: (Context dependent on Main/Supp/Credit)
+			$(options.panel || options.target).find( "SELECT[name='money_in[name]']" ).trigger('change');
+
+		}
+	
+	};
+
+
+	var BoundFields = {
+
+		// Helper to apply any new field values to other elements bound to the same field:
+		// Fields are identified by custom data-resource and data-field attributes.
+		// Any "INPUT[data-resource][data-field]" in the loaded html is assumed to be a source of data.
+		// Any "[data-bound][data-resource][data-field]" on the page is assumed to be bound to the data (if resource & field match source).
+		update : function(ui){
+
+			var $updates = $( ui.panel || ui.target ).find("INPUT[data-resource][data-field]");
+
+			if( $updates.length ){
+
+				// Locate all the bound elements on the page: (Potentially SLOW!)
+				var $candidates  = $("SPAN,INPUT").filter("[data-bound]");
+
+				// Update all fields bound to the updated data:
+				$updates.each(function(){
+
+					var $this    = $(this);
+					var resource = $this.attr('data-resource');
+					var field    = $this.attr('data-field');
+					var value    = $this.val();
+					var selector = "[data-resource='{r}'][data-field='{f}']".replace("{r}",resource).replace("{f}",field);
+
+					$candidates.filter(selector).not(this)
+						.not('INPUT,TEXTAREA').text(value).end()	// Set bound text elements.
+						.filter('INPUT,TEXTAREA').val(value);		// Set bound value elements.
+
+				});
+
+			}
+
+		}
+
+	};
+
 
 
 

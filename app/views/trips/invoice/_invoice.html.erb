@@ -3,9 +3,21 @@
 
 
 
-	# This ain't it!
 
-	# ALSO SEE views\money_ins\new.html.erb
+
+
+
+
+
+
+	# THIS IS NOT THE INVOICE FORM!
+
+	# SEE /money_ins/new.html.erb
+
+
+
+
+
 
 
 
@@ -103,12 +115,12 @@
 							<td colspan="8">
 								<ul class="checkboxList">
 									<%= partial 'shared/list', :list_type => :checkbox, :collection => @trip.clients, :selected => :all, :field_name => 'money_in[clients_ids][]', :id_prefix => nested_resource( @client, @trip, :money_ins, true ), :custom_attrs => { :readonly => :readonly, :disabled => :disabled },  :empty_message => '<p>No clients have been named on this trip!</p>' %>
-								</ul>
+</ul>
 							</td>
-						</tr>
+</tr>
 
-						<tr>
-							<th colspan="8" class="ui-state-default">Provisional flight details <small>(Subject to change)</small></th>
+<tr>
+<th colspan="8" class="ui-state-default">Provisional flight details <small>(Subject to change)</small></th>
 						</tr>
 						<tr>
 							<%= partial 'trips/flights_table', :flights => @trip.flights, :rows_only => true %>
@@ -131,19 +143,19 @@
 						<tr>
 							<td colspan="7">Single supplement:</td>
 							<td>
-								&pound;<%= text_field :name => :single_supp_amount, :value => @invoice.single_supp_amount, :class => 'widthHalfField', :readonly => true %>
+								&pound;<%= text_field :single_supp_amount, :class => 'widthHalfField', :readonly => true %>
 							</td>
 						</tr>
 						<tr>
 							<td colspan="7">Business class supplement:</td>
 							<td>
-								&pound;<%= text_field :name => :biz_supp_amount, :value => @invoice.biz_supp_amount, :class => 'widthHalfField', :readonly => true %>
+								&pound;<%= text_field :biz_supp_amount, :class => 'widthHalfField', :readonly => true %>
 							</td>
 						</tr>
 						<tr>
 							<td colspan="7">Invoice total:</td>
 							<td>
-								&pound;<%= text_field :name => :total_amount, :value => @invoice.total_amount, :class => 'widthHalfField', :readonly => true %>
+								&pound;<%= text_field :total_amount, :class => 'widthHalfField', :readonly => true %>
 							</td>
 						</tr>
 						<tr>
@@ -212,4 +224,4 @@
 
 	<% end =%>
 
-</div>
+	</div>

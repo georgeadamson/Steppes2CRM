@@ -115,6 +115,7 @@ class Trip
     accepts_nested_attributes_for :countries  # See http://github.com/snusnu/dm-accepts_nested_attributes
     accepts_nested_attributes_for :trip_countries
     accepts_nested_attributes_for :trip_clients, :allow_destroy => true
+    accepts_nested_attributes_for :trip_elements
     
     # Handlers for has n through associations: 
     accepts_ids_for :clients		        # ONLY used for providing a clients_names attribute, not for receiving clients_ids!
@@ -216,7 +217,7 @@ class Trip
         elem.adults   = self.adults   if elem.adults   != self.adults  
         elem.children = self.children if elem.children != self.children
         elem.infants  = self.infants  if elem.infants  != self.infants 
-        #elem.singles  = self.singles  # <-- TODO: Get unit tests to work with this.
+        elem.singles  = self.singles  # <-- TODO: Get unit tests to work with this.
         #elem.save!      if elem.dirty? #&& !elem.new? && !elem.destroyed? && elem.valid? && elem.supplier_id
         
       end
@@ -353,8 +354,22 @@ class Trip
     # Derived properties and helpers...
     
     def leaders;			return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_leader			=> true ); end
-    def primaries;		return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_primary		=> true ); end
     def invoicables;	return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_invoicable	=> true ); end
+
+    def primaries
+
+      primaries = self.clients.all( TripClient.is_primary => true )
+
+      # Attempt to correct trip with no primary client!
+      if primaries.empty? && ( first_trip_client = self.trip_clients.first( :order => [:id] ) )
+        first_trip_client.is_primary = true
+        first_trip_client.save! unless self.new?
+        primaries.reload        unless self.new?
+      end
+
+      return primaries
+
+    end
     
     def flights;	return self.trip_elements.all( :type_id => TripElement::FLIGHT,  :order => [:start_date, :id] ); end
     def handlers; return self.trip_elements.all( :type_id => TripElement::HANDLER, :order => [:start_date, :id] ); end	# AKA Flight agents
@@ -456,10 +471,11 @@ class Trip
     def year;							return self.start_date.strftime("%Y"); end
     def month;						return self.start_date.strftime("%b %Y"); end
     def travellers;				return self.adults.to_i + self.children.to_i + self.infants.to_i; end
-    def travellers?;			return self.travellers.>(0); end
-    def adults?;					return self.adults.>(0); end
-    def children?;				return self.children.>(0); end
-    def infants?;					return self.infants.>(0); end
+    def travellers?;			return self.travellers    > 0; end
+    def adults?;					return self.adults.to_i   > 0; end
+    def children?;				return self.children.to_i > 0; end
+    def infants?;					return self.infants.to_i  > 0; end
+    def singles?;					return self.singles.to_i  > 0; end
     
     def is_first_version; return self.version_of_trip_id == self.id || self.id.nil?; end  # AKA The ORIGINAL trip version.
     def version_name;		  return self.is_first_version ? "Original version: #{ self.name }" : self.name; end
@@ -475,7 +491,9 @@ class Trip
     
     # Helper to return a string of client names: (Used in reports)
     def primary_clients_names
-      self.clients.all( TripClient.is_primary => true ).map{|c| "#{ c.fullname } #{ c.postcode }" }.join(', ')
+
+      return self.primaries.map{|c| "#{ c.fullname } #{ c.postcode }" }.join(', ')
+
     end
     
     # Helper to return a list of all versions of this trip:
@@ -504,7 +522,7 @@ class Trip
     def become_active_version!( save_self = false, save_others = true )
       
       self.is_active_version = true
-      self.save! if save_self && self.dirty?
+      self.save! if save_self && self.dirty? && !self.new?
       self.make_other_versions_inactive! save_others
 
     end
@@ -515,7 +533,7 @@ class Trip
 
       if self.is_active_version && self.version_of_trip_id && self.id
         other_versions = self.versions.all( :id.not => self.id ).each{ |v| v.is_active_version = false }
-        other_versions.save! if save_others
+        other_versions.save! if save_others && !self.new?
         return other_versions
       end
 
@@ -594,7 +612,8 @@ class Trip
       if self.travellers?
         return	(self.adults?   ?        "#{ self.adults   } adults"   : 'No adults!') +
                 (self.children? ? ", " + "#{ self.children } children" : '') +
-                (self.infants?  ? ", " + "#{ self.infants  } infants"  : '')
+                (self.infants?  ? ", " + "#{ self.infants  } infants"  : '') +
+                (self.singles?  ? ", " + "#{ self.singles  } singles"  : '')
       else
         return "No travellers!"
       end
@@ -858,25 +877,44 @@ class Trip
           end
           
           
-          # Calculate MARGIN amount or PERCENT_MARGIN:
+        # Calculate MARGIN amount or PERCENT_MARGIN:
         elsif measure == :margin || measure == :percent_margin
           
+          exclude_non_marginables = { :with_taxes => false, :with_booking_fee => false }
+
           net    = self.calc( days, currency, :net,   per_or_all, person, options_and_as_decimal )
           gross  = self.calc( days, currency, :gross, per_or_all, person, options_and_as_decimal )
           margin = gross - net
-          
+
+          # BEWARE! Margin is the difference (profit) between net and gross but
+          #         PERCENT-MARGIN is calculated using values that exclude taxes and booking-fee.
           if measure == :percent_margin
+
+            #net    = self.calc( days, currency, :net,   per_or_all, person, options_and_as_decimal.merge(exclude_non_marginables) )
+            #gross  = self.calc( days, currency, :gross, per_or_all, person, options_and_as_decimal.merge(exclude_non_marginables) )
+
+            taxes       = self.calc( days, currency, :net,   per_or_all, person, :taxes       => true, :string_format => false )
+            booking_fee = self.calc( days, currency, :net,   per_or_all, person, :booking_fee => true, :string_format => false )
+ 
+            unless options[:biz_supp] || options[:single_supp]
+              gross -= taxes
+              gross -= booking_fee
+            end
+
             result = margin / gross * 100 unless gross.zero?
             puts "#{@@indent} Percent_margin: #{result} (#{margin} / #{gross} * 100) options: #{ options.inspect }" if ( options[:debug] )
+
           else
+
             result = margin
             puts "#{@@indent} Margin: #{result} options: #{ options.inspect }" if ( options[:debug] )
+
           end
           
           
-          # Derive total calculated NET / GROSS / MARGIN by summing the trip_elements:
-          # Note that :net is always calculated, regardless of :final_prices.
-          # Eg: trip.calc( :daily, :actual, :net, :for_all, :travellers, :with_all_extras => true )
+        # Derive total calculated NET / GROSS / MARGIN by summing the trip_elements:
+        # Note that :net is always calculated, regardless of :final_prices.
+        # Eg: trip.calc( :daily, :actual, :net, :for_all, :travellers, :with_all_extras => true )
         elsif measure == :net || !options[:final_prices]
           
           elems = self.method(trip_elements).call
@@ -934,8 +972,8 @@ class Trip
           end
           
           
-          # Fetch GROSS FINAL PRICE for ALL PERSONS:
-          # Note: This condition can only happen when options[:final_prices] is true.
+        # Fetch GROSS FINAL PRICE for ALL PERSONS:
+        # Note: This condition can only happen when options[:final_prices] is true.
         elsif measure == :gross && person == :traveller
           
           result_before = result
@@ -949,9 +987,9 @@ class Trip
           puts "#{@@indent} #{result_before} + #{adult_gross} + #{child_gross} + #{infant_gross} + #{single_gross} = #{result}" if ( options[:debug] )
           
           
-          # Fetch GROSS FINAL PRICE for adult/child/infant/single:
-          # Warning: This returns final price per child (for example) even when there are not children on the trip!
-          # Note: This condition can only happen when options[:final_prices] is true and measure is not :gross.
+        # Fetch GROSS FINAL PRICE for adult/child/infant/single:
+        # Warning: This returns final price per child (for example) even when there are not children on the trip!
+        # Note: This condition can only happen when options[:final_prices] is true and measure is not :gross.
         else
           
           if ( count_of_persons ||= self.count_of(persons) ) > 0
@@ -1201,12 +1239,12 @@ class Trip
 
         elem.exchange_rate = elem.supplier.currency.rate if elem.supplier && elem.supplier.currency
         elem.update_prices
-        elem.save! if save
+        elem.save! if save && !self.new?
 
       end
 
       result = self.update_prices
-      self.save! if save
+      self.save! if save && !self.new?
       return result
 
     end

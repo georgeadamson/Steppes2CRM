@@ -65,7 +65,7 @@ class TripElement
   property :biz_supp_per_adult,		BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
   property :biz_supp_per_child,		BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
   property :biz_supp_per_infant,	BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
-  property :biz_supp_margin,			BigDecimal, :precision=> 6, :scale	  => 2,	:default => '10', :required	=> true
+  property :biz_supp_margin,			BigDecimal, :precision=> 6, :scale	  => 2,	:default => lambda{ |elem,prop| CRM[:default_margin] || 24 }, :required	=> true
   property :biz_supp_margin_type, String,     :length		=> 1,			            :default => '%'
   
   property :is_subgroup,					Boolean,		:default	=> false							# Only set when number of adults/children/infants must differ from main trip.
@@ -189,6 +189,9 @@ class TripElement
   # Clean up properties etc (without affecting related objects!)
   before :valid? do
     
+    # Ensure we are not stumped when empty string is submitted accidentally for a new element:
+    self.id = nil if self.id.blank?
+
     self.handler_id = nil unless handler_id.to_i > 0
     
     # Always save flight number in upper case:
@@ -639,15 +642,22 @@ class TripElement
           exchange_rate         = ( currency == :actual && self.exchange_rate != 0 ) ? self.exchange_rate.abs : 1.0
           cost_in_currency      = cost_in_local  / exchange_rate
           
-          if margin_type == '%'
-            # Calculate percent margin per person:
-            margin_in_currency  = ( cost_in_currency  / margin_multipler ) - cost_in_currency
-          elsif options[:taxes] || person == :single
-            # Skip fixed margin on single calculations and taxes:
+          # Skip any margin on taxes and skip fixed margin on single calculations:
+          if options[:taxes] || ( person == :single && margin_type != '%' )
             margin_in_currency  = 0.0
+
+          # Calculate percent margin per person:
+          elsif margin_type == '%'
+            margin_in_currency  = ( cost_in_currency  / margin_multipler ) - cost_in_currency
+
+          #  # Skip fixed margin on single calculations and taxes:
+          #  elsif person == :single || options[:taxes]
+          #    margin_in_currency  = 0.0
+
+          # Otherwise used fixed margin:
           else
-            # Otherwise used fixed margin:
             margin_in_currency  = margin
+
           end
           
           # Calculate net or gross or margin amount:

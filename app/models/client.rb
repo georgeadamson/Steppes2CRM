@@ -121,6 +121,7 @@ class Client
   def country_name;      self.country.name; end
   def mailing_zone_name; self.country && self.country.mailing_zone.name; end
   def areas_of_interest; self.countries_names.join(', '); end
+  def total_spend;       self.attribute_get(:total_spend) || 0; end # Override to avoid nil
 
 	alias :interests_ids  :countries_ids
 	alias :interests_ids= :countries_ids=
@@ -191,14 +192,11 @@ class Client
     # Might as well assume marketing source is same as original source if necessary: (Helpful when someone uses this field for reposrting)
     self.source ||= self.original_source
 
+    # Recalculate client total_spend:
+    self.update_total_spend
+    
   end
 
-  before :update do
-    #datePattern = /^[0-3][0-9][-\/][0-1][0-9][-\/][1-2][0-9]{3}$/
-    #self.birth_date = nil #unless self.birth_date.to_s =~ datePattern
-    #self.passport_issue_date = nil #unless self.passport_issue_date.to_s =~ datePattern
-    #self.passport_expiry_date = nil #unless self.passport_expiry_date.to_s =~ datePattern
-  end 
 
   after :create do
 
@@ -234,7 +232,13 @@ class Client
   # Note how we cache @primary_address to prevent unecessary db trips as each address line is accessed:
   # Also, in the situation where a *new* client's attributes are being set, there will be no client_address mapping yet.
   def primary_address
-		return @primary_address ||= self.addresses.first( ClientAddress.is_active => true ) || ( self.new? && self.addresses.first )
+    
+    return @primary_address if @primary_address
+    primary_mapping    = self.client_addresses.first( :is_active => true )
+    @primary_address ||= primary_mapping && primary_mapping.address
+    return @primary_address || ( self.new? && self.addresses.first ) || nil
+
+		#return @primary_address ||= self.addresses.first( ClientAddress.is_active => true ) || ( self.new? && self.addresses.first ) || nil
   end
 
   # Depricated:
@@ -255,13 +259,18 @@ class Client
 		return self.primary_address.id
 	end
 
-  # Helper for setting one of the client_addresses as primary. (Used by the addresses form)
-  # (The test for blank/new just prevents accidentally submitted attribute from causing errors)
+  # SETTER to make one of the client_addresses primary. (Used by the addresses form)
+  # (The tests for blank & new just prevent accidentally submitted attribute from causing errors)
+  # Important: Syntax could be simpler but this approach queries unsaved data instead of querying sql only.
 	def primary_address_id=(id)
 
     unless id.blank? || self.new? || self.client_addresses.all( :address_id => id ).empty?
-	    self.client_addresses.each{ |a| a.is_active = (a.address_id == id) }.save!
-      @primary_address = nil
+
+	    self.client_addresses.each{ |a| puts a.inspect, a.is_active = (a.address_id == id.to_i) }.save!
+
+      primary_mapping  = self.client_addresses.first( :is_active => true )
+      @primary_address = primary_mapping && primary_mapping.address || nil
+
     end
 
   end
@@ -348,6 +357,18 @@ class Client
   # Helper to identify clients that have only just been added to the database:
   def created_today?
     self.new? || ( self.created_at && self.created_at.jd == Date.today.jd ) || false
+  end
+
+
+  # Recalculate total_spend by adding up all invoice totals:
+  def update_total_spend
+    self.total_spend = self.money_ins.sum(:amount) || 0   # Allow for sum returns nil when there are no items.
+  end
+
+  # Recalculate and SAVE total_spend by adding up all invoice totals:
+  def update_total_spend!
+    self.update_total_spend()
+    self.save!
   end
 
 
