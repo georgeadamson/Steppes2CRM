@@ -73,11 +73,11 @@
     </ul>
 
 		<!-- Link to Quickie trip builder (for pasting flight data from Amadeus) -->
-		<%= unless Merb.environment == 'production'
+		<%=
 			begin
 				link_to icon(:grid), "#{ resource(@client_or_tour, trip, :trip_elements) }/grid", :title => 'Quickie trip!', :style => 'left:0em;position:absolute;top:4em;'
 			end
-		end %>
+		%>
 
   </div>
 	<!-- end of _tripPage sectionHead -->
