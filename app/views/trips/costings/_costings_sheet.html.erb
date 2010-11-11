@@ -200,10 +200,10 @@
 	<!-- sectionFoot: -->
 	<div class="sectionFoot ui-widget">
 		<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
-			<!-- Important! The markup order of these buttons is significant to ensure that pressing Enter submits 'Save' -->
-			<%#= button 'Recalculate gross prices',	:class => 'ui-priority-secondary ui-state-default left', :disabled => true %>
+			<!-- IMPORTANT! The markup order of these buttons is significant to ensure that pressing Enter submits 'Save' -->
 			<%= submit 'Save price adjustments',		:class => 'ui-priority-primary ui-state-default' %>
-			<%= submit 'Update exchange rates',			:class => 'ui-priority-secondary ui-state-default left', :disabled => ( trip.confirmed? || trip.completed? ) %>
+			<!-- User must not update exchange rates on group trips or confirmed/completed trips: -->
+			<%= submit 'Update exchange rates',			:class => 'ui-priority-secondary ui-state-default left', :disabled => ( trip.confirmed? || trip.completed? || trip.tour_template? || trip.fixed_dep? ) %>
 		</div>
 	</div>
 
