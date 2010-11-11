@@ -27,6 +27,7 @@ if !do_totals %>
 		<%= tag :td, trip.calc( :daily, :actual, :net,            :per, person, :with_taxes => true, :with_booking_fee => true, :to_currency => true ) %>
 		<%= tag :td, trip.calc( :daily, :actual, :gross,					:per, person, :with_taxes => true, :with_booking_fee => true, :to_currency => true ), :class => 'muted calculated-gross' %>
 		<%= tag :td, "#{ copy_gross } #{ text_field( price_method, :value => price_per_person.to_currency(:generic), :class => 'widthHalfField' ) }" %>
+		<!-- Beware! The margin column is actually MARKUP, not margin! (Markup is a percentage of net, margin is a percentage of gross) -->
 		<%= tag :td, trip.calc( :daily, :actual, :margin,         :per, person, :with_taxes => true, :with_booking_fee => true, :final_prices => true, :to_currency => true ) %>
 		<%= tag :td, trip.calc( :daily, :actual, :percent_margin, :per, person, :with_taxes => true, :with_booking_fee => true, :final_prices => true, :decimal_places => 1 ) + '%' %>
 	</tr>
@@ -38,6 +39,7 @@ if !do_totals %>
 		<%= tag :td, trip.calc( :total, :actual, :net,            :per, person, :biz_supp => true, :to_currency => true ) %>
 		<%= tag :td, trip.calc( :total, :actual, :gross,          :per, person, :biz_supp => true, :to_currency => true ), :class => 'muted calculated-gross' %>
 		<%= tag :td, "#{ copy_gross } #{ text_field( biz_supp_price_method, :value => price_per_person_biz_supp.to_currency(:generic), :class => 'widthHalfField' ) }" %>
+		<!-- Beware! The margin column is actually MARKUP, not margin! (Markup is a percentage of net, margin is a percentage of gross) -->
 		<%= tag :td, trip.calc( :total, :actual, :margin,         :per, person, :biz_supp => true, :final_prices => true, :to_currency => true ) %>
 		<%= tag :td, trip.calc( :total, :actual, :percent_margin, :per, person, :biz_supp => true, :final_prices => true, :decimal_places => 1 ) + '%' %>
 	</tr>
