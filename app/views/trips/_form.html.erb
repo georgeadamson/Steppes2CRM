@@ -27,7 +27,6 @@
 
 <%= hidden_field :version_of_trip_id,		:value => @trip.version_of_trip_id.to_i unless trip.tour %>
 <%= hidden_field :tour_id,							:value => @trip.tour_id || params[:tour_id] %>
-<%#= hidden_field :name => 'client_id',	:value => @trip.context.id %>
 
 <% case when @trip.type_id == TripType::TOUR_TEMPLATE %>
 	<h4 style="margin:0 0 1em 9em;">This trip is a template for a group: <em><%= @trip.tour ? @trip.tour.name : 'that has been deleted!' %></em></h4>
@@ -70,16 +69,40 @@
 	</tr>
 
 	<tr>
-		<td><%= text_field								:label => 'PNR numbers',	:name => 'trip[pnr_numbers]',	:value => @trip.pnr_numbers.join(', ').upcase , :title => 'Flights will be added and updated automatically when you provide a PNR number here. Use a comma between each PNR number if you need to enter more.', :class => 'uppercase' unless @trip.new? || @trip.tour %></td>
+		<td>
+			<!-- Here we show the pnr_numbers field or the do_link_to_master field, depending on the trip type: -->
+
+			<% unless @trip.new? || @trip.tour %>
+				<!-- For the time being, the pnr_numbers field is only available on private trips that not associated with groups: -->
+				<%= text_field :pnr_numbers, :label => 'PNR numbers',	:value => @trip.pnr_numbers.join(', ').upcase , :title => 'Flights will be added and updated automatically when you provide a PNR number here. Use a comma between each PNR number if you need to enter more.', :class => 'uppercase' %>
+			<% end %>
+
+			<% if @trip.fixed_dep? && @trip.new? %>
+				<!-- Checkbox must remain readonly until requirements change: (Then the hidden_field will no longer be needed) -->
+				<% @trip.do_link_to_master = true %>
+				<%#= check_box			:do_link_to_master,      :label => 'Link elements to Group Template', :disabled => true 
+				%>
+				<%= hidden_field  :do_link_to_master,      :label => 'Link elements to Group Template' %>
+				<!--
+				<div class="formField">
+					<%= icon :attention, :text => icon(:locked) %>
+					<span style="display:inline-block;width:18em;">
+					Elements in the Group Template will appear read-only in this copy of the trip
+					</span>
+				</div>
+				-->
+			<% end %>
+
+		</td>
 		<td><%= select			:type_id,			:label => 'Type of trip',	:collection => trip_type_list, :value_method => :id, :text_method => :name %></td>
 		<td><%= text_field	:singles,			:label => 'Single supps',			:readonly => false, :class => 'widthHalfField spinbox', :title => 'Tick clients below to set the number of singles' %></td>
-		</tr>
-		
-		<tr>
+	</tr>
+
+	<tr>
 		<td colspan="2">
-		<br/>
+			<br/>
 		</td>
-		</tr>
+	</tr>
 	
 	<tr>
 

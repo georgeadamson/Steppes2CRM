@@ -17,7 +17,7 @@ class TripElement
   
   # This is just a simple boolean flag but it helps to document the code!
   YES_BUT_SEE_MANUAL_VALIDATION_BELOW = false unless defined? YES_BUT_SEE_MANUAL_VALIDATION_BELOW
-  
+
   property :id,                   Serial
   property :type_id,							Integer,		:required	=> true,	:default	=> FLIGHT  					# tripElementType ID	(1=Flight, 4=Accomm, 5=Ground, 8=Misc)
   property :misc_type_id,					Integer,		:default	=> 1																		# tripElementMiscType ID
@@ -135,6 +135,9 @@ class TripElement
   belongs_to :depart_airport,	:model => 'Airport',							:child_key => [:depart_airport_id]
   belongs_to :arrive_airport,	:model => 'Airport',							:child_key => [:arrive_airport_id]
   
+  belongs_to :master_element,     :model => 'TripElement',      :child_key => [:master_trip_element_id]
+  has n,     :slave_elements_all, :model => 'TripElement',      :child_key => [:master_trip_element_id] #, :constraint => :destroy
+  
   has n, :tasks         # Flight Reminders (Followups)
   has n, :touchdowns    # List of 0-n touchdown airports.
   
@@ -232,8 +235,7 @@ class TripElement
     end
     
   end
-  
-  
+
   
   # Silently tidy up invalid attributes before saving:
   before :save do
@@ -246,10 +248,19 @@ class TripElement
   
   after :create do
     
+    create_slave_elements() if self.is_master?
+    
     # Generate a followup reminder for this flight *if* the trip is confirmed:
     self.create_task if self.flight? && self.trip.confirmed?
     
+  end  
+  
+  after :update do
+    
+    update_slave_elements() if self.is_master?
+
   end
+
   
   
   after :save do
@@ -259,17 +270,24 @@ class TripElement
     
     @prevElem = nil
     @nextElem = nil
-    
+
     # Recalculate and save price_per_xxx and total_price OF THE TRIP:
     if self.trip
       self.trip.reload
       self.trip.update_prices
       self.trip.save!
     end       
-    
+
   end
   
-  
+  before :destroy do
+
+    # Delete any linked elements: (This only works here, not in the after:destroy)
+    # TODO: Find out how to wrap transactions around before/after hooks.
+    delete_slave_elements() if self.is_master?
+    
+  end
+
   after :destroy do
     
     self.total_cost  = 0
@@ -281,7 +299,7 @@ class TripElement
     # Recalculate and save price_per_xxx and total_price OF THE TRIP:
     if self.trip
       self.trip.reload
-      self.trip.update_prices
+      self.trip.update_prices()
       self.trip.save!
     end       
     
@@ -527,8 +545,7 @@ class TripElement
     self.start_date = ( self.trip.start_date.to_time + number.days                 ).to_datetime
     self.end_date   = ( self.trip.start_date.to_time + number.days + duration.days ).to_datetime
     
-    # Set flight times back the way they were:
-    # TODO: Find a simpler way to set hour/minute.
+    # Set flight times back the way they were: # TODO: Find a simpler way to set hour/minute.
     if self.flight?
       self.start_date = DateTime.civil(self.start_date.year, self.start_date.month, self.start_date.day, orig_start_time.hour, orig_start_time.min)
       self.end_date   = DateTime.civil(self.end_date.year,   self.end_date.month,   self.end_date.day,   orig_end_time.hour,   orig_end_time.min)
@@ -852,6 +869,30 @@ class TripElement
   end
   
   
+  # Helper flag to tell us whether element is controlled by another element: (Typically when this is a Fixed Dep created from a Group Template)
+  def is_slave?
+    return !!self.master_trip_element_id
+  end
+
+  # Helper flag to tell us whether element controls other elements: (Typically when this is a Group Template with Fixed Deps created from it)
+  def is_master?
+    self.trip && self.trip.tour_template?
+  end
+  
+  # Helper to fetch elements that are linked to this element.
+  # By default this only returns elements in the active_version of each trip.
+  def slave_elements( include_inactive_versions = false )
+    #slaves = TripElement.all( :master_trip_element_id => self.id )
+    slaves = self.slave_elements_all
+    slaves = slaves.all( TripElement.trip.is_active_version => true ) unless include_inactive_versions
+    return slaves
+  end
+  
+  #  def master_element
+  #    return TripElement.get( self.master_trip_element_id )
+  #  end
+
+  
 	# Consistent string for use in displays and reports etc:
   def display_name
     return self.supplier.name.blank? ? self.name : self.supplier.name
@@ -900,7 +941,46 @@ class TripElement
   end
   
   
+  # Helper for CLONING a trip element:
+  def copy_attributes_from( master, options = nil )
+    
+    # Apply defaults for omitted options:
+    defaults   = {
+      :clone            => self,
+      :adjust_dates     => false, # When true, element dates will be changed to fit the new trip.
+      :unbind_from_pnrs => false, # When true, skip the :booking_code field.
+      :link_to_master   => false  # When true, set  the :master_trip_element_id field. For Fixed Dep only!
+    }
+    options    = defaults.merge( options || {} )
+    clone      = options[:clone]
+    
+    attributes = master.attributes.except(:id)
+    
+    # Unbind the flight from the PNR if specified:
+    if options[:unbind_from_pnrs]
+      attributes.delete :booking_code
+      attributes.delete :booking_line_number
+      attributes.delete :booking_line_revision
+    end
+    
+    # Bind the flight to the master element if specified:
+    # (Only use this when creating a Fixed Dep trip elem from a Group Template trip elem. When making a new Version of a Fixed Dep, assume the same :master_trip_element_id.)
+    if options[:link_to_master]
+      attributes[:master_trip_element_id] ||= master.id
+    end
+    
+    clone.attributes = attributes
+    
+    # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
+    if options[:adjust_dates]
+      clone.day = master.day
+    end
+    
+    return clone
+
+  end
   
+
   # Helper for re-calculating the trip.total_cost property: (Formerly known as total_spend)
   # Includes WITH_ALL_EXTRAS
   def calc_total_cost( options = {} )
@@ -939,8 +1019,69 @@ class TripElement
     end
     
   end
-  
-  
+
+
+  # Called whenever a GroupTemplate element is updated, to update the 'same' element from it's FixedDep trips.
+  def update_slave_elements
+
+    return 0 if self.new? || !self.id
+
+    slave_count       = 0
+    master_element_id = self.id
+    master_attributes = self.attributes.only(*subset_of_master_attributes)
+    
+    self.trip.slave_trips(:all).each do |slave_trip|
+
+      slave_trip.trip_elements.all( :master_trip_element_id => master_element_id ).each do |slave|
+        Merb.logger.info "Updating slave element #{slave.id} because master element #{self.id} is being updated"
+        slave.attributes = master_attributes
+        slave.update_prices()
+        slave.save!
+        slave_count += 1
+      end
+
+      slave_trip.update_prices()
+      slave_trip.save!
+
+    end
+
+    return slave_count
+
+  end
+
+
+  # Called whenever a GroupTemplate element is deleted, to remove the 'same' element from it's FixedDep trips.
+  def delete_slave_elements
+
+    # self.slave_elements(:all).destroy!
+    # The following manual technique avoids "The source must be saved before mass-deleting the collection"
+    self.slave_elements(:all).each{ |slave|
+      Merb.logger.info "Deleting slave element #{slave.id} because master element #{self.id} is being deleted"
+      slave.destroy!
+    }
+
+  end
+
+
+  # Called whenever a GroupTemplate element is created, to add the 'same' element to it's FixedDep trips.
+  # TODO: Store the Group Template trip_id on the FixedDep trip instead of relying on finding at least one linked element!
+  def create_slave_elements
+
+    self.trip.slave_trips(:all).each do |slave_trip|
+
+      slave = slave_trip.trip_elements.new
+      slave.copy_attributes_from self, :link_to_master => true
+      slave.update_prices()
+      slave.save!
+      Merb.logger.info "Created slave element #{slave.id} because master element #{self.id} has been created"
+      
+      slave_trip.update_prices()
+      slave_trip.save!
+
+    end
+
+  end
+
   
   
   #	# Daily STERLING COST of trip element:
@@ -1026,4 +1167,50 @@ class TripElement
   end
   
   
+  # Define which attributes will updated in all 'slave' elements when a 'master' element is updated:
+  def subset_of_master_attributes
+    [
+      :name,				
+      :start_date,	
+      :end_date,		
+      :notes,			
+      :description,
+      :supplier_id,
+      :handler_id,
+      :depart_airport_id,		
+      :arrive_airport_id,		
+      :depart_terminal,			
+      :arrive_terminal,	
+      :margin_type,		
+      :margin,					
+      :exchange_rate,	
+      :cost_per_adult,	
+      :cost_per_child,	
+      :cost_per_infant,
+      :cost_per_triple,
+      :cost_by_room,		
+      :single_supp,		
+      :biz_supp_per_adult,		
+      :biz_supp_per_child,		
+      :biz_supp_per_infant,	
+      :biz_supp_margin,			
+      :biz_supp_margin_type, 
+      :taxes,								
+      :meal_plan,						
+      :room_type,						
+      :single_rooms,					
+      :twin_rooms,						
+      :triple_rooms,					
+      :arrive_next_day,			
+      :flight_code,					
+      :flight_leg,						
+      :booking_code,					
+      :booking_reminder,			
+      :booking_expiry,				
+      :booking_line_number,	
+      :booking_line_revision,
+      :is_active
+    ]
+  end  
+
 end
