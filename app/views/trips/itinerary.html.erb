@@ -64,43 +64,47 @@
 
 
 
-		<!-- Button to generate CONTACT SHEET DOCUMENT: -->
-		<%= form_for @document, :action => resource(:documents) do %>
+		<% unless @trip.tour_template? %>
 
-			<% @document.document_type_id	= DocumentType::CONTACT_SHEET %>
-			
-			<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@trip) }/itinerary" %>
-			<%= hidden_field :trip_id %>
-			<%= hidden_field :client_id %>
-			<%= hidden_field :company_id %>
-			<%= hidden_field :user_id %>
-			<%= hidden_field :document_type_id %><!-- CONTACT_SHEET -->
-			<%= hidden_field :generate_doc_after_create %>
-			<%= hidden_field :generate_doc_later %>
+			<!-- Button to generate CONTACT SHEET DOCUMENT: -->
+			<%= form_for @document, :action => resource(:documents) do %>
 
-			<%= submit "Generate contacts doc", :class => "save ui-priority-secondary ui-state-default" %>
+				<% @document.document_type_id	= DocumentType::CONTACT_SHEET %>
+				
+				<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@trip) }/itinerary" %>
+				<%= hidden_field :trip_id %>
+				<%= hidden_field :client_id %>
+				<%= hidden_field :company_id %>
+				<%= hidden_field :user_id %>
+				<%= hidden_field :document_type_id %><!-- CONTACT_SHEET -->
+				<%= hidden_field :generate_doc_after_create %>
+				<%= hidden_field :generate_doc_later %>
 
-		<% end =%>
+				<%= submit "Generate contacts doc", :class => "save ui-priority-secondary ui-state-default" %>
+
+			<% end =%>
 
 
 
-		<!-- Button to generate ITINERARY DOCUMENT: -->
-		<%= form_for @document, :action => resource(:documents) do %>
+			<!-- Button to generate ITINERARY DOCUMENT: -->
+			<%= form_for @document, :action => resource(:documents) do %>
 
-			<% @document.document_type_id	= DocumentType::ITINERARY %>
+				<% @document.document_type_id	= DocumentType::ITINERARY %>
 
-			<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@trip) }/itinerary" %>
-			<%= hidden_field :trip_id %>
-			<%= hidden_field :client_id %>
-			<%= hidden_field :company_id %>
-			<%= hidden_field :user_id %>
-			<%= hidden_field :document_type_id %><!-- ITINERARY -->
-			<%= hidden_field :generate_doc_after_create %>
-			<%= hidden_field :generate_doc_later %>
+				<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@trip) }/itinerary" %>
+				<%= hidden_field :trip_id %>
+				<%= hidden_field :client_id %>
+				<%= hidden_field :company_id %>
+				<%= hidden_field :user_id %>
+				<%= hidden_field :document_type_id %><!-- ITINERARY -->
+				<%= hidden_field :generate_doc_after_create %>
+				<%= hidden_field :generate_doc_later %>
 
-			<%= submit "Generate itinerary doc", :class => "save ui-priority-primary ui-state-default" %>
+				<%= submit "Generate itinerary doc", :class => "save ui-priority-primary ui-state-default" %>
 
-		<% end =%>
+			<% end =%>
 
+		<% end %>
+	
 	</div>
 </div>
