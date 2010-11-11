@@ -21,6 +21,18 @@ describe Trip do
     @client2      = Client.first_or_create(  { :name => 'Client 2'  }, { :title => @title, :name => 'Client 2', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
     @client3      = Client.first_or_create(  { :name => 'Client 3'  }, { :title => @title, :name => 'Client 3', :forename => 'Test', :marketing_id => 1, :type_id => 1, :original_source_id => 1, :address_client_id => 1 } )
 
+    @valid_traveller_numbers = {
+      :adults    => valid_flight_attributes[:adults],    
+      :children  => valid_flight_attributes[:children],    
+      :infants   => valid_flight_attributes[:infants],
+      :singles   => valid_flight_attributes[:singles]    
+    }
+
+    @valid_tour_attributes = valid_trip_attributes.merge(
+      :tour_id => 1,
+      :type_id => TripType::TOUR_TEMPLATE
+    )
+
     # Ensure user has a "most_recent_client" (Helps when confirmed trip tries to create_task (flight followups) automatically)
     user = User.first_or_create( { :id => valid_trip_attributes[:user_id] }, valid_user_attributes )
     if user.clients.empty?
@@ -34,17 +46,10 @@ describe Trip do
 
 
   before :each do
-
-    number_of_travellers = {
-      :adults    => valid_flight_attributes[:adults],    
-      :children  => valid_flight_attributes[:children],    
-      :infants   => valid_flight_attributes[:infants],
-      :singles   => valid_flight_attributes[:singles]    
-    }
     
     # Prepare trip and flight with same numbers of travellers:
-    @tripA    = Trip.create( valid_trip_attributes.merge(number_of_travellers) )
-    @tripB    = Trip.create( valid_trip_attributes.merge(number_of_travellers) )
+    @tripA    = Trip.create( valid_trip_attributes.merge(@valid_traveller_numbers) )
+    @tripB    = Trip.create( valid_trip_attributes.merge(@valid_traveller_numbers) )
     @elemA    = @tripA.trip_elements.create(valid_flight_attributes)
     @elemB    = @tripB.trip_elements.create(valid_flight_attributes)
     
@@ -227,4 +232,113 @@ describe Trip do
   end
 
 
+  describe 'Fixed Departures' do
+
+    before :each do
+
+      # Prepare trip and flight with same numbers of travellers:
+      @tourA = Trip.create( @valid_tour_attributes.merge @valid_traveller_numbers )
+      @tourA.trip_elements.create(valid_flight_attributes)
+    
+    end
+
+    it "should assume new trip is a Fixed Dep when copied from a Group Template" do
+
+      @deptB = Trip.new
+
+      elem_countA = @tourA.trip_elements.length
+      elem_countB = @deptB.trip_elements.length
+
+      @deptB.copy_attributes_from @tourA
+      @deptB.save
+      
+      @tourA.slave_trips.length.should == 1
+      @deptB.tour_id.should == 1
+      @deptB.type_id.should == TripType::FIXED_DEP
+      @deptB.trip_elements.length.should == elem_countA + elem_countB
+      
+
+    end
+
+    it "should assume new trip is not a Fixed Dep when not copied from a Group Template" do
+
+      @deptB = Trip.new
+      @deptB.copy_attributes_from @tripA
+      @deptB.save
+
+      @deptB.tour_id.should              == @tripA.tour_id
+      @deptB.type_id.should              == @tripA.type_id
+      @deptB.type_id.should_not          == TripType::FIXED_DEP
+      @deptB.trip_elements.length.should == @tripA.trip_elements.length
+
+    end
+
+    it "should link new Fixed Dep elements to it's Group Template elements" do
+
+      @deptB = Trip.new
+      @deptB.copy_attributes_from @tourA
+
+      @deptB.trip_elements.last.master_trip_element_id.should == @tourA.trip_elements.last.id
+
+      @tourA.trip_elements.last.is_master?.should be_true
+      @deptB.trip_elements.last.is_master?.should be_false
+      @tourA.trip_elements.last.is_slave?.should be_false
+      @deptB.trip_elements.last.is_slave?.should be_true
+
+    end
+
+    it "should UPDATE linked Fixed Dep element when Group Template element is updated" do
+
+      @deptB = Trip.new
+      @deptB.copy_attributes_from @tourA
+      @deptB.save
+
+      @elemA = @tourA.trip_elements.last
+      @elemB = @deptB.trip_elements.last
+
+      @elemA.update :cost_per_adult => 99
+      @elemB.reload
+
+      @elemA.is_master?.should be_true
+      @elemB.is_slave?.should  be_true
+      @elemA.cost_per_adult.should  == 99
+      @elemB.cost_per_adult.should  == 99
+
+    end
+
+    it "should DELETE linked Fixed Dep element when Group Template element is deleted" do
+
+      @deptB = Trip.new
+      @deptB.copy_attributes_from @tourA
+      @deptB.save
+
+      @elemA      = @tourA.trip_elements.last
+      elem_countB = @deptB.trip_elements.length
+
+      @elemA.slave_elements(:all).reload  # This line seems to be necessary for test to pass.
+      @elemA.destroy
+
+      @deptB.reload
+      @deptB.trip_elements.length.should == elem_countB - 1
+
+    end
+
+    it "should CREATE linked Fixed Dep element when Group Template element is created" do
+
+      @deptB = Trip.new
+      @deptB.copy_attributes_from @tourA
+      @deptB.save
+
+      @elemA     = @tourA.trip_elements.last
+      elem_count = @deptB.trip_elements.length
+
+      @tourA.trip_elements.create(valid_flight_attributes)
+      
+      @deptB.reload
+      @deptB.trip_elements.length.should == elem_count + 1
+
+    end
+
+  end
+    
 end
