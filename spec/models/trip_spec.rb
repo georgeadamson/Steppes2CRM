@@ -106,7 +106,7 @@ describe Trip do
     it 'should be valid' do
       @trip.should be_valid
     end
-  	  
+
     it "should confirm our test data is valid before start" do
 		  @company.should be_valid
 		  @world_region.should be_valid
@@ -406,6 +406,23 @@ describe Trip do
 
     end
 
+
+    it 'should update_margins_to on all trip elements' do
+
+      @trip.update_prices()
+      
+      new_margin = 15
+      old_margin = @trip.trip_elements.first.margin
+      old_price  = @trip.total_price
+
+      @trip.update_margins_to(new_margin)
+      #puts old_margin, new_margin, @trip.total_price, @trip.trip_elements.first.inspect
+
+      @trip.trip_elements.first.margin.should     == new_margin
+      @trip.trip_elements.first.margin.should_not == old_margin
+      @trip.total_price.should_not                == old_price
+
+    end
 
 
   end
