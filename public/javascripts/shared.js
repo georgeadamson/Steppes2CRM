@@ -2839,7 +2839,7 @@ function initKeyPressFilters(){
 			
 		var keys = [ KEY.integer, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
 
-		if( isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
+		if( !e.shiftKey && isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
 
 			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
 			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
@@ -2859,7 +2859,7 @@ function initKeyPressFilters(){
 
 		var keys = [ KEY.decimal, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
 
-		if( isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
+		if( !e.shiftKey && isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
 
 			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
 			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
