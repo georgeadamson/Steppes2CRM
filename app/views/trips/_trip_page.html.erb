@@ -46,7 +46,8 @@
 		<%= hidden_field :name => 'trip_name',	:value => trip.name		%>
 		<%= hidden_field :name => 'trip_title',	:value => trip.title	%>
 
-		<% unless trip.type_id == TripType::TOUR_TEMPLATE %>
+		<% unless trip.tour_template? || trip.fixed_dep? %>
+
 			<!-- This picklist has a custom href attribute used for deriving the resource url of the chosen version.
 					 Eg: When href="/clients/1234/trips/{value}" and selected value="1122" then url is derived as "/clients/1234/trips/1122"
 			-->
@@ -55,6 +56,7 @@
 					<%= select :active_version_id, :label => "Active version:", :collection => versions_list, :selected => trip.id.to_s, :class=>"auto-submit tripVersion width2Fields stealth", :readonly => true %>
 				</div>
 			<% end =%>
+
 		<% end %>
 
     <ul class="tripPageTabsNav">
