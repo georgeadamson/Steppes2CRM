@@ -1339,10 +1339,11 @@ class Trip
     end
     
     
-    # Helper to generate a new version of this trip:
+    # Helper to generate a new version of this trip: (Note we explicitly prevent copied elements from being bound to their originals)
     def new_version( custom_attributes = {} )
 
       version = Trip.new
+      version.do_link_to_master = false
       cloned  = version.copy_attributes_from self, custom_attributes
 
       return version if cloned
