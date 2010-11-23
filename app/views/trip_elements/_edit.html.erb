@@ -42,7 +42,8 @@
 
 			<% if element.is_master? %>
 
-				<div class="left"> &nbsp; <%= icon :attention, :text => element.slave_elements.count %>client trip elements are linked to this template element.</div>
+				<% slave_count = element.slave_elements.count %>
+				<div class="left"> &nbsp; <%= icon :attention, :text => slave_count %> elements are linked to this template element in client copies.</div>
 
 			<% end %>
 
