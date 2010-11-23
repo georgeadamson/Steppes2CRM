@@ -1343,6 +1343,7 @@ class Trip
     def new_version( custom_attributes = {} )
 
       version = Trip.new
+      version.do_link_to_master = false
       cloned  = version.copy_attributes_from self, custom_attributes
 
       return version if cloned
