@@ -888,6 +888,7 @@ class TripElement
     return slaves
   end
   
+  # Depricated in favour of using belongs_to:
   #  def master_element
   #    return TripElement.get( self.master_trip_element_id )
   #  end

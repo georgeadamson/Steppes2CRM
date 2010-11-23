@@ -319,6 +319,7 @@ class Trip
       
       
       # Create flight followups if the trip is now confirmed:
+      # Note: Followups will not be created again if they already exist.
       if self.confirmed?
         self.flights.each{ |flight| flight.create_task() }
       end
@@ -500,12 +501,26 @@ class Trip
     # Helper to fetch trips that are linked to this trip.
     # By default this only returns the active_version of each trip.
     def slave_trips( include_inactive_versions = false )
+
       master_elem_ids = self.trip_elements.map{|elem| elem.id }
       slaves          = Trip.all( Trip.trip_elements.master_trip_element_id => master_elem_ids )
       slaves          = slaves.all( :is_active_version => true ) unless include_inactive_versions
+      
       return slaves
+      
     end
-  
+    
+    # Helper to return the Group Trip that this trip's elements are linked to:
+    # TODO: Store master_trip_id in the database because this will be useless if master trip has no elements!
+    def master_trip
+      
+      slave_element = self.trip_elements.first( :master_trip_element_id.gt => 0 )
+      
+      return slave_element && slave_element.master_element && slave_element.master_element.trip
+
+    end
+
+
     # Helper to return a list of all versions of this trip:
     def versions
       return Trip.all( :version_of_trip_id => self.version_of_trip_id )
