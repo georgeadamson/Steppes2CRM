@@ -123,6 +123,7 @@ class Trips < Application
       
       if master = Trip.get( params[:copy_trip_id] )
         
+        @trip.copy_countries_from master
         @trip.copy_attributes_from master
           
   		  # Ensure current client is on this new trip:
