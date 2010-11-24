@@ -78,7 +78,7 @@ customSize = "width:#{ element.percentOfTrip.to_s }%;left:#{ element.percentThro
 
 			<%= if element.is_master? && ( slave_count = element.slave_elements.count ) > 0
 
-				icon :attention, :text => '!', :class => 'master',
+				icon :attention, :text => '', :class => 'master',
 				     :title => "#{ slave_count } elements are linked to this template element in client copies."
 				
 			elsif element.is_slave? && element.master_element

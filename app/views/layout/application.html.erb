@@ -29,10 +29,6 @@
 			Steppes CRM <%#= params[:company_code] %>
 			<%= tag :small, "('#{ Merb.environment }' database)" unless Merb.environment == 'production' %>
 		</h1>
-		<% if Merb.environment == 'development' %>
-			<a href="/clients/2138590478/trips/119673/trip_elements/grid" title="Quickie trip!"><span class="ui-icon ui-icon-grid " style="height: 20px; width: 20px;"></span></a>
-		<% end %>
-
 
     <% if session.user %>
 
