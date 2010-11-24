@@ -381,13 +381,17 @@ FORM {
 
 
 
-INPUT.date.hasDatepicker {
+INPUT.date.hasDatepicker:hover,
+INPUT.date.hasDatepicker:focus {
 	background-image:url(/images/icons/icon.date.png);
 	background-position:right 1px;
 	background-repeat:no-repeat;
+	cursor:text;
 }
-
-
+	INPUT.date.hasDatepicker[disabled],
+	INPUT.date.hasDatepicker[readonly] {
+		background-image:none;
+	}
 
 
 

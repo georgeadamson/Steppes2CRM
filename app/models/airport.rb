@@ -16,6 +16,9 @@ class Airport
   has n, :trip_elements, :child_key => [:arrive_airport_id]		# tripElement.arriveAirport
   has n, :touchdowns																					# tripElement.touchdowns	???
 	
+  # Set the default sort order:
+  default_scope(:default).update( :order => [:name,:code] )
+  
 	before :save do
 		self.code.upcase!
 	end
@@ -31,18 +34,22 @@ class Airport
 	end
 	
 	# Airport NAME and code string used for consistent display: (Eg: "Heathrow [LHR]")
+  # BEWARE of using different brackets. Some ui script may expect '[...]' for deriving airport code.
+  # NOTE the use of double-space ("  ") to safely tell the UI where additional formatting may be added.
 	def name_and_code
 		name = self.name.blank? ? '(blank airport name)' : self.name
 		code = self.code.blank? ? 'no code'              : self.code
-		return "#{ name } [#{ code }]"  # Beware of using different brackets. Some ui script may expect '[...]' for deriving the code.
+		return "#{ name }  [#{ code }]"
 	end
 	alias display_name name_and_code
 	
 	# Airport CODE and name string used for consistent display: (Eg: "LHR [Heathrow]")
+  # BEWARE of using different brackets. Some ui script may expect '[...]' for deriving airport name.
+  # NOTE the use of double-space ("  ") to safely tell the UI where additional formatting may be added.
 	def code_and_name
 		name = self.name.blank? ? '(blank airport name)' : self.name
 		code = self.code.blank? ? 'no code'              : self.code
-		return "#{ code } [#{ name }]"
+		return "#{ code }  [#{ name }]"
 	end
 	alias display_code code_and_name
 	

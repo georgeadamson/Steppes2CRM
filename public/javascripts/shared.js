@@ -40,18 +40,22 @@ jQuery(function($) {
 
 	var guid = 0,											// Used by the jQuery.fn.id() method.
 		undefined,											// Speeds up test for undefined variables.
-		spinnerTimeoutId,
+		spinnerTimeoutId,									// Timeout that will hide the ajax spinner image.
+		messageTimeoutID,									// Timeout that will hide the server-response messages.
 
-		UK_COUNTRY_ID					= 6,				// TODO: Find a data-driven way of settings this!
-		FIXED_DEPARTURE					= 4,				// TODO: Find a data-driven way of settings this!
-		DOCUMENT_TYPE_ID_FOR_LETTERS	= 8,				// TODO: Find a data-driven way of settings this!
-		TASK_STATUS_OPEN				= 0,				// TODO: Find a data-driven way of settings this!
+		// These IDs must match those in the database: 		// TODO: Find a data-driven way of settings these!
+		UK_COUNTRY_ID					= 6,
+		FIXED_DEPARTURE					= 4,
+		DOCUMENT_TYPE_ID_FOR_LETTERS	= 8,
+		TASK_STATUS_OPEN				= 0,
+		LOOKUP_TRIP_ELEMENT_TYPE		= { 1:'flight', 2:'flightagent', 4:'accomm', 5:'ground', 8:'misc' },
 
+		// Text for labelling and identifying special tabs:
 		SYSTEM_ADMIN_LABEL				= 'System admin',
 		WEB_REQUESTS_ADMIN_LABEL		= 'Web requests',
 		BROCHURE_REQUESTS_ADMIN_LABEL	= 'Brochure merge',
 		REPORTS_PAGE_LABEL				= 'Reports',
-		ALLOW_DOWNLOAD_OF				= { doc:true, pdf:true, csv:true },
+		DOWNLOADABLE_EXT				= { doc:true, pdf:true, xls:true, csv:true },
 		ELEMENT_URL_ATTR				= 'data-ajax-url',
 
 		// Global ajax timeout:
@@ -59,11 +63,11 @@ jQuery(function($) {
 
 		// Settings for client-search:
 		CLIENT_SEARCH_MAX_ROWS			= 20,				// Will be sent as &limit=n parameter when searching for clients via ajax.
-		CLIENT_SEARCH_DELAY_BEFORE_AJAX	= 500,				// Slight delay before searching for the keywords being typed in client search box.
+		CLIENT_SEARCH_DELAY_BEFORE_AJAX	= 500,				// Milliseconds delay before searching for the keywords being typed in client search box.
 
 		// Settings for postcode-lookup:
-		POSTCODE_LOOKUP_MAX_ROWS			= 20,				// Will be sent as &limit=n parameter when searching for postcodes via ajax.
-		POSTCODE_LOOKUP_DELAY_BEFORE_AJAX	= 200,				// Slight delay before searching for the keywords being typed in postcode search box.
+		POSTCODE_LOOKUP_MAX_ROWS			= 20,			// Will be sent as &limit=n url parameter when searching for postcodes via ajax.
+		POSTCODE_LOOKUP_DELAY_BEFORE_AJAX	= 200,			// Slight delay before searching for the keywords being typed in postcode search box.
 
 		// Delay before generating the overview just below the timeline when the Trip Builder tab is opened:
 		TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW	= 2000,
@@ -75,27 +79,21 @@ jQuery(function($) {
 		// Test for "Access to restricted URI denied" (NS_ERROR_DOM_BAD_URI) in error text: (Only Mozilla raises the error. Opera and Chrome just ignore restricted link completely)
 		IS_BROWSER_DOC_LINK_SECURITY_ERROR	= /NS_ERROR_DOM_BAD_URI/,
 
-		// Constant to help make code more readable: ( Eg: if( event.button == BUTTON.LEFT )... )
-		BUTTON							= { LEFT:0, MIDDLE:1, RIGHT:2 },
-
 		// Horizontal line displayed in some javascript alert() boxes etc:
 		MESSAGE_BOX_HR					= new Array(81).join('_'),
 
 		// Settings for displaying notices and error messages:
 		DELAY_BEFORE_MESSAGE_SHOW		= 1000,				// Wait before showing messages from server.
-		DELAY_BEFORE_MESSAGE_HIDE		= 4000,				// Wait before hiding messages from server, after showing them.
+		DELAY_BEFORE_MESSAGE_HIDE		= 3000,				// Wait before hiding messages from server, after showing them.
 		DURATION_OF_MESSAGE_SHOW		= 250,				// Animation speed when showing messages.
 		DURATION_OF_MESSAGE_HIDE		= 2000,				// Animation speed when hiding messages.
 
-		$messages						= $('H2.noticeMessage, H2.errorMessage'),	// See showMessage() function.
-		messageTimeoutID				= null,
+		$messages						= $('H2.noticeMessage, H2.errorMessage, H2.warningMessage'),	// See showMessage() function.
 
-		// IMPORTANT: These Lookups must match codes in the corresponding TripElementTypes database table!
-		lookupTripElementType = { 1:'flight', 2:'flightagent', 4:'accomm', 5:'ground', 8:'misc' },
-
-		COMMA							= ',',
-
-		KEY = {
+		// Constants to help make code more readable: ( Eg: if( event.button == BUTTON.LEFT )... )
+		BUTTON							= { LEFT:0, MIDDLE:1, RIGHT:2 },
+		COMMA							= ",",
+		KEY								= {
 			digits			: /[0-9]|[\x60-\x69]/,						// Allows for number-pad digits too.
 			integer			: /[0-9]|[\x60-\x69]|[\x6D]/,				// Same as digits but allow minus (-) too.
 			'decimal'		: /[0-9]|[\x60-\x69]|[\x6D]|[\xBE\x6E]/,	// Same as digits but allow minus (-) and dot (.) too.
@@ -134,6 +132,35 @@ jQuery(function($) {
 
 	var Layout = {
 
+		// Experimental new router matching syntax: (To replace livePath & liveForm)
+		// Eg: Layout.match(/clients\/new/).on('success').to(Client.openNew)
+		match : function(path){
+
+			var methods = { on: status, to: callback }, 
+				route   = { path: path, status: undefined, callback: undefined };
+			return methods;
+
+			function status(state){
+				route.status = state;
+				bindRoute(route);
+				return methods;
+			}
+
+			function callback(fn){
+				route.callback = fn;
+				bindRoute(route);
+				return methods;
+			}
+
+			function bindRoute(route){
+				if( route.callback && route.status && route.path ){
+					Layout.livePath( route.status, route.path, route.callback );
+				}
+			}
+
+		},
+
+
 		init	: function(){
 
 			// Bind custom 'hashchange' event:
@@ -145,6 +172,7 @@ jQuery(function($) {
 			// Top tip: Be wary of false positives, eg: 'clients/trips/trip_elements' would also trigger /clients\/trips/
 			// Regex preference? Is this syntax clearer? Using RegExp avoids the need to explicitly escape the slashes in the url.
 			// TODO: Refactor liveForm to alternate syntax: Layout.liveForm('update:success', 'clients', Client.initForm ) & maybe combine with livePath()
+			//       Or like a resource:	Layout.match(/clients\/new/).on('success').to(Client.openNew)
 
 			// Clients:
 			Layout.livePath('click',   new RegExp('clients/new'),						Client.openNew );
@@ -169,23 +197,34 @@ jQuery(function($) {
 
 			// Trips:
 			$("A[href $= '#costing_copy_gross']").live('click', Trip.copyGrossPrice);										// Handle 'Set gross' helper button on Costings Sheet.
-			Layout.livePath('click',   /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.openShow );	// Create new version.
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.initShow );	// Created new version.
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,									Trip.initForm );
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)$/,							Trip.initShow );
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/edit/,						Trip.initForm );
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/builder/,					Trip.initTimeline );
-			Layout.livePath('click',   /clients\/([0-9]+)\/trips\/([0-9]+)\/copy/,						Trip.showSearch );
-			Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/,				Trip.showSearchResults );
+			//Layout.livePath('click',   /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.openShow );	// Create new version.
+			//Layout.livePath('success', /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.initShow );	// Created new version.
+			//Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,									Trip.initForm );
+			//Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)$/,								Trip.initShow );
+			//Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/edit/,						Trip.initForm );
+			//Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/builder/,						Trip.initTimeline );
+			//Layout.livePath('click',   /clients\/([0-9]+)\/trips\/([0-9]+)\/copy/,						Trip.showSearch );
+			//Layout.livePath('success', /clients\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/,				Trip.showSearchResults );
 			Layout.liveForm('success', 'trips:create',													Trip.onCreateSuccess );
 			Layout.liveForm('success', 'trips:update',													Trip.onUpdateSuccess );
 			Layout.liveForm('success', 'trips:destroy',													Trip.onDestroySuccess );
+			
+			// The following are refactored alternatives to the original livePath definitions above:
+			Layout.match(/clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/)	.on('click'  ).to(Trip.openShow);
+			Layout.match(/clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/)	.on('success').to(Trip.initShow);
+			Layout.match(/clients\/([0-9]+)\/trips\/new/)									.on('success').to(Trip.initForm);
+			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)$/)								.on('success').to(Trip.initShow);
+			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/edit/)						.on('success').to(Trip.initForm);
+			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/builder/)						.on('success').to(Trip.initTimeline);
+			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy/)						.on('click'  ).to(Trip.showSearch);
+			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/)				.on('success').to(Trip.showSearchResults);
 
 			// TripElements:
-			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.grid );
+			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.openGrid );
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.hideForm );
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.hideForm );
 			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/([0-9]+)/edit'),	TripElement.showForm, TripElement.initForm );
+			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.initGrid );
 			Layout.livePath('success', new RegExp('trips/([0-9]+)/trip_elements/new'),				TripElement.showForm, TripElement.initForm );
 			Layout.liveForm('success', 'trip_elements:create',										TripElement.initForm, Trip.initTimeline );
 			Layout.liveForm('success', 'trip_elements:update',										TripElement.initForm, Trip.initTimeline );
@@ -382,7 +421,7 @@ jQuery(function($) {
 
 				// Trigger the callback passing a pimped-up copy of the options hash:
 				if( form.controller == controller && form.action == action && $.isFunction(callback) ){
-					console.log('Triggering liveForm:', type, form.path, pattern, callback );
+					console.log('Triggering liveForm:', type, form.path, pattern, callback, 'with options:', options );
 					var args = $.extend( {}, options, { form:form, pattern:pattern, data:data, type:type, event:e } );
 					callback(args);
 				}
@@ -424,10 +463,11 @@ jQuery(function($) {
 				    options	= { url:path, target:target, event:e },
 				    triggerHashChange = true;
 
-				// Bail out now if we've accidentally intercepted a click on a tab:
+				// Bail out now if we've accidentally intercepted a click on a tab etc:
 				// If FILE DOWNLOAD, skip the clever stuff and let the browser do it's thing:
-				if( $link.parents('UL').is('.ui-tabs-nav') ){ return }
-				if( ALLOW_DOWNLOAD_OF[ext] || $link.is('.download') || $(this).is('.ajaxDownload') ){ return }
+				if( $link.parents('UL').is('.ui-tabs-nav, .ui-datepicker') ){ return }
+				if( DOWNLOADABLE_EXT[ext] || $link.is('.download') || $(this).is('.ajaxDownload') ){ return }
+				if( $link.is("[class *= 'datepicker']") ||  $link.parent().is("[class *= 'datepicker']") ){ return }
 
 				// Derive a {resource}_id property for each resource in the path: (Eg: "clients/1/trips/2" => {client_id:1, trip_id:2}
 				$.extend( options, Layout.getResourceIDsFrom(path) );
@@ -498,7 +538,7 @@ jQuery(function($) {
 				if( $button.is(':submit') && $button.attr('name') ){ buttonData[ $button.attr('name') ] = $button.val() }
 				
 				// Stop interfering right now if form is generating a file to download:
-				if( ALLOW_DOWNLOAD_OF[ext] || $button.is('.download, .ajaxDownload') || $form.is('.download, .ajaxDownload') ){ return }
+				if( DOWNLOADABLE_EXT[ext] || $button.is('.download, .ajaxDownload') || $form.is('.download, .ajaxDownload') ){ return }
 
 				// By setting up the AJAX SUBMIT here, each of the callbacks can refer to the $form using a closure:
 				$form.ajaxSubmit({
@@ -1821,10 +1861,11 @@ return
 
 	// Handle events on the new/edit photo popup:
 
-	$("SELECT.imgFilename").live("change", onImgFileChange).triggerHandler("change");
-	$("SELECT.imgFilename").live("keyup", onImgFileChange);
-	$("SELECT.imgFolder").live("change", onImgFolderChange);
-	$("SELECT.imgFolder").live("keyup", onImgFolderChange);
+	// Depricated until needed:
+	//	$("SELECT.imgFilename").live("change", onImgFileChange).triggerHandler("change");
+	//	$("SELECT.imgFilename").live("keyup", onImgFileChange);
+	//	$("SELECT.imgFolder").live("change", onImgFolderChange);
+	//	$("SELECT.imgFolder").live("keyup", onImgFolderChange);
 
 	// Respond when user chooses a different IMAGE FOLDER:
 	function onImgFolderChange() {
@@ -1879,8 +1920,8 @@ return
 	function onTripElementTypeChange() {
 
 		// Derive array of TripElementType names formatted as css classnames suitable for the form element:
-		var elementType = lookupTripElementType[$(this).val()], formClasses = [];
-		$.each(lookupTripElementType, function(id, type) {
+		var elementType = LOOKUP_TRIP_ELEMENT_TYPE[$(this).val()], formClasses = [];
+		$.each(LOOKUP_TRIP_ELEMENT_TYPE, function(id, type) {
 			formClasses.push(formClassFor(type))
 		});
 
@@ -1906,8 +1947,7 @@ return
 	// Respond to click on tripElement is_subgroup checkbox:
 	$(".tripElementForm INPUT:checkbox[name='trip_element[is_subgroup]']")
 		.live("click", function() {
-			$(this).parents(".tripElementForm")
-				.toggleClass("allTravellers", !$(this).is(":checked"));
+			$(this).parents(".tripElementForm").toggleClass("allTravellers", !$(this).is(":checked"));
 		});
 
 
@@ -2376,23 +2416,73 @@ return
 
 
 // Helper to activate any datepickers:
-function initDatepickers() {
+function initDatepickers(context) {
 
-	$("INPUT.date")
+	// context argument may be a LivePath options hash or an element or a selector:
+	context = ( context && ( context.panel || context.target ) ) || context || document;
 
-		//.filter(":not(.daterange)")
-		.datepicker({
-			//closeText: "Cancel",
-			dateFormat: "dd/mm/yy",
-			minDate: "-90y",
-			maxDate: "+5y",
-			//numberOfMonths  : 2,
-			showButtonPanel: true,
-			showOtherMonths: false,
-			changeYear: true,
-			changeMonth: true,
-			yearRange: "-90:+5"
-		});
+	var defaults = {
+		dateFormat: "dd/mm/yy",
+		showButtonPanel: false,
+		showOtherMonths: false,
+		selectOtherMonths: false,	// TODO: This would be handy but our custom css needs fixing first!
+		changeYear: true,
+		changeMonth: true,
+		minDate: "-90y",
+		maxDate: "+5y",
+		yearRange: "-90:+5"
+	};
+
+	var for_dob = $.extend( {}, defaults, {
+		minDate: "-90y",
+		maxDate: "+1y",
+		yearRange: "-90:+1"
+	});
+
+	var for_travel = $.extend( {}, defaults, {
+		minDate: "-1y",
+		maxDate: "+5y",
+		yearRange: "-1:+5"
+	});
+
+	// Init the various types of datepickers with relevant settings:
+	// Note: The datepicker plugin adds the class 'hasDatepicker' to each field.
+	$("INPUT.date:not(.hasDatepicker)", context)
+
+		// Workaround: The datepicker assumes every target field has a unique id.
+		// Because of our heavy use of tabs containing similar pages we cannot guarantee this.
+		// This loop ensures any duplicated IDs are fixed before we proceed (along with any associated LABEL)
+		.each(function(){
+
+			var id				= $(this).attr('id'),
+				dupeIDsSelector	= "INPUT[id='{id}']".replace('{id}',id),
+				$others			= $(dupeIDsSelector).not(this);
+
+			// Give all date elements a unique ID if their current ID is duplicated in the DOM:
+			$others.each(function(){
+				var uniqueID = id + '_' + (guid++);
+				$(this).attr('id',uniqueID)
+					.siblings("LABEL[for='" + id + "']").attr('for',uniqueID);
+			});
+
+		})
+
+		// Trip and element date fields:
+		.filter('.travel-date')
+			.datepicker(for_travel)
+		.end()
+
+		// Birthday fields:
+		.filter('.dob')
+			.datepicker(for_dob)
+		.end()
+
+		// Other date fields:
+		.not('.travel-date, .dob')
+			.datepicker(defaults)
+		.end()
+
+	;
 
 	// Cannot use daterange picker yet because it does not have collision detection:
 	// http://www.filamentgroup.com/lab/date_range_picker_using_jquery_ui_16_and_jquery_ui_css_framework/
@@ -2406,6 +2496,10 @@ function initDatepickers() {
 	//})
 
 };
+
+// Make initDatepickers available globally: (Eg: For use in trip_elements.js. TODO: Find a tidier solution)
+window.initDatepickers = initDatepickers;
+
 
 
 // Initialise Spinbox fields: (Assumes jquery.spinbox.css is loaded and spinbox-sprite image is available to mimic buttons)
@@ -2805,19 +2899,6 @@ function initKeyPressFilters(){
 
 
 
-
-
-	function initTripElementFormTotals(){
-		
-		// Update TripElement totals when these fields change:
-		// Warning: We just bind one event here. Binding more tends to slow down the responsiveness of the ui.
-		// Warning: If you change this code, verify that the form initialisation still works: See TripElement.initForm
-		$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
-			.live( 'change keyup', onTripElementFieldChange )
-		;
-
-	}
-
 	// Called to update TripElement totals whenever user makes changes in TripElement form: (And each time it is loaded by ajax)
 	function onTripElementFieldChange(){
 
@@ -2921,6 +3002,25 @@ function initKeyPressFilters(){
 
 
 
+	function initTripElementFormTotals(){
+
+		// Update TripElement totals when these fields change:
+		// Warning: If you change this code, verify that the form initialisation still works: See TripElement.initForm
+		// By testing for general name likeness first, we waste less cpu time when event is triggered on unrelated fields:
+		$( "INPUT[name ^= 'trip_element'], SELECT[name ^= 'trip_element']" ).live( 'change keyup', function(e){
+			if( $(this).is("SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']") ){
+				onTripElementFieldChange.call(this,e);
+			}
+		});
+		// The following equivalent code was slower becaue it required jQuery to check many names every time event was triggered.
+		//	$( "SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']" )
+		//		.live( 'change keyup', onTripElementFieldChange )
+		//	;
+
+	}
+
+
+
 
 
 // Update Trip Invoice amount when these fields change:
@@ -2928,8 +3028,7 @@ function initTripInvoiceFormTotals(){
 
 	// Update Trip Invoice amount when these fields change:
 	$( "INPUT[name='money_in[deposit]']" )
-		.live( 'keyup', onTripInvoiceFieldChange )
-		.live( 'click', onTripInvoiceFieldChange );
+		.live( 'click keyup', onTripInvoiceFieldChange );
 
 	$( "SELECT[name='money_in[name]']" )
 		.live( 'change', onTripInvoiceTypeChange );
@@ -3157,7 +3256,13 @@ function initTripInvoiceFormTotals(){
 
 			// Activate the country-tabs and trip_clients search box in this tab panel:
 			Trip.initCountryTabs(ui.panel);
-			Trip.initClientSearch(ui.panel);
+
+			// Reduce the effect of the CountryTabs FOUC by giving the browser a chance to render them before other changes:
+			window.setTimeout(function(){
+				initSpinboxes(ui.panel);
+				initDatepickers(ui.panel);
+				Trip.initClientSearch(ui.panel);
+			},0);
 
 		},
 
@@ -3262,14 +3367,29 @@ function initTripInvoiceFormTotals(){
 
 		onUpdateSuccess : function(options){
 
-			if(options && options.form && options.form.id && options.form.target){
+			var form = options && options.form;
 
-				var $panel   = $(options.form.target);
+			// Derive the target element manually when form was submitted from the FLIGHTS GRID:
+			// Eg: Trip page id "#clients2138590478trips119673"
+			if( form.params && form.params.grid && form.path ){
+				
+				form.target = '#' + form.path.replace('/','','g');
+				
+				$(form.target).replaceWith(options.data);
+				Trip.initShow(options);
+				TripElement.closeGridDialog();
+				
+			}
+
+			// Otherwise handle a normal trip update:
+			else if( form && form.id && form.target ){
+
+				var $panel   = $(form.target);
 				var tripName = $panel.find("INPUT[name='trip[name]']").val();
 
 				if(tripName){
 					var $tabs = $panel.parents('.clientPage').find('.ui-tabs:first');
-					var regex = new RegExp('/trips/' + options.form.trip_id);	// Eg: /\/trips\/1234/
+					var regex = new RegExp('/trips/' + form.trip_id);	// Eg: /\/trips\/1234/
 					var ui    = $tabs.tabs('url',regex);
 					$(ui.tab).text(tripName);	// TODO: This seems correct but UI is not changing!
 				}
@@ -3372,45 +3492,52 @@ function initTripInvoiceFormTotals(){
 
 		},
 
-		grid : function(options){
+		openGrid : function(options){
 
 			// We've intercepted a link so prevent default code from handling it:
 			options.event.stopImmediatePropagation();
 
 			// Re-use existing dialog or create new: 
-			$('#trip-elements-grid').parents('.ui-dialog').add('<div>').first()
-			.html('Opening...')
-			.dialog({
-				modal		: true,
-				title		: icon('grid') + ' Quickie trip builder',
-				minHeight	: 500,
-				maxHeight	: 500,
-				width		: 750,
-				open		: function(e,ui){
-					ui.panel = this;
-					options.target = '#' + $(ui.panel).id();
-					options.url = options.url + '?limit=500'
-					Layout.load(options.url,options);
-				},
-				close		: function(e,ui){
-					$(this).remove();
-				},
-				buttons		: {
-					'Cancel'		: function(){ $(this).dialog('close') },
-					'Save changes'	: function(){ $('FORM:last',this).submit() }	// First form is for searching the second (last) is to perform the copy.
-				}
-			});
+			$('#trip-elements-grid').closest('.ui-dialog-content').add('<div>').first()
+				.html('Opening...')
+				.dialog({
+					modal		: true,
+					title		: icon('grid') + ' Quickie trip builder',
+					minHeight	: 450,
+					maxHeight	: 450,
+					width		: 950,
+					open		: function(e,ui){
+						ui.panel = this;
+						options.target = '#' + $(ui.panel).id();
+						options.url = options.url + '?limit=100'
+						Layout.load(options.url,options);
+					},
+					close		: function(e,ui){
+						// Prevent odd effects later by removing dialog from DOM:
+						$(this).remove();
+					},
+					buttons		: {
+						'Cancel'		: function(){ console.log(this,$(this)); TripElement.closeGridDialog() },
+						'Save changes'	: function(){ $('FORM:last',this).submit() }
+					}
+				})
+			;
+		},
+
+		closeGridDialog : function(){
+			$('#trip-elements-grid').closest('.ui-dialog-content').dialog('close');
+		},
+
+		initGrid : function(options){
+
+			// This works but we must also apply datepickers whenever rows are added dynamically:
+			initDatepickers(options.target);
 
 		}
 
+
 	} // End of TripElement utilities.
 	
-
-	// Respond to CLIPBOARD PASTE into the amadeus textbox:
-	$('#amadeus-paste').live('paste', function(e){
-		var $textbox = $(this);
-		window.setTimeout( function(){ alert($textbox.val()) }, 0 );
-	})
 
 
 
@@ -3879,4 +4006,4 @@ function numVal(selector, $fields, defaultAlternative) {
 // QUnit testing://$.getScript('/javascripts/testing/qunit.js', function(){//	$.getScript('/javascripts/testing/test-specs.js')//});
 	// Initialise all our custom Layout event handling:
 	Layout.init();
-	// Intercept accidental attempts to use the BACK BUTTONS etc:	// Note: We only intercept page-unload when there are client tabs open. That way testing individual controller pages is not annoying!	// TODO: Allow use of back buttons by adding to the browser history while user navigates around the tabs.	window.onbeforeunload = function(e){		// Derive file extension of clicked link if applicable: (Eg 'doc', 'pdf')		var elem = e.target.activeElement;		var href = !!elem && elem.href || '';		var file_extension = href.split(/#|\?/).shift().split('.').pop();	// Get text between the last dot and the first # or ?, if any.		if( $('#pageTabsNav > LI').length > 1 && !ALLOW_DOWNLOAD_OF[file_extension] ){			return "- Tip: If you are simply trying to reload the page then press OK to continue.\n\n" +				"- More info:\n This site is more like an application than an ordinary web page, so " +				"using your browser's back and forward buttons will not navigate you around this application."		}	};});	// End of jQuery ready handler.
+	// Intercept accidental attempts to use the BACK BUTTONS etc:	// Note: We only intercept page-unload when there are client tabs open. That way testing individual controller pages is not annoying!	// TODO: Allow use of back buttons by adding to the browser history while user navigates around the tabs.	window.onbeforeunload = function(e){		// Derive file extension of clicked link if applicable: (Eg 'doc', 'pdf')		var elem = e.target.activeElement;		var href = !!elem && elem.href || '';		var file_extension = href.split(/#|\?/).shift().split('.').pop();	// Get text between the last dot and the first # or ?, if any.		if( $('#pageTabsNav > LI').length > 1 && !DOWNLOADABLE_EXT[file_extension] ){			return "- Tip: If you are simply trying to reload the page then press OK to continue.\n\n" +				"- More info:\n This site is more like an application than an ordinary web page, so " +				"using your browser's back and forward buttons will not navigate you around this application."		}	};});	// End of jQuery ready handler.

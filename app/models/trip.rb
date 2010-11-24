@@ -114,8 +114,8 @@ class Trip
 
     accepts_nested_attributes_for :countries  # See http://github.com/snusnu/dm-accepts_nested_attributes
     accepts_nested_attributes_for :trip_countries
-    accepts_nested_attributes_for :trip_clients, :allow_destroy => true
-    accepts_nested_attributes_for :trip_elements
+    accepts_nested_attributes_for :trip_clients,  :allow_destroy => true
+    accepts_nested_attributes_for :trip_elements, :allow_destroy => true
     
     # Handlers for has n through associations: 
     accepts_ids_for :clients		        # ONLY used for providing a clients_names attribute, not for receiving clients_ids!
@@ -1326,7 +1326,7 @@ class Trip
     # Helper to copy details from another trip if required:
     # Warning: Relying on this hook can cause save to fail if copied elements are invalid.
     # Note: This clears the do_copy_trip_xxxx flags to prevent copies from being created again accidentally.
-    def do_copy_trip( from_trip_id = nil )
+    def do_copy_trip( from_trip_id = nil, unbind_from_pnrs = true )
 
       from_trip_id ||= self.do_copy_trip_id
 
@@ -1348,10 +1348,15 @@ class Trip
         # Copy Trip Elements from other_trip:
         # Important: PNR Flight elements are cloned as standard flights (without booking_code)
         if self.do_copy_trip_elements
-          self.copy_elements_from other_trip, :adjust_dates => true, :delete_booking_code => true
+          self.copy_elements_from other_trip, :adjust_dates => true, :unbind_from_pnrs => unbind_from_pnrs
           self.do_copy_trip_elements = nil    # Clear flag to prevent duplication if saved again.
         end
 
+        # But do not copy the pnrs:
+        if unbind_from_pnrs
+          self.copy_pnr_numbers_from other_trip
+        end
+        
       end
 
     end
@@ -1384,29 +1389,30 @@ class Trip
         clone.copy_clients_from master
         clone.copy_elements_from master
         clone.copy_countries_from master
-
+        clone.copy_pnr_numbers_from master
+        
         # Override defaults with any attributes explicitly specified in this method's arguments:
         clone.attributes = custom_attributes if custom_attributes
-      
+        
         return clone.attributes
         
       end
       
     end
     
-
+    
     def copy_clients_from( master, clone = nil )
-
+      
       clone ||= self
-
+      
       master.trip_clients.each do |c|
-
+        
         attributes = c.attributes.merge( :id => nil, :status_id => TripClientStatus::UNCONFIRMED )
         conditions = { :client_id => c.client_id }
         clone.trip_clients.first_or_new( conditions, attributes )
-    
+        
       end
-
+      
     end
     
 
@@ -1425,14 +1431,29 @@ class Trip
     end
 
 
+    def copy_pnr_numbers_from( master, clone = nil )
+      
+      clone ||= self
+      
+      master.trip_pnrs.each do |p|
+        
+        attributes = { :pnr_id => p.pnr_id, :pnr_number => p.pnr_number }
+        conditions = { :pnr_id => p.pnr_id }
+        clone.trip_pnrs.first_or_new( conditions, attributes )
+        
+      end
+      
+    end
+
+
     # Helper for cloning elements from another trip:
     # Options:
-    #    :adjust_dates true to ensure first element is at start of trip)
-    #    :delete_booking_code true to skip any PNR Numbers associated with flights.
+    #    :adjust_dates true to ensure first element date is adjusted to start of trip.
+    #    :unbind_from_pnrs true to skip any PNR Number (AKA booking_code) associated with flights.
     def copy_elements_from( master, options = nil )
 
       # Apply defaults for omitted options:
-      defaults  = { :adjust_dates => false, :clone => self, :type_id => nil, :delete_booking_code => false }
+      defaults  = { :adjust_dates => false, :clone => self, :type_id => nil, :unbind_from_pnrs => false }
       options   = defaults.merge( options || {} )
       clone     = options[:clone]
       type_id   = options[:type_id].to_i > 0 ? options[:type_id].to_i : nil
@@ -1440,7 +1461,7 @@ class Trip
       master.trip_elements.each do |master_elem|
 
         #attrs       =  master_elem.attributes.merge( :id => nil )
-        #attrs.delete(:booking_code) if options[:delete_booking_code]
+        #attrs.delete(:booking_code) if options[:unbind_from_pnrs]
         #clone_elem  = TripElement.new(attrs)
 
         # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
@@ -1451,7 +1472,7 @@ class Trip
         if !type_id || master_elem.type_id == type_id
 
           attrs       =  master_elem.attributes.merge( :id => nil )
-          attrs.delete(:booking_code) if options[:delete_booking_code]
+          attrs.delete(:booking_code) if options[:unbind_from_pnrs]
           clone_elem = clone.trip_elements.new(attrs)
 
           # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
