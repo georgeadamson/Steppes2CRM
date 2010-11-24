@@ -215,8 +215,9 @@ module Merb::Helpers::Form
 
 	# And out own special <span class="ui-icon ui-icon-xxx"></span>
 	def icon( type = :info, attrs = {} )
+    text = attrs.delete(:text) || ''
 		attrs[:class] = "ui-icon ui-icon-#{ type } #{ attrs[:class] }"
-		return tag :span, attrs
+		return tag :span, text, attrs
 	end
   
 

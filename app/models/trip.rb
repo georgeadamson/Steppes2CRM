@@ -128,7 +128,8 @@ class Trip
     attr_accessor :do_copy_trip_elements   # Allows elements to be cloned from another trip.     Use with do_copy_trip_id.
     attr_accessor :do_copy_trip_itinerary  # Allows elements etc to be cloned from another trip. Use with do_copy_trip_id.
     attr_accessor :do_copy_trip_countries  # Allows countries to be copied from another trip.    Use with do_copy_trip_id.
-       
+    attr_accessor :do_link_to_master       # When set, elements in the copied trip will be bound to the original. Use with do_copy_trip_id when creating a Fixed Dep from a Group Template.
+    
 
 
     # This fix is redundant because trip.start/end_date are Date properties not DateTime
@@ -318,6 +319,7 @@ class Trip
       
       
       # Create flight followups if the trip is now confirmed:
+      # Note: Followups will not be created again if they already exist.
       if self.confirmed?
         self.flights.each{ |flight| flight.create_task() }
       end
@@ -459,23 +461,23 @@ class Trip
     def days_overrun;		return self.days(true); end
     
     # Handy shortcuts for common attributes:
-    def tailor_made?;     return self.type_id   == TripType::TAILOR_MADE;   end
-    def private_group?;   return self.type_id   == TripType::PRIVATE_GROUP; end # Depricated?
-    def tour_template?;   return self.type_id   == TripType::TOUR_TEMPLATE; end
-    def fixed_dep?;       return self.type_id   == TripType::FIXED_DEP;     end
-    def unconfirmed?;     return self.status_id == TripState::UNCONFIRMED;  end
-    def confirmed?;       return self.status_id == TripState::CONFIRMED;    end
-    def completed?;       return self.status_id == TripState::COMPLETED;    end
-    def abandonned?;      return self.status_id == TripState::ABANDONED;    end
-    def cancelled?;       return self.status_id == TripState::CANCELLED;    end
-    def year;							return self.start_date.strftime("%Y"); end
-    def month;						return self.start_date.strftime("%b %Y"); end
-    def travellers;				return self.adults.to_i + self.children.to_i + self.infants.to_i; end
-    def travellers?;			return self.travellers    > 0; end
-    def adults?;					return self.adults.to_i   > 0; end
-    def children?;				return self.children.to_i > 0; end
-    def infants?;					return self.infants.to_i  > 0; end
-    def singles?;					return self.singles.to_i  > 0; end
+    def tailor_made?;   return self.type_id   == TripType::TAILOR_MADE;   end
+    def private_group?; return self.type_id   == TripType::PRIVATE_GROUP; end # Depricated?
+    def tour_template?; return self.type_id   == TripType::TOUR_TEMPLATE; end
+    def fixed_dep?;     return self.type_id   == TripType::FIXED_DEP;     end
+    def unconfirmed?;   return self.status_id == TripState::UNCONFIRMED;  end
+    def confirmed?;     return self.status_id == TripState::CONFIRMED;    end
+    def completed?;     return self.status_id == TripState::COMPLETED;    end
+    def abandonned?;    return self.status_id == TripState::ABANDONED;    end
+    def cancelled?;     return self.status_id == TripState::CANCELLED;    end
+    def year;						return self.start_date.strftime("%Y"); end
+    def month;					return self.start_date.strftime("%b %Y"); end
+    def travellers;			return self.adults.to_i + self.children.to_i + self.infants.to_i; end
+    def travellers?;		return self.travellers    > 0; end
+    def adults?;				return self.adults.to_i   > 0; end
+    def children?;			return self.children.to_i > 0; end
+    def infants?;				return self.infants.to_i  > 0; end
+    def singles?;				return self.singles.to_i  > 0; end
     
     def is_first_version; return self.version_of_trip_id == self.id || self.id.nil?; end  # AKA The ORIGINAL trip version.
     def version_name;		  return self.is_first_version ? "Original version: #{ self.name }" : self.name; end
@@ -495,7 +497,30 @@ class Trip
       return self.primaries.map{|c| "#{ c.fullname } #{ c.postcode }" }.join(', ')
 
     end
+
+    # Helper to fetch trips that are linked to this trip.
+    # By default this only returns the active_version of each trip.
+    def slave_trips( include_inactive_versions = false )
+
+      master_elem_ids = self.trip_elements.map{|elem| elem.id }
+      slaves          = Trip.all( Trip.trip_elements.master_trip_element_id => master_elem_ids )
+      slaves          = slaves.all( :is_active_version => true ) unless include_inactive_versions
+      
+      return slaves
+      
+    end
     
+    # Helper to return the Group Trip that this trip's elements are linked to:
+    # TODO: Store master_trip_id in the database because this will be useless if master trip has no elements!
+    def master_trip
+      
+      slave_element = self.trip_elements.first( :master_trip_element_id.gt => 0 )
+      
+      return slave_element && slave_element.master_element && slave_element.master_element.trip
+
+    end
+
+
     # Helper to return a list of all versions of this trip:
     def versions
       return Trip.all( :version_of_trip_id => self.version_of_trip_id )
@@ -1201,7 +1226,7 @@ class Trip
     
     # Helper for recalculating and setting price_per_xxx and total_price of trip:
     # Only applied where price pp is currently zero because we must not override prices set manually in costing sheet!
-    def update_prices
+    def update_prices( override = false )
       
       # Ensure submitted currency strings such as "123.00" are converted to decimals:
       # (These values are submitted by the Costings page)
@@ -1214,16 +1239,16 @@ class Trip
       self.price_per_infant_biz_supp  = self.price_per_infant_biz_supp.to_f
       
       std_options = { :with_all_extras => true, :string_format => false, :to_currency => false }
-      biz_options = { :biz_supp => true, :string_format => false, :to_currency => false }
+      biz_options = { :biz_supp        => true, :string_format => false, :to_currency => false }
       
       # Recalculate prices-per-person where they seem to be ZERO or just the booking fee:
       # (This typically occurs when no-one has entered prices in the Costing Sheet yet)
-      self.price_per_adult            = self.calc( :total, :actual, :gross, :per, :adult,  std_options ) if self.price_per_adult.zero?  || self.price_per_adult  == self.booking_fee || self.price_per_adult  == self.booking_fees(:adults)
-      self.price_per_child            = self.calc( :total, :actual, :gross, :per, :child,  std_options ) if self.price_per_child.zero?  || self.price_per_child  == self.booking_fee || self.price_per_child  == self.booking_fees(:children)
-      self.price_per_infant           = self.calc( :total, :actual, :gross, :per, :infant, std_options ) if self.price_per_infant.zero? || self.price_per_infant == self.booking_fee || self.price_per_infant == self.booking_fees(:infants)
-      self.price_per_adult_biz_supp   = self.calc( :total, :actual, :gross, :per, :adult,  biz_options ) if self.price_per_adult_biz_supp.zero?
-      self.price_per_child_biz_supp   = self.calc( :total, :actual, :gross, :per, :child,  biz_options ) if self.price_per_child_biz_supp.zero?
-      self.price_per_infant_biz_supp  = self.calc( :total, :actual, :gross, :per, :infant, biz_options ) if self.price_per_infant_biz_supp.zero?
+      self.price_per_adult            = self.calc( :total, :actual, :gross, :per, :adult,  std_options ) if override || self.price_per_adult.zero?  || self.price_per_adult  == self.booking_fee || self.price_per_adult  == self.booking_fees(:adults)
+      self.price_per_child            = self.calc( :total, :actual, :gross, :per, :child,  std_options ) if override || self.price_per_child.zero?  || self.price_per_child  == self.booking_fee || self.price_per_child  == self.booking_fees(:children)
+      self.price_per_infant           = self.calc( :total, :actual, :gross, :per, :infant, std_options ) if override || self.price_per_infant.zero? || self.price_per_infant == self.booking_fee || self.price_per_infant == self.booking_fees(:infants)
+      self.price_per_adult_biz_supp   = self.calc( :total, :actual, :gross, :per, :adult,  biz_options ) if override || self.price_per_adult_biz_supp.zero?
+      self.price_per_child_biz_supp   = self.calc( :total, :actual, :gross, :per, :child,  biz_options ) if override || self.price_per_child_biz_supp.zero?
+      self.price_per_infant_biz_supp  = self.calc( :total, :actual, :gross, :per, :infant, biz_options ) if override || self.price_per_infant_biz_supp.zero?
       
       # Recalculate the total price of the trip too:
       self.total_price = self.calc_total_price
@@ -1249,6 +1274,27 @@ class Trip
 
     end
 
+    
+    # Helper to set all elements' margins to the specified percentage:
+    def update_margins_to( new_margin, save = false )
+
+      self.elements.each do |elem|
+
+        elem.margin_type          = '%'
+        elem.biz_supp_margin_type = '%'
+        elem.margin               = new_margin
+        elem.biz_supp_margin      = new_margin
+        elem.update_prices
+        elem.save! if save && !self.new?
+
+      end
+
+      self.update_prices(:override_price_per_person)
+      self.save! if save && !self.new?
+
+      return self.total_price
+
+    end
     
     
     
@@ -1311,10 +1357,11 @@ class Trip
     end
     
     
-    # Helper to generate a new version of this trip:
+    # Helper to generate a new version of this trip: (Note we explicitly prevent copied elements from being bound to their originals)
     def new_version( custom_attributes = {} )
 
       version = Trip.new
+      version.do_link_to_master = false
       cloned  = version.copy_attributes_from self, custom_attributes
 
       return version if cloned
@@ -1326,35 +1373,42 @@ class Trip
     # Helper to copy details from another trip if required:
     # Warning: Relying on this hook can cause save to fail if copied elements are invalid.
     # Note: This clears the do_copy_trip_xxxx flags to prevent copies from being created again accidentally.
-    def do_copy_trip( from_trip_id = nil, unbind_from_pnrs = true )
+    def do_copy_trip( master_trip_id = nil, unbind_from_pnrs = true )
 
-      from_trip_id ||= self.do_copy_trip_id
+      master_trip_id ||= self.do_copy_trip_id
 
       # Copy details from another trip if required:
-      if from_trip_id && other_trip = Trip.get(from_trip_id)
+      if master_trip_id && ( master_trip = Trip.get(master_trip_id) )
 
-        # Copy Clients from other_trip:
+        # Copy Clients from master_trip:
         if self.do_copy_trip_clients
-          self.copy_clients_from other_trip
+          self.copy_clients_from master_trip
           self.do_copy_trip_clients = nil     # Clear flag to prevent duplication if saved again.
         end
 
-        # Copy Countries from other_trip:
+        # Copy Countries from master_trip:
         if self.do_copy_trip_countries
-          self.copy_countries_from other_trip
+          self.copy_countries_from master_trip
           self.do_copy_trip_countries = nil   # Clear flag to prevent duplication if saved again.
         end
 
-        # Copy Trip Elements from other_trip:
+        # Copy Trip Elements from master_trip:
         # Important: PNR Flight elements are cloned as standard flights (without booking_code)
         if self.do_copy_trip_elements
-          self.copy_elements_from other_trip, :adjust_dates => true, :unbind_from_pnrs => unbind_from_pnrs
+
+          options = {
+            :adjust_dates     => true,
+            :unbind_from_pnrs => unbind_from_pnrs,
+            :link_to_master   => self.do_link_to_master # Should only be used to link a FIXED_DEP's elements to it's TOUR_TEMPLATE
+          }
+          self.copy_elements_from master_trip, options
           self.do_copy_trip_elements = nil    # Clear flag to prevent duplication if saved again.
+
         end
 
-        # But do not copy the pnrs:
-        if unbind_from_pnrs
-          self.copy_pnr_numbers_from other_trip
+        # Only copy the pnrs if specified:
+        unless unbind_from_pnrs
+          self.copy_pnr_numbers_from master_trip
         end
         
       end
@@ -1368,26 +1422,19 @@ class Trip
       
       if master
         
-        clone    = self
+        clone          = self
+        link_to_master = ( clone.do_link_to_master.nil? ? true : !!clone.do_link_to_master )
 
-        attributes = {
-          :id       => nil,
-          :name     => master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }",
-          :type_id  => master.tour_template? ? TripType::FIXED_DEP       : master.type_id   # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
-        }
+        attributes = master.attributes.except(:id).merge( :name => "Copy of #{ master.name }" )
 
-        clone.attributes = master.attributes.merge(attributes)
+        # Important: A copy of a TOUR_TEMPLATE must be a FIXED_DEP:
+        attributes.merge!( :type_id => TripType::FIXED_DEP, :name => "Group: #{ master.name }" ) if master.tour_template?
 
-        #new_name = master.tour_template? ? "Group: #{ master.name }" : "Copy of #{ master.name }"
-        #type_id  = master.tour_template? ? TripType::FIXED_DEP       : master.type_id # Copy of a TOUR_TEMPLATE must be a FIXED_DEP:
-        #  :id       => nil,
-        #  :name     => new_name,
-        #  :type_id  => type_id
-        #)
+        clone.attributes = attributes
         
-        # Copy clients and countries and elements:
+        # Copy clients, countries, elements and pnr-numbers:
         clone.copy_clients_from master
-        clone.copy_elements_from master
+        clone.copy_elements_from master, :link_to_master => link_to_master
         clone.copy_countries_from master
         clone.copy_pnr_numbers_from master
         
@@ -1453,30 +1500,45 @@ class Trip
     def copy_elements_from( master, options = nil )
 
       # Apply defaults for omitted options:
-      defaults  = { :adjust_dates => false, :clone => self, :type_id => nil, :unbind_from_pnrs => false }
+      defaults  = {
+        :clone            => self,
+        :type_id          => nil,   # When set, only elements matching this type will be copied.
+        :adjust_dates     => false, # When true, element dates will be changed to fit the new trip.
+        :unbind_from_pnrs => false, # When true, skip the :booking_code field.
+        :link_to_master   => false  # When true, set  the :master_trip_element_id field. For Fixed Dep only!
+      }
       options   = defaults.merge( options || {} )
-      clone     = options[:clone]
+      clone     = options.delete :clone
       type_id   = options[:type_id].to_i > 0 ? options[:type_id].to_i : nil
 
-      master.trip_elements.each do |master_elem|
-
-        #attrs       =  master_elem.attributes.merge( :id => nil )
-        #attrs.delete(:booking_code) if options[:unbind_from_pnrs]
-        #clone_elem  = TripElement.new(attrs)
-
-        # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
-        #clone_elem.day = master_elem.day if options[:adjust_dates]
+      master.trip_elements.all( :order => [:id] ).each do |master_elem|
 
         # Add cloned element to the trip (unless type_id was specified and matches element type)
-        #clone.trip_elements << clone_elem 
         if !type_id || master_elem.type_id == type_id
 
-          attrs       =  master_elem.attributes.merge( :id => nil )
-          attrs.delete(:booking_code) if options[:unbind_from_pnrs]
-          clone_elem = clone.trip_elements.new(attrs)
+          clone_elem = clone.trip_elements.new.copy_attributes_from( master_elem, options )
 
-          # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
-          clone_elem.day = master_elem.day if options[:adjust_dates]
+          #  attrs = master_elem.attributes.merge( :id => nil )
+          #
+          #  # Unbind the flight from the PNR if specified:
+          #  if options[:unbind_from_pnrs]
+          #    attrs.delete(:booking_code)
+          #    attrs.delete(:booking_line_number)
+          #    attrs.delete(:booking_line_revision)
+          #  end
+          #
+          #  # Bind the flight to the master element if specified:
+          #  # (Only use this when creating a Fixed Dep trip from a Group Template trip. When making a new Version of a Fixed Dep, assume the same :master_trip_element_id.)
+          #  if options[:link_to_master]
+          #    attrs[:master_trip_element_id] ||= master_elem.id
+          #  end
+          #
+          #  clone_elem = clone.trip_elements.new(attrs)
+          #
+          #  # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
+          #  if options[:adjust_dates]
+          #    clone_elem.day = master_elem.day
+          #  end
 
         end
 
@@ -1484,7 +1546,6 @@ class Trip
 
     end
 
-    
     
     def initialize(*)
       super

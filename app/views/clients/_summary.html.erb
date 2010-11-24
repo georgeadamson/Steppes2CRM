@@ -42,7 +42,7 @@
 				<dt>Known as</dt><dd><%= client.known_as %></dd>
 				<dt>Salutation</dt><dd><%= client.salutation %></dd>
 				<dt>Addressee</dt><dd><%= client.addressee %></dd>
-				<dt>Date of birth</dt>
+				<dt>DoB</dt>
 				<dd>
 					<% if client.birth_date %>
 						<%= client.birth_date.formatted(:uidate) %> <%= "<small>(age #{ client.age })</small>" %>
@@ -50,20 +50,23 @@
 						n/a
 					<% end %>
 				</dd>
+
 				<% if client.created_at || client.original_company || !client.created_by.blank? %>
 					<dt>Added</dt>
 					<dd>
+						<small>
 						<%= client.created_at.formatted(:uidate)	if client.created_at %>
 						<%= '<br/>by'																if client.original_company || !client.created_by.blank? %>
 						<%= "#{ client.created_by }<br/>"						if !client.created_by.blank? %>
 						<%= client.original_company.name						if client.original_company %>
+						</small>
 					</dd>
 				<% end %>
 			<dl>
     </div>
 
     <div class="fieldset widthFifth withHeading">
-		
+
       <h4>Primary address 
 				<%= tag :small, "(1 of #{ client.addresses.length })" if client.addresses.length > 1 %>
         <%#= link_to "Letter", resource(client, :edit) if client.id %>
@@ -84,7 +87,7 @@
         <dt>Country</dt><dd><%= client.country && client.country.name %></dd>
         <dt>Mailing zone</dt><dd>Zone: <%= client.country && client.country.mailing_zone && client.country.mailing_zone.name %></dd>
       </dl>
-			
+
     </div>
 
     <div class="fieldset widthFifth withHeading">
@@ -117,13 +120,15 @@
 				-->
 				<dt>Preferences</dt>
 				<dd>
+					<small>
 					<% unless client.notes_frequent_flyer.blank? %><em>Frequent flyer number:</em> <%= client.notes_frequent_flyer %>,<% end %>
 					<% unless client.notes_airline.blank? %><em>Airline:</em> <%= client.notes_airline %>, <% end %>
 					<% unless client.notes_seating.blank? %><em>Seating:</em> <%= client.notes_seating %>, <% end %>
 					<% unless client.notes_food.blank? %><em>Meals:</em> <%= client.notes_food %>, <% end %>
 					<% unless client.notes_general.blank? %><em>Other:</em> <%= client.notes_general %><% end %>
+					</small>
 				</dd>
       </dl>
     </div>
-  
+
 <!--</div>-->

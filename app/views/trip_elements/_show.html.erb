@@ -1,10 +1,11 @@
 <%
+
 # Render a SINGLE TRIP ELEMENT on the TripBuilder timeline.
 # Called by trip_elements/_timeline_elements.html.erb partial
 
 element			||= @element
 selected		||= @selected
-isOverview	||= @isOverview || false	# Depricated
+isOverview	||= @isOverview || false						# Depricated
 trip					= element.trip
 
 # Build css class names for this trip element:
@@ -21,7 +22,8 @@ cssClasses = [
 	trip.infants  > 0 ? 'hasInfants'  : 'noInfants',
 	trip.singles  > 0 ? 'hasSingles'  : 'noSingles',
 	#"trip_element[id]=#{ element.id }",	# Depricated?
-	selected ? 'selected' : ''
+	selected ? 'selected' : '',
+	element.is_slave?   ? 'slave'   : ''
 ]
 
 # Build informative tooltip for this trip element:
@@ -57,19 +59,41 @@ elementUrl = nested_resource(element)
 customSize = "width:#{ element.percentOfTrip.to_s }%;left:#{ element.percentThroughTrip.to_s }%;" if isOverview
 
 
--%><%= fields_for element do %>
-	
+-%>
+<%= fields_for element do %>
+
 	<li class="<%= cssClasses.join(" ") %>" title="<%= elementTitle %>" style="<%= customSize %>" data-ajax-url="<%= elementUrl %>">
-		<%= hidden_field :id %>
+
+		<%= hidden_field :id -%>
+
 		<% unless isOverview -%>
+
 			<h4>
-			<%= link_to element_label,
-			nested_resource( element, :edit ),
-			:class	=> 'ajax',
-			:rel		=> '.tripElementFormContainer'	# IMPORTANT: rel attribute defines html target where response will be loaded!
-			-%>
-		</h4>
-		<% end -%>
-			</li>
+				<%= link_to element_label,
+					nested_resource( element, :edit ),
+					:class	=> 'ajax',
+					:rel		=> '.tripElementFormContainer'	# IMPORTANT: rel attribute defines html target where form will be loaded!
+				-%>
+			</h4>
+
+			<%= if element.is_master? && ( slave_count = element.slave_elements.count ) > 0
+
+				icon :attention, :text => '', :class => 'master',
+				     :title => "#{ slave_count } elements are linked to this template element in client copies."
+				
+			elsif element.is_slave? && element.master_element
 			
-			<% end =%>
+				icon :attention, :text => icon(:locked), :class => 'slave',
+				     :title => 'This element is controlled by the Group Trip Template so you won&apos;t be able to modify it here.'
+				
+			elsif element.is_slave? && !element.master_element
+			
+				icon :alert, :class => 'slave',
+				     :title => "This element was controlled by the Group Trip Template but the original element no longer exists."
+			
+			end -%>
+
+		<% end -%>
+	</li>
+
+<% end =%>

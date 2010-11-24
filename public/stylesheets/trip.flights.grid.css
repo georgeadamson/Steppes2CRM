@@ -63,9 +63,11 @@ TABLE#trip-elements-grid { background-color:#000; }
 #trip-elements-grid TR:not(.create) .ui-icon.create,
 #trip-elements-grid TR:not(.update) .ui-icon.update,
 #trip-elements-grid TR:not(.delete) .ui-icon.delete,
-#trip-elements-grid TR:not(.locked) .ui-icon.locked { display:none; }
+#trip-elements-grid TR:not(.pnr)    .ui-icon.pnr,
+#trip-elements-grid TR:not(.slave)  .ui-icon.slave { display:none; }
 
-#trip-elements-grid TR        		.ui-icon.locked { background-color:#1A61A9; }	/* Amadeus blue */
+#trip-elements-grid TR        		.ui-icon.locked { background-color:#E72E3F; }	/* Red */
+#trip-elements-grid TR        		.ui-icon.pnr    { background-color:#1A61A9; }	/* Amadeus blue */
 #trip-elements-grid TR        		.ui-icon.update { background-color:#98B4E2; }	/* Trip-Builder Flight blue */
 #trip-elements-grid TR        		.ui-icon-round  { -moz-box-shadow:-0px -0px 1px rgba(255, 255, 255, 0.5); }
 

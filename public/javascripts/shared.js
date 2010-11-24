@@ -132,30 +132,38 @@ jQuery(function($) {
 
 	var Layout = {
 
-		// Experimental new router matching syntax: (To replace livePath & liveForm)
+		// Experimental new router matching syntax: (To replace livePath & eventually liveForm)
 		// Eg: Layout.match(/clients\/new/).on('success').to(Client.openNew)
 		match : function(path){
 
-			var methods = { on: status, to: callback }, 
-				route   = { path: path, status: undefined, callback: undefined };
-			return methods;
+			var undefined,
+				methods = { on: status, to: callback }, 
+				route   = $.isPlainObject(path) ? path : { path:path, status:undefined, callback:undefined };
 
-			function status(state){
-				route.status = state;
-				bindRoute(route);
-				return methods;
+			// Return the methods hash to begin chaining:
+			return bindRoute();
+
+			function status(arg){
+				return bindRoute({ status:arg });
 			}
 
-			function callback(fn){
-				route.callback = fn;
-				bindRoute(route);
-				return methods;
+			function callback(arg){
+				return bindRoute({ callback:arg });
 			}
 
-			function bindRoute(route){
+			// Add more arguments to the route settings and initialise the route listener if settings are complete:
+			function bindRoute(args){
+
+				// Merge in any new route configuration arguments:
+				$.extend( route, args );
+
 				if( route.callback && route.status && route.path ){
 					Layout.livePath( route.status, route.path, route.callback );
 				}
+
+				// Return the methods hash to maintain chaining:
+				return methods;
+
 			}
 
 		},
@@ -197,6 +205,7 @@ jQuery(function($) {
 
 			// Trips:
 			$("A[href $= '#costing_copy_gross']").live('click', Trip.copyGrossPrice);										// Handle 'Set gross' helper button on Costings Sheet.
+			// The following have been refactored to use the new Layout.match syntax below!
 			//Layout.livePath('click',   /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.openShow );	// Create new version.
 			//Layout.livePath('success', /clients\/([0-9]+)\/trips\/new\?.*version_of_trip_id=([0-9]+)/,	Trip.initShow );	// Created new version.
 			//Layout.livePath('success', /clients\/([0-9]+)\/trips\/new/,									Trip.initForm );
@@ -2842,7 +2851,7 @@ function initKeyPressFilters(){
 			
 		var keys = [ KEY.integer, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
 
-		if( isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
+		if( ( isKeyCodeInList( e.keyCode, keys ) && !e.shiftKey ) || e.ctrlKey || e.altKey ){
 
 			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
 			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
@@ -2862,7 +2871,7 @@ function initKeyPressFilters(){
 
 		var keys = [ KEY.decimal, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
 
-		if( isKeyCodeInList( e.keyCode, keys ) || e.ctrlKey || e.altKey ){
+		if( ( isKeyCodeInList( e.keyCode, keys ) && !e.shiftKey ) || e.ctrlKey || e.altKey ){
 
 			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
 			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
@@ -3370,11 +3379,11 @@ function initTripInvoiceFormTotals(){
 			var form = options && options.form;
 
 			// Derive the target element manually when form was submitted from the FLIGHTS GRID:
-			// Eg: Trip page id "#clients2138590478trips119673"
-			if( form.params && form.params.grid && form.path ){
-				
-				form.target = '#' + form.path.replace('/','','g');
-				
+			// Eg: Trip page id "#clients123trips456" or "#tours123trips456"
+			if( form && form.params && form.params.grid && form.path ){
+
+				options.target = form.target = '#' + form.path.replace('/','','g');
+
 				$(form.target).replaceWith(options.data);
 				Trip.initShow(options);
 				TripElement.closeGridDialog();

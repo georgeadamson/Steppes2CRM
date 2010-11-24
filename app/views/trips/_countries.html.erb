@@ -3,7 +3,10 @@
 	trip.id	     ||= 0
 	field_prefix ||= nil
 
-	selected_countries = '-1,' + trip.countries_ids.join(',')				# Comma separated list of the trip's current country selections.
+	# Note: We use trip.trip_countries in case the trip is unsaved (because a new trip won't have a .countries collection yet)
+	
+	country_ids        = trip.trip_countries.map{|c|c.country_id}		# Read country IDs from the trip_countries collection.
+	selected_countries = country_ids.unshift(-1).join(',')	        # Comma separated list of the trip's current country selections.
 	checkbox_id_prefix = "#{ nested_resource(trip,true) }country"		# Ensures each checkbox has a unique ID so it's label can be wired to it.
 
 	# Params to add to each world-region tab url: (world_region_id will be added later for each link)
@@ -27,10 +30,13 @@
 		<ul class="countryTabs">
 
 			<!-- Show a tab for selected countries unless this is a new trip: -->
-			<%= tag :li do
-						link_to 'Chosen countries', "##{ nested_resource(trip,true) }countriesSelected"
-					end unless trip.new? && trip.countries.empty?		# No need to show chosen countries for new trips unless they have some countries selected.
-			%>
+			<%= unless trip.new? && trip.trip_countries.empty?
+
+				tag :li do
+					link_to 'Chosen countries', "##{ nested_resource(trip,true) }countriesSelected"
+				end 		# No need to show chosen countries for new trips unless they have some countries selected.
+
+			end %>
 
 			<!-- One TAB for each world region: -->
 			<% $cached[:world_regions].each do |region| %>
@@ -45,7 +51,7 @@
 		<!-- For info about the field naming convention below see: http://wonderfullyflawed.com/2009/02/17/rails-forms-microformat and http://groups.google.com/group/merb/browse_thread/thread/284450882ba6822c -->
 
 		<!-- Populate SELECTED COUNTRIES TAB unless this is a new trip: (The 'countriesSelected' class is used by js to locate the summary of checked countries) -->
-		<%= unless trip.new? && trip.countries.empty?					# No need to show chosen countries for new trips unless they have some countries selected.
+		<%= unless trip.new? && trip.trip_countries.empty?					# No need to show chosen countries for new trips unless they have some countries selected.
 
 					tag :div, :id => "#{ nested_resource(trip,true) }countriesSelected", :class => 'countryTabsPanel countriesSelected' do
 						tag :ul, :class => 'checkboxList ellipsis columns' do
