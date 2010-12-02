@@ -49,7 +49,10 @@
 		<fieldset class="width1Field">
 			<legend class="ui-helper-hidden">Marketing</legend>
 			<%= partial 'clients/marketing', :client => client %>
-			<%= partial 'clients/profile', :client => client %>
+		</fieldset>
+		<fieldset class="width1Field">
+			<legend class="ui-helper-hidden">Source</legend>
+			<%= partial 'clients/profile',   :client => client %>
 		</fieldset>
   </dd>
 

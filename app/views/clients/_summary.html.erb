@@ -56,9 +56,9 @@
 					<dd>
 						<small>
 						<%= client.created_at.formatted(:uidate)	if client.created_at %>
-						<%= '<br/>by'																if client.original_company || !client.created_by.blank? %>
-						<%= "#{ client.created_by }<br/>"						if !client.created_by.blank? %>
-						<%= client.original_company.name						if client.original_company %>
+						<%= '<br/>by'															if client.original_company || !client.created_by.blank? %>
+						<%= "#{ client.created_by }<br/>"					if !client.created_by.blank? %>
+						<%= client.original_company.name					if client.original_company %>
 						</small>
 					</dd>
 				<% end %>
@@ -103,14 +103,18 @@
     </div>
 
     <div class="fieldset widthTwoFifths withHeading">
-      <h4>Marketing &amp; Preferences <%#= link_to "Edit", resource(client, :edit)+"#preferences" if client.id %></h4>
+      <h4>Marketing &amp; Preferences</h4>
       <dl class="fields ellipsis">
         <dt>Areas</dt><dd><%= areas_of_interest.join(', ') %></dd>
         <dt>Source</dt><dd><%= client.source && client.source.name %></dd>
         <dt>Orig source</dt><dd><%= client.original_source && client.original_source.name %></dd>
         <dt>Type</dt><dd><%= client.type && client.type.name %></dd>
-        <dt>Topic</dt><dd>(Unused)</dd>
-        <dt>Marketing</dt><dd class="xtextarea"><%= client.marketing && client.marketing.name %></dd>
+        <!--<dt>Topic</dt><dd>(Unused)</dd>-->
+        <dt>Marketing</dt>
+				<dd>
+					<%= client.marketing && client.marketing.name %>
+					<%= " (#{ client.companies.map{|c|c.initials}.join(', ') })" unless client.companies.empty? %>
+				</dd>
         <!--
 				<dt>Freq. flyer</dt><dd><%= client.notes_frequent_flyer %></dd>
         <dt>Airline</dt><dd class="textarea"><%= client.notes_airline %></dd>
