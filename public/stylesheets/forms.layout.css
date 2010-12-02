@@ -661,12 +661,15 @@ DIV.fieldset {
 
 		DIV.fieldset.withHeading DL.fields DT {
 			position:absolute;
+			font-weight:bold;
+			text-shadow:0 0 1px #999;
 		}
 
 		DIV.fieldset.withHeading DL.fields DD {
 			-ms-box-sizing:padding-box; -moz-box-sizing:padding-box; -webkit-box-sizing:padding-box; -o-box-sizing:padding-box;
 			padding-left:6em;
 			margin-bottom:0.3em;
+			text-shadow:0 0 1px #999;
 			width:100%;
 		}
 			DIV.fieldset.withHeading DL.fields.hideLabels DD {

@@ -365,6 +365,16 @@ class Client
     return self.money_ins.sum(:amount)
   end
 
+  # Used in reports:
+  def companies_names
+    return self.companies.map{|c|c.name}.join(', ')
+  end
+
+  # Used in reports:
+  def companies_initials
+    return self.companies.map{|c|c.initials}.join(', ')
+  end
+
 
   # Helper to identify clients that have only just been added to the database:
   def created_today?
@@ -448,7 +458,7 @@ class Client
   # Define which properties are available in reports  
   def self.potential_report_fields
     #return [ :name, :title, :trip_clients, :trips ]
-    return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :client_type, :areas_of_interest, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :booked_trips_count, :invoice_total, :created_at ]
+    return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :companies_names, :companies_initials, :client_type, :areas_of_interest, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :booked_trips_count, :invoice_total, :created_at ]
   end
 
 end
