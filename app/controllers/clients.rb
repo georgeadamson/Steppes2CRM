@@ -159,8 +159,12 @@ class Clients < Application
 
   def new
     only_provides :html
-    @client = Client.new
-    @client.type ||= ClientType.first # <-- TODO: This workaround should not be necessary!
+
+    @client                    = Client.new
+    @client.type             ||= ClientType.first # <-- TODO: This workaround should not be necessary!
+    @client.original_company ||= session.user.company
+    @client.companies        <<  @client.original_company
+
     display @client
   end
 

@@ -100,6 +100,10 @@ class Client
 	alias :interests  :countries
 	alias :interests= :countries=
 
+  # Associate clients with companies: (Only used on client page and for marketing/reports)
+  has n, :client_companies
+  has n, :companies, :through => :client_companies
+
 	accepts_nested_attributes_for :notes
 	accepts_nested_attributes_for :countries	#:interests
 	accepts_nested_attributes_for :client_interests
@@ -110,6 +114,7 @@ class Client
 	accepts_ids_for :trips
 	accepts_ids_for :countries	# AKA :interests
 	accepts_ids_for :addresses
+	accepts_ids_for :companies
   
 	#validates_format :birth_date, :with => /^[0-3]?[0-9][\-\/][0-1]?[0-9][\-\/][0-9][0-9][0-9][0-9]$/, :allow_nil => true, :message => "The client's date of birth needs to be valid, or leave it blank please"
 	#validates_format :birth_date, :with => /^[1-2][0-9]{3}[-\/][0-1][0-9][-\/][0-3][0-9]$/, :message => "Date of birth: Needs to be of the form 'dd/mm/yyyy' (or leave it blank)"
@@ -167,6 +172,13 @@ class Client
     # (This should not be confused with client_addresses or address_clients!)
     self.address_client ||= self
 
+  end
+
+  before :create do
+
+    # Ensure at least one company is selected for marketing to new client:
+    self.companies << self.original_company if self.companies.empty?
+    
   end
 
   before :save do
