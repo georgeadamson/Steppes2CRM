@@ -661,6 +661,8 @@ DIV.fieldset {
 
 		DIV.fieldset.withHeading DL.fields DT {
 			position:absolute;
+			font-weight:bold;
+			text-shadow:0 0 1px #999;
 		}
 
 		DIV.fieldset.withHeading DL.fields DD {
