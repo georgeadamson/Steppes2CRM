@@ -175,6 +175,7 @@ class TripElement
   :message => "The Airline code was not recognised. (Try examining the PNR and ensure the airline has an Airline Code defined in the System Admin pages)"
   
   
+  # WARNING: Use attribute_set to set both date and time! Because the standard .start/end_date methods have been overwritten to ignore time. #514
   # Ugly workaround for the way datamapper returns datetime properties!
   # Necessary because DM adds unwanted +01 timezone offset when reading datetime fields from database during BST.
   # TODO: Look out for a better solution: http://groups.google.com/group/datamapper/browse_thread/thread/f01d9dba2cc29412
@@ -955,7 +956,7 @@ class TripElement
     options    = defaults.merge( options || {} )
     clone      = options[:clone]
     
-    attributes = master.attributes.except(:id)
+    attributes = master.attributes.except( :id, :created_at, :updated_at )
     
     # Unbind the flight from the PNR if specified:
     if options[:unbind_from_pnrs]
@@ -965,13 +966,19 @@ class TripElement
     end
     
     # Bind the flight to the master element if specified:
-    # (Only use this when creating a Fixed Dep trip elem from a Group Template trip elem. When making a new Version of a Fixed Dep, assume the same :master_trip_element_id.)
+    # Only use this option when creating a Fixed Dep trip elem from a Group Template trip elem.
+    # Important: When making a new Version of a Fixed Dep, assume the same :master_trip_element_id.
     if options[:link_to_master]
       attributes[:master_trip_element_id] ||= master.id
     end
     
     clone.attributes = attributes
-    
+
+    # Workaround date timezone but by setting datetime fields explicitly:
+    # WARNING: We use attribute_set because the standard .start/end_date methods have been overwritten to ignore time. #514
+    clone.attribute_set :start_date, master.start_date
+    clone.attribute_set :end_date,   master.end_date
+
     # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
     if options[:adjust_dates]
       clone.day = master.day

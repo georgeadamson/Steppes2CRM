@@ -1371,7 +1371,7 @@ puts 'after save:', self.attributes.inspect
 
     # Helper to copy details from another trip if required:
     # Warning: Relying on this hook can cause save to fail if copied elements are invalid.
-    # Note: This clears the do_copy_trip_xxxx flags to prevent copies from being created again accidentally.
+    # Note: This also clears the do_copy_trip_xxx flags to prevent copies from being created again accidentally.
     def do_copy_trip( master_trip_id = nil, unbind_from_pnrs = true )
 
       master_trip_id ||= self.do_copy_trip_id
@@ -1392,7 +1392,7 @@ puts 'after save:', self.attributes.inspect
         end
 
         # Copy Trip Elements from master_trip:
-        # Important: PNR Flight elements are cloned as standard flights (without booking_code)
+        # Important: PNR Flight elements are cloned as standard flights (without booking_code) if unbind_from_pnrs.
         if self.do_copy_trip_elements
 
           options = {
@@ -1516,28 +1516,6 @@ puts 'after save:', self.attributes.inspect
         if !type_id || master_elem.type_id == type_id
 
           clone_elem = clone.trip_elements.new.copy_attributes_from( master_elem, options )
-
-          #  attrs = master_elem.attributes.merge( :id => nil )
-          #
-          #  # Unbind the flight from the PNR if specified:
-          #  if options[:unbind_from_pnrs]
-          #    attrs.delete(:booking_code)
-          #    attrs.delete(:booking_line_number)
-          #    attrs.delete(:booking_line_revision)
-          #  end
-          #
-          #  # Bind the flight to the master element if specified:
-          #  # (Only use this when creating a Fixed Dep trip from a Group Template trip. When making a new Version of a Fixed Dep, assume the same :master_trip_element_id.)
-          #  if options[:link_to_master]
-          #    attrs[:master_trip_element_id] ||= master_elem.id
-          #  end
-          #
-          #  clone_elem = clone.trip_elements.new(attrs)
-          #
-          #  # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
-          #  if options[:adjust_dates]
-          #    clone_elem.day = master_elem.day
-          #  end
 
         end
 
