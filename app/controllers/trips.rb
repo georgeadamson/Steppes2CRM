@@ -384,7 +384,7 @@ class Trips < Application
     # Set MARGIN on all elements:
     elsif params[:submit] =~ /margin/i
 
-      if @trip.update_margins_to( params[:new_margin], :save )
+      if @trip.update_margins_to( params[:new_margin].to_i, :save )
       
         message[:notice] = "Successfully set the margin on every element and then recalculated trip prices."
         

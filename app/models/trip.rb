@@ -1234,9 +1234,10 @@ class Trip
       self.price_per_adult_biz_supp   = self.price_per_adult_biz_supp.to_f
       self.price_per_child_biz_supp   = self.price_per_child_biz_supp.to_f
       self.price_per_infant_biz_supp  = self.price_per_infant_biz_supp.to_f
-      
-      std_options = { :with_all_extras => true, :string_format => false, :to_currency => false }
-      biz_options = { :biz_supp        => true, :string_format => false, :to_currency => false }
+
+      # Specify options: (Note we don't use :with_all_extras because it would include :with_biz_supp)
+      std_options = { :with_biz_supp  => false, :with_booking_fee => true, :with_taxes => true, :string_format => false, :to_currency => false }
+      biz_options = { :biz_supp       => true,                                                  :string_format => false, :to_currency => false }
       
       # Recalculate prices-per-person where they seem to be ZERO or just the booking fee:
       # (This typically occurs when no-one has entered prices in the Costing Sheet yet)
@@ -1248,7 +1249,7 @@ class Trip
       self.price_per_infant_biz_supp  = self.calc( :total, :actual, :gross, :per, :infant, biz_options ) if override || self.price_per_infant_biz_supp.zero?
       
       # Recalculate the total price of the trip too:
-      self.total_price = self.calc_total_price
+      self.total_price = self.calc_total_price()
       
     end
     
@@ -1279,15 +1280,16 @@ class Trip
 
         elem.margin_type          = '%'
         elem.biz_supp_margin_type = '%'
-        elem.margin               = new_margin
-        elem.biz_supp_margin      = new_margin
+        elem.margin               = new_margin.to_i
+        elem.biz_supp_margin      = new_margin.to_i
         elem.update_prices
         elem.save! if save && !self.new?
 
       end
-
+puts 'before save:', self.attributes.inspect
       self.update_prices(:override_price_per_person)
       self.save! if save && !self.new?
+puts 'after save:', self.attributes.inspect
 
       return self.total_price
 
