@@ -219,13 +219,13 @@ class Trips < Application
     
     # Skip any unwanted clients: (Those marked for delete)
     # This typically only occurs when creating a new fixed dep that is a duplicate of a tour template.
-    trip[:trip_clients_attributes].delete_if{ |i,attributes| attributes[:_delete] } if trip[:trip_clients_attributes]
+    trip[:trip_clients_attributes].delete_if{ |i,attrs| attrs[:_delete] } if trip[:trip_clients_attributes]
 
     # Remember whether we need to copy elements etc from another trip:
     do_copy_trip_id = trip.delete(:do_copy_trip_id)
 
-    @trip		= Trip.new(trip)
-    @client_or_tour = Tour.get( params[:tour_id] ) || Client.get( params[:client_id] ) || session.user.most_recent_client
+    @trip		        = Trip.new(trip)
+    @client_or_tour = Tour.get(params[:tour_id]) || Client.get(params[:client_id]) || session.user.most_recent_client
     
 		@trip.updated_by					||= session.user.fullname
     @trip.clients							<<	@client_or_tour unless @trip.tour
