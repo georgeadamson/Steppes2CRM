@@ -2,7 +2,7 @@ require "dm-accepts_nested_attributes"
 require "ostruct"	#OpenStruct
 
 class Trip
-  include DataMapper::Resource
+  include DataMapper::Resource 
     
     # TripState constants duplicated here for readability: (Eg @trip.status_id = Trip::UNCONFIRMED or TripState::UNCONFIRMED)  
     UNCONFIRMED = TripState::UNCONFIRMED    unless defined? UNCONFIRMED
@@ -498,6 +498,19 @@ class Trip
 
     end
 
+	
+	# Helper to return total of all invoices and credits etc: (Used in reports)
+	def invoiced_total
+		return self.money_ins.sum(:amount) || 0
+	end
+	
+	
+	# Helper to return the earliest trip invoice date: (Used in reports)
+	def invoice_first_date
+		return self.money_ins.min(:created_at)
+	end
+	
+	
     # Helper to fetch trips that are linked to this trip.
     # By default this only returns the active_version of each trip.
     def slave_trips( include_inactive_versions = false )
@@ -1286,10 +1299,9 @@ class Trip
         elem.save! if save && !self.new?
 
       end
-puts 'before save:', self.attributes.inspect
+
       self.update_prices(:override_price_per_person)
       self.save! if save && !self.new?
-puts 'after save:', self.attributes.inspect
 
       return self.total_price
 
@@ -1587,7 +1599,7 @@ puts 'after save:', self.attributes.inspect
     # Define which properties are available in reports  
     def self.potential_report_fields
       #return [ :name, :title, :trip_clients, :clients ]
-      return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names, :primary_clients_names ]
+      return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names, :primary_clients_names, :trip_type, :invoiced_total, :invoice_first_date ]
     end
     
 end
