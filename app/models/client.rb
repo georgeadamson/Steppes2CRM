@@ -100,6 +100,10 @@ class Client
 	alias :interests  :countries
 	alias :interests= :countries=
 
+  # Associate clients with companies: (Only used on client page and for marketing/reports)
+  has n, :client_companies
+  has n, :companies, :through => :client_companies
+
 	accepts_nested_attributes_for :notes
 	accepts_nested_attributes_for :countries	#:interests
 	accepts_nested_attributes_for :client_interests
@@ -110,6 +114,7 @@ class Client
 	accepts_ids_for :trips
 	accepts_ids_for :countries	# AKA :interests
 	accepts_ids_for :addresses
+	accepts_ids_for :companies
   
 	#validates_format :birth_date, :with => /^[0-3]?[0-9][\-\/][0-1]?[0-9][\-\/][0-9][0-9][0-9][0-9]$/, :allow_nil => true, :message => "The client's date of birth needs to be valid, or leave it blank please"
 	#validates_format :birth_date, :with => /^[1-2][0-9]{3}[-\/][0-1][0-9][-\/][0-3][0-9]$/, :message => "Date of birth: Needs to be of the form 'dd/mm/yyyy' (or leave it blank)"
@@ -167,6 +172,13 @@ class Client
     # (This should not be confused with client_addresses or address_clients!)
     self.address_client ||= self
 
+  end
+
+  before :create do
+
+    # Ensure at least one company is selected for marketing to new client:
+    self.companies << self.original_company if self.companies.empty?
+    
   end
 
   before :save do
@@ -353,6 +365,16 @@ class Client
     return self.money_ins.sum(:amount)
   end
 
+  # Used in reports:
+  def companies_names
+    return self.companies.map{|c|c.name}.join(', ')
+  end
+
+  # Used in reports:
+  def companies_initials
+    return self.companies.map{|c|c.initials}.join(', ')
+  end
+
 
   # Helper to identify clients that have only just been added to the database:
   def created_today?
@@ -436,7 +458,7 @@ class Client
   # Define which properties are available in reports  
   def self.potential_report_fields
     #return [ :name, :title, :trip_clients, :trips ]
-    return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :client_type, :areas_of_interest, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :booked_trips_count, :invoice_total, :created_at ]
+    return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :companies_names, :companies_initials, :client_type, :areas_of_interest, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :booked_trips_count, :invoice_total, :created_at ]
   end
 
 end

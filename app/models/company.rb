@@ -24,7 +24,6 @@ class Company
   has n, :money_ins   # AKA Invoices
   has n, :web_requests
   has n, :brochure_requests
-  #has n, :clients, :child_key => [:original_company_id]  # Clients do have original_company_id but company.clients is not used so we can omit it.
   
   has n, :company_suppliers
   has n, :suppliers, :through => :company_suppliers
@@ -32,6 +31,10 @@ class Company
   has n, :company_countries
   has n, :companies, :through => :company_countries
 	
+  # Associate clients with companies: (Only used on client page and for marketing/reports)
+  has n, :client_companies
+  has n, :clients, :through => :client_companies
+  
 	# Return a sting like 'Steppes Africa (Active) [SA]'
 	def name_and_is_active
 		return "#{ self.name } #{ ' (Inactive)' unless self.is_active }#{ ' [' + self.initials + ']' unless self.initials.blank? }"

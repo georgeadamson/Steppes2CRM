@@ -2,7 +2,7 @@ require "dm-accepts_nested_attributes"
 require "ostruct"	#OpenStruct
 
 class Trip
-  include DataMapper::Resource
+  include DataMapper::Resource 
     
     # TripState constants duplicated here for readability: (Eg @trip.status_id = Trip::UNCONFIRMED or TripState::UNCONFIRMED)  
     UNCONFIRMED = TripState::UNCONFIRMED    unless defined? UNCONFIRMED
@@ -498,6 +498,19 @@ class Trip
 
     end
 
+	
+	# Helper to return total of all invoices and credits etc: (Used in reports)
+	def invoiced_total
+		return self.money_ins.sum(:amount) || 0
+	end
+	
+	
+	# Helper to return the earliest trip invoice date: (Used in reports)
+	def invoice_first_date
+		return self.money_ins.min(:created_at)
+	end
+	
+	
     # Helper to fetch trips that are linked to this trip.
     # By default this only returns the active_version of each trip.
     def slave_trips( include_inactive_versions = false )
@@ -1237,9 +1250,10 @@ class Trip
       self.price_per_adult_biz_supp   = self.price_per_adult_biz_supp.to_f
       self.price_per_child_biz_supp   = self.price_per_child_biz_supp.to_f
       self.price_per_infant_biz_supp  = self.price_per_infant_biz_supp.to_f
-      
-      std_options = { :with_all_extras => true, :string_format => false, :to_currency => false }
-      biz_options = { :biz_supp        => true, :string_format => false, :to_currency => false }
+
+      # Specify options: (Note we don't use :with_all_extras because it would include :with_biz_supp)
+      std_options = { :with_biz_supp  => false, :with_booking_fee => true, :with_taxes => true, :string_format => false, :to_currency => false }
+      biz_options = { :biz_supp       => true,                                                  :string_format => false, :to_currency => false }
       
       # Recalculate prices-per-person where they seem to be ZERO or just the booking fee:
       # (This typically occurs when no-one has entered prices in the Costing Sheet yet)
@@ -1251,7 +1265,7 @@ class Trip
       self.price_per_infant_biz_supp  = self.calc( :total, :actual, :gross, :per, :infant, biz_options ) if override || self.price_per_infant_biz_supp.zero?
       
       # Recalculate the total price of the trip too:
-      self.total_price = self.calc_total_price
+      self.total_price = self.calc_total_price()
       
     end
     
@@ -1282,8 +1296,8 @@ class Trip
 
         elem.margin_type          = '%'
         elem.biz_supp_margin_type = '%'
-        elem.margin               = new_margin
-        elem.biz_supp_margin      = new_margin
+        elem.margin               = new_margin.to_i
+        elem.biz_supp_margin      = new_margin.to_i
         elem.update_prices
         elem.save! if save && !self.new?
 
@@ -1372,7 +1386,7 @@ class Trip
 
     # Helper to copy details from another trip if required:
     # Warning: Relying on this hook can cause save to fail if copied elements are invalid.
-    # Note: This clears the do_copy_trip_xxxx flags to prevent copies from being created again accidentally.
+    # Note: This also clears the do_copy_trip_xxx flags to prevent copies from being created again accidentally.
     def do_copy_trip( master_trip_id = nil, unbind_from_pnrs = true )
 
       master_trip_id ||= self.do_copy_trip_id
@@ -1393,7 +1407,7 @@ class Trip
         end
 
         # Copy Trip Elements from master_trip:
-        # Important: PNR Flight elements are cloned as standard flights (without booking_code)
+        # Important: PNR Flight elements are cloned as standard flights (without booking_code) if unbind_from_pnrs.
         if self.do_copy_trip_elements
 
           options = {
@@ -1518,28 +1532,6 @@ class Trip
 
           clone_elem = clone.trip_elements.new.copy_attributes_from( master_elem, options )
 
-          #  attrs = master_elem.attributes.merge( :id => nil )
-          #
-          #  # Unbind the flight from the PNR if specified:
-          #  if options[:unbind_from_pnrs]
-          #    attrs.delete(:booking_code)
-          #    attrs.delete(:booking_line_number)
-          #    attrs.delete(:booking_line_revision)
-          #  end
-          #
-          #  # Bind the flight to the master element if specified:
-          #  # (Only use this when creating a Fixed Dep trip from a Group Template trip. When making a new Version of a Fixed Dep, assume the same :master_trip_element_id.)
-          #  if options[:link_to_master]
-          #    attrs[:master_trip_element_id] ||= master_elem.id
-          #  end
-          #
-          #  clone_elem = clone.trip_elements.new(attrs)
-          #
-          #  # If required, use the .day setter to recalculate the elem.start_date relative to trip.start_date:
-          #  if options[:adjust_dates]
-          #    clone_elem.day = master_elem.day
-          #  end
-
         end
 
       end
@@ -1610,7 +1602,7 @@ class Trip
     # Define which properties are available in reports  
     def self.potential_report_fields
       #return [ :name, :title, :trip_clients, :clients ]
-      return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names, :primary_clients_names ]
+      return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names, :primary_clients_names, :trip_type, :invoiced_total, :invoice_first_date ]
     end
     
 end

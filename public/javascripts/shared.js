@@ -34,8 +34,8 @@ if( !console.log    ){ console.log = function(){} };
 
 jQuery(function($) {
 
-	// Allow alternative styles because js is enabled:
-	$('BODY').removeClass('nojs').addClass('js')
+	// Javascript is running so enable alternative styles:
+	$('BODY').removeClass('nojs').addClass('js');
 
 
 	var guid = 0,											// Used by the jQuery.fn.id() method.
@@ -3150,14 +3150,85 @@ function initTripInvoiceFormTotals(){
 
 		},
 
+		// Prepare the client new/edit form:
 		initForm : function(options){
 
-			var target = options && options.panel || options.target;
+			var target = options && ( options.panel || options.target );
+			var client = getClientName(target);
 
 			if( target ){
-				// Select 2nd panel when form is for new client:
+				// Select accordion's 2nd panel when form is for new client:
 				var index = options.client_id ? 0 : 1;
 				$( 'DL.accordion', target ).accordion({ autoHeight: false, active: index });
+			}
+
+
+			// Respond to user editing title, forename or surname:
+			$("SELECT[name='client[title_id]']", target).bind('change keyup', onNameChanged);
+			$("INPUT[name='client[forename]'], INPUT[name='client[name]']", target).bind('keyup', onNameChanged);
+
+			// Flag user's direct edits of salutation and addressee:
+			$("INPUT[name='client[salutation]'], INPUT[name='client[addressee]']", target).bind('change', function(){
+				$(this).attr('data-edited',true);
+			})
+			// If the fields don't match their defaults then assume they've been set explicity so flag them to prevent overwite:
+			.filter(function(){
+				var $this = $(this);
+				var default_val = $this.is("[name *= salutation]") ? client.default_salutation : client.default_addressee;
+				return !!$this.val() && $this.val() != default_val;
+			})
+			.attr('data-edited',true);
+
+			// Handler to update salutation ans addressee from title, forename and surname: (unless 'edited' flag is set)
+			function onNameChanged(){
+
+				var $this = $(this);
+
+				if( $this.is('INPUT') ){
+					var text = $this.val().replace(/\b([a-z])/g, function($0,$1){ return $1.toUpperCase() });
+					$this.val(text);
+				}
+
+				var client = getClientName( $this.closest('FIELDSET') );
+
+				client.salutation_field.not('[data-edited]').val(client.default_salutation);
+				client.addressee_field .not('[data-edited]').val(client.default_addressee);
+
+			}
+
+			// Helper for reading values from client fields into a hash:
+			// TODO: Can we make this into a generic method to read form fields into a hash?
+			function getClientName(context){
+
+				context = context || target || document;
+
+				// Find the form fields:
+				var client = {
+					title_field      : $("SELECT[name='client[title_id]'] > OPTION:selected", context),
+					forename_field   : $("INPUT[name='client[forename]']", context),
+					surname_field    : $("INPUT[name='client[name]']", context),
+					known_as_field   : $("INPUT[name='client[known_as]']", context),
+					addressee_field  : $("INPUT[name='client[addressee]']", context),
+					salutation_field : $("INPUT[name='client[salutation]']", context)
+				};
+
+				// Read the form field values too:
+				$.extend( client, {
+					title      : client.title_field.text() || '',
+					surname    : client.surname_field.val() || '',
+					forename   : client.forename_field.val() || '',
+					known_as   : client.known_as_field.val() || '',
+					addressee  : client.addressee_field.val() || '',
+					salutation : client.salutation_field.val() || '',
+					initial    : ( client.forename_field.val() || '' ).slice(0,1)
+				});
+
+				// Derive other values and return the result:
+				return $.extend( client, {
+					default_salutation : client.title + ' ' + client.surname,
+					default_addressee  : client.title + ' ' + (client.initial ? client.initial + ' ' : '' ) + client.surname
+				});
+
 			}
 
 		},
@@ -3231,6 +3302,8 @@ function initTripInvoiceFormTotals(){
 
 	} // End of Client utilities.
 
+
+Client.initForm();
 
 	var Trip = {
 
