@@ -125,16 +125,32 @@ A.mailto, A[href ^= mailto] {
 		background-position:0 0;
 	}
 
-	SPAN.ui-icon.ui-icon-attention {
-		background-image:url(/images/icons/icon.circle.red.png);
-		background-position:0 0;
-	}
-
 	SPAN.ui-icon.ui-icon-grid {
 		background-image:url(/images/icons/icon.calendar.gif);
 		background-position:-2px -2px;
 	}
 
+
+	/* This special icon is a red circle that can contain a digit or another icon: */
+	SPAN.ui-icon.ui-icon-attention {
+		background-image:url(/images/icons/icon.circle.red.png);
+		background-position:0 0;
+		color:#FFF;
+		font-size:0.75em;
+		font-weight:bold;
+		line-height:24px;
+		text-align:center;
+		text-indent:0;
+		height:24px;
+		width:24px;
+	}
+		.buttonBar SPAN.ui-icon.ui-icon-attention {
+			margin-bottom:-5px;		/* Tweak position of the attention icon when in a buttonBar. */
+		}
+
+		SPAN.ui-icon.ui-icon-attention SPAN.ui-icon {
+			margin-top:3px;			/* Tweak position of an icon inside the attention icon. */
+		}
 
 
 

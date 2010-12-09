@@ -123,6 +123,7 @@ class Trips < Application
       
       if master = Trip.get( params[:copy_trip_id] )
         
+        @trip.copy_countries_from master
         @trip.copy_attributes_from master
           
   		  # Ensure current client is on this new trip:
@@ -184,6 +185,7 @@ class Trips < Application
   end
   
   
+
   def edit(id)
     
     @trip = Trip.get(id)
@@ -202,6 +204,7 @@ class Trips < Application
   end
   
   
+
   def create(trip)
     
 		# Workaround for when no checkboxes are ticked: (Because posted params will not contain an array of ids)
@@ -289,6 +292,7 @@ class Trips < Application
   end
   
   
+
   def update(id, trip)
     
     @trip = Trip.get(id)
@@ -377,12 +381,34 @@ class Trips < Application
       end
 
 
+    # Set MARGIN on all elements:
+    elsif params[:submit] =~ /margin/i
+
+      if @trip.update_margins_to( params[:new_margin], :save )
+      
+        message[:notice] = "Successfully set the margin on every element and then recalculated trip prices."
+        
+        if request.ajax?
+          next_page ? render(next_page) : render(:show)
+        else
+          redirect "#{ nested_resource(@trip) }/#{ next_page }", :message => message
+        end
+      
+      else
+
+        collect_error_messages_for @trip
+			  message[:error] = "Oh dear, there was some difficulty setting the margins. \n #{ error_messages_for( @trip, :header => 'The trip details could not be saved because:' ) }"
+        render :show
+
+      end
+
+
     # Update EXCHANGE RATES
     elsif params[:submit] =~ /exchange rates/i
 
-      if @trip.update_exchange_rates :save
+      if @trip.update_exchange_rates(:save)
       
-        message[:notice] = "Successfully updated the exchange rate on each element and then recalculated trip prices."
+        message[:notice] = "Successfully updated the exchange rate on every element and then recalculated trip prices."
         
         if request.ajax?
           next_page ? render(next_page) : render(:show)
@@ -397,6 +423,7 @@ class Trips < Application
         render :show
 
       end
+
 
     # Otherwise apply the changes in the normal way:
 		elsif @trip.update(trip)

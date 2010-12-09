@@ -1,6 +1,8 @@
 <%
+
 	element ||= @element
 	delete_button_id = "#{ nested_resource( element, true ) }Delete"
+	
 %>
 <div class="sectionContainer is<%= element.element_type.code.capitalize %>" >
 
@@ -12,19 +14,38 @@
 	<div class="sectionFoot">
 		<div class="buttonBar ui-dialog-buttonpane ui-widget-content xui-widget-header ui-corner-all ui-helper-clearfix">
 
-			<%= submit "Save details", :rel => "##{ nested_resource( element.trip, true ) }Builder", :class => "save ajaxBlank ui-priority-primary ui-state-default" %>
-			<%#= link_to "Cancel without saving", nested_resource( element.trip, :trip_elements ), :class => "xcancel ajaxCancel ajaxBlank ui-priority-secondary ui-state-default" %>
+			<% unless element.is_slave? && element.master_element %>
+
+				<%= submit 'Save details', :rel => "##{ nested_resource( element.trip, true ) }Builder", :class => 'save ajaxBlank ui-priority-primary ui-state-default' %>
+
+			<% end %>
 
 			<% if element.bound_to_pnr? %>
 				
-				<div class="left"> &nbsp; <%= icon :locked, :class => 'ui-icon-round' %> This flight is defined by a PNR so some fields may not be modified</div>
+				<div class="left"> &nbsp; <%= icon :attention, :text => icon(:locked) %> This flight is defined by a PNR so some fields may not be modified.</div>
+
+			<% elsif element.is_slave? && element.master_element %>
+
+				<div class="left"> &nbsp; <%= icon :attention, :text => icon(:locked) %> This element is controlled by the Group Trip Template so you won&apos;t be able to modify it here.</div>
 
 			<% else %>
 
 				<!-- This cunning "Delete" label looks like a button but actually activates the delete button below: -->
 				<%= tag :label, "#{ icon :delete } Delete this element", :for => delete_button_id, :class => 'ui-priority-secondary ui-state-default left' %>
-				
+
+				<% if element.is_slave? && !element.master_element %>
+					<!-- Allow for linked element who's master element has been deleted: -->
+					<div class="left"> &nbsp; <%= icon :alert %> This element was controlled by the Group Trip Template but the original element no longer exists.</div>
+				<% end -%>
+
 			<% end -%>
+
+			<% if element.is_master? %>
+
+				<% slave_count = element.slave_elements.count %>
+				<div class="left"> &nbsp; <%= icon :attention, :text => slave_count %> elements are linked to this template element in client copies.</div>
+
+			<% end %>
 
 		</div>
 	</div>

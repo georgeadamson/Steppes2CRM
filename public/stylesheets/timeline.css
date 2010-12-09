@@ -231,6 +231,22 @@
 			opacity:1;
 		}
 
+		/* Special icon to indicate element that is linked to a master element: (Typically on a Fixed Dep trip) */
+		.tripBuilder .timelineContent .timelineElements .timelineElement .ui-icon.slave {
+			position:absolute;
+			/*left:-3px;*/
+			right:0px;
+			top:0px;
+		}
+
+		/* Special icon to indicate element that is linked to slave elements: (Typically on a Group Template trip) */
+		.tripBuilder .timelineContent .timelineElements .timelineElement .ui-icon.master {
+			position:absolute;
+			right:0px;
+			top:0px;
+		}
+
+
 	.timelineElement.isFlight,
 	DIV.formField.isFlight,
 	DIV.sectionHead.isFlight {

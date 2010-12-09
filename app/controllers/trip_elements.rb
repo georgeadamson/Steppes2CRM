@@ -204,6 +204,8 @@ class TripElements < Application
       # TODO: Find a better solution! (Also see notes in pnr.refresh_flight_elements_for)
       @trip.update_prices()
       @trip.save!
+      @element.update_slave_elements() if @element.is_master?
+
       
       message[:notice] = "The Trip Element has been updated with your changes"
 
@@ -237,7 +239,7 @@ class TripElements < Application
     
     # Fetch a reference to the trip itself:
     @trip = @element.trip || Trip.get(params[:trip_id]) || Trip.new
-
+puts "about to destroy element"
     if @element.destroy
 
       message[:notice] = "The element has been deleted from your trip"

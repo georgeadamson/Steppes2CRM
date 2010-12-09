@@ -4,6 +4,7 @@
 
 	edit								||= false
 	element							||= @element
+	is_slave						||= element.master_trip_element_id	# Only true when element is bound to a Group Template element.
 	trip									= element.trip
 	handlers_list					= []
 	suppliers_list				= []
@@ -11,6 +12,9 @@
 	arrive_airports_list	= []
 
 	element.reload if element.trip.nil?
+	
+	# Element must be readonly if it is controlled by a PNR or a master element:
+	bound_to_pnr_or_master = element.bound_to_pnr? || element.is_slave?
 	
 	# Build up string of css classes for styling and guiding interactions:
 	cssClasses = [
@@ -163,22 +167,22 @@
 
 		<!-- Supplier list is limited to those assigned to the trip's invoice company: (eg: SteppesEast Suppliers) -->
 		<%#= select :supplier_id, :label=>supplierLabel, :class=>"tableCell", :collection => suppliers_list, :selected => element.supplier.id.to_s, :value_method => :id, :text_method => :display_name %>
-		<%=  select :supplier_id, :label => supplierLabel, :class => 'tableCell width2Fields', :collection => suppliers_list, :selected => element.supplier_id.to_s, :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr?, :prompt => ( element.supplier ? nil : "- Must choose #{ element.element_type.supplier_type_name }!" ) %>
+		<%=  select :supplier_id, :label => supplierLabel, :class => 'tableCell width2Fields', :collection => suppliers_list, :selected => element.supplier_id.to_s, :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master, :prompt => ( element.supplier ? nil : "- Must choose #{ element.element_type.supplier_type_name }!" ) %>
 
 		<%# One of these is included when elemen_type is Flight or Misc: %>
-		<%= select :handler_id,   :label => 'Flight agent',  :class => "tableCell whenFlight #{ 'load-more' if show_minimal_lists }", :collection => handlers_list, :prompt => ( element.handler ? nil : '- Don&apos;t forget me!' ) if element.flight? %>
-		<%= select :misc_type_id, :label => 'Misc category', :class => 'tableCell whenMisc', :collection => TripElementMiscType.all, :value_method => :id, :text_method => :name  if element.misc? %>
+		<%= select :handler_id,   :label => 'Flight agent',  :class => "tableCell whenFlight #{ 'load-more' if show_minimal_lists }", :collection => handlers_list, :prompt => ( element.handler ? nil : '- Don&apos;t forget me!' ), :disabled => element.is_slave?, :readonly => element.is_slave? if element.flight? %>
+		<%= select :misc_type_id, :label => 'Misc category', :class => 'tableCell whenMisc', :collection => TripElementMiscType.all, :value_method => :id, :text_method => :name, :disabled => element.is_slave?, :readonly => element.is_slave? if element.misc? %>
 
 		<!-- THIS FUNCTIONALITY HAS BEEN DISABLED until a future release: (Remove "invisible" class to reactivate this) -->
 		<%= check_box :is_subgroup, :label => 'For a subgroup', :id => "#{ nested_resource(element,true) }is_subgroup" , :class => 'tableCell width2Fields invisible' %>
 
 	<!--</div>-->
 
-	<% unless Merb.environment == 'production' -%>
+	<% unless Merb.environment == 'production' || !element.id -%>
 		<!-- Prev/Next buttons for navigating through elements: -->
 		<span class="right" style="position:absolute;	right:0; top:0;">
-			<%= link_to '&lt; Prev', nested_resource( element.prev, :edit ), :class => 'ui-priority-secondary ui-state-default', :style => 'min-width:auto;', :title => 'Previous element' if element.prev %>
-			<%= link_to 'Next &gt;', nested_resource( element.next, :edit ), :class => 'ui-priority-secondary ui-state-default', :style => 'min-width:auto;', :title => 'Next element'     if element.next %>
+			<%= link_to '&lt; Prev', nested_resource( element.prev || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.prev }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Previous element' %>
+			<%= link_to 'Next &gt;', nested_resource( element.next || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.next }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Next element'     %>
 		</span>
 	<% end -%>
 
@@ -213,11 +217,11 @@
 
 		<%# June 2010 - Deactivated datepicker plugin because it causes CPU meltdown! %>
 
-		<td><%= text_field :start_date, :label => startDateLabel,   :value => element.start_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell date start-date travel-date daterange daterangeStart dtstart', :title => "#{ startDateLabel } format dd/mm/yyyy", :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? %></td>
-		<td><%= text_field :start_time, :label => 'Departure time', :value => element.start_date.formatted(:uitime), :maxlength => 5 , :class => 'tableCell whenFlight time start-time dtstart', :title => 'Departure time format hh:mm', :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
+		<td><%= text_field :start_date, :label => startDateLabel,   :value => element.start_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell date start-date travel-date daterange daterangeStart dtstart', :title => "#{ startDateLabel } format dd/mm/yyyy", :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master %></td>
+		<td><%= text_field :start_time, :label => 'Departure time', :value => element.start_date.formatted(:uitime), :maxlength => 5 , :class => 'tableCell whenFlight time start-time dtstart', :title => 'Departure time format hh:mm', :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %></td>
 
 		<!-- Extra field for Flights only: -->
-		<td><%= select :depart_airport_id,  :label => 'From airport', :class => 'tableCell whenFlight', :selected => element.depart_airport.id.to_s, :collection => depart_airports_list, :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
+		<td><%= select :depart_airport_id,  :label => 'From airport', :class => 'tableCell whenFlight', :selected => element.depart_airport.id.to_s, :collection => depart_airports_list, :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %></td>
 
 	</tr>
 
@@ -225,11 +229,11 @@
 
 		<%# June 2010 - Deactivated datepicker plugin because it causes CPU meltdown! %>
 
-		<td><%= text_field :end_date, :label => endDateLabel,   :value => element.end_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell date end-date travel-date daterange daterangeEnd dtend', :title => "#{ endDateLabel } format dd/mm/yyyy", :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? %></td>
-		<td><%= text_field :end_time, :label => 'Arrival time', :value => element.end_date.formatted(:uitime), :maxlength => 5,  :class => 'tableCell whenFlight time end-time dtend', :title => 'Arrival time format hh:mm', :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
+		<td><%= text_field :end_date, :label => endDateLabel,   :value => element.end_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell date end-date travel-date daterange daterangeEnd dtend', :title => "#{ endDateLabel } format dd/mm/yyyy", :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master %></td>
+		<td><%= text_field :end_time, :label => 'Arrival time', :value => element.end_date.formatted(:uitime), :maxlength => 5,  :class => 'tableCell whenFlight time end-time dtend', :title => 'Arrival time format hh:mm', :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %></td>
 
 		<!-- Extra field for Flights only: -->
-		<td><%= select :arrive_airport_id, :label => 'To airport', :class => 'tableCell whenFlight', :selected => element.arrive_airport.id.to_s, :collection => arrive_airports_list, :disabled => element.bound_to_pnr?, :readonly => element.bound_to_pnr? if element.flight? %></td>
+		<td><%= select :arrive_airport_id, :label => 'To airport', :class => 'tableCell whenFlight', :selected => element.arrive_airport.id.to_s, :collection => arrive_airports_list, :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %></td>
 
 	</tr>
 
@@ -237,17 +241,8 @@
 	<% if element.is_accomm? %><!-- Extra fields for ACCOMM/GROUND only: -->
 	<tr class="tableRow">
 
-		<td><%= text_field :room_type,		:label => 'Room type',	:class => 'tableCell whenAccomm width1Field' %></td>
-		<td><%= select :meal_plan,				:label => 'Meal plan',	:class => 'tableCell whenAccomm widthHalfField', :selected => element.meal_plan, :collection => %w[BB HB FB RO], :prompt => "n/a" %></td>
-
-		<%#= text_field :single_rooms, :label => 'Single rooms', :class => 'tableCell whenAccomm widthHalfField spinbox' %>
-		<%#= text_field :twin_rooms,			:label => 'Twin rooms',		:class => 'tableCell whenAccomm widthHalfField spinbox' %>
-		<%#= text_field :triple_rooms,		:label => 'Triple rooms', :class => 'tableCell whenAccomm widthHalfField spinbox' %>
-
-		<%#= text_field :cost_per_triple, :label => 'Cost per triple room', :maxlength => 4, :class => 'tableCell whenAccomm widthHalfField spinbox spinboxMax money' %>
-		<%#= text_field :cost_by_room,    :label => 'Cost by room',         :maxlength => 4, :class => 'tableCell whenAccomm widthHalfField spinbox spinboxMax money' %>
-		<%#
-		%>
+		<td><%= text_field :room_type,		:label => 'Room type',		:class => 'tableCell whenAccomm width1Field' %></td>
+		<td><%= select :meal_plan,				:label => 'Meal plan',		:class => 'tableCell whenAccomm widthHalfField', :selected => element.meal_plan, :collection => %w[BB HB FB RO], :prompt => "n/a" %></td>
 
 	</tr>
 	<% end %>
@@ -255,9 +250,9 @@
 	<!-- THIS FUNCTIONALITY HAS BEEN DISABLED until a future release: (Remove "hidden" class to reactivate this) -->
 	<tr class="tableRow unlessAllTravellers hidden"><!-- Number of travellers in subgroup: -->
 		<td><div class="formField unlessAllTravellers"><label>Subgroup details</label></div></td>
-		<td><%= text_field :adults,   :label=>"Number of adults", :class=>"tableCell whenAdults unlessAllTravellers widthHalfField spinbox spinboxMax" + @element.trip.adults.to_s %></td>
-		<td><%= text_field :children, :label=>"Children", :class=>"tableCell whenChildren unlessAllTravellers widthHalfField spinbox spinboxMax" + @element.trip.children.to_s %></td>
-		<td><%= text_field :infants,  :label=>"Infants", :class=>"tableCell whenInfants unlessAllTravellers widthHalfField spinbox spinboxMax" + @element.trip.infants.to_s %></td>
+		<td><%= text_field :adults,   :label=> 'Number of adults', :class => "tableCell whenAdults   unlessAllTravellers widthHalfField spinbox spinboxMax#{ @element.trip.adults   }" %></td>
+		<td><%= text_field :children, :label=> 'Children',         :class => "tableCell whenChildren unlessAllTravellers widthHalfField spinbox spinboxMax#{ @element.trip.children }" %></td>
+		<td><%= text_field :infants,  :label=> 'Infants',          :class => "tableCell whenInfants  unlessAllTravellers widthHalfField spinbox spinboxMax#{ @element.trip.infants  }" %></td>
 		<%= hidden_field :singles %>
 	</tr>
 
@@ -267,7 +262,7 @@
 
 		<td>
 			<div class="formField twoFields">
-				<%= orig_text_field :margin, :value=>element.margin.to_f, :label=>"Standard margin", :class=>"widthHalfField spinbox spinboxMin spinboxMax spinboxScale2 spinboxStep0.1 spinboxBigStep10" %>
+				<%= orig_text_field :margin, :value => element.margin.to_f, :label => 'Standard margin', :class => 'widthHalfField spinbox spinboxMin spinboxMax spinboxScale2 spinboxStep0.1 spinboxBigStep10' %>
 				<select name="trip_element[margin_type]" id="trip_element_margin_type" class="widthHalfField">
 					<option value="%">%</option>
 					<!--<option value=""><%= element.supplier && element.supplier.currency && element.supplier.currency.name || "Exactly" %></option>-->
@@ -275,30 +270,30 @@
 				</select>
 			</div>
 		</td>
-		<td><%= text_field :cost_per_adult,  :label=>"Cost per adult",  :maxlength=>7, :class=>"tableCell whenAdults xwidthHalfField spinbox spinboxMax spinboxScale2 money" %></td>
-		<td><%= text_field :cost_per_child,  :label=>"Cost per child",  :maxlength=>7, :class=>"tableCell whenChildren xwidthHalfField spinbox spinboxMax spinboxScale2 money" %></td>
-		<td><%= text_field :cost_per_infant, :label=>"Cost per infant", :maxlength=>7, :class=>"tableCell whenInfants xwidthHalfField spinbox spinboxMax spinboxScale2 money" %></td>
+		<td><%= text_field :cost_per_adult,  :label => 'Cost per adult',  :maxlength => 7, :class => 'tableCell whenAdults   spinbox spinboxMax spinboxScale2 money' %></td>
+		<td><%= text_field :cost_per_child,  :label => 'Cost per child',  :maxlength => 7, :class => 'tableCell whenChildren spinbox spinboxMax spinboxScale2 money' %></td>
+		<td><%= text_field :cost_per_infant, :label => 'Cost per infant', :maxlength => 7, :class => 'tableCell whenInfants  spinbox spinboxMax spinboxScale2 money' %></td>
 
 	</tr>
 
 	<tr class="tableRow whenFlight whenAccomm"><!-- Business supplements: -->
 		<td>
 			<div class="formField twoFields whenFlight">
-				<%= orig_text_field :biz_supp_margin, :label => 'Biz supp margin', :class => 'widthHalfField spinbox spinboxMin spinboxMax spinboxStep0.1 spinboxBigStep10' %>
-				<%= orig_select     :biz_supp_margin_type, :readonly => 'readonly',              :class => 'widthHalfField', :collection => ['%'] %>
+				<%= orig_text_field :biz_supp_margin, :label => 'Biz supp margin',  :class => 'widthHalfField spinbox spinboxMin spinboxMax spinboxStep0.1 spinboxBigStep10' %>
+				<%= orig_select     :biz_supp_margin_type, :readonly => 'readonly', :class => 'widthHalfField', :collection => ['%'] %>
 				<!--<select name="trip_element[biz_supp_margin_type]" id="trip_element_biz_supp_margin_type" readonly="readonly" disabled="disabled" class="widthHalfField">
 					<option value="%" selected="selected">%</option>
 				</select>-->
 			</div>
 		</td>
 		<td>
-			<%= text_field :biz_supp_per_adult,  :label => 'Adult biz supp',	:maxlength=>7, :class=>"tableCell whenFlight whenAdults xwidthHalfField spinbox spinboxMax money" %>
+			<%= text_field :biz_supp_per_adult,  :label => 'Adult biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenAdults   spinbox spinboxMax money' %>
 		</td>
 		<td>
-			<%= text_field :biz_supp_per_child,  :label => 'Child biz supp',	:maxlength=>7, :class=>"tableCell whenFlight whenChildren xidthHalfField spinbox spinboxMax money" %>
+			<%= text_field :biz_supp_per_child,  :label => 'Child biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenChildren spinbox spinboxMax money' %>
 		</td>
 		<td>
-			<%= text_field :biz_supp_per_infant, :label => 'Infant biz supp',	:maxlength=>7, :class=>"tableCell whenFlight whenInfants xwidthHalfField spinbox spinboxMax money" %>
+			<%= text_field :biz_supp_per_infant, :label => 'Infant biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenInfants  spinbox spinboxMax money' %>
 		</td>
 		<!--<td><div class="formField hidden">
 			<%#= orig_text_field :name=>"averageBizSuppPP", :label=>"Average Biz Supp pp", :class=>"tableCell whenFlight widthHalfField money" %>
