@@ -16,7 +16,7 @@ class BrochureRequest
   property :status_id,              Integer,  :required => true,  :default  => PENDING  # 0=Pending
   #property :use_template,          Boolean,  :required => true,  :default  => true     # Formerly UseStandardText (To use XX_Brochure.doc)
   property :document_template_file, String,   :required => true,  :length => 255        #(Eg: XX_Brochure.doc)
-  property :requested_date,         DateTime, :required => true,  :default  => lambda{ |obj,prop| Date.today }
+  property :requested_date,         DateTime, :required => true,  :default  => lambda{ |obj,prop| DateTime.now }
   property :generated_date,         DateTime, :required => false                        # Formerly DateTimeSent
   property :client_id,              Integer,  :required => true
   property :company_id,             Integer,  :required => true

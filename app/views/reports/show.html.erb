@@ -3,79 +3,109 @@
 	<div class="sectionBody report-results-table-container">
 
 		<%
-			@results = @report.run()
-		-%>
-
-		<table class="report-results">
-
-			<thead>
+			@results      = @report.run()
+			total_of = {}
+			-%>
+			
+			<table class="report-results">
+				
+				<thead>
 				<tr>
-					<% @report.report_fields.each do |field| -%>
-						<%= tag :th, field.display_name -%>
+					<% @report.report_fields.each do |f| -%>
+					
+						<%=
+
+							# Might as well initialise column totals while we're looping through the columns:
+							total_of[f.name] = 0
+
+							# Render column header cell:
+							tag :th, f.display_name 
+							
+						-%>
+						
 					<% end -%>
 				</tr>
-			</thead>
+				</thead>
+				
+				<tbody>
+				
+				<%# The awkward indenting below simply helps to reduce whitespace in the resulting html:
+				-%>
 
-			<tbody>
+				<% @results.each do |row| -%><tr><% 
+				
+						@report.columns.each do |column| 
+						
+							-%><td><%=
 
-				<% @results.each do |row| -%>
+								value = row[column.name]
+								#total_of[column.name] += value.to_f if value.respond_to? :to_f
+								total_of[column.name] += value.to_f if value.is_a?(Fixnum) || value.is_a?(BigDecimal)
 
-					<tr>
-					<% @report.columns.each do |column| -%>
+								if value.nil?
+									'(not set)'
+								elsif value.is_a? Date
+									value.formatted(:uidate)
+								elsif value.is_a? DateTime
+									value.formatted(:uidatetime)
+								elsif value.is_a?(TrueClass)
+									'Yes'
+								elsif value.is_a?(FalseClass)
+									'No'
+								else
+									value
+								end
+											
+							-%></td><% 
 
-						<td scope="col"><%=
-
-										value = row[column.name]
-										
-										if value.nil?
-											'(not set)'
-										elsif value.to_s =~ /^true|false$/
-											value ? 'Yes' : 'No'
-										elsif value.is_a? Date
-											value.formatted(:uidate)
-										elsif value.is_a? DateTime
-											value.formatted(:uidatetime)
-										else
-											value
-										end
-										
-								-%>
-						</td>
-
-					<% end -%>
-					</tr>
-
-				<% end -%>		
+						end 
+						
+				-%></tr><% end -%>
 
 			</tbody>
 
-			<% unless @results.empty? %>
+		<%
+			# Are we showing all the results?
+			is_within_limit = @results.length < @report.limit
+			total_row_count = is_within_limit ? @results.length : @report.run(:count)
+		-%>
+
+		<% unless @results.empty? %>
 			<tfoot>
 				<tr>
 					<% @report.columns.each do |field| -%>
 						<th>
-							<%= @report.run( :sum, field.name.split('.').pop ) if field.property_data_type == BigDecimal %>
-							<%#= field.property_data_type %>
+							<%= 
+							
+								# We could query to calculate totals but that is easy for properties but not for custom methods etc:
+								#if field.property_data_type == BigDecimal 
+							
+									#@report.run( :sum, field.name.split('.').pop )
+								
+								#else
+								
+									total_of[field.name] unless total_of[field.name].zero?
+								
+								#end
+							
+							%>
+							<%#= field.property_data_type
+							%>
 						</th>
 					<% end -%>
 				</tr>
 			</tfoot>
-			<% end %>
-			
+		<% end %>
+
 		</table>
-		
-		<%
-			number_of_rows = ( @results.length < @report.limit ) ? @results.length : @report.run(:count)
-		-%>
 
 		<p>
 			<br/>
-			Showing <%= @results.length %> of <%= number_of_rows %> results.
+			Showing <%= @results.length %> of <%= total_row_count %> results.
+			<%= "Beware: Column totals are for the first #{ @results.length } rows only." unless is_within_limit %>
 			<br/>
-			<%= 'Try exporting to Excel if you need to see more.' if number_of_rows > @results.length %>
+			<%= 'Try exporting to Excel if you need to see more.' unless is_within_limit %>
 		</p>
-		
-		
-		
+
 	</div>
 </div>
