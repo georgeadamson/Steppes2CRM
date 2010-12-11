@@ -256,6 +256,9 @@ class ReportField
     # Convert '*' wildcards to '%' and add wildcards when none provided:
     if operator == 'like'
 
+      # Ensure empty filter values don't accidentally filter out all results:
+      return {} if value.blank?
+
       value.gsub!('*','%')
       value = "%#{ value }%" if value !~ /(\%|\?)/
 
