@@ -270,9 +270,9 @@
 				</select>
 			</div>
 		</td>
-		<td><%= text_field :cost_per_adult,  :label => 'Cost per adult',  :maxlength => 7, :class => 'tableCell whenAdults   spinbox spinboxMax spinboxScale2 money' %></td>
-		<td><%= text_field :cost_per_child,  :label => 'Cost per child',  :maxlength => 7, :class => 'tableCell whenChildren spinbox spinboxMax spinboxScale2 money' %></td>
-		<td><%= text_field :cost_per_infant, :label => 'Cost per infant', :maxlength => 7, :class => 'tableCell whenInfants  spinbox spinboxMax spinboxScale2 money' %></td>
+		<td><%= text_field :cost_per_adult,  :label => 'Cost per adult',  :maxlength => 7, :class => "tableCell whenAdults   spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
+		<td><%= text_field :cost_per_child,  :label => 'Cost per child',  :maxlength => 7, :class => "tableCell whenChildren spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
+		<td><%= text_field :cost_per_infant, :label => 'Cost per infant', :maxlength => 7, :class => "tableCell whenInfants  spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
 
 	</tr>
 
@@ -287,13 +287,13 @@
 			</div>
 		</td>
 		<td>
-			<%= text_field :biz_supp_per_adult,  :label => 'Adult biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenAdults   spinbox spinboxMax money' %>
+			<%= text_field :biz_supp_per_adult,  :label => 'Adult biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenAdults   spinbox spinboxMax money positive' %>
 		</td>
 		<td>
-			<%= text_field :biz_supp_per_child,  :label => 'Child biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenChildren spinbox spinboxMax money' %>
+			<%= text_field :biz_supp_per_child,  :label => 'Child biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenChildren spinbox spinboxMax money positive' %>
 		</td>
 		<td>
-			<%= text_field :biz_supp_per_infant, :label => 'Infant biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenInfants  spinbox spinboxMax money' %>
+			<%= text_field :biz_supp_per_infant, :label => 'Infant biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenInfants  spinbox spinboxMax money positive' %>
 		</td>
 		<!--<td><div class="formField hidden">
 			<%#= orig_text_field :name=>"averageBizSuppPP", :label=>"Average Biz Supp pp", :class=>"tableCell whenFlight widthHalfField money" %>
@@ -308,10 +308,10 @@
 			<%= text_field :exchange_rate,			 :label => 'Exchange rate', :class => 'widthHalfField exchange_rate decimal', :readonly => !allow_modify_exchange_rate %>
 		</td>
 		<td>
-			<%= text_field :taxes,							 :label => 'Taxes/fees pp<small><br/>Margin n/a</small>', :class => 'widthHalfField exchange_rate decimal' %>
+			<%= text_field :taxes,							 :label => 'Taxes/fees pp<small><br/>Margin n/a</small>', :class => 'widthHalfField exchange_rate money positive' %>
 		</td>
 		<td>
-			<%= text_field :single_supp,				 :label => "Single supp #{ tag :small, single_supp_info }<small><br/>Additional amount</small>", :class => 'tableCell whenAccomm whenGround widthHalfField spinbox spinboxMax money', :maxlength=>7 %>
+			<%= text_field :single_supp,				 :label => "Single supp #{ tag :small, single_supp_info }<small><br/>Additional amount</small>", :class => 'tableCell whenAccomm whenGround widthHalfField spinbox spinboxMax money positive', :maxlength=>7 %>
 		</td>
 		<!--<td><div class="xformField whenAllTravellers link">
 			<label for="<%= nested_resource(element,true) %>is_subgroup">Define a subgroup</label>

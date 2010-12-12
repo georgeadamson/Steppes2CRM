@@ -2845,7 +2845,7 @@ function initKeyPressFilters(){
 	// Only allow INTEGER values:
 	// TODO: Validate pasted values too?
 	$( "INPUT:text.integer" ).live( 'keydown', function(e){
-			
+
 		var keys = [ KEY.integer, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
 
 		if( ( isKeyCodeInList( e.keyCode, keys ) && !e.shiftKey ) || e.ctrlKey || e.altKey ){
@@ -2859,7 +2859,7 @@ function initKeyPressFilters(){
 		}else{
 			return false;
 		}
-	
+
 	});
 
 	// Only allow DECIMAL values:
