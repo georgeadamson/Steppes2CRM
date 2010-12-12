@@ -3,10 +3,10 @@ class WebRequest
   
   property :id, Serial
   property :name,                 String,   :required => true,  :length => 50, :default => 'Web request'
-  property :type_id,              Integer,  :required => true,  :default => lambda{ |web_request,prop| WebRequestType.first.id }
+  property :type_id,              Integer,  :required => true,  :default => lambda{ |w,prop| WebRequestType.first.id }
   property :status_id,            Integer,  :required => true,  :default => 1   # 1=Pending, 2=Processed, 3=Imported, 4=Rejected
   property :company_id,           Integer,  :required => false  # Only required when web request is being processed
-  property :requested_date,       DateTime, :required => true   # Used for legacy WebRequests only.
+  property :requested_date,       DateTime, :required => true,  :default => lambda{ |w,prop| DateTime.now }   # Used for legacy WebRequests only.
   property :received_date,        DateTime, :required => true,  :default => Time.now
   property :processed_date,       DateTime, :required => false
   property :xml_text,             Text,     :required => true   #,  :lazy => :raw_data  # Only required for NEW web requests, not legacy ones.
