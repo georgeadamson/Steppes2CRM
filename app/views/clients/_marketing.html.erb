@@ -1,1 +1,11 @@
-<%= select :marketing_id, :label=>"Allow marketing", :collection => ClientMarketing.all, :value_method=>:id, :text_method=>:name %>
+<%
+	marketing_list			= ClientMarketing.all
+	companies_list			= Company.all( :order => [:name], :is_active => true )
+	
+	marketing_selected	= client.marketing_id.to_s
+	companies_selected	= client.companies_ids.all_to_s
+
+	companies_tooltip   = 'Hold down Ctrl to select multiple companies. &#13;(Also try Ctrl + up/down or Spacebar)'
+-%>
+<%= select :marketing_id, :label => "Allow marketing",                                                 :selected => marketing_selected, :collection => marketing_list, :value_method => :id, :text_method => :name %>
+<%= select :companies,		:label => "<small>(#{client.companies.length})</small> Marketing companies", :selected => companies_selected, :collection => companies_list, :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[companies_ids][]', :title => companies_tooltip, :class => 'height4Fields' %>
