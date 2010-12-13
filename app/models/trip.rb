@@ -498,18 +498,28 @@ class Trip
 
     end
 
+
+    def total_margin_percent
+      return self.calc( :total, :actual, :percent_margin, :for_all, :travellers, :with_all_extras => true, :final_prices => true, :decimal_places => 1 ) + '%'
+    end
+
 	
-	# Helper to return total of all invoices and credits etc: (Used in reports)
-	def invoiced_total
-		return self.money_ins.sum(:amount) || 0
-	end
+	  # Helper to return total of all invoices and credits etc: (Used in reports. Name is consistent with TotalPrice etc)
+	  def total_invoiced
+		  return self.money_ins.sum(:amount) || 0
+	  end
+  	
+	  # Helper to return the earliest trip invoice date: (Used in reports)
+	  def invoice_first_date
+		  return self.money_ins.min(:created_at)
+	  end
 	
-	
-	# Helper to return the earliest trip invoice date: (Used in reports)
-	def invoice_first_date
-		return self.money_ins.min(:created_at)
-	end
-	
+
+	  # Helper to return the trip type because reports don't seem to handle trip.type.name automatically: (Used in reports)
+    def type_name
+      return self.type.name
+    end
+
 	
     # Helper to fetch trips that are linked to this trip.
     # By default this only returns the active_version of each trip.
@@ -1601,8 +1611,12 @@ class Trip
     
     # Define which properties are available in reports  
     def self.potential_report_fields
-      #return [ :name, :title, :trip_clients, :clients ]
-      return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names, :primary_clients_names, :trip_type, :invoiced_total, :invoice_first_date ]
+
+      return [ :name, :title, :booking_ref, :status, :company, :user, :is_active_version, :pax, :clients, :money_ins, :start_date, :end_date, :total_cost, :total_price, :countries, :country_names, 
+
+      # ...and the following are special custom methods especially for reports:
+      :primary_clients_names, :type_name, :total_invoiced, :invoice_first_date, :total_margin_percent ]
+
     end
     
 end

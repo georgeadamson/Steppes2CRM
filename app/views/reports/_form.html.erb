@@ -170,16 +170,22 @@
 				</div>
 
 			</div>
-		
+
 			<div class="sectionFoot">
 
+				<!-- ROW LIMIT: -->
+				<%= hidden_field :name => 'report[limit]', :value => @report.limit %>
+
 				<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
+
 					<%= link_to "New report", resource(:reports,:new), :class => 'ajax left ui-priority-secondary ui-state-default', :rel => '#report-page' %>
-					<%# Important: The controller checks the name of the submit button to decide how to react: %>
+
+					<%# Important: The controller checks the name of the SUBMIT button to decide how to react: %>
 					<%= submit 'Run this report', :class => 'ajax ui-priority-primary ui-state-default', :name => 'run_report', :rel => '#reportResults' %>
+
 				</div>
 
-			</div>	
+			</div>
 
 		</div>
 
@@ -197,10 +203,13 @@
 			<div class="sectionFoot formSurround">
 
 				<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
-					<%# Important: The controller checks the name of this submit button to decide how to react: %>
+
+					<%# Important: The controller checks the name of this SUBMIT button to decide how to react: %>
 					<%= submit  "Save this report", :class => 'ajax ui-priority-primary ui-state-default', :name => 'save_report', :rel => '#report-page' %>
+
 					<%= link_to "#{ icon :extlink } Export to Excel",    resource( @report, :format => :csv ),	:target => '_tab', :class => "noajax ui-priority-secondary ui-state-default" unless @report.new?	%>
 					<%= link_to "#{ icon :delete  } Delete this report", resource( @report, :delete),	:rel => '#report-page',	:class => "ajax ui-priority-secondary ui-state-default" unless @report.new?	%>
+
 				</div>
 
 			</div>
