@@ -11,10 +11,13 @@ describe Document do
     
     @user               = User.first_or_create( {:id=>1}, valid_user_attributes )
     @client             = Client.create( valid_client_attributes )
-    @company            = Company.create( valid_company_attributes.merge( :initials => 'SV' ) )
+    @company            = Company.first_or_create( {}, valid_company_attributes.merge( :initials => 'SV' ) )
     @document_template  = DocumentTemplate.create( valid_document_template_attributes )
     @trip               = Trip.first_or_create( {:id=>1}, valid_trip_attributes )
     
+    # Ensure our test company has initials "SV" because we'll be using an SV doc template:
+    @company.update!( :initials => 'SV' ) unless @company.initials == 'SV'
+
     # Override default paths in app_settings:
     CRM[:doc_folder_path]    = 'C:/SteppesCRM/steppes2dev/scripts/documents/doc_builder/(Sample Documents)'
     CRM[:doc_templates_path] = 'C:/SteppesCRM/steppes2dev/scripts/documents/doc_builder/(Sample Templates)'
@@ -44,11 +47,16 @@ describe Document do
 
 
   it "should be valid" do
+    puts @document.errors.full_messages.inspect unless @document.valid?
     @document.should be_valid
     @document.save.should be_true
   end
 
   it "should have valid test data" do
+    puts @user.errors.full_messages.inspect unless @user.valid?
+    puts @client.errors.full_messages.inspect unless @client.valid?
+    puts @company.errors.full_messages.inspect unless @company.valid?
+    puts @document_template.errors.full_messages.inspect unless @document_template.valid?
     @user.should be_valid
     @client.should be_valid
     @company.should be_valid
@@ -173,6 +181,7 @@ describe Document do
     @document.document_type_id = DocumentType::ITINERARY
     @document.parameters = nil
     @document.document_template_file = nil
+    puts @document.errors.full_messages.inspect unless @document.valid?
     @document.should be_valid
 
     # Delete any existing doc file if there is one:
@@ -183,7 +192,7 @@ describe Document do
     @document.generate_doc_after_create = true
     @document.save.should be_true
     
-    # Verify that the generation report includes the word 'Success'!
+    # Verify that the generated report includes the word 'Success'!
     @document.reload
     @document.document_status_id == 3   # 3=Success
     @document.doc_builder_output.should match /\*Success\*/i
@@ -251,8 +260,7 @@ describe Document do
     @document.document_type_id = DocumentType::CREDIT_NOTE
     @document.parameters = nil
     @document.document_template_file = nil
-@document.valid?
-puts @document.errors.inspect
+
     @document.should be_valid
 
     # Delete any existing doc file if there is one:

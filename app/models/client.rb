@@ -177,7 +177,7 @@ class Client
   before :create do
 
     # Ensure at least one company is selected for marketing to new client:
-    self.companies << self.original_company if self.companies.empty?
+    self.companies << self.original_company if self.companies.empty? && self.original_company
     
   end
 
