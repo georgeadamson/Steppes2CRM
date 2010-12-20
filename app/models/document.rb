@@ -237,17 +237,28 @@ class Document
     sub_folder  = year / company / doc_type
     
     begin
-      
+
       raise IOError, "Document root folder path is blank"        if folder.blank?
-      raise IOError, "Document root folder path does not exist"  unless File.exist?(folder)
-      raise IOError, "Document root folder path is not a folder" unless File.directory?(folder)
+      raise IOError, "Document root folder path does not exist"  if !File.exist?(folder)
+      raise IOError, "Document root folder path is not a folder" if File.file?(folder)  # Warning: File.directory? raises error on shared folders!
       
       # If required, try to ensure the docs sub-folder structure actually exists:
       if options[:create] && !self.created_by_legacy_crm && !folder.blank? && File.exist?(folder)
         
-        FileUtils.mkdir(folder / year)                       unless File.exist?(folder / year)
-        FileUtils.mkdir(folder / year / company)             unless File.exist?(folder / year / company)
-        FileUtils.mkdir(folder / year / company / doc_type)  unless File.exist?(folder / year / company / doc_type)
+        unless File.exist?(folder / year)
+          puts "Creating sub-folder: #{ folder / year }"
+          FileUtils.mkdir(folder / year)                       
+        end
+        
+        unless File.exist?(folder / year / company)
+          puts "Creating sub-folder: #{ folder / year / company }"
+          FileUtils.mkdir(folder / year / company)                       
+        end
+        
+        unless File.exist?(folder / year / company / doc_type)
+          puts "Creating sub-folder: #{ folder / year / company / doc_type }"
+          FileUtils.mkdir(folder / year / company / doc_type)                       
+        end
         
         # The multiple commands above are necessary because mkpath() seems to fail on Windows!
         # FileUtils.mkpath(full_path)      # For 'mode' settings see http://ss64.com/bash/chmod.html or google for "chmod mode"
@@ -255,7 +266,9 @@ class Document
       end
       
     rescue Exception => error_details
-      puts "ERROR while verifying document sub-folders path: #{ error_details } (#{ folder / sub_folder })"
+      err_msg = "ERROR while verifying document sub-folders path: #{ error_details } (#{ folder / sub_folder })"
+      Document.logger.error err_msg
+      puts err_msg
     end
     
     return sub_folder
@@ -483,7 +496,7 @@ class Document
       raise IOError, "The Document.doc_builder_script_path does not exist: #{ Document.doc_builder_script_path }"                    unless File.exist?( Document.doc_builder_script_path )
       raise IOError, "The Document.doc_builder_settings_path does not exist: #{ Document.doc_builder_settings_path }"                unless File.exist?( Document.doc_builder_settings_path )
       raise IOError, "The Document.folder does not exist: #{ Document.folder }"                                                      unless File.exist?( Document.folder )
-      raise IOError, "The Document sub-folder does not exist: #{ Document.folder / self.sub_folder }"                                                  unless File.exist?( Document.folder / self.sub_folder )
+      raise IOError, "The Document sub-folder does not exist: #{ Document.folder / self.sub_folder }"                                unless File.exist?( Document.folder / self.sub_folder )
       
       shell_command = "#{ Document.doc_builder_shell_command } #{ self.id }"
 
