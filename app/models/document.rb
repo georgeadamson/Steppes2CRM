@@ -154,6 +154,8 @@ class Document
   # Trigger the doc file generation after saving details of a new document:
   after :create do
 
+    Document.logger.info ''
+    
     # Generate doc file too if specified:
     if self.generate_doc_later
       Document.logger.info "Document record #{self.id} created (but skipping doc gen because generate_doc_later is set)"
@@ -167,7 +169,8 @@ class Document
   end
   
   before :destroy do
-    Document.logger.info "Deleting document #{ self.id }..."
+    Document.logger.info ''
+    Document.logger.info "About to delete document #{ self.id }..."
   end
 
   
@@ -177,7 +180,7 @@ class Document
       
     self.delete_file! :pdf
     self.delete_file! :doc
-    Document.logger.info "All trace of document #{ self.id } gone forever!"
+    Document.logger.info " All trace of document #{ self.id } gone forever!"
     
   end
   
@@ -235,19 +238,24 @@ class Document
     
     begin
       
+      raise IOError, "Document root folder path is blank"        if folder.blank?
+      raise IOError, "Document root folder path does not exist"  unless File.exist?(folder)
+      raise IOError, "Document root folder path is not a folder" unless File.directory?(folder)
+      
+      # If required, try to ensure the docs sub-folder structure actually exists:
       if options[:create] && !self.created_by_legacy_crm && !folder.blank? && File.exist?(folder)
         
         FileUtils.mkdir(folder / year)                       unless File.exist?(folder / year)
         FileUtils.mkdir(folder / year / company)             unless File.exist?(folder / year / company)
         FileUtils.mkdir(folder / year / company / doc_type)  unless File.exist?(folder / year / company / doc_type)
         
-        # The commands above are necessary because mkpath() seems to fail on Windows!
+        # The multiple commands above are necessary because mkpath() seems to fail on Windows!
         # FileUtils.mkpath(full_path)      # For 'mode' settings see http://ss64.com/bash/chmod.html or google for "chmod mode"
         
       end
       
     rescue Exception => error_details
-      puts "ERROR while creating document sub-folders path: #{ error_details } (#{ folder / sub_folder })"
+      puts "ERROR while verifying document sub-folders path: #{ error_details } (#{ folder / sub_folder })"
     end
     
     return sub_folder
@@ -323,20 +331,25 @@ class Document
 
     begin
 
-      Document.logger.info "Deleting document #{ document_id } file: #{ file_path }"
+      Document.logger.info " Deleting document: #{ document_id } file: #{ file_path }"
       
-      # If there's no file then I reckon we've succeeded already!
-      if !file_path.blank? && !File.exist?(file_path)
+      # Let's first make sure we're dealing with a document!
+      raise IOError, "The document path is blank!"                                if file_path.blank?
+      raise IOError, "The document path is a folder!"                             if File.exist?(file_path) && File.directory?(file_path)
 
+
+      # If the document does not exist then we've kinda succeeded already! (so return true)
+      if !File.exist?(file_path)
+        
         Document.logger.info " File does not exist so nothing to delete"
         return true
-      
+        
       else
-
+  
         to_folder          = Document.deleted_folder
         file_utils_options = { :force => true, :verbose => true }
 
-        # Do what we can to ensure the 'documents deleted' folder is available for use:
+        # Do what we can to ensure the 'documents/deleted/' folder is available for use:
         FileUtils.mkdir(to_folder) unless to_folder.blank? || File.exist?(to_folder)
 
         # Some quick belt-and-braces checks to help with troubleshooting:
@@ -344,6 +357,7 @@ class Document
         raise IOError, "The documents-deleted folder does not exist #{to_folder}"     unless File.exist?(to_folder)
         raise IOError, "The documents-deleted folder is not a directory #{to_folder}" unless File.directory?(to_folder)
         
+        # Attempt to move the file to the "deleted" folder if all is well:
         if !to_folder.blank? && File.exist?(to_folder) && File.directory?(to_folder)
           
           FileUtils.move( file_path, to_folder, file_utils_options )
@@ -351,21 +365,22 @@ class Document
           
           # Delete original file if it still exists *and* it was copied successfully:
           # This could happen when moving between different servers or partitions.
-          if File.exist?(new_path)
+          if File.exist?(new_path) && !File.directory?(new_path)
             Document.logger.info " (File has been moved to #{ new_path } just in case!)" 
             File.delete(file_path) if File.exist?(file_path)
           end
 
         end
 
-        # Return true if the file really has gone:
-        Document.logger.info " Document file delete completed successfully"
-        return !File.exist?(file_path)
-      
       end
+
+      # Return true if the file really has gone:
+      Document.logger.info " Document file delete completed successfully"
+      return !File.exist?(file_path)
+
       
     rescue Exception => reason
-      Document.logger.error " Unable to delete file #{ file_path } (because #{ reason })"
+      Document.logger.error " Unable to delete file because #{ reason }. File: #{ file_path }"
       return false
     end
     
@@ -428,7 +443,7 @@ class Document
   def generate_doc
     
     output = []
-    an_exception_was_raised = nil
+    doc_gen_exception = nil
     
     # If necessary, assume company & derive document template file name:
     self.company              ||= self.default_company || Company.first( :is_active => true )
@@ -464,17 +479,17 @@ class Document
       Document.create_doc_builder_settings_file()
       
       raise ArgumentError, 'The document details need to be saved before a Word doc can be generated' if self.new?
-      raise IOError, "The Document.doc_builder_commands_folder_path does not exist (#{ Document.doc_builder_commands_folder_path })"  unless File.exist?( Document.doc_builder_commands_folder_path )
-      raise IOError, "The Document.doc_builder_script_path does not exist (#{ Document.doc_builder_script_path })"                    unless File.exist?( Document.doc_builder_script_path )
-      raise IOError, "The Document.doc_builder_settings_path does not exist (#{ Document.doc_builder_settings_path })"                unless File.exist?( Document.doc_builder_settings_path )
-      raise IOError, "The Document.folder does not exist (#{ Document.folder })"                                                      unless File.exist?( Document.folder )
-      raise IOError, "The Document sub-folder does not exist (#{ self.sub_folder })"                                                  unless File.exist?( Document.folder / self.sub_folder )
+      raise IOError, "The Document.doc_builder_commands_folder_path does not exist: #{ Document.doc_builder_commands_folder_path }"  unless File.exist?( Document.doc_builder_commands_folder_path )
+      raise IOError, "The Document.doc_builder_script_path does not exist: #{ Document.doc_builder_script_path }"                    unless File.exist?( Document.doc_builder_script_path )
+      raise IOError, "The Document.doc_builder_settings_path does not exist: #{ Document.doc_builder_settings_path }"                unless File.exist?( Document.doc_builder_settings_path )
+      raise IOError, "The Document.folder does not exist: #{ Document.folder }"                                                      unless File.exist?( Document.folder )
+      raise IOError, "The Document sub-folder does not exist: #{ Document.folder / self.sub_folder }"                                                  unless File.exist?( Document.folder / self.sub_folder )
       
       shell_command = "#{ Document.doc_builder_shell_command } #{ self.id }"
 
       message = "Starting shell command #{ Time.now.formatted(:db) }: #{ shell_command }"
+      Document.logger.info! message
       output << message
-      Document.logger.info message
       
       # This did not seem to update the row. No idea why! Had to resort to direct update instead:
       #self.doc_builder_output = output.join("\n")
@@ -489,25 +504,34 @@ class Document
         doc.save!
         self.reload
       else
-        Document.logger.info "Unable to log progress to doc record because it does not exist #{ self.id }"
+        Document.logger.error "Unable to log progress to doc record because it does not exist #{ self.id }"
       end
       
 
       IO.popen(shell_command) do |readme|
         readme.each do |line|
           
-          Document.logger.info! line
+          begin
+
+            Document.logger.info! line
           
-          # Exception when script path is incomplete: (Eg: it outputs: "Input Error: Unknown option /scripts/documents/doc_builder/sdb.vbs specified.")
-          raise ScriptError, 'Problem with the shell command' if line =~ /Input Error:/i 
-          raise IOError,     'Unable to open INI file'        if line =~ /ERROR.*Unable to open INI file/i 
-          raise IOError,     'Unable to update job status'    if line =~ /ERROR.*Unable to update job status/i 
+            # Exception when script path is incomplete: (Eg: it outputs: "Input Error: Unknown option /scripts/documents/doc_builder/sdb.vbs specified.")
+            raise ScriptError, 'Problem with the shell command' if line =~ /Input Error:/i 
+            raise IOError,     'Unable to open INI file'        if line =~ /ERROR.*Unable to open INI file/i 
+            raise IOError,     'Unable to update job status'    if line =~ /ERROR.*Unable to update job status/i 
+
+            # Important: If we decide to update the doc_builder_output as we go then we'll need to keep
+            #            reloading it because the external script process is updating the database row:
+            # self.reload
+            # self.doc_builder_output << line
+            # self.save!
           
-          # Important: If we decide to update the doc_builder_output as we go then we'll need to keep
-          #            reloading it because the external script process is updating the database row:
-          # self.reload
-          # self.doc_builder_output << line
-          # self.save!
+          rescue Exception => error_details
+
+            Document.logger.error! error_details
+            raise Exception, error_details
+
+          end
           
         end
       end
@@ -520,17 +544,17 @@ class Document
       
     rescue Exception => error_details
       
-      an_exception_was_raised = "ERROR: #{ error_details }\nTerminating shell command because of errors."
-      Document.logger.error an_exception_was_raised
+      doc_gen_exception = "ERROR: #{ error_details }\nTerminating shell command because of errors."
+      Document.logger.error! doc_gen_exception
       
     ensure
       
       # Note we must RELOAD the object because the db row has been updated by the separate script process:
       #self.reload
       
-      if an_exception_was_raised
-        message = an_exception_was_raised
-        Document.logger.error 'Saving doc_builder_output for debugging'
+      if doc_gen_exception
+        message = doc_gen_exception
+        Document.logger.error! 'Saving doc_builder_output for debugging'
         self.document_status_id = FAILED
       else
         message = "Completed shell command."
@@ -557,10 +581,10 @@ class Document
     name = self.document_type && self.document_type.name || ''
     
     case self.document_status_id
-    when 1 then "Your #{ name } document is being created."
-    when 2 then "Whoops, your #{ name } document could not be created. See the documents page for more details."
-    when 3 then "Your new #{ name } document has been created successfully."
-    else   nil
+      when 1 then "Your #{ name } document is being created."
+      when 2 then "Whoops, your #{ name } document could not be created. See the documents page for more details."
+      when 3 then "Your new #{ name } document has been created successfully."
+      else   nil
     end
     
   end
