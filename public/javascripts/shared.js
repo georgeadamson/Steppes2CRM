@@ -273,6 +273,10 @@ jQuery(function($) {
 			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
 			Layout.livePath('success', /\/autotexts\?autotext/,							Autotext.showAutotexts );	// Eg: '/autotexts?autotext&country_id={value}&list=option'
 
+			// Documents:
+			Layout.match(/clients\/([0-9]+)\/documents.*list=option/).on('success').to(Document.list);	// For listing template filenames
+
+
 			// Depricated in favour of Layout.liveForm:
 			//$('FORM.edit-client').live('form:success', Client.onEditSuccess)
 			//$('FORM.create-tour').live('form:success', Tour.onCreateSuccess)
@@ -2322,28 +2326,30 @@ return
 	// ADD-REPORT-FILTER button handler:
 	$('.add-filter').live('click', function(){
 
-		var newFilterUID	= '[' + ( +new Date ) + ']';							// New random id number.
+		var newFilterUID	= '[NEW_' + ( +new Date ) + ']';						// New random id. Note: The Delete handler checks for 'NEW_' id.
 		var $template		= $(this).siblings('.report-filter:last');				// Locate previous filter to use as a template.
 		var $newFilter		= $template.clone().hide();
 		$newFilter.find("INPUT[name *= '[id]'], .filter-value-box:gt(0)").remove();	// Discard id field and all but the first value field.
+		$newFilter.find('INPUT,SELECT').removeAttr('disabled');						// Ensure fields are enabled (in case we just copied a 'deleted' filter)
 		$newFilter.find("INPUT[name *= '[_delete]']").attr('disabled','disabled');	// Ensure the delete field is disabled so it can't be submitted.
 
 		// Change the unique identifier of the cloned fields Eg: "report[report_filters_attributes][918][filter_value][]" => "report[report_filters_attributes][1280307283304][filter_value][]"
 		// so that the server can distinguish them when the form is submitted.
 		$newFilter.find('INPUT,SELECT')
-		.each(function(){
-			var newName = $(this).attr('name').replace( /\[\d+\]/, newFilterUID );
-			$(this).attr( 'name', newName );
-		})
-		.end()
-		.insertAfter( $template ).slideDown();
+			.each(function(){
+				var newName = $(this).attr('name').replace( /\[\d+\]/, newFilterUID );
+				$(this).attr( 'name', newName );
+			})
+			.end()
+			.insertAfter( $template ).slideDown()
+		;
 
 		return false;
 
 	})
 
 
-	// ADD-REPORT-FILTER-VALUE button handler:
+	// add-report-filter-VALUE button handler: (depricated)
 	$('.report-filter .add-filter-value').live('click', function(){
 
 		var $template			= $(this).parent('.filter-value-box');
@@ -2361,15 +2367,31 @@ return
 
 		var $filter = $(this).parent('.filter-value-box').parent('.report-filter');
 
-		// Delete the filter value unless it is the only one:
-		if( $filter.find('.filter-value-box').length > 1 ){
+		// Delete the filter *value* element unless it is the only one:
+		// (This action is no longer relevant because the ability to filter by multiple values was depricated)
+		if( $filter.has('.filter-value-box').length > 1 ){
 
 			$(this).parent('.filter-value-box').slideUp(function(){ $(this).remove() });
 
-		// Otherwise delete the entire filter unless it is the only one:
+		// Otherwise delete the *entire* filter unless it is the only one:
+		// Note: We cannot actually remove the filter elements yet because we still need to submit something to inform the server:
 		}else if( $filter.siblings(".report-filter:has(INPUT[name *= '[_delete]'][disabled])").length > 0 ){
 
-			$filter.find("INPUT[name *= '[_delete]']").removeAttr('disabled').end().slideUp();
+			if( $filter.has("INPUT[name *= '[NEW_']").length > 0 ){
+
+				// This filter was added but not saved so we can remove it without letting the server know:
+				$filter.slideUp(function(){ $(this).remove() });
+
+			}else{
+
+				// Activate the filter's _delete flag field, then deactivate the filter's settings:
+				// (The latter is not strictly necessary but it helps reduce noise in the submitted params)
+				$filter.find("INPUT[name *= '[_delete]']").removeAttr('disabled');
+				$filter.find("SELECT[name *= '[name]'], SELECT[name *= '[filter_operator]'], INPUT[name *= '[filter_value]']").attr('disabled','disabled');
+
+				$filter.slideUp();
+
+			}
 
 		}
 
@@ -3911,6 +3933,19 @@ Client.initForm();
 		}
 	
 	};
+
+
+	// For listing template filenames:
+	var Document = {
+
+		list : function(options){
+	
+			console.log(options)
+			console.log( $(options.target) )
+		}
+
+	};
+
 
 
 	var BoundFields = {
