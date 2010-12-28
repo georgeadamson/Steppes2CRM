@@ -15,14 +15,7 @@ class Reports < Application
     @report = Report.get(id)
     raise NotFound unless @report
 
-#    if params[:format] && params[:format].to_sym == :csv
-#
-#      rows = @report.run
-#      return rows.map{ |row| row.values.join("\t") }.join("\n")
-#
-#    else
-      display @report, :show
-#    end
+    display @report, :show
 
   end
 
