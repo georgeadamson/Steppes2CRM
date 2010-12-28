@@ -1,11 +1,12 @@
 <div class="sectionContainer noSectionHead">
 
-	<%#
-		Important: @brochure_request.client & company are required to create a new brochure_request!
-		Here's a feeble attempt to guess some defaults:
+	<%
+		# Important: @brochure_request.client & company are required to create a new brochure_request!
+		# Here's a feeble attempt to guess some defaults:
+
+		@brochure_request.client_id ||= params[:client_id]
+		@brochure_request.company   ||= session.user.company || Company.first( :is_active => true )
 	%>
-	<% @brochure_request.client_id  ||= params[:client_id] %>
-	<% @brochure_request.company_id ||= Company.first( :is_active => true ).id %>
 
 	<%= form_for @brochure_request, :action => resource( @brochure_request.client, :brochure_requests ) do %>
 

@@ -143,18 +143,20 @@ jQuery(function($) {
 			// Return the methods hash to begin chaining:
 			return bindRoute();
 
+			// Handler for the 'on' method:
 			function status(arg){
 				return bindRoute({ status:arg });
 			}
 
+			// Handler for the 'to' method:
 			function callback(arg){
 				return bindRoute({ callback:arg });
 			}
 
-			// Add more arguments to the route settings and initialise the route listener if settings are complete:
+			// Helper to initialise the route listener if we have all the route settings we need:
 			function bindRoute(args){
 
-				// Merge in any new route configuration arguments:
+				// Merge the next route configuration argument to build up our route hash:
 				$.extend( route, args );
 
 				if( route.callback && route.status && route.path ){
@@ -2368,16 +2370,16 @@ return
 		var $filter = $(this).parent('.filter-value-box').parent('.report-filter');
 
 		// Delete the filter *value* element unless it is the only one:
-		// (This action is no longer relevant because the ability to filter by multiple values was depricated)
+		// (This action is no longer relevant because the ability to supply multiple values for one filter was depricated)
 		if( $filter.has('.filter-value-box').length > 1 ){
 
 			$(this).parent('.filter-value-box').slideUp(function(){ $(this).remove() });
 
-		// Otherwise delete the *entire* filter unless it is the only one:
+		// Otherwise delete the *entire* filter unless it is the only one left:
 		// Note: We cannot actually remove the filter elements yet because we still need to submit something to inform the server:
 		}else if( $filter.siblings(".report-filter:has(INPUT[name *= '[_delete]'][disabled])").length > 0 ){
 
-			if( $filter.has("INPUT[name *= '[NEW_']").length > 0 ){
+			if( $filter.is(":has( INPUT[ name *= '[NEW_' ] )") ){
 
 				// This filter was added but not saved so we can remove it without letting the server know:
 				$filter.slideUp(function(){ $(this).remove() });
@@ -3935,13 +3937,13 @@ Client.initForm();
 	};
 
 
-	// For listing template filenames:
 	var Document = {
 
+		// For listing TEMPLATE filenames in a picklist:
 		list : function(options){
 	
-			console.log(options)
-			console.log( $(options.target) )
+			console.log( 'Fetching list of doc templates', options.params, $(options.target), options )
+
 		}
 
 	};
