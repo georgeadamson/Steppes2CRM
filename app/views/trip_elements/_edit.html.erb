@@ -53,6 +53,6 @@
 <% end =%>
 
 	<!-- This invisible delete form has to be outside the edit form. Button is "clicked" by the delete-label above! -->
-	<%= delete_button "#{ nested_resource(element) }", "Delete this element", :id => delete_button_id, :class => "hidden delete ajaxBlank", :rel => '.ajaxPanel' %>
+	<%= delete_button "#{ nested_resource(element) }", "Delete this element", :id => delete_button_id, :class => "hidden delete ajaxBlank", :rel => '.ajaxPanel', :'data-confirm' => 'Ok to delete this element?' %>
 
 </div>

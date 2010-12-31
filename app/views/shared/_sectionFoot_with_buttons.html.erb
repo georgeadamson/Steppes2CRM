@@ -58,7 +58,7 @@
 		<%= link_to				cancel_caption, cancel_url, :rel	=> ui_target,	:title => cancel_tooltip,	:class => "#{ cancel_class } #{ secondary_class } ajaxCancel"	if cancel	%>
 		
 		<!-- Define a special <label> element that can be clicked to activate the hidden delete_button defined beneath the current form: -->
-		<%= tag :label,		"#{ icon :delete } #{ delete_caption }",							:for	=> delete_id,	:title => delete_tooltip,	:class => "#{ delete_class } #{ secondary_class }"					if label_for_delete %>
+		<%= tag :label,		"#{ icon :trash } #{ delete_caption }",							:for	=> delete_id,	:title => delete_tooltip,	:class => "#{ delete_class } #{ secondary_class }"					if label_for_delete %>
 
 		<%# Warning: delete_button will render it's own little form so it cannot be nested inside another form: %>
 		<%= delete_button	delete_url,	delete_caption,	:rel	=> ui_target,	:title => delete_tooltip,	:class => "#{ delete_class } #{ secondary_class }"					if delete	%>
