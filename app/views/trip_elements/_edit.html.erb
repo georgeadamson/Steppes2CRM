@@ -31,7 +31,7 @@
 			<% else %>
 
 				<!-- This cunning "Delete" label looks like a button but actually activates the delete button below: -->
-				<%= tag :label, "#{ icon :delete } Delete this element", :for => delete_button_id, :class => 'ui-priority-secondary ui-state-default left' %>
+				<%= tag :label, "#{ icon :trash } Delete this element", :for => delete_button_id, :class => 'ui-priority-secondary ui-state-default left' %>
 
 				<% if element.is_slave? && !element.master_element %>
 					<!-- Allow for linked element who's master element has been deleted: -->
