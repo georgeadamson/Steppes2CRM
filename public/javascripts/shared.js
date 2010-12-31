@@ -1134,107 +1134,108 @@ return
 
 
 	// AUTO-SUBMIT is used submit the form when user selects a new item in a pick list:
-	$('SELECT.auto-submit').live('change', function(){
-return
-		var $list		= $(this);
-		var $form		= $list.closest('FORM');
-		var $submit		= $form.find('INPUT:submit').eq(0);
-		var uiTarget	= $list.attr('rel') || $list.attr('data-rel') || $list.attr('data-target') || $submit.attr("rel");
-		var ajaxBlank	= $submit.is(".ajaxBlank");				// Optional flag to clear form container element after submit.
-		var $parent		= $form.parents(".ajaxPanel").eq(0);
-		var thisForm	= $submit.link()						// The link() method is a helper to parse details from a url etc.
+	// DEPRICATED in favour of the Layout.livePath/liveForm functionality.
+	//	$('SELECT.auto-submit').live('change', function(){
 
-		// Attempt to derive target panel from the rel attribute, otherwise search up dom for .ajaxPanel:
-		var $uiTarget = uiTarget ? $submit.closest(uiTarget).eq(0) : $parent;
+	//		var $list		= $(this);
+	//		var $form		= $list.closest('FORM');
+	//		var $submit		= $form.find('INPUT:submit').eq(0);
+	//		var uiTarget	= $list.attr('rel') || $list.attr('data-rel') || $list.attr('data-target') || $submit.attr("rel");
+	//		var ajaxBlank	= $submit.is(".ajaxBlank");				// Optional flag to clear form container element after submit.
+	//		var $parent		= $form.parents(".ajaxPanel").eq(0);
+	//		var thisForm	= $submit.link()						// The link() method is a helper to parse details from a url etc.
 
-		// Derive uiTarget selector if we still don't know it:
-		if( !uiTarget && $uiTarget.attr("id") ) uiTarget = "#" + $uiTarget.id();
+	//		// Attempt to derive target panel from the rel attribute, otherwise search up dom for .ajaxPanel:
+	//		var $uiTarget = uiTarget ? $submit.closest(uiTarget).eq(0) : $parent;
 
-		$form.ajaxSubmit({
-			target		: uiTarget
-			//success		: success,
-			//complete	: complete
-		});
+	//		// Derive uiTarget selector if we still don't know it:
+	//		if( !uiTarget && $uiTarget.attr("id") ) uiTarget = "#" + $uiTarget.id();
 
-	});
+	//		$form.ajaxSubmit({
+	//			target		: uiTarget
+	//			//success		: success,
+	//			//complete	: complete
+	//		});
+
+	//	});
 
 
 
 	// DEPRICATED
-//	// Called when any ajax calls complete:
-//	function onAjaxComplete(xhr, status, options) {
+	//	// Called when any ajax calls complete:
+	//	function onAjaxComplete(xhr, status, options) {
 
-//		var isHtml		= /^\s*\</;				// var isJson = /^\s*[\[\{]/;
-//		var findFormUrl	= / action="([^"]*)"/;
+	//		var isHtml		= /^\s*\</;				// var isJson = /^\s*[\[\{]/;
+	//		var findFormUrl	= / action="([^"]*)"/;
 
-//		// Only update UI elements if response is html:
-//		if( xhr && xhr.responseText && isHtml.test(xhr.responseText) ){
+	//		// Only update UI elements if response is html:
+	//		if( xhr && xhr.responseText && isHtml.test(xhr.responseText) ){
 
-//			// Derive a handy hash of url info kinda like window.location on steroids:
-//			// (Extract <form action="url"> using a regex because some responseText can be too big or complex for jQuery to parse)
-//			var formAction	= ( findFormUrl.exec(xhr.responseText) || [] )[1];
-//			var url			= parseUrl( formAction );
-//			var target		= xhr && xhr.options && xhr.options.target;
-//			var $target		= undefined;
-//			
-//			if( target ){ $target = $(target) }
+	//			// Derive a handy hash of url info kinda like window.location on steroids:
+	//			// (Extract <form action="url"> using a regex because some responseText can be too big or complex for jQuery to parse)
+	//			var formAction	= ( findFormUrl.exec(xhr.responseText) || [] )[1];
+	//			var url			= parseUrl( formAction );
+	//			var target		= xhr && xhr.options && xhr.options.target;
+	//			var $target		= undefined;
+	//			
+	//			if( target ){ $target = $(target) }
 
-//			//initLevel2Tabs_forClient($target);
-//			//initLevel3Tabs_forTrip($target);
-//			//initLevel2Tabs_forSysAdmin($target);
-//			//initLevel2Tabs_forReports($target);
-//			initFormAccordions($target);
-//			//initFormTabs($target);	// Eg: countriesTabs on Trip Summary page.
-//			initSpinboxes($target);
-//			initDatepickers($target);
-//			initPostcodeSearch($target);
-//			initMVC($target);
-//			triggerTripInvoiceFormChange();
+	//			//initLevel2Tabs_forClient($target);
+	//			//initLevel3Tabs_forTrip($target);
+	//			//initLevel2Tabs_forSysAdmin($target);
+	//			//initLevel2Tabs_forReports($target);
+	//			initFormAccordions($target);
+	//			//initFormTabs($target);	// Eg: countriesTabs on Trip Summary page.
+	//			initSpinboxes($target);
+	//			initDatepickers($target);
+	//			initPostcodeSearch($target);
+	//			initMVC($target);
+	//			triggerTripInvoiceFormChange();
 
-//			// Display any user-feedback messages found in the response:
-//			// (Extract message elements using a regex because some responseText can be too big or complex for jQuery to parse)
-//			var messagesFragment = ( FIND_MESSAGE_CONTENT.exec(xhr.responseText) || [] )[1];
-//			if( messagesFragment ){
-//				var $newMessages	 = $(messagesFragment).closest(".noticeMessage, .errorMessage");
-//				showMessage( $newMessages );
-//			}
+	//			// Display any user-feedback messages found in the response:
+	//			// (Extract message elements using a regex because some responseText can be too big or complex for jQuery to parse)
+	//			var messagesFragment = ( FIND_MESSAGE_CONTENT.exec(xhr.responseText) || [] )[1];
+	//			if( messagesFragment ){
+	//				var $newMessages	 = $(messagesFragment).closest(".noticeMessage, .errorMessage");
+	//				showMessage( $newMessages );
+	//			}
 
-//			// TRIP ELEMENTs: Derive trip_element.id from the form url and refresh the element in the timeline:
-//			if( url.resource.trip_element ) {
+	//			// TRIP ELEMENTs: Derive trip_element.id from the form url and refresh the element in the timeline:
+	//			if( url.resource.trip_element ) {
 
-////				var elemId			= url.resource.trip_element;
-////				var elemIdFieldName = "trip_element[id]";
-////				//var elemClass	 = elemIdFieldName + "=" + elemId;   // Eg: class="trip_element[id]=123456"
-////				//	elemClass	 = elemClass.replace(/([\[\]\=])/g,"\\$1")
-////				//var $timelineElem = $("LI." + elemClass);
-////				var $timelineElem = $("INPUT:hidden[value='" + elemId + "'][name='trip_element[id]']").parents("LI.tripElement:first");
+	////				var elemId			= url.resource.trip_element;
+	////				var elemIdFieldName = "trip_element[id]";
+	////				//var elemClass	 = elemIdFieldName + "=" + elemId;   // Eg: class="trip_element[id]=123456"
+	////				//	elemClass	 = elemClass.replace(/([\[\]\=])/g,"\\$1")
+	////				//var $timelineElem = $("LI." + elemClass);
+	////				var $timelineElem = $("INPUT:hidden[value='" + elemId + "'][name='trip_element[id]']").parents("LI.tripElement:first");
 
-////				$timelineElem.reload(function() {
-////					// Refresh timeline overview after ajax reload:
-////					//$('DIV.timelineContent:visible').timelineOverview();
-////				}, true);
+	////				$timelineElem.reload(function() {
+	////					// Refresh timeline overview after ajax reload:
+	////					//$('DIV.timelineContent:visible').timelineOverview();
+	////				}, true);
 
-//			}
+	//			}
 
 
-//			// Check for a message from the server telling us to OPEN A CLIENT TAB for the specified client:
-//			if( $target && $target.length ){
-//			
-//				// Look for <input name="client_id" class="showClient" value="123456">
-//				$target.find('INPUT[name=client_id][value].showClient').each(function(){
+	//			// Check for a message from the server telling us to OPEN A CLIENT TAB for the specified client:
+	//			if( $target && $target.length ){
+	//			
+	//				// Look for <input name="client_id" class="showClient" value="123456">
+	//				$target.find('INPUT[name=client_id][value].showClient').each(function(){
 
-//					var client_id	 = $(this).val();									  // This extra search simple allows for when the field has been carelessly rendered in a <div class="formField">
-//					var client_label = $(this).siblings('INPUT[name=client_label]').val() || $(this).parent().siblings().children('INPUT[name=client_label]').val();
+	//					var client_id	 = $(this).val();									  // This extra search simple allows for when the field has been carelessly rendered in a <div class="formField">
+	//					var client_label = $(this).siblings('INPUT[name=client_label]').val() || $(this).parent().siblings().children('INPUT[name=client_label]').val();
 
-//					openClientTab( client_id, client_label );
+	//					openClientTab( client_id, client_label );
 
-//				});
-//			
-//			}
-//			
-//		}
+	//				});
+	//			
+	//			}
+	//			
+	//		}
 
-//	};
+	//	};
 
 
 
@@ -2665,7 +2666,7 @@ function initSpinboxes() {
 	// Initialise AUTOCOMPLETE within address postcode fields:
 	function initPostcodeSearch(context){
 
-		$('INPUT.postal-code',context).autocomplete('/postcodes', {
+		$('INPUT.postal-code',context).each(function(){ console.log(this) }).autocomplete('/postcodes', {
 
 			max					: POSTCODE_LOOKUP_MAX_ROWS,
 			delay				: POSTCODE_LOOKUP_DELAY_BEFORE_AJAX,
@@ -3225,6 +3226,11 @@ function initTripInvoiceFormTotals(){
 			})
 			.attr('data-edited',true);
 
+
+			// Enable the address search on the postcode field(s):
+			initPostcodeSearch(target)
+
+
 			// Handler to update salutation ans addressee from title, forename and surname: (unless 'edited' flag is set)
 			function onNameChanged(){
 
@@ -3349,7 +3355,6 @@ function initTripInvoiceFormTotals(){
 	} // End of Client utilities.
 
 
-Client.initForm();
 
 	var Trip = {
 
@@ -3357,7 +3362,7 @@ Client.initForm();
 		
 			console.log(options)
 			//alert(options)
-		
+
 		},
 
 		// Called when a TRIP is opened:
