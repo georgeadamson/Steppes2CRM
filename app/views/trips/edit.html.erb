@@ -1,14 +1,15 @@
 <!-- Trip edit.html: -->
 <%
 
-	client_or_tour    ||= @client_or_tour
+	client_or_tour						||= @client_or_tour
 	
-	delete_caption		||= @trip.is_first_version ? 'Delete all versions of this trip' : 'Delete this version'
-	delete_uid				||= "delete-btn#{ Time.new.to_i }"
-	label_for_delete	||= delete_caption
-	label_for_delete  = false if @trip.completed? || @trip.confirmed?
+	delete_caption						||= @trip.is_first_version ? 'Delete all versions of this trip' : 'Delete this version'
+	prompt_to_confirm_delete	||= @trip.is_first_version ? 'That seems a bit drastic. Are you quite sure you want to delete all versions of this trip?' : 'Delete this version?'
+	delete_uid								||= "delete-btn#{ Time.new.to_i }"
+	label_for_delete					||= delete_caption
+	label_for_delete						= false if @trip.completed? || @trip.confirmed?
 	
-	url_params					= { :redirect_to => resource(client_or_tour,@trip.version_of_trip) }
+	url_params									= { :redirect_to => resource(client_or_tour,@trip.version_of_trip) }
 	
 -%>
 <!--<div class="sectionContainer noSectionHead">-->
@@ -46,6 +47,6 @@
 
 		<!-- Important: This delete button is HIDDEN and exists in it's own little form.
 		     It has an associated <label> defined above that can be clicked in the preceeding sectionFoot! -->
-		<%= delete_button resource(client_or_tour, @trip, url_params ), delete_caption, :class => "hidden", :id => delete_uid, :'data-target' => '.clientPageContainer' %>
+		<%= delete_button resource(client_or_tour, @trip, url_params ), delete_caption, :class => "hidden", :id => delete_uid, :'data-target' => '.clientPageContainer', :'data-confirm' => prompt_to_confirm_delete %>
 
 <!--</div>-->

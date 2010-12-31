@@ -184,6 +184,9 @@ jQuery(function($) {
 			// TODO: Refactor liveForm to alternate syntax: Layout.liveForm('update:success', 'clients', Client.initForm ) & maybe combine with livePath()
 			//       Or like a resource:	Layout.match(/clients\/new/).on('success').to(Client.openNew)
 
+			// Layout.match(':destroy').on('click').to( function(){alert('are you sure?!')} );
+			Layout.liveForm('submit', 'clients:destroy',	function(){alert('are you sure?!')} );
+
 			// Clients:
 			Layout.livePath('click',   new RegExp('clients/new'),						Client.openNew );
 			Layout.livePath('success', new RegExp('clients/new'),						Client.initForm );
@@ -194,6 +197,7 @@ jQuery(function($) {
 			Layout.livePath('success', /[\?\&]open_client_id=([0-9]+)/,					Client.openShow );	// Eg: web_requests?open_client_id=2138587702
 			Layout.liveForm('success', 'clients:create',								Client.openShow );	// After creating a new client.
 			Layout.liveForm('success', 'clients:update',								Client.initForm, BoundFields.update );
+			Layout.liveForm('success', 'clients:destroy',								Client.initForm, BoundFields.update );
 
 			// Tours:
 			Layout.livePath('click',   /tours\/([0-9]+)$/,								Tour.openShow );	//openTourTab
@@ -538,16 +542,32 @@ jQuery(function($) {
 
 				// The source argument will only be present when triggered by SELECT.auto-submit:
 				var $form		= $(this),
-					$button		= $(source || e.originalEvent && e.originalEvent.explicitOriginalTarget),
-					url			= $form.attr('action').replace(/^#/, ''),
+					$button		= $(source || e.originalEvent && e.originalEvent.explicitOriginalTarget);
+
+					// When a <label> is clicked, explicitOriginalTarget will be the text node within the label:
+					if( $button.parent().is('LABEL') ){
+						$button = $button.parent()
+					}
+
+					// When a <label> is clicked, derive the actual submit button from the "for" attribute:
+					if( $button.is('LABEL') && $button.is('[for]') ){
+						var buttonID = $button.attr('for');
+						$button = $( '#' + buttonID );
+					}
+
+				var	url			= $form.attr('action').replace(/^#/, ''),
 					dataType	= $form.attr('data-type')   || 'html',
 					target		= $form.attr('data-target') || Layout.getTargetOf($button),
 					ext			= url.split('.')[1],	// Filename extension				
 					form		= Layout.getActionOf($form),
 					options		= { url:url, target:target, form:form },
-					buttonData	= {};
+					buttonData	= {},
+					promptToConfirm	    = $button.attr('data-confirm');
+
 					options.form.target = target;
 					options.form.button = $button.id();
+
+				//if( $button.parent().is('LABEL') )
 
 				// When using a live event the ajaxSubmit() method will not include name/value of the submit button so add it:
 				if( $button.is(':submit') && $button.attr('name') ){ buttonData[ $button.attr('name') ] = $button.val() }
@@ -555,49 +575,54 @@ jQuery(function($) {
 				// Stop interfering right now if form is generating a file to download:
 				if( DOWNLOADABLE_EXT[ext] || $button.is('.download, .ajaxDownload') || $form.is('.download, .ajaxDownload') ){ return }
 
-				// By setting up the AJAX SUBMIT here, each of the callbacks can refer to the $form using a closure:
-				$form.ajaxSubmit({
 
-					url       : url,
-					dataType  : dataType,
-					data      : $.extend( {}, form.params, buttonData ),	// Also submit url params as fields.
+				if( !promptToConfirm || confirm(promptToConfirm) ){
 
-					beforeSubmit: function(data, form, options){
-						$form.trigger('form:beforeSubmit', [data, form, options]);
-					},
+					// By setting up the AJAX SUBMIT here, each of the callbacks can refer to the $form using a closure:
+					$form.ajaxSubmit({
 
-					beforeSend: function(xhr){
-						$form.trigger('form:beforeSend', [xhr]);
-					},
+						url       : url,
+						dataType  : dataType,
+						data      : $.extend( {}, form.params, buttonData ),	// Also submit url params as fields.
 
-					success: function(data, status, xhr){
+						beforeSubmit: function(data, form, options){
+							$form.trigger('form:beforeSubmit', [data, form, options]);
+						},
 
-						// For the benefit of the error handler, ensure the xhr.responseText still contains the response:
-						if( !xhr.responseText && data ){ xhr.responseText = data }
+						beforeSend: function(xhr){
+							$form.trigger('form:beforeSend', [xhr]);
+						},
 
-						// After creating a new object we may be able to read it's new id from the response: (Eg: form.trip_id = 123)
-						var resource = options.form && options.form.resource, attr = resource+'_id';
-						if( resource && !options.form[attr] ){ options.form[attr] = $(data).find('#'+attr).val(); options.form.resource_id = options.form[attr] }
+						success: function(data, status, xhr){
 
-						if ( Layout.getMessagesFrom(data).is('.errorMessage') ) {
-							$form.trigger('form:error', [xhr, status, 'custom']);
-						} else {
-							Layout.onSuccess(data, status, xhr, options, e);
-							Layout.triggerLiveForm('success', options.form, options, data, e);
-							$form.trigger('form:success', [data, status, xhr]);
+							// For the benefit of the error handler, ensure the xhr.responseText still contains the response:
+							if( !xhr.responseText && data ){ xhr.responseText = data }
+
+							// After creating a new object we may be able to read it's new id from the response: (Eg: form.trip_id = 123)
+							var resource = options.form && options.form.resource, attr = resource+'_id';
+							if( resource && !options.form[attr] ){ options.form[attr] = $(data).find('#'+attr).val(); options.form.resource_id = options.form[attr] }
+
+							if ( Layout.getMessagesFrom(data).is('.errorMessage') ) {
+								$form.trigger('form:error', [xhr, status, 'custom']);
+							} else {
+								Layout.onSuccess(data, status, xhr, options, e);
+								Layout.triggerLiveForm('success', options.form, options, data, e);
+								$form.trigger('form:success', [data, status, xhr]);
+							}
+
+						},
+
+						error: function(xhr, status, error) {
+							$form.trigger('form:error', [xhr, status, error]);
+						},
+
+						complete: function(xhr, status) {
+						  $form.trigger('form:complete', [xhr, status]);
 						}
 
-					},
+					});
 
-					error: function(xhr, status, error) {
-						$form.trigger('form:error', [xhr, status, error]);
-					},
-
-					complete: function(xhr, status) {
-					  $form.trigger('form:complete', [xhr, status]);
-					}
-
-				});
+				}
 
 				e.preventDefault();
 
