@@ -68,7 +68,7 @@ jQuery(function($) {
 		// Settings for postcode-lookup:
 		POSTCODE_LOOKUP_MAX_ROWS			= 20,			// Will be sent as &limit=n url parameter when searching for postcodes via ajax.
 		POSTCODE_LOOKUP_DELAY_BEFORE_AJAX	= 200,			// Slight delay before searching for the keywords being typed in postcode search box.
-		POSTCODE_LOOKUP_MIN_CHARS			= 4,			// The longer this is the faster the search is likely to be. (Shortest postcode in DB is 6 chars)
+		POSTCODE_LOOKUP_MIN_CHARS			= 5,			// The longer this is the faster the search is likely to be. (Shortest postcode in DB is 6 chars)
 
 		// Delay before generating the overview just below the timeline when the Trip Builder tab is opened:
 		TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW	= 2000,

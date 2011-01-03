@@ -306,6 +306,7 @@ class Trips < Application
 		trip[:countries_ids] ||= @trip.countries_ids
     
 		# Convert from UK date formats and make assumptions for missing dates:
+    # TODO: Do this in the model instead.
 		accept_valid_date_fields_for trip, [ :start_date, :end_date ]
     trip[:start_date] ||= @trip.start_date || Date.today
     trip[:end_date]   ||= @trip.end_date   || trip[:start_date]
@@ -316,7 +317,10 @@ class Trips < Application
     
     next_page = params[:redirect_to] && params[:redirect_to].to_sym || nil
     
-    
+    # This attribute needs to be set before calling @trip.update: (because we cannot guarantee the order in which the params are processed)
+    @trip.auto_update_elements_dates = trip[:auto_update_elements_dates] || false
+
+
     # Switch VERSION:
     if trip[:active_version_id] && trip[:active_version_id].to_i != @trip.id
 
@@ -427,7 +431,7 @@ class Trips < Application
 
     # Otherwise apply the changes in the normal way:
 		elsif @trip.update(trip)
-      
+
 			message[:notice]	  = 'Trip was updated successfully. '
       #message[:notice]   += 'The active version has been changed.' if @trip_version
       
