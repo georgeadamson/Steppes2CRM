@@ -543,6 +543,7 @@ INPUT[type=reset].ui-state-default.ui-priority-secondary,
 
 	.buttonBar DIV.checkbox LABEL {
 		color:#000;
+		font-weight:normal;
 	}
 
 
