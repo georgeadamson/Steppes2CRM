@@ -256,38 +256,41 @@ class ReportField
     # Convert '*' wildcards to '%' and add wildcards when none provided:
     if operator == 'like'
 
+      # Ensure empty filter values don't accidentally filter out all results:
+      return {} if value.blank?
+
       value.gsub!('*','%')
       value = "%#{ value }%" if value !~ /(\%|\?)/
 
     # Change custom begins operator to like. Convert '*' wildcards to '%' and add wildcard suffix:
     elsif operator == 'begins'
 
+      value    = "#{ value.gsub!('*','%') }%"
       operator = 'like'
-      value = "#{ value.gsub!('*','%') }%"
 
     # Change custom begins operator to like. Convert custom '*' wildcards to '%' and add wildcard prefix:
     elsif operator == 'ends'
 
+      value    = "%#{ value.gsub!('*','%') }"
       operator = 'like'
-      value = "%#{ value.gsub!('*','%') }"
 
     # Change custom nil operator to .eql => nil
     elsif operator == 'nil'
 
-      operator = 'eql'
       value    = nil
+      operator = 'eql'
 
     # Change custom true/false operator to ".eql => 1" and ".eql => 0"
     elsif operator == 'true' || operator == 'false'
 
+      value    = ( operator == 'true' ) ? 1 : 0
       operator = 'eql'
-      value    = operator == 'true' ? 1 : 0
 
     # Change custom not.nil operator to not.eql => nil
     elsif operator == 'not.nil'
 
-      operator = 'not'
       value    = nil
+      operator = 'not'
 
     # Depricated? Allow boolean filter-values to be expressed as yes, no, true, false, on, off, 1, 0 etc:
     elsif property_data_type == DataMapper::Types::Boolean

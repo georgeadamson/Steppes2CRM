@@ -56,6 +56,22 @@ class MoneyOut
 
 
 
+# Custom fields for reports:
+
+  # Elements for which this payment is *probably* for:
+  def trip_elements
+    self.trip.trip_elements.all( :supplier_id => self.supplier_id )
+  end
+
+  def trip_elements_count
+    self.trip_elements.count
+  end
+
+  def trip_elements_days
+    days = 0
+    self.trip_elements.each{ |elem| days += elem.days }
+    return days
+  end
 
 
 # Class methods:
@@ -68,7 +84,14 @@ class MoneyOut
   
   # Define which properties are available in reports  
   def self.potential_report_fields
-    return [ :name, :amount_requested, :requested_date, :notes, :supplier, :trip, :status, :currency, :user, :created_at ]
+
+    return [ :name, :amount_requested, :requested_date, :notes, :supplier, :trip, :status, :currency, :user, :created_at,
+
+      # ...and the following are special custom methods especially for reports:
+      :trip_elements_count, :trip_elements_days
+
+    ]
+
   end
 
 end

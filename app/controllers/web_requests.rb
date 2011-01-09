@@ -61,7 +61,7 @@ class WebRequests < Application
     web_request[:status_id] = WebRequestStatus::PROCESSED if web_request[:status_id] == WebRequestStatus::ALLOCATED && is_old_client    # Process (assign to) client
     web_request[:status_id] = WebRequestStatus::ALLOCATED if web_request[:status_id] == WebRequestStatus::PROCESSED && is_new_client    # Import client
 
-    # (Scenario 1) The mere presence of the id attribute will prevent NEW CLIENT from saving: (even if id is an empty string)
+    # (Scenario 1) The mere presence of the client id attribute will prevent NEW CLIENT from saving: (even if id is an empty string)
     web_request[:client_attributes].delete(:id) if is_new_client
     
     # (Scenario 2) We don't want to overwrite attributes of an EXISTING CLIENT, so delete them and assign client_id instead!
@@ -77,10 +77,29 @@ class WebRequests < Application
       web_request[:client_attributes][:original_source_id] = web_request[:client_attributes][:source_id] if web_request[:client_attributes][:original_source_id].blank?
     end
 
+
+    # Workaround for odd symptoms when saving webrequest with new client: (See bug #537)
+    client_attributes = web_request.delete(:client_attributes)
+
+
     if @web_request.update(web_request)
 
+      # Workaround for odd symptoms when saving webrequest with new client: (See bug #537)
+      # DM seemed to get confused about saving new client using nested attributes. Failed to discover cause.
+      if client_attributes
+
+        if is_new_client
+          client = Client.new(client_attributes)
+        else
+          client = Client.get(client_attributes[:id])
+        end
+
+        @web_request.client = client
+
+      end
+
       # (Scenario 1) Explicitly save nested associations: (because they may be too nested to have been saved automatically)
-      if client = @web_request.client
+      if client
       
         #client.addresses.save if client.addresses.first && client.addresses.first.new?
         #client.client_interests.save if client.client_interests
@@ -90,6 +109,8 @@ class WebRequests < Application
         client.created_by            = session.user.fullname if client.new? && client.created_by.blank?
         client.updated_by            = session.user.fullname
         client.save
+
+        @web_request.save if is_new_client
 
       end
 
@@ -120,6 +141,7 @@ class WebRequests < Application
     end
 
   end
+
 
   def destroy(id)
     @web_request = WebRequest.get(id)
