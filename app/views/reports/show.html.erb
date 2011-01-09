@@ -2,17 +2,47 @@
 
 	<div class="sectionBody report-results-table-container">
 
+
+<%#= "Filters before applying _delete flags: #{ @report.filters.map{|f| f.attributes.inspect} }" 
+%>
+<%
+
+	# Exclude filters flagged for delete (they don't get destroyed until the user chooses to save the report)
+	# (The @destroyables instance variable)
+	unwanted_filters = @report.instance_variable_get(:@destroyables) || []
+	
+	@report.deleted_filters.each do |deleted|
+		
+		@report.filters.delete_if{ |f| f.id == deleted.id } 
+		
+	end
+	
+%>
+<%#= "<br/><br/>Filters after applying _delete flags: #{ @report.filters.map{|f| f.attributes.inspect} }" 
+%>
+
 		<%
-			@results      = @report.run()
+			@results = @report.run()
 			total_of = {}
+		-%>
+
+		<!-- Summary of results: -->
+		<p>
+			<%
+				# Are we showing all the results?
+				is_within_limit = @results.length < @report.limit
+				total_row_count = is_within_limit ? @results.length : @report.run(:count)
 			-%>
-			
-			<table class="report-results">
-				
-				<thead>
+			Showing <%= is_within_limit ? 'all' : "#{ @results.length } of" %> <%= total_row_count %> results. 
+			<%= 'Try saving and exporting to Excel if you need to see more.' unless is_within_limit %>
+		</p>
+
+		<table class="report-results">
+
+			<thead>
 				<tr>
 					<% @report.report_fields.each do |f| -%>
-					
+
 						<%=
 
 							# Might as well initialise column totals while we're looping through the columns:
@@ -22,53 +52,47 @@
 							tag :th, f.display_name 
 							
 						-%>
-						
+
 					<% end -%>
 				</tr>
-				</thead>
-				
-				<tbody>
-				
-				<%# The awkward indenting below simply helps to reduce whitespace in the resulting html:
-				-%>
+			</thead>
 
-				<% @results.each do |row| -%><tr><% 
-				
-						@report.columns.each do |column| 
-						
-							-%><td><%=
+			<tbody>
 
-								value = row[column.name]
-								#total_of[column.name] += value.to_f if value.respond_to? :to_f
-								total_of[column.name] += value.to_f if value.is_a?(Fixnum) || value.is_a?(BigDecimal)
+			<%# The awkward indenting below simply helps to reduce whitespace in the resulting html:
+			-%>
 
-								if value.nil?
-									'(not set)'
-								elsif value.is_a? Date
-									value.formatted(:uidate)
-								elsif value.is_a? DateTime
-									value.formatted(:uidatetime)
-								elsif value.is_a?(TrueClass)
-									'Yes'
-								elsif value.is_a?(FalseClass)
-									'No'
-								else
-									value
-								end
-											
-							-%></td><% 
+			<% @results.each do |row| -%><tr><%
+			
+					@report.columns.each do |column| 
+					
+						-%><td><%=
 
-						end 
-						
-				-%></tr><% end -%>
+							value = row[column.name]
+							#total_of[column.name] += value.to_f if value.respond_to? :to_f
+							total_of[column.name] += value.to_f if value.is_a?(Fixnum) || value.is_a?(BigDecimal)
+
+							if value.nil?
+								'(not set)'
+							elsif value.is_a? Date
+								value.formatted(:uidate)
+							elsif value.is_a? DateTime
+								value.formatted(:uidatetime)
+							elsif value.is_a?(TrueClass)
+								'Yes'
+							elsif value.is_a?(FalseClass)
+								'No'
+							else
+								value
+							end
+										
+						-%></td><% 
+
+					end 
+					
+			-%></tr><% end -%>
 
 			</tbody>
-
-		<%
-			# Are we showing all the results?
-			is_within_limit = @results.length < @report.limit
-			total_row_count = is_within_limit ? @results.length : @report.run(:count)
-		-%>
 
 		<% unless @results.empty? %>
 			<tfoot>
@@ -101,10 +125,9 @@
 
 		<p>
 			<br/>
-			Showing <%= @results.length %> of <%= total_row_count %> results.
-			<%= "Beware: Column totals are for the first #{ @results.length } rows only." unless is_within_limit %>
+			Showing <%= is_within_limit ? 'all' : "#{ @results.length } of" %> <%= total_row_count %> results. 
 			<br/>
-			<%= 'Try exporting to Excel if you need to see more.' unless is_within_limit %>
+			<%= "Beware: Column totals are for the first #{ @results.length } rows only." unless is_within_limit %>
 		</p>
 
 	</div>

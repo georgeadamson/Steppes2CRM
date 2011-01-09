@@ -5,6 +5,8 @@ require File.join( File.dirname(__FILE__), '..', "spec_data" )
 
 # Note: If the trip_element_spec does not succeed then this one does not have a chance!
 
+# TODO: Update MARGIN tests for the new margin calculation!
+
 describe Trip do
 
   before :all do
@@ -99,7 +101,7 @@ describe Trip do
 
 
 
-
+#=begin
 
   describe ' validations' do
 
@@ -561,10 +563,39 @@ describe Trip do
 
 
 
-#=begin
+
+  describe ' dates' do
+
+    it 'should adjust element dates when trip start_date changes' do
+
+      orig_trip_start_date = @trip.start_date
+      orig_trip_end_date   = @trip.end_date
+      orig_elem_start_date = @elem.start_date
+      orig_elem_end_date   = @elem.end_date
+      
+      attributes = {
+        :start_date                 => orig_trip_start_date + 10,
+        :auto_update_elements_dates => true 
+      }
+      @trip.update(attributes)
+      @trip.reload
+      @elem.reload
+
+      @trip.start_date.to_s.should == ( orig_trip_start_date + 10 ).to_s
+      @trip.end_date.to_s.should   == ( orig_trip_end_date        ).to_s  # trip.end_date should not change
+      
+      @elem.start_date.to_s.should == ( orig_elem_start_date + 10 ).to_s
+      @elem.end_date.to_s.should   == ( orig_elem_end_date   + 10 ).to_s
+
+    end
+
+  end
+
+
+
 
   describe ' invoicing' do    
-    
+
     it 'should remain unconfirmed when a deposit is created' do
       
       @main_invoice.is_deposit  = true
@@ -609,10 +640,8 @@ describe Trip do
 
 
 
-
-
   describe '.calc' do    
-    
+
     
     it "should calculate total TAXES per/for_all persons" do
       #puts @trip.adults
@@ -767,8 +796,6 @@ describe Trip do
 
    
   end
-
-
 
 
 
@@ -1792,9 +1819,7 @@ end
 
 
 
-
   describe " use final prices TOTALS" do    
-    
     
     it "should calculate total actual cost  for_all travellers/adult/child/infant/single for all_elements" do
       

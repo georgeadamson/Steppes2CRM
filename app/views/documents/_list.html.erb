@@ -1,0 +1,25 @@
+<%
+
+	# Default filter conditions:
+	type				||= nil
+	prefix			||= nil
+	company_id	||= nil
+	
+	type					= nil if type.blank?
+	prefix				= nil if prefix.blank?
+	company_id		= nil if company_id.blank?
+	
+	# Derive prefix from company_id parameter if necessary:
+	company ||= Company.get(company_id)
+	prefix  ||= ( company && company.initials ) || nil 
+	
+	# Prepare a hash of filter conditions:
+	conditions = {}
+	conditions.merge!( :type   => type   ) unless type.blank?			# Template type, eg: 'general', 'letter', 'tripletter'
+	conditions.merge!( :prefix => prefix ) unless prefix.blank?		# Template filename prefix, eg: 'SV', 'TT'
+	
+	# Fetch array of filenames and wrap them in <option> tags:
+	filenames  = Document.doc_builder_letter_templates(conditions).map{ |filename| tag( :option, filename ) }
+	
+-%>
+<%= filenames.join('') -%>

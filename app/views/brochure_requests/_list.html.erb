@@ -2,6 +2,9 @@
 
 	brochure_requests ||= @brochure_requests
 	
+	#type ||= params['templates_list']
+
+	
 	# We should be able to derive the client from the url but if not then choose user's most recent client:
 	client ||= params[:client_id].to_i.zero? ? session.user.most_recent_client : Client.get( params[:client_id] )
 

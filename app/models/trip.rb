@@ -122,7 +122,10 @@ class Trip
     accepts_ids_for :countries			    # Country IDs are accessed via trip.countries_ids
     accepts_ids_for :pnrs						    # Pnr numbers are accessed via trip.pnrs_names (or pnr_numbers alias)
     
-    attr_accessor :debug
+    # This flag can be used to derive new dates for every element when trip start_date is changed:
+    # (So an element that was on day5 will be adjusted accordingly to remain on day5 after the new start_date)
+    attr_accessor :auto_update_elements_dates
+    
     attr_accessor :do_copy_trip_id         # Specify a trip to copy details from.
     attr_accessor :do_copy_trip_clients    # Allows clients to be copied from another trip.      Use with do_copy_trip_id.
     attr_accessor :do_copy_trip_elements   # Allows elements to be cloned from another trip.     Use with do_copy_trip_id.
@@ -130,6 +133,7 @@ class Trip
     attr_accessor :do_copy_trip_countries  # Allows countries to be copied from another trip.    Use with do_copy_trip_id.
     attr_accessor :do_link_to_master       # When set, elements in the copied trip will be bound to the original. Use with do_copy_trip_id when creating a Fixed Dep from a Group Template.
     
+    attr_accessor :debug
 
 
     # This fix is redundant because trip.start/end_date are Date properties not DateTime
@@ -183,7 +187,9 @@ class Trip
       # and the update methods decides to overwrite them with their defaulv values!
       #self.start_date = self.start_date || Date.today
       #self.end_date   = self.end_date   || Date.today + 10
-      self.start_date, self.end_date = self.end_date, self.start_date if self.start_date > self.end_date
+      if self.start_date > self.end_date
+        self.start_date, self.end_date = self.end_date, self.start_date
+      end
 
     end
 
@@ -209,6 +215,10 @@ class Trip
       # Warning: Relying on this hook can cause save to fail if copied elements are invalid.
       # Note: This clears the do_copy_trip_xxxx flags to prevent copies from being created again accidentally.
       self.do_copy_trip if self.do_copy_trip_id
+      
+      # Adjust every element's start_date to allow for a new trip.start_date
+      self.update_elements_dates if self.auto_update_elements_dates === true || self.auto_update_elements_dates.to_s.to_i > 0
+
 
       # Ensure all trip elements still have valid numbers of adults/children/infants
       # (Also see TripElement before :save)
@@ -220,7 +230,7 @@ class Trip
         elem.infants  = self.infants  if elem.infants  != self.infants 
         elem.singles  = self.singles  # <-- TODO: Get unit tests to work with this.
         #elem.save!      if elem.dirty? #&& !elem.new? && !elem.destroyed? && elem.valid? && elem.supplier_id
-        
+          
       end
     
       # Recalculate and set price_per_xxx and total_price attributes:
@@ -234,7 +244,7 @@ class Trip
       @orig_pnr_numbers_before_save   = self.pnr_numbers
       
     end
-
+      
     
     after :save do
       
@@ -1196,7 +1206,42 @@ class Trip
       return suppliers
       
     end
-    
+
+
+
+    # Helper to reposition all the elements when the trip date changes. (Except bound elements)
+    # Eg: When trip.start_date is moved by +10 days, all elements move by +10 days.
+    # The number of days is derived automatically from the current and dirty (unsaved) start_date.
+    def update_elements_dates( days = nil )
+
+      if ( self.attribute_dirty?(:start_date) || days ) && !self.new?
+        
+        date   = Trip.properties[:start_date]
+        days ||= self.dirty_attributes[date] - self.original_attributes[date]
+      
+        Merb.logger.debug "Adjusting dates of #{ self.trip_elements.length } elements by #{ days } days for trip #{ self.id }:"
+
+        unless days.to_i.zero?
+          
+          self.trip_elements.each do |elem|
+            
+            if elem.bound_to_pnr?
+              Merb.logger.debug " Not adjusting element #{ elem.id } dates because it is bound to a PNR."
+            elsif elem.is_slave?
+              Merb.logger.debug " Not adjusting element #{ elem.id } dates because it is bound to a Group Template."
+            else
+              elem.day += days.to_i
+              Merb.logger.debug " Adjusting dates of element #{ elem.id } by #{ days } days."
+            end
+            
+          end
+          
+        end
+        
+      end
+      
+    end
+
     
     # Helper for deriving company booking_fee:
     # (We cache the result temporarily to help speed up calculations that call this repeatedly)

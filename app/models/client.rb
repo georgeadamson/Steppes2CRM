@@ -59,6 +59,9 @@ class Client
   property :updated_at,           DateTime
   property :updated_by,           String
   
+  property :deleted_at,           DateTime, :required => false  # See custom "archive" method below.
+  property :deleted_by,           String,   :required => false, :lazy => true
+  
   belongs_to :titlename,        :model => "Title",            :child_key => [:title_id]
   #belongs_to :type,             :model => "ClientType",       :child_key => [:type_id]
   belongs_to :client_type,      :model => "ClientType",       :child_key => [:type_id]
@@ -103,6 +106,12 @@ class Client
   # Associate clients with companies: (Only used on client page and for marketing/reports)
   has n, :client_companies
   has n, :companies, :through => :client_companies
+
+
+  # Set the default sort order and filter:
+  #default_scope(:default).update( :deleted_by => nil, :order => [:name,:forename] )
+
+
 
 	accepts_nested_attributes_for :notes
 	accepts_nested_attributes_for :countries	#:interests
@@ -177,7 +186,7 @@ class Client
   before :create do
 
     # Ensure at least one company is selected for marketing to new client:
-    self.companies << self.original_company if self.companies.empty?
+    self.companies << self.original_company if self.companies.empty? && self.original_company
     
   end
 
@@ -234,6 +243,41 @@ class Client
     self.refresh_search_keywords() if self.auto_refresh_search_keywords_after_save
 
   end
+    
+
+
+  # Safer alternative to the DESTROY method. (Updates the deleted_at field without actually destroying the row)
+  # We could have used the ParanoidDateTime to do this automatically but that would prevent the normal queries from finding deleted rows without employing the extra "with_deleted" method.
+  # More info at http://datamapper.org/docs/misc and http://blog.hez.ca/entries/photo/datamapper-paranoid-delete-quirks
+  def archive( archived_by = nil )
+
+    self.deleted_at = DateTime.now
+    self.deleted_by = archived_by if archived_by
+    
+    return self.save
+
+  end
+
+  # Safer alternative to the DESTROY! method. (Updates the deleted_at field without actually destroying the row)
+  def archive!( archived_by = nil )
+
+    self.deleted_at = DateTime.now
+    self.deleted_by = archived_by if archived_by
+    
+    return self.save!
+    
+  end
+
+  # Helper for identifying "deleted" clients:
+  def archived?
+    return self.deleted_at != nil
+  end
+
+
+  # On ARCHIVE, remove this client from the keyword search table:
+  after :archive,  :refresh_search_keywords
+  after :archive!, :refresh_search_keywords
+
 
   attr_accessor :search_results_trips
 	attr_accessor :search_results_address
@@ -431,7 +475,8 @@ class Client
 
   # Helper to instruct database to rebuild search data for current client:
   def refresh_search_keywords
-		Client.refresh_search_keywords(self.id)
+    do_delete = ( self.deleted_at != nil )
+		Client.refresh_search_keywords( self.id, do_delete )
   end
 
 
@@ -451,12 +496,18 @@ class Client
 
   # Helper to instruct database to rebuild search data for one or all clients:
   # Warning: Takes longer when client_id not specified! (Though usually less than 10 seconds)
-  def self.refresh_search_keywords(client_id = nil)
+  def self.refresh_search_keywords( client_id = nil, do_delete = nil )
 
-    Merb.logger.info "Refreshing client_keywords table for client_id #{ client_id || 'all'  }"
+    do_delete = nil if client_id == nil
 
-		sql_statement = "EXEC usp_client_keywords_refresh ?"
-		repository(:default).adapter.execute( sql_statement, client_id )
+    if do_delete
+      Merb.logger.info "Deleting client_keywords for client_id #{ client_id }"
+    else
+      Merb.logger.info "Refreshing client_keywords table for client_id #{ client_id || 'all'  }"
+    end
+
+		sql_statement = "EXEC usp_client_keywords_refresh ?, ?"
+		repository(:default).adapter.execute( sql_statement, client_id, do_delete )
     
   end
   

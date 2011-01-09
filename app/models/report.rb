@@ -226,11 +226,9 @@ class Report
   
   
   
-#  # Helper to return all report_fields that are also filters:
-#  def filters
-#    #self.report_fields.all( :filter_operator.not => nil )
-#    self.report_fields.select{ |field| field.filter_operator != nil }
-#  end
+  def deleted_filters
+    return @destroyables || []
+  end
   
   
   # Array of possible field objects available for this report to use: (Based on chosen source_model.potential_report_fields)

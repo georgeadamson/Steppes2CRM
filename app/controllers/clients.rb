@@ -304,15 +304,19 @@ class Clients < Application
   end
 
 
-
+  # ARCHIVE the client (by flagging it as deleted instead of actually destroying it)
   def destroy(id)
+
     @client = Client.get(id)
     raise NotFound unless @client
-    if @client.destroy
-      redirect resource(:clients)
-    else
-      raise InternalServerError
+
+    @client.deleted_by = session.user.fullname
+    
+    if @client.archive
+      message[:notice] = "#{ @client.fullname } has been deleted"
     end
+    redirect "#{ resource(@client) }/summary", :message => message
+
   end
 
 
