@@ -12,6 +12,21 @@ class ClientMarketingDivision
   belongs_to :client
   belongs_to :division
 
+  def summary
+
+    return case
+      when self.allow_email && self.allow_postal
+        'Email & Postal'
+      when self.allow_email
+        'Email only'
+      when self.allow_postal
+        'Postal only'
+      else
+        'None'
+      end
+  
+  end
+
 end
 
 # ClientMarketingDivision.auto_migrate!		# Warning: Running this will clear the table!

@@ -1136,6 +1136,10 @@ BLOCKQUOTE.amadeus_air
 		margin-bottom:0.75em;
 	}
 
+	.checkbox-grid THEAD TH {
+		text-align:center;	
+	}
+
 	.checkbox-grid THEAD TH:first-child,
 	.checkbox-grid TBODY TH {
 		text-align:right;	
@@ -1158,7 +1162,7 @@ BLOCKQUOTE.amadeus_air
 		vertical-align:bottom;	
 	}
 	.checkbox-grid TD {
-		padding:0;	
+		width:4em;	
 	}
 
 	/* Override normal checkbox styles: */
