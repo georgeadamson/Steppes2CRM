@@ -7,5 +7,40 @@
 
 	companies_tooltip   = 'Hold down Ctrl to select multiple companies. &#13;(Also try Ctrl + up/down or Spacebar)'
 -%>
-<%= select :marketing_id, :label => "Allow marketing",                                                 :selected => marketing_selected, :collection => marketing_list, :value_method => :id, :text_method => :name %>
-<%= select :companies,		:label => "<small>(#{client.companies.length})</small> Marketing companies", :selected => companies_selected, :collection => companies_list, :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[companies_ids][]', :title => companies_tooltip, :class => 'height4Fields' %>
+
+<table class="checkbox-grid" cellspacing="0" cellpadding="0">
+
+	<thead>
+		<tr>
+			<th>Marketing Divisions</th>
+			<th>Email</th>
+			<th>Postal</th>
+		</tr>
+	</thead>
+	
+	<tbody>
+		<% Division.all.each_with_index do |division, i| %>
+		<tr>
+
+			<% marketing_division = client.client_marketing_divisions.first_or_new( :division_id => division.id ) %>
+
+			<%= fields_for marketing_division do %>
+
+			<th>
+				<%= hidden_field  :id,          :name => "client[client_marketing_divisions_attributes][#{ i }][id]" unless marketing_division.new? %>
+				<%= hidden_field  :division_id, :name => "client[client_marketing_divisions_attributes][#{ i }][division_id]" %>
+				<%= division.name %> -
+			</th>
+			<td><%= check_box :allow_email,  :name => "client[client_marketing_divisions_attributes][#{ i }][allow_email]",  :boolean => true %></td>
+			<td><%= check_box :allow_postal, :name => "client[client_marketing_divisions_attributes][#{ i }][allow_postal]", :boolean => true %></td>
+
+			<% end =%>
+		</tr>
+		<% end %>
+	</tbody>
+
+</table>
+
+<%= select :companies,		:label => "<small>(#{ client.companies.length })</small> Marketing companies", :selected => companies_selected, :collection => companies_list, :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[companies_ids][]', :title => companies_tooltip, :class => 'height4Fields' %>
+
+<%= select :marketing_id, :label => "Allow marketing <small>This is deprecated!</small>",                                                 :selected => marketing_selected, :collection => marketing_list, :value_method => :id, :text_method => :name %>
