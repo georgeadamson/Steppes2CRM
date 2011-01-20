@@ -107,6 +107,9 @@ class Client
   has n, :client_companies
   has n, :companies, :through => :client_companies
 
+  # Client Marketing options by Company Division:
+  has n, :client_marketing_divisions
+  has n, :divisions, :through => :client_marketing_divisions
 
   # Set the default sort order and filter:
   #default_scope(:default).update( :deleted_by => nil, :order => [:name,:forename] )
@@ -118,6 +121,7 @@ class Client
 	accepts_nested_attributes_for :client_interests
 	accepts_nested_attributes_for :addresses, :allow_destroy => true
 	accepts_nested_attributes_for :client_addresses, :allow_destroy => true  # See http://github.com/snusnu/dm-accepts_nested_attributes
+	accepts_nested_attributes_for :client_marketing_divisions, :allow_destroy => true
 
   # These are used for adding and removing existing objects to/from the collection:
 	accepts_ids_for :trips

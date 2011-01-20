@@ -263,7 +263,6 @@ FORM {
 		}
 
 
-
 		.formField.arrow-only SELECT,
 		SELECT.arrow-only {
 			background:none repeat scroll 0 0 transparent;
@@ -1126,3 +1125,61 @@ BLOCKQUOTE.amadeus_air
 			display:block;
 			font-family:courier new, Courier;
 		}
+
+
+
+
+
+/* checkbox-grid: A table of checkboxes: */
+
+	.checkbox-grid {
+		margin-bottom:0.75em;
+	}
+
+	.checkbox-grid THEAD TH:first-child,
+	.checkbox-grid TBODY TH {
+		text-align:right;	
+		width:8em;	
+	}
+
+	.checkbox-grid TH {
+		font-weight:normal;
+	}
+	.checkbox-grid TBODY TH {
+		padding-top:0;
+		padding-bottom:0.2em;
+	}
+	.checkbox-grid THEAD TH:first-child {
+		font-weight:bold;	
+	}
+
+	.checkbox-grid THEAD TH {
+		padding-top:0;
+		vertical-align:bottom;	
+	}
+	.checkbox-grid TD {
+		padding:0;	
+	}
+
+	/* Override normal checkbox styles: */
+	.checkbox-grid .formField.checkbox INPUT[type=checkbox] {
+		margin-left:0.5em;
+		margin-right:0.5em;
+	}
+		.checkbox-grid .formField.checkbox,
+		.checkbox-grid .formField.checkbox:last-child {
+			min-height:inherit;
+			padding:0;
+			text-align:center;
+		}
+
+	/* Top border: */
+	.checkbox-grid THEAD TH { border-top:1px solid #D9D9D9; }
+	.checkbox-grid THEAD TH:first-child { border-top:0px solid #D9D9D9; }
+
+	/* Side borders: */
+	.checkbox-grid THEAD TH:first-child, .checkbox-grid THEAD TH:last-child { border-right:1px solid #D9D9D9; }
+	.checkbox-grid TBODY TH:first-child, .checkbox-grid TBODY TD:last-child { border-right:1px solid #D9D9D9; }
+
+	/* Bottom border: */
+	.checkbox-grid TBODY TR:last-child TD { border-bottom:1px solid #D9D9D9; }
