@@ -15,7 +15,7 @@ class Document
   require 'fileutils'
   
   # Number of seconds between each cache refresh: (Eg: 1800 = 30 minutes)
-  FILENAMES_CACHE_INTERVAL = 30 unless defined? FILENAMES_CACHE_INTERVAL
+  FILENAMES_CACHE_INTERVAL = 1800 unless defined? FILENAMES_CACHE_INTERVAL
   @@cached_filenames       = {}
   
   # document_status_id:
