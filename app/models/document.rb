@@ -14,6 +14,10 @@ class Document
   include DataMapper::Resource
   require 'fileutils'
   
+  # Number of seconds between each cache refresh: (Eg: 1800 = 30 minutes)
+  FILENAMES_CACHE_INTERVAL = 30 unless defined? FILENAMES_CACHE_INTERVAL
+  @@cached_filenames       = {}
+  
   # document_status_id:
   PENDING   = 0 unless defined? PENDING  
   RUNNING   = 1 unless defined? RUNNING  
@@ -893,7 +897,7 @@ class Document
     }
     
     attrs = defaults.merge(attrs)
-    
+        
     letter_type = attrs[:type]    || '*'
     letter_type = letter_type.to_s.gsub( /General|Letter/i, '' )
     
@@ -901,9 +905,39 @@ class Document
     ext         = attrs[:ext]     || :doc
     pattern     = attrs[:pattern] || "#{ prefix }_#{ letter_type }Letter_*.#{ ext.to_s }"
     folder      = Document.doc_builder_letter_templates_path.gsub('\\','/')
+
+    # Decide whether to use the cached list of filenames if there is one:
+    # (There are several caches, one for each combination of attrs)
+    cached          = @@cached_filenames[attrs] ||= {}
+    last_refresh_at = cached[:last_refresh_at] || ( Time.now - FILENAMES_CACHE_INTERVAL )
+    next_refresh_at = last_refresh_at + FILENAMES_CACHE_INTERVAL
+    cache_is_stale  = next_refresh_at <= Time.now
+    cache_is_ready  = cached[:filenames] && !cached[:filenames].empty?
     
-    return Dir[ folder / pattern ].map{ |path| File.basename(path) }.sort()
-  	
+    begin
+
+      if !cache_is_stale && cache_is_ready
+
+        return cached[:filenames]
+
+      elsif File.exist?(folder) && !File.file?(folder)
+        
+        # Warning: We couldn't use File.directory? because it raises error on shared folders! We did at least verify that it exists and it's not a file:
+        cached[:filenames]       = Dir[ folder / pattern ].map{ |path| File.basename(path) }.sort()
+        cached[:last_refresh_at] = Time.now
+        Document.logger.info "#{ DateTime.now.formatted(:uidatetime) } doc_builder_letter_templates() Refreshed cached template filenames (type=#{ attrs[:type] }). Next refresh due after #{ ( cached[:last_refresh_at] + FILENAMES_CACHE_INTERVAL ).to_datetime.formatted(:uitime) }"
+        return cached[:filenames]
+
+      else
+        raise IOError, "Sorry, I could not fetch list of templates from #{ folder }"
+      end
+
+    rescue Exception => error_details
+
+      return [[ "(#{ error_details })" ]]
+
+    end
+
   end
   
   
@@ -982,15 +1016,15 @@ class Document
 		
 		return @@doc_log
 		
-	end	
+	end
 
 
-#  # Depricated. Could nto get it to work.
-#  # Our own version of the run_later method normally only available to controllers and views:
-#  # Yes, yes I know it's a controller/view thing, but this seemed like a good idea at the time!
-#  # See http://yardoc.com/docs/namelessjon-merb/Merb.run_later
-#  def self.run_later(&blk)
-#    Merb::Dispatcher.work_queue << blk
-#  end
+  #  # Depricated. Could nto get it to work.
+  #  # Our own version of the run_later method normally only available to controllers and views:
+  #  # Yes, yes I know it's a controller/view thing, but this seemed like a good idea at the time!
+  #  # See http://yardoc.com/docs/namelessjon-merb/Merb.run_later
+  #  def self.run_later(&blk)
+  #    Merb::Dispatcher.work_queue << blk
+  #  end
   
 end
