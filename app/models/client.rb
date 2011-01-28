@@ -111,6 +111,41 @@ class Client
   has n, :client_marketing_divisions
   has n, :divisions, :through => :client_marketing_divisions
 
+  # Friendly readable summary of client's marketing preferences:
+  # Note: The default delimiters provide the best default for reports, when no arguments are possible.
+  # Eg: "Email: Steppes, Discovery. Postal: Discovery	"
+  def marketing_summary( text_when_none = 'None', media_delimiter = '. ', divisions_delimiter = ', ' )
+
+    summary = []
+
+    unless self.client_marketing_divisions.empty?
+      
+      email_divisions  = marketing_divisions_email()
+      postal_divisions = marketing_divisions_postal()
+
+      summary.push "Email: #{  email_divisions.join(divisions_delimiter)  }" unless email_divisions.empty?
+      summary.push "Postal: #{ postal_divisions.join(divisions_delimiter) }" unless postal_divisions.empty?
+
+    end
+
+    return summary.empty? ? text_when_none : summary.join(media_delimiter)
+
+  end
+
+  def marketing_summary_email( text_when_none = 'None', verbose = false )
+    
+    divisions = marketing_divisions_email()
+    return divisions.empty? ? text_when_none : "#{ verbose ? 'Email: ' : '' }#{ divisions.join(', ') }"
+    
+  end
+  
+  def marketing_summary_postal( text_when_none = 'None', verbose = false )
+    
+    divisions = marketing_divisions_postal()
+    return divisions.empty? ? text_when_none : "#{ verbose ? 'Postal: ' : '' }#{ divisions.join(', ') }"
+    
+  end
+
   # Set the default sort order and filter:
   #default_scope(:default).update( :deleted_by => nil, :order => [:name,:forename] )
 
@@ -527,9 +562,31 @@ class Client
     return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :companies_names, :companies_initials, :client_type, :areas_of_interest, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :created_at, 
 
       # ...and the following are special custom methods especially for reports:
-      :booked_trips_count, :invoice_total, :invoice_first_date, :brochure_last_date ]
+      :booked_trips_count, :invoice_total, :invoice_first_date, :brochure_last_date, :marketing_summary, :marketing_summary_email, :marketing_summary_postal ]
 
   end
+
+
+
+# Private methods:
+
+private
+
+  # Helper to list all DIVISIONS for which the client allows EMAIL marketing:
+  def marketing_divisions_email( text_when_none = 'None' )
+    
+    return self.client_marketing_divisions.select{|m| m.allow_email }.map{|m| m.division.name }
+    
+  end
+
+  # Helper to list all DIVISIONS for which the client allows POSTAL marketing:
+  def marketing_divisions_postal( text_when_none = 'None' )
+    
+    return self.client_marketing_divisions.select{|m| m.allow_postal }.map{|m| m.division.name }
+    
+  end
+
+
 
 end
 

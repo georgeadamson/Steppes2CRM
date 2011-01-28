@@ -125,11 +125,12 @@
         <!--<dt>Topic</dt><dd>(Unused)</dd>-->
         <dt>Marketing</dt>
 				<dd>
-					<%= client.client_marketing_divisions.map{|m| "#{ m.division.name }: #{ m.summary }" }.join(', ') %>
-					<br/>(Formerly: 
-					<%= client.marketing && client.marketing.name %>
+					<%= client.marketing_summary.gsub('.','<br/>') %>
+					<br/>
+					<small>Formerly: 
+					&quot;<%= client.marketing && client.marketing.name %>
 					<%= " (#{ client.companies.map{|c|c.initials}.join(', ') })" unless client.companies.empty? %>
-					)
+					&quot;</small>
 				</dd>
         <!--
 				<dt>Freq. flyer</dt><dd><%= client.notes_frequent_flyer %></dd>
