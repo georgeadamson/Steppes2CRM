@@ -34,9 +34,11 @@
 <!--<div class="xfieldsetRow">-->		
 
     <div class="fieldset widthFifth withHeading">
+
       <h4>
 				Client <%#= link_to "Edit", resource(client, :edit)+"#name" if client.id %>
       </h4>
+ 
 			<dl class="fields ellipsis">
 				<dt>Name</dt><dd><%= client.title %> <%= client.forename %> <%= client.name %></dd>
 				<dt>Known as</dt><dd><%= client.known_as %></dd>
@@ -62,6 +64,17 @@
 						</small>
 					</dd>
 				<% end %>
+
+				<% if client.deleted_at %>
+					<dt style="color:#f00">Deleted</dt>
+					<dd>
+						<small>
+						<%= client.deleted_at.formatted(:uidate)	if client.deleted_at %>
+						<%= "<br/>by #{ client.deleted_by }<br/>"	if !client.deleted_by.blank? %>
+						</small>
+					</dd>
+				<% end %>
+
 			<dl>
     </div>
 

@@ -68,6 +68,7 @@ jQuery(function($) {
 		// Settings for postcode-lookup:
 		POSTCODE_LOOKUP_MAX_ROWS			= 20,			// Will be sent as &limit=n url parameter when searching for postcodes via ajax.
 		POSTCODE_LOOKUP_DELAY_BEFORE_AJAX	= 200,			// Slight delay before searching for the keywords being typed in postcode search box.
+		POSTCODE_LOOKUP_MIN_CHARS			= 5,			// The longer this is the faster the search is likely to be. (Shortest postcode in DB is 6 chars)
 
 		// Delay before generating the overview just below the timeline when the Trip Builder tab is opened:
 		TIMELINE_DELAY_BEFORE_GENERATE_OVERVIEW	= 2000,
@@ -143,18 +144,20 @@ jQuery(function($) {
 			// Return the methods hash to begin chaining:
 			return bindRoute();
 
+			// Handler for the 'on' method:
 			function status(arg){
 				return bindRoute({ status:arg });
 			}
 
+			// Handler for the 'to' method:
 			function callback(arg){
 				return bindRoute({ callback:arg });
 			}
 
-			// Add more arguments to the route settings and initialise the route listener if settings are complete:
+			// Helper to initialise the route listener if we have all the route settings we need:
 			function bindRoute(args){
 
-				// Merge in any new route configuration arguments:
+				// Merge the next route configuration argument to build up our route hash:
 				$.extend( route, args );
 
 				if( route.callback && route.status && route.path ){
@@ -182,6 +185,9 @@ jQuery(function($) {
 			// TODO: Refactor liveForm to alternate syntax: Layout.liveForm('update:success', 'clients', Client.initForm ) & maybe combine with livePath()
 			//       Or like a resource:	Layout.match(/clients\/new/).on('success').to(Client.openNew)
 
+			// Layout.match(':destroy').on('click').to( function(){alert('are you sure?!')} );
+			Layout.liveForm('submit', 'clients:destroy',	function(){alert('are you sure?!')} );
+
 			// Clients:
 			Layout.livePath('click',   new RegExp('clients/new'),						Client.openNew );
 			Layout.livePath('success', new RegExp('clients/new'),						Client.initForm );
@@ -192,6 +198,7 @@ jQuery(function($) {
 			Layout.livePath('success', /[\?\&]open_client_id=([0-9]+)/,					Client.openShow );	// Eg: web_requests?open_client_id=2138587702
 			Layout.liveForm('success', 'clients:create',								Client.openShow );	// After creating a new client.
 			Layout.liveForm('success', 'clients:update',								Client.initForm, BoundFields.update );
+			Layout.liveForm('success', 'clients:destroy',								Client.initForm, BoundFields.update );
 
 			// Tours:
 			Layout.livePath('click',   /tours\/([0-9]+)$/,								Tour.openShow );	//openTourTab
@@ -272,6 +279,10 @@ jQuery(function($) {
 			// AutoText:
 			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
 			Layout.livePath('success', /\/autotexts\?autotext/,							Autotext.showAutotexts );	// Eg: '/autotexts?autotext&country_id={value}&list=option'
+
+			// Documents:
+			Layout.match(/clients\/([0-9]+)\/documents.*list=option/).on('success').to(Document.list);	// For listing template filenames
+
 
 			// Depricated in favour of Layout.liveForm:
 			//$('FORM.edit-client').live('form:success', Client.onEditSuccess)
@@ -532,16 +543,32 @@ jQuery(function($) {
 
 				// The source argument will only be present when triggered by SELECT.auto-submit:
 				var $form		= $(this),
-					$button		= $(source || e.originalEvent && e.originalEvent.explicitOriginalTarget),
-					url			= $form.attr('action').replace(/^#/, ''),
+					$button		= $(source || e.originalEvent && e.originalEvent.explicitOriginalTarget);
+
+					// When a <label> is clicked, explicitOriginalTarget will be the text node within the label:
+					if( $button.parent().is('LABEL') ){
+						$button = $button.parent()
+					}
+
+					// When a <label> is clicked, derive the actual submit button from the "for" attribute:
+					if( $button.is('LABEL') && $button.is('[for]') ){
+						var buttonID = $button.attr('for');
+						$button = $( '#' + buttonID );
+					}
+
+				var	url			= $form.attr('action').replace(/^#/, ''),
 					dataType	= $form.attr('data-type')   || 'html',
 					target		= $form.attr('data-target') || Layout.getTargetOf($button),
 					ext			= url.split('.')[1],	// Filename extension				
 					form		= Layout.getActionOf($form),
 					options		= { url:url, target:target, form:form },
-					buttonData	= {};
+					buttonData	= {},
+					promptToConfirm	    = $button.attr('data-confirm');
+
 					options.form.target = target;
 					options.form.button = $button.id();
+
+				//if( $button.parent().is('LABEL') )
 
 				// When using a live event the ajaxSubmit() method will not include name/value of the submit button so add it:
 				if( $button.is(':submit') && $button.attr('name') ){ buttonData[ $button.attr('name') ] = $button.val() }
@@ -549,49 +576,54 @@ jQuery(function($) {
 				// Stop interfering right now if form is generating a file to download:
 				if( DOWNLOADABLE_EXT[ext] || $button.is('.download, .ajaxDownload') || $form.is('.download, .ajaxDownload') ){ return }
 
-				// By setting up the AJAX SUBMIT here, each of the callbacks can refer to the $form using a closure:
-				$form.ajaxSubmit({
 
-					url       : url,
-					dataType  : dataType,
-					data      : $.extend( {}, form.params, buttonData ),	// Also submit url params as fields.
+				if( !promptToConfirm || confirm(promptToConfirm) ){
 
-					beforeSubmit: function(data, form, options){
-						$form.trigger('form:beforeSubmit', [data, form, options]);
-					},
+					// By setting up the AJAX SUBMIT here, each of the callbacks can refer to the $form using a closure:
+					$form.ajaxSubmit({
 
-					beforeSend: function(xhr){
-						$form.trigger('form:beforeSend', [xhr]);
-					},
+						url       : url,
+						dataType  : dataType,
+						data      : $.extend( {}, form.params, buttonData ),	// Also submit url params as fields.
 
-					success: function(data, status, xhr){
+						beforeSubmit: function(data, form, options){
+							$form.trigger('form:beforeSubmit', [data, form, options]);
+						},
 
-						// For the benefit of the error handler, ensure the xhr.responseText still contains the response:
-						if( !xhr.responseText && data ){ xhr.responseText = data }
+						beforeSend: function(xhr){
+							$form.trigger('form:beforeSend', [xhr]);
+						},
 
-						// After creating a new object we may be able to read it's new id from the response: (Eg: form.trip_id = 123)
-						var resource = options.form && options.form.resource, attr = resource+'_id';
-						if( resource && !options.form[attr] ){ options.form[attr] = $(data).find('#'+attr).val(); options.form.resource_id = options.form[attr] }
+						success: function(data, status, xhr){
 
-						if ( Layout.getMessagesFrom(data).is('.errorMessage') ) {
-							$form.trigger('form:error', [xhr, status, 'custom']);
-						} else {
-							Layout.onSuccess(data, status, xhr, options, e);
-							Layout.triggerLiveForm('success', options.form, options, data, e);
-							$form.trigger('form:success', [data, status, xhr]);
+							// For the benefit of the error handler, ensure the xhr.responseText still contains the response:
+							if( !xhr.responseText && data ){ xhr.responseText = data }
+
+							// After creating a new object we may be able to read it's new id from the response: (Eg: form.trip_id = 123)
+							var resource = options.form && options.form.resource, attr = resource+'_id';
+							if( resource && !options.form[attr] ){ options.form[attr] = $(data).find('#'+attr).val(); options.form.resource_id = options.form[attr] }
+
+							if ( Layout.getMessagesFrom(data).is('.errorMessage') ) {
+								$form.trigger('form:error', [xhr, status, 'custom']);
+							} else {
+								Layout.onSuccess(data, status, xhr, options, e);
+								Layout.triggerLiveForm('success', options.form, options, data, e);
+								$form.trigger('form:success', [data, status, xhr]);
+							}
+
+						},
+
+						error: function(xhr, status, error) {
+							$form.trigger('form:error', [xhr, status, error]);
+						},
+
+						complete: function(xhr, status) {
+						  $form.trigger('form:complete', [xhr, status]);
 						}
 
-					},
+					});
 
-					error: function(xhr, status, error) {
-						$form.trigger('form:error', [xhr, status, error]);
-					},
-
-					complete: function(xhr, status) {
-					  $form.trigger('form:complete', [xhr, status]);
-					}
-
-				});
+				}
 
 				e.preventDefault();
 
@@ -1103,107 +1135,108 @@ return
 
 
 	// AUTO-SUBMIT is used submit the form when user selects a new item in a pick list:
-	$('SELECT.auto-submit').live('change', function(){
-return
-		var $list		= $(this);
-		var $form		= $list.closest('FORM');
-		var $submit		= $form.find('INPUT:submit').eq(0);
-		var uiTarget	= $list.attr('rel') || $list.attr('data-rel') || $list.attr('data-target') || $submit.attr("rel");
-		var ajaxBlank	= $submit.is(".ajaxBlank");				// Optional flag to clear form container element after submit.
-		var $parent		= $form.parents(".ajaxPanel").eq(0);
-		var thisForm	= $submit.link()						// The link() method is a helper to parse details from a url etc.
+	// DEPRICATED in favour of the Layout.livePath/liveForm functionality.
+	//	$('SELECT.auto-submit').live('change', function(){
 
-		// Attempt to derive target panel from the rel attribute, otherwise search up dom for .ajaxPanel:
-		var $uiTarget = uiTarget ? $submit.closest(uiTarget).eq(0) : $parent;
+	//		var $list		= $(this);
+	//		var $form		= $list.closest('FORM');
+	//		var $submit		= $form.find('INPUT:submit').eq(0);
+	//		var uiTarget	= $list.attr('rel') || $list.attr('data-rel') || $list.attr('data-target') || $submit.attr("rel");
+	//		var ajaxBlank	= $submit.is(".ajaxBlank");				// Optional flag to clear form container element after submit.
+	//		var $parent		= $form.parents(".ajaxPanel").eq(0);
+	//		var thisForm	= $submit.link()						// The link() method is a helper to parse details from a url etc.
 
-		// Derive uiTarget selector if we still don't know it:
-		if( !uiTarget && $uiTarget.attr("id") ) uiTarget = "#" + $uiTarget.id();
+	//		// Attempt to derive target panel from the rel attribute, otherwise search up dom for .ajaxPanel:
+	//		var $uiTarget = uiTarget ? $submit.closest(uiTarget).eq(0) : $parent;
 
-		$form.ajaxSubmit({
-			target		: uiTarget
-			//success		: success,
-			//complete	: complete
-		});
+	//		// Derive uiTarget selector if we still don't know it:
+	//		if( !uiTarget && $uiTarget.attr("id") ) uiTarget = "#" + $uiTarget.id();
 
-	});
+	//		$form.ajaxSubmit({
+	//			target		: uiTarget
+	//			//success		: success,
+	//			//complete	: complete
+	//		});
+
+	//	});
 
 
 
 	// DEPRICATED
-//	// Called when any ajax calls complete:
-//	function onAjaxComplete(xhr, status, options) {
+	//	// Called when any ajax calls complete:
+	//	function onAjaxComplete(xhr, status, options) {
 
-//		var isHtml		= /^\s*\</;				// var isJson = /^\s*[\[\{]/;
-//		var findFormUrl	= / action="([^"]*)"/;
+	//		var isHtml		= /^\s*\</;				// var isJson = /^\s*[\[\{]/;
+	//		var findFormUrl	= / action="([^"]*)"/;
 
-//		// Only update UI elements if response is html:
-//		if( xhr && xhr.responseText && isHtml.test(xhr.responseText) ){
+	//		// Only update UI elements if response is html:
+	//		if( xhr && xhr.responseText && isHtml.test(xhr.responseText) ){
 
-//			// Derive a handy hash of url info kinda like window.location on steroids:
-//			// (Extract <form action="url"> using a regex because some responseText can be too big or complex for jQuery to parse)
-//			var formAction	= ( findFormUrl.exec(xhr.responseText) || [] )[1];
-//			var url			= parseUrl( formAction );
-//			var target		= xhr && xhr.options && xhr.options.target;
-//			var $target		= undefined;
-//			
-//			if( target ){ $target = $(target) }
+	//			// Derive a handy hash of url info kinda like window.location on steroids:
+	//			// (Extract <form action="url"> using a regex because some responseText can be too big or complex for jQuery to parse)
+	//			var formAction	= ( findFormUrl.exec(xhr.responseText) || [] )[1];
+	//			var url			= parseUrl( formAction );
+	//			var target		= xhr && xhr.options && xhr.options.target;
+	//			var $target		= undefined;
+	//			
+	//			if( target ){ $target = $(target) }
 
-//			//initLevel2Tabs_forClient($target);
-//			//initLevel3Tabs_forTrip($target);
-//			//initLevel2Tabs_forSysAdmin($target);
-//			//initLevel2Tabs_forReports($target);
-//			initFormAccordions($target);
-//			//initFormTabs($target);	// Eg: countriesTabs on Trip Summary page.
-//			initSpinboxes($target);
-//			initDatepickers($target);
-//			initPostcodeSearch($target);
-//			initMVC($target);
-//			triggerTripInvoiceFormChange();
+	//			//initLevel2Tabs_forClient($target);
+	//			//initLevel3Tabs_forTrip($target);
+	//			//initLevel2Tabs_forSysAdmin($target);
+	//			//initLevel2Tabs_forReports($target);
+	//			initFormAccordions($target);
+	//			//initFormTabs($target);	// Eg: countriesTabs on Trip Summary page.
+	//			initSpinboxes($target);
+	//			initDatepickers($target);
+	//			initPostcodeSearch($target);
+	//			initMVC($target);
+	//			triggerTripInvoiceFormChange();
 
-//			// Display any user-feedback messages found in the response:
-//			// (Extract message elements using a regex because some responseText can be too big or complex for jQuery to parse)
-//			var messagesFragment = ( FIND_MESSAGE_CONTENT.exec(xhr.responseText) || [] )[1];
-//			if( messagesFragment ){
-//				var $newMessages	 = $(messagesFragment).closest(".noticeMessage, .errorMessage");
-//				showMessage( $newMessages );
-//			}
+	//			// Display any user-feedback messages found in the response:
+	//			// (Extract message elements using a regex because some responseText can be too big or complex for jQuery to parse)
+	//			var messagesFragment = ( FIND_MESSAGE_CONTENT.exec(xhr.responseText) || [] )[1];
+	//			if( messagesFragment ){
+	//				var $newMessages	 = $(messagesFragment).closest(".noticeMessage, .errorMessage");
+	//				showMessage( $newMessages );
+	//			}
 
-//			// TRIP ELEMENTs: Derive trip_element.id from the form url and refresh the element in the timeline:
-//			if( url.resource.trip_element ) {
+	//			// TRIP ELEMENTs: Derive trip_element.id from the form url and refresh the element in the timeline:
+	//			if( url.resource.trip_element ) {
 
-////				var elemId			= url.resource.trip_element;
-////				var elemIdFieldName = "trip_element[id]";
-////				//var elemClass	 = elemIdFieldName + "=" + elemId;   // Eg: class="trip_element[id]=123456"
-////				//	elemClass	 = elemClass.replace(/([\[\]\=])/g,"\\$1")
-////				//var $timelineElem = $("LI." + elemClass);
-////				var $timelineElem = $("INPUT:hidden[value='" + elemId + "'][name='trip_element[id]']").parents("LI.tripElement:first");
+	////				var elemId			= url.resource.trip_element;
+	////				var elemIdFieldName = "trip_element[id]";
+	////				//var elemClass	 = elemIdFieldName + "=" + elemId;   // Eg: class="trip_element[id]=123456"
+	////				//	elemClass	 = elemClass.replace(/([\[\]\=])/g,"\\$1")
+	////				//var $timelineElem = $("LI." + elemClass);
+	////				var $timelineElem = $("INPUT:hidden[value='" + elemId + "'][name='trip_element[id]']").parents("LI.tripElement:first");
 
-////				$timelineElem.reload(function() {
-////					// Refresh timeline overview after ajax reload:
-////					//$('DIV.timelineContent:visible').timelineOverview();
-////				}, true);
+	////				$timelineElem.reload(function() {
+	////					// Refresh timeline overview after ajax reload:
+	////					//$('DIV.timelineContent:visible').timelineOverview();
+	////				}, true);
 
-//			}
+	//			}
 
 
-//			// Check for a message from the server telling us to OPEN A CLIENT TAB for the specified client:
-//			if( $target && $target.length ){
-//			
-//				// Look for <input name="client_id" class="showClient" value="123456">
-//				$target.find('INPUT[name=client_id][value].showClient').each(function(){
+	//			// Check for a message from the server telling us to OPEN A CLIENT TAB for the specified client:
+	//			if( $target && $target.length ){
+	//			
+	//				// Look for <input name="client_id" class="showClient" value="123456">
+	//				$target.find('INPUT[name=client_id][value].showClient').each(function(){
 
-//					var client_id	 = $(this).val();									  // This extra search simple allows for when the field has been carelessly rendered in a <div class="formField">
-//					var client_label = $(this).siblings('INPUT[name=client_label]').val() || $(this).parent().siblings().children('INPUT[name=client_label]').val();
+	//					var client_id	 = $(this).val();									  // This extra search simple allows for when the field has been carelessly rendered in a <div class="formField">
+	//					var client_label = $(this).siblings('INPUT[name=client_label]').val() || $(this).parent().siblings().children('INPUT[name=client_label]').val();
 
-//					openClientTab( client_id, client_label );
+	//					openClientTab( client_id, client_label );
 
-//				});
-//			
-//			}
-//			
-//		}
+	//				});
+	//			
+	//			}
+	//			
+	//		}
 
-//	};
+	//	};
 
 
 
@@ -2325,28 +2358,30 @@ return
 	// ADD-REPORT-FILTER button handler:
 	$('.add-filter').live('click', function(){
 
-		var newFilterUID	= '[' + ( +new Date ) + ']';							// New random id number.
+		var newFilterUID	= '[NEW_' + ( +new Date ) + ']';						// New random id. Note: The Delete handler checks for 'NEW_' id.
 		var $template		= $(this).siblings('.report-filter:last');				// Locate previous filter to use as a template.
 		var $newFilter		= $template.clone().hide();
 		$newFilter.find("INPUT[name *= '[id]'], .filter-value-box:gt(0)").remove();	// Discard id field and all but the first value field.
+		$newFilter.find('INPUT,SELECT').removeAttr('disabled');						// Ensure fields are enabled (in case we just copied a 'deleted' filter)
 		$newFilter.find("INPUT[name *= '[_delete]']").attr('disabled','disabled');	// Ensure the delete field is disabled so it can't be submitted.
 
 		// Change the unique identifier of the cloned fields Eg: "report[report_filters_attributes][918][filter_value][]" => "report[report_filters_attributes][1280307283304][filter_value][]"
 		// so that the server can distinguish them when the form is submitted.
 		$newFilter.find('INPUT,SELECT')
-		.each(function(){
-			var newName = $(this).attr('name').replace( /\[\d+\]/, newFilterUID );
-			$(this).attr( 'name', newName );
-		})
-		.end()
-		.insertAfter( $template ).slideDown();
+			.each(function(){
+				var newName = $(this).attr('name').replace( /\[\d+\]/, newFilterUID );
+				$(this).attr( 'name', newName );
+			})
+			.end()
+			.insertAfter( $template ).slideDown()
+		;
 
 		return false;
 
 	})
 
 
-	// ADD-REPORT-FILTER-VALUE button handler:
+	// add-report-filter-VALUE button handler: (depricated)
 	$('.report-filter .add-filter-value').live('click', function(){
 
 		var $template			= $(this).parent('.filter-value-box');
@@ -2364,15 +2399,31 @@ return
 
 		var $filter = $(this).parent('.filter-value-box').parent('.report-filter');
 
-		// Delete the filter value unless it is the only one:
-		if( $filter.find('.filter-value-box').length > 1 ){
+		// Delete the filter *value* element unless it is the only one:
+		// (This action is no longer relevant because the ability to supply multiple values for one filter was depricated)
+		if( $filter.has('.filter-value-box').length > 1 ){
 
 			$(this).parent('.filter-value-box').slideUp(function(){ $(this).remove() });
 
-		// Otherwise delete the entire filter unless it is the only one:
+		// Otherwise delete the *entire* filter unless it is the only one left:
+		// Note: We cannot actually remove the filter elements yet because we still need to submit something to inform the server:
 		}else if( $filter.siblings(".report-filter:has(INPUT[name *= '[_delete]'][disabled])").length > 0 ){
 
-			$filter.find("INPUT[name *= '[_delete]']").removeAttr('disabled').end().slideUp();
+			if( $filter.is(":has( INPUT[ name *= '[NEW_' ] )") ){
+
+				// This filter was added but not saved so we can remove it without letting the server know:
+				$filter.slideUp(function(){ $(this).remove() });
+
+			}else{
+
+				// Activate the filter's _delete flag field, then deactivate the filter's settings:
+				// (The latter is not strictly necessary but it helps reduce noise in the submitted params)
+				$filter.find("INPUT[name *= '[_delete]']").removeAttr('disabled');
+				$filter.find("SELECT[name *= '[name]'], SELECT[name *= '[filter_operator]'], INPUT[name *= '[filter_value]']").attr('disabled','disabled');
+
+				$filter.slideUp();
+
+			}
 
 		}
 
@@ -2619,12 +2670,12 @@ function initSpinboxes() {
 	// Initialise AUTOCOMPLETE within address postcode fields:
 	function initPostcodeSearch(context){
 
-		$('INPUT.postal-code',context).autocomplete('/postcodes', {
+		$('INPUT.postal-code',context).each(function(){ console.log(this) }).autocomplete('/postcodes', {
 
 			max					: POSTCODE_LOOKUP_MAX_ROWS,
 			delay				: POSTCODE_LOOKUP_DELAY_BEFORE_AJAX,
+			minChars			: POSTCODE_LOOKUP_MIN_CHARS,	// The longer the string, the faster the search.
 			cacheLength			: 0,
-			minChars			: 5,		// (Shortest postcode in db is 6 chars) The longer this is the faster the search is likely to be.
 			matchContains		: false,
 			matchSubset			: false,
 			multiple			: false,
@@ -3179,6 +3230,11 @@ function initTripInvoiceFormTotals(){
 			})
 			.attr('data-edited',true);
 
+
+			// Enable the address search on the postcode field(s):
+			initPostcodeSearch(target)
+
+
 			// Handler to update salutation ans addressee from title, forename and surname: (unless 'edited' flag is set)
 			function onNameChanged(){
 
@@ -3303,7 +3359,6 @@ function initTripInvoiceFormTotals(){
 	} // End of Client utilities.
 
 
-Client.initForm();
 
 	var Trip = {
 
@@ -3311,7 +3366,7 @@ Client.initForm();
 		
 			console.log(options)
 			//alert(options)
-		
+
 		},
 
 		// Called when a TRIP is opened:
@@ -3914,6 +3969,19 @@ Client.initForm();
 		}
 	
 	};
+
+
+	var Document = {
+
+		// For listing TEMPLATE filenames in a picklist:
+		list : function(options){
+	
+			console.log( 'Fetching list of doc templates', options.params, $(options.target), options )
+
+		}
+
+	};
+
 
 
 	var BoundFields = {

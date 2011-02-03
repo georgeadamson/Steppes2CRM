@@ -1,5 +1,21 @@
 <%
+
+	# If a list of template filename <option> items is being requested then pass the job to a partial:
+	if params[:list] == 'option'
 	
+		return partial 'documents/list', 
+			:type				=> params[:type], 
+			:prefix			=> params[:prefix], 
+			:company_id => params[:company_id]
+	
+	end
+
+
+
+
+
+	# Otherwise render a list of client documents...
+
 	building_rows_for_trip = 0
 
 	trip_ids   = []
