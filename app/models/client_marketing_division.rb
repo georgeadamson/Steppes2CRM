@@ -25,7 +25,7 @@ class ClientMarketingDivision
   # Eg: "Discovery: Email & Postal" (Used by client.marketing_summary)
   def summary( filter = :all, verbose = false )
 
-    filter = :all if !filter == :all && !filter == :email && !filter == :postal
+    filter = :all unless filter.to_s =~ /all|email|postal/
 
     return case
       when filter == :all && self.allow_email && self.allow_postal

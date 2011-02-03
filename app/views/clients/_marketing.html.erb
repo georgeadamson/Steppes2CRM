@@ -12,7 +12,7 @@
 
 	<thead>
 		<tr>
-			<th>Marketing Divisions</th>
+			<th><small>New! </small>Marketing Divisions</th>
 			<th>Email</th>
 			<th>Postal</th>
 		</tr>
@@ -22,14 +22,23 @@
 		<% Division.all.each_with_index do |division, i| %>
 		<tr>
 
-			<% marketing_division = client.client_marketing_divisions.first_or_new( :division_id => division.id ) %>
+			<%
+				# Fetch existing marketing setting or prepare a new one:
+				preference = client.client_marketing_divisions.first_or_new( :division_id => division.id )
+				
+				# Default new client preferences to maximise spam! (This is the Chairman's official choice)
+				if client.new?
+					preference.allow_email  = true
+					preference.allow_postal = true
+				end
+			%>
 
-			<%= fields_for marketing_division do %>
+			<%= fields_for preference do %>
 
 			<th>
-				<%= hidden_field  :id,          :name => "client[client_marketing_divisions_attributes][#{ i }][id]" unless marketing_division.new? %>
+				<%= hidden_field  :id,          :name => "client[client_marketing_divisions_attributes][#{ i }][id]" unless preference.new? %>
 				<%= hidden_field  :division_id, :name => "client[client_marketing_divisions_attributes][#{ i }][division_id]" %>
-				<%= division.name %> -
+				<%= division.name %>:
 			</th>
 			<td><%= check_box :allow_email,  :name => "client[client_marketing_divisions_attributes][#{ i }][allow_email]",  :boolean => true %></td>
 			<td><%= check_box :allow_postal, :name => "client[client_marketing_divisions_attributes][#{ i }][allow_postal]", :boolean => true %></td>
@@ -41,6 +50,8 @@
 
 </table>
 
-<%= select :companies,		:label => "<small>(#{ client.companies.length })</small> Marketing companies", :selected => companies_selected, :collection => companies_list, :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[companies_ids][]', :title => companies_tooltip, :class => 'height4Fields' %>
-
-<%= select :marketing_id, :label => "Allow marketing <small>This is deprecated!</small>",                                                 :selected => marketing_selected, :collection => marketing_list, :value_method => :id, :text_method => :name %>
+<!-- TODO: Deprecate these fields after NL has migrated the data: -->
+<div style="background-color:#CCC; margin-left:0.5em; padding-top:1em;">
+	<%= select :companies,		:label => "<small>(#{ client.companies.length })</small> Marketing companies <br/><small>(To be deprecated!)</small>", :selected => companies_selected, :collection => companies_list, :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[companies_ids][]', :title => companies_tooltip, :class => 'height4Fields' %>
+	<%= select :marketing_id, :label => "Allow marketing <br/><small>(To be deprecated!)</small>",                                                 :selected => marketing_selected, :collection => marketing_list, :value_method => :id, :text_method => :name %>
+</div>
