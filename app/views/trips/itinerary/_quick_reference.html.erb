@@ -22,21 +22,28 @@
 				<br/><br/>
 			</td>
 
-
 			<td>
 				<ul>
 				<% day.elements.each do |element| %>
 
-					<li>
-						<%= element.name %>: <%= element.supplier.name %>
-						<%= "(#{ element.description })" unless element.description.blank? %>
-					</li>
+					<% if element.flight? && element.start_date < day.date -%>
+
+						<!-- Don't bother mentioning second day of flight. -->
+
+					<% else -%>
+						
+						<li>
+							<%= element.name %>: <%= element.supplier.name %>
+							<%= "(#{ element.description })" unless element.description.blank? %>
+						</li>
+
+					<% end -%>
 
 				<% end %>
 				</ul>
 				<br/>
 			</td>
-			
+
 		</tr>
 		<% end %>
 	</tbody>

@@ -46,6 +46,7 @@ Const strIniFileName			= "sdb.ini"
 Const strUnknown				= "*unknown*"
 Const intImageBorder			= 12
 Const ForReading				= 1
+Const wdDoNotSaveChanges		= 0
 
 ' --- If the document.document_type_id matches either of these then we must use strLetterTemplatePath instead of strTemplatePath (default)
 '     WARNING: These must match settings in the document_types table!
@@ -77,8 +78,10 @@ Dim strSignaturePath
 Dim strPortraitPath
 
 Dim strScriptFolder
-Dim strTemplateFileName
+Dim strTemplateFilePath
 Dim strDocumentFileName
+Dim strDocumentFilePath
+Dim strDocumentTempPath
 Dim intDocumentTypeID
 Dim strClientId
 Dim strTripId
@@ -88,8 +91,7 @@ Dim strVoucherId
 Dim strBrochureId
 
 Dim objWord
-Dim objTemplate
-Dim objDocument
+Dim objDoc
 Dim objSelection
 Dim boolInitialWordPagination
 Dim intInitialWordViewType
@@ -165,17 +167,23 @@ Function CheckError(strDescription, boolContinue)
 		Err.Clear
 
 		If Not boolContinue Then
-		
+
 			On Error Resume Next
-			
+
 			' No need to save document if we havn't yet managed to make a copy of the template:
-			If blnDoneTemplateSaveAs Then objTemplate.Save
+			If blnDoneTemplateSaveAs Then 
+				ReportProgress " - saving document """ & objDoc.FullName & """"
+				objDoc.Save
+			End If
 			
 			' Close Word but do not use FinaliseDocument through risk of circular errors
-			objTemplate.Close
-			objWord.Quit
+			ReportProgress " - closing Word"
+			objDoc.Close wdDoNotSaveChanges
+			objWord.Quit wdDoNotSaveChanges
 		
 			UpdateJobStatus(2)   ' update job status to failed
+			GarbageCollection
+
 			Wscript.Quit
 		End If
 		
@@ -321,10 +329,26 @@ Sub CloseSqlConnection
 	On Error Resume Next
 	
 	objSqlConnection.Close
-	
+	Set objSqlConnection = Nothing
+
 	CheckError "Unable to close database connection", False
 
 End Sub
+
+
+' ---A bit of housekeeping to try to release objects gracefully---
+Sub GarbageCollection
+
+	On Error Resume Next
+
+	Set objSelection = Nothing
+	If Not objDoc  Is Nothing Then objDoc.Close wdDoNotSaveChanges : Set objDoc  = Nothing
+	If Not objWord Is Nothing Then objWord.Quit wdDoNotSaveChanges : Set objWord = Nothing
+
+	CloseSqlConnection
+
+End Sub
+
 
 ' ---Update the job status with supplied status---
 ' 0 - pending, 1 - running, 2 - failed, 3 - success
@@ -384,14 +408,23 @@ Sub GetJobParameters
 		strChosenTemplatePath = IIf( intDocumentTypeID = DOC_TYPE_LETTER Or intDocumentTypeID = DOC_TYPE_BROCHURE, strLetterTemplatePath, strTemplatePath )
 
 		' Derive full template path from strChosenTemplatePath and template_name (AKA document_template_file in database):
-		strTemplateFileName = strChosenTemplatePath + "\" + objJobFields.Item("template_name")
-		strTemplateFileName = Replace( strTemplateFileName, "/", "\" )
-		ReportProgress(" - template file name: " & IIf(objJobFields.Item("template_name") = "", "n/a", strTemplateFileName ))    
+		strTemplateFilePath = strChosenTemplatePath + "\" + objJobFields.Item("template_name")
+		strTemplateFilePath = Replace( strTemplateFilePath, "/", "\" )
+		ReportProgress(" - template file path: " & IIf(objJobFields.Item("template_name") = "", "n/a", strTemplateFilePath ))    
 
-		' Derive full doc path from path and filename: (Change any forward-slashes to back-slashes just in case)
-		strDocumentFileName = strDocumentPath + "\" + objJobFields.Item("document_file_name")
+		' Derive doc filename:
+		strDocumentFileName = objJobFields.Item("document_file_name")
 		strDocumentFileName = Replace( strDocumentFileName, "/", "\" )
-		ReportProgress(" - document file name: " & IIf(objJobFields.Item("document_file_name") = "", "n/a", strDocumentFileName))    
+		ReportProgress(" - document file name: " & IIf(strDocumentFileName = "", "n/a", strDocumentFileName))    
+
+		' Derive full NETWORK doc path from path and filename: (Change any forward-slashes to back-slashes just in case)
+		strDocumentFilePath = strDocumentPath + "\" + strDocumentFileName
+		strDocumentFilePath = Replace( strDocumentFilePath, "/", "\" )
+		ReportProgress(" - document file path: " & IIf(strDocumentFileName = "", "n/a", strDocumentFilePath))    
+
+		' Derive full TEMP doc path from path and filename: (Swap folder separators for another character to make a valid filename)
+		strDocumentTempPath = "C:\temp\" & Replace(strDocumentFileName, "\", "_") & ".BUILDING"
+		ReportProgress(" - document temp path: " & IIf(strDocumentFileName = "", "n/a", strDocumentTempPath))    
 
 		strClientId			= objJobFields.Item("client_id")
 		ReportProgress(" - client id: " & IIf(strClientId = "", "n/a", strClientId))    
@@ -438,24 +471,25 @@ Sub InitialiseDocument
 	
 	Dim strTemplateFolder
 	
-	If Not objFSO.FileExists(strTemplateFileName) Then Err.Raise 53, "OpenTemplateDoc", "Template File not found"
-	CheckError "Unable to open template file (" + strTemplateFileName + ")", False
+	If Not objFSO.FileExists(strTemplateFilePath) Then Err.Raise 53, "OpenTemplateDoc", "Template File not found"
+	CheckError "Unable to open template file (" + strTemplateFilePath + ")", False
 	
 	' Open template read only:
 	' Note: For some reason the Err.Description will contain a truncated copy of the path so not much help (eg "C:\...\tst_Letter_Brochure_Enquiry.doc")
-	Set objTemplate = objWord.Documents.Open(strTemplateFileName, wdDoNotConfirmConversion, wdReadOnly)
+	Set objDoc = objWord.Documents.Open(strTemplateFilePath, wdDoNotConfirmConversion, wdReadOnly)
 	CheckError "Unable to open template", False
 
 	' Save document immediately - get path root from ini - 'ainder of path presented as parameter
-	objTemplate.SaveAs(strDocumentFileName & ".running")
-	CheckError "Unable to save template as running document (" & strDocumentFileName & ")", False
+	'objDoc.SaveAs(strDocumentFilePath & ".running")
+	objDoc.SaveAs(strDocumentTempPath)
+	CheckError "Unable to save template as running document (" & strDocumentTempPath & ")", False
 
 	' Set document properties (Mostly as a precaution to override old values left there from old templates!)
-	objTemplate.BuiltInDocumentProperties(wdPropertyTitle)    = "Steppes Travel document"
-	objTemplate.BuiltInDocumentProperties(wdPropertyAuthor)   = "Steppes Travel"
-	objTemplate.BuiltInDocumentProperties(wdPropertyCompany)  = "Steppes Travel"
-	objTemplate.BuiltInDocumentProperties(wdPropertyKeywords) = "steppes travel document"
-	objTemplate.BuiltInDocumentProperties(wdPropertyComments) = ""
+	objDoc.BuiltInDocumentProperties(wdPropertyTitle)    = "Steppes Travel document"
+	objDoc.BuiltInDocumentProperties(wdPropertyAuthor)   = "Steppes Travel"
+	objDoc.BuiltInDocumentProperties(wdPropertyCompany)  = "Steppes Travel"
+	objDoc.BuiltInDocumentProperties(wdPropertyKeywords) = "steppes travel document"
+	objDoc.BuiltInDocumentProperties(wdPropertyComments) = ""
 	CheckError "Unable to customise document properties", True
 	
 	' Flag to let error handler know we're now working with a new copy of the document:
@@ -475,31 +509,58 @@ Sub InitialiseDocument
 
 End Sub
 
+
 ' --- Save the document with its final name ---
 Sub FinaliseDocument
 
+	Dim strTempPath
 	ReportProgress "Finalising document..."
 	
 	On Error Resume Next
 
+	' This should be identical to strDocumentTempPath in theory:
+	strTempPath = objDoc.FullName
+
 	' Restore the default settings
 	objWord.Options.Pagination = boolInitialWordPagination 
 	objWord.ActiveWindow.View.Type = intInitialWordViewType
-	
+	ReportProgress " - saving changes"
+
 	' Save as proper name
-	objTemplate.SaveAs(strDocumentFileName) 'Note that this DOES NOT add doc if there isnt one in the job table field - not assuming that is what is wanted
-	CheckError "Unable to save file as " & strDocumentFileName, False
+	objDoc.Save
+	CheckError "Unable to save file to " & strTempPath, False
+	ReportProgress " - document saved to '" & strTempPath & "'"
 	
-	ReportProgress " - document saved as '" & strDocumentFileName & "'"
+	ReportProgress " - closing document"
+	objDoc.Close wdDoNotSaveChanges
+	CheckError "Unable to close the document", True
 	
-	' Close the template and quit Word
-	objTemplate.Close
+	ReportProgress " - closing Word"
 	objWord.Quit
 	CheckError "Unable to close Word", True
+
+	ReportProgress " - moving document to '" & strDocumentFilePath & "'"
+	objFSO.CopyFile strTempPath, strDocumentFilePath, true
+	CheckError "Unable to copy document", False
+	
+'	' Save as proper name
+'	objDoc.SaveAs(strDocumentFilePath) 'Note that this DOES NOT add doc if there isnt one in the job table field - not assuming that is what is wanted
+'	CheckError "Unable to save file as " & strDocumentFilePath, False
+'	ReportProgress " - document saved as '" & strDocumentFilePath & "'"
+'	
+'	' Close the template and quit Word
+'	ReportProgress " - closing document"
+'	objDoc.Close wdDoNotSaveChanges
+'	CheckError "Unable to close the document", True
+
+'	ReportProgress " - closing Word"
+'	objWord.Quit
+'	CheckError "Unable to close Word", True
 	
 	' Remove the running version
-	objFSO.DeleteFile(strDocumentFileName & ".running")
-	CheckError "Unable to delete file " & strDocumentFileName & ".running", True
+	'objFSO.DeleteFile(strDocumentFilePath & ".running")
+	objFSO.DeleteFile(strDocumentTempPath)
+	CheckError "Unable to delete file " & strDocumentFilePath & ".running", True
 	
 End Sub
 
@@ -830,7 +891,7 @@ Sub FindAndReplaceFields(strTagType, objFields, boolIsList, boolIgnoreDateField)
 	If loopLimit = 0 Then
 		Err.Raise 10006
 		Err.Description = "Looped too many times looking for tags"
-		CheckError "Forcibly quitting long-running loop in FindAndReplaceFields function. (Possible cause may be incorrect use of {" & strTagType & "} tags in template: " & strTemplateFileName & ")", True
+		CheckError "Forcibly quitting long-running loop in FindAndReplaceFields function. (Possible cause may be incorrect use of {" & strTagType & "} tags in template: " & strTemplateFilePath & ")", True
 	End If
 
 End Sub
@@ -975,7 +1036,7 @@ Sub populate_list_of_daily_activities
 			Do Until objDatesRecordSet.EOF 
 
 				' **TODO: there are possible quirks here
-				' Notes: 	- it may be too slow, returning to server for every day - consider alternatives
+				' Notes: 	- it may be too slow, returning to server for every day - consider alternatives such as fetching several resultsets.
 				'			- if end_date is exactly midnight (as it usually is for accomodation), that day will not be included in the list
 				' 			- start_date is rounded down to midnight so the comparison works
 				'			- might want to consider union so flights, accomm and ground are treated differently
@@ -993,16 +1054,26 @@ Sub populate_list_of_daily_activities
 
 					Do Until objItemsRecordSet.EOF
 
-						objTable.Rows(intNewRowNumber).Range.FormattedText = objTemplateRow.Range.FormattedText
-						objTable.Rows(intNewRowNumber).Select 
+						If objItemsFields.Item("type_id") = 1 And CDate(objItemsFields.Item("start_date")) < CDate(strDayDate) Then
+						
+							'ReportProgress "   Skipping 2nd day of overnight flight because we don't need to show flight twice"
+						
+						Else
 
-						FindAndReplaceFields "trip_element", objItemsFields, True, boolIgnoreDateField 
+							objTable.Rows(intNewRowNumber).Range.FormattedText = objTemplateRow.Range.FormattedText
+							objTable.Rows(intNewRowNumber).Select 
+
+							FindAndReplaceFields "trip_element", objItemsFields, True, boolIgnoreDateField 
+
+							CheckError "Unable to populate list of daily activities in items loop", False
+							boolIgnoreDateField = true 'only ignore the first time
+							intNewRowNumber = intNewRowNumber + 1
+	
+						End If
 
 						objItemsRecordSet.MoveNext
-						boolIgnoreDateField = true 'only ignore the first time
-						intNewRowNumber = intNewRowNumber + 1
 
-						CheckError "Unable to populate list of daily activities in items loop", False
+						CheckError "Error while populating list of daily activities in items loop", False
 
 					Loop
 
@@ -1091,7 +1162,7 @@ Sub ParseLists
 	If loopLimit = 0 Then
 		Err.Raise 10006
 		Err.Description = "Looped too many times looking for tags"
-		CheckError "Forcibly quitting long-running loop in ParseLists function. (Possible cause may be incorrect use of {list_of...} tags in template: " & strTemplateFileName & ")", True
+		CheckError "Forcibly quitting long-running loop in ParseLists function. (Possible cause may be incorrect use of {list_of...} tags in template: " & strTemplateFilePath & ")", True
 	End If
 
 	
@@ -1203,7 +1274,7 @@ Sub ParseMiscTags
 	If loopLimit = 0 Then
 		Err.Raise 10006
 		Err.Description = "Looped too many times looking for tags"
-		CheckError "Forcibly quitting long-running loop in ParseMiscTags function. (Possible cause may be incorrect use of {today...} tags in template: " & strTemplateFileName & ")", True
+		CheckError "Forcibly quitting long-running loop in ParseMiscTags function. (Possible cause may be incorrect use of {today...} tags in template: " & strTemplateFilePath & ")", True
 	End If
 
 End Sub
@@ -1241,4 +1312,4 @@ FinaliseDocument
 
 UpdateJobStatus(3) 'update job status to "complete"
 ReportSuccess
-CloseSqlConnection
+GarbageCollection
