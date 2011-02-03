@@ -1162,6 +1162,8 @@ BLOCKQUOTE.amadeus_air
 		vertical-align:bottom;	
 	}
 	.checkbox-grid TD {
+		padding-top:0;
+		padding-bottom:0;
 		width:4em;	
 	}
 
