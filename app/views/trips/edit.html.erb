@@ -1,15 +1,15 @@
 <!-- Trip edit.html: -->
 <%
 
-	client_or_tour						||= @client_or_tour
+	client_or_tour				||= @client_or_tour
 	
-	delete_caption						||= @trip.is_first_version ? 'Delete all versions of this trip' : 'Delete this version'
+	delete_caption				||= @trip.is_first_version ? 'Delete all versions of this trip' : 'Delete this version'
 	prompt_to_confirm_delete	||= @trip.is_first_version ? 'That seems a bit drastic. Are you quite sure you want to delete all versions of this trip?' : 'Delete this version?'
-	delete_uid								||= "delete-btn#{ Time.new.to_i }"
-	label_for_delete					||= delete_caption
-	label_for_delete						= false if @trip.completed? || @trip.confirmed?
+	delete_uid					||= "delete-btn#{ Time.new.to_i }"
+	label_for_delete			||= delete_caption
+	label_for_delete			  = false if @trip.completed? || @trip.confirmed?
 	
-	url_params									= { :redirect_to => resource(client_or_tour,@trip.version_of_trip) }
+	url_params					  = { :redirect_to => resource(client_or_tour,@trip.version_of_trip) }
 	
 -%>
 <!--<div class="sectionContainer noSectionHead">-->
@@ -39,10 +39,10 @@
 			:delete_id				=> delete_uid,				# This is used to associate the label with the button.
 			:delete_caption		=> delete_caption,
 			:delete_class			=> 'left',
-			:delete						=> false
+			:delete						=> false,
 			
-			#:custom_tag				=> check_box( :auto_update_elements_dates, :label => 'Move elements with Start date', :title => 'This option helps you keep all elements relative to the trip&apos;s start date. Note that Flights bound to a PNR and elements linked to a Group Template are not affected.', :class => 'widthAuto labelWidthAuto' ),
-			#:custom_after			=> false
+			:custom_tag				=> check_box( :auto_update_elements_dates, :label => 'Move elements along with Start date', :title => 'This option helps you keep all elements relative to the trip&apos;s start date. Note that Flights bound to a PNR and elements linked to a Group Template are not affected.', :class => 'widthAuto labelWidthAuto' ),
+			:custom_after			=> false
 
 		%>
 
