@@ -250,7 +250,7 @@ class Client
     #self.client_addresses.first.is_active = true if self.client_addresses.first
 
     # Might as well assume marketing source is same as original source if necessary: (Helpful when someone uses this field for reposrting)
-    self.source ||= self.original_source
+    self.source_id ||= self.original_source_id
 
     # Recalculate client total_spend:
     self.update_total_spend
