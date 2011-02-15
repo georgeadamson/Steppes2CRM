@@ -202,7 +202,7 @@
 			<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
 
 				<%
-					readonly   = ( trip.confirmed? || trip.completed? || trip.tour_template? || trip.fixed_dep? )
+					readonly   = ( trip.completed? || trip.tour_template? || trip.fixed_dep? )
 					old_margin = trip.calc( :total, :actual, :percent_margin, :for_all, :travellers, :with_all_extras => true, :final_prices => true, :decimal_places => 1 )
 				%>	
 
