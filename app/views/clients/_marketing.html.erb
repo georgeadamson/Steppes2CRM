@@ -6,15 +6,17 @@
 	companies_selected	= client.companies_ids.all_to_s
 
 	companies_tooltip   = 'Hold down Ctrl to select multiple companies. &#13;(Also try Ctrl + up/down or Spacebar)'
+	
+	default_marketing = { :allow_email => true, :allow_postal => true }
 -%>
 
 <table class="checkbox-grid" cellspacing="0" cellpadding="0">
 
 	<thead>
 		<tr>
-			<th><small>New! </small>Allow marketing for</th>
-			<th>Email</th>
-			<th>Postal</th>
+			<th title="AKA Marketing Divisions">Allow marketing for</th>
+			<th title="Allow marketing by email">Email</th>
+			<th title="Allow marketing by post">Postal</th>
 		</tr>
 	</thead>
 	
@@ -24,19 +26,16 @@
 
 			<%
 				# Fetch existing marketing setting or prepare a new one:
-				preference = client.client_marketing_divisions.first_or_new( :division_id => division.id )
+				marketing = client.client_marketing_divisions.first_or_new( :division_id => division.id )
 				
 				# Default new client preferences to maximise spam! (This is the Chairman's official choice)
-				if client.new?
-					preference.allow_email  = true
-					preference.allow_postal = true
-				end
+				marketing.attributes = default_marketing if client.new?
 			%>
 
-			<%= fields_for preference do %>
+			<%= fields_for marketing do %>
 
 			<th>
-				<%= hidden_field  :id,          :name => "client[client_marketing_divisions_attributes][#{ i }][id]" unless preference.new? %>
+				<%= hidden_field  :id,          :name => "client[client_marketing_divisions_attributes][#{ i }][id]" unless marketing.new? %>
 				<%= hidden_field  :division_id, :name => "client[client_marketing_divisions_attributes][#{ i }][division_id]" %>
 				<%= division.name %>:
 			</th>
