@@ -35,8 +35,8 @@
 			<p id="loginStatus">
 				<%= fields_for session.user do -%>
 					<small>
-						Logged in as <%= session.user.forename %>
-						<%= link_to 'Log out', '/logout', :id => 'logout', :class => 'noajax' %>
+						Signed in as <%= session.user.forename %>
+						<%= link_to 'Sign out', '/logout', :id => 'logout', :class => 'noajax' %>
 					</small>
 					<%= hidden_field :id %>
 				<% end =%>
