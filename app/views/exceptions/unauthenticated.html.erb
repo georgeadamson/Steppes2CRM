@@ -11,8 +11,7 @@
 <div style="width:18em;display:inline-block;background-color:#EFEDDE;padding:2em;-moz-border-radius:1em;">
 
 <h2>Welcome to the Steppes CRM</h2>
-<br/>
-<p>Please log in by providing your user name and password</p>
+<p>Please sign in to get cracking...</p>
 <br/>
 
   <%= error_messages_for session.authentication %>
@@ -25,20 +24,23 @@
 
 	<input type="hidden" name="_method" value="PUT" />
 
-	<div class="formField">
-		<label for="<%= @login_param.to_s %>">User name</label>
+	<div class="formField" style="font-size:1.4em;">
+		<label for="<%= @login_param.to_s %>" style="text-align:left;width:10em">User name</label>
 		<input type="text" name="<%= @login_param.to_s %>" value="<%= params[:login] %>" id="<%= @login_param.to_s %>"/>
 	</div>
 
-	<div class="formField">
-		<label for="<%= @password_param.to_s %>">Password</label>
+	<div class="formField" style="font-size:1.4em;">
+		<label for="<%= @password_param.to_s %>" style="text-align:left;width:10em">Password</label>
 		<input type="password" name="<%= @password_param.to_s %>" value="<%= params[:password] %>" id="<%= @password_param.to_s %>"/>
 	</div>
-
 	<br/>
+
 	<div class="buttonBar">
-		<small><a href="http://database" style="color:#000;">Open the old database</a> or </small>
-		<input type="submit" name="Submit" value="Log in" id="Submit" class="save">
+		<input type="submit" name="Submit" value="Sign me in" id="Submit" class="save ui-priority-primary ui-state-default" style="font-size:1.4em;">
+		<!--
+			<br/>
+			<small> or <a href="http://database" style="color:#000;">Open the old database</a></small>
+		-->
 	</div>
 
 </form>
