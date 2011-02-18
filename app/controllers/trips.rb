@@ -229,6 +229,17 @@ class Trips < Application
     
 		@trip.updated_by					||= session.user.fullname
     @trip.clients							<<	@client_or_tour unless @trip.tour
+
+    if @client_or_tour.is_a? Client
+      
+      # This applies to new private trips only:
+      # Hack: Don't know why trip[:clients_attributes][x][:source_id] is not being saved so we set it explicitly:
+      new_source_id = trip[:clients_attributes] \
+        && trip[:clients_attributes][@client_or_tour.id.to_s] \
+        && trip[:clients_attributes][@client_or_tour.id.to_s][:source_id]
+      @client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
+
+    end
 		
 		# Alas this does not seem to affect the row in the trip_clients table:
 		@trip.trip_clients.each{ |relationship| relationship.created_by = @trip.created_by }
@@ -265,8 +276,8 @@ class Trips < Application
       
     else
 
-      collect_error_messages_for @trip, :clients
-      collect_error_messages_for @trip, :trip_clients
+      collect_error_messages_for @trip, :clients      unless @trip.new?
+      collect_error_messages_for @trip, :trip_clients unless @trip.new?
       collect_error_messages_for @trip, :countries
 
 #      @trip.model.relationships.each do | name, association |
