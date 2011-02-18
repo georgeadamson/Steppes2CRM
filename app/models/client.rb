@@ -438,6 +438,11 @@ class Client
     return self.active_trips.all( :status_id => [ TripStatus::CONFIRMED, TripStatus::COMPLETED ] )
   end
 
+  # Helper for listing group templates that the client has joined:
+  def tour_templates
+    return self.trips.all( :is_active_version => true, :type_id => TripType::TOUR_TEMPLATE )
+  end
+
   # Used in reports:
   def booked_trips_count
     return self.booked_trips.count
