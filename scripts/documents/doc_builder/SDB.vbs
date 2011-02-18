@@ -476,7 +476,7 @@ Sub InitialiseDocument
 	' Create a Word object
 	Set objWord = CreateObject("Word.Application")
 
-	objWord.Visible = isTestEnvironment() Or isDevEnvironment()	'Visible when running unit tests.
+	objWord.Visible = True	'isTestEnvironment() Or isDevEnvironment()	'Visible when running unit tests.
 	objWord.ScreenUpdating = False
 	
 	Dim strTemplateFolder
