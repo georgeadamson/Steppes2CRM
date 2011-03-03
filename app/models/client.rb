@@ -248,11 +248,9 @@ class Client
     # This original simpler solution failed. Does not like boolean as first item in order clause: self.client_addresses.all( :order => [ :is_active.desc, :id ] ).each_with_index{ |a,i| a.is_active = (i==0) }
     #self.client_addresses.each_with_index{ |a,i| a.is_active = (i==0) }
     #self.client_addresses.first.is_active = true if self.client_addresses.first
-puts "source_id: #{ self.source_id }"
-puts "original_source_id: #{ self.original_source_id }"
+
     # Might as well assume marketing source is same as original source if necessary: (Helpful when someone uses this field for reposrting)
     self.source_id ||= self.original_source_id
-puts "source_id: #{ self.source_id }"
 
     # Recalculate client total_spend:
     self.update_total_spend
