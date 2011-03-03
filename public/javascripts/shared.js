@@ -267,6 +267,7 @@ jQuery(function($) {
 
 			// SysAdmin:
 			Layout.livePath('success', new RegExp('/system$'),							SysAdmin.initShow );
+			Layout.match(/exchange_rates/).on('success').to(initSpinboxes);
 
 			// Tasks: (AKA Followups / Reminders)
 			Layout.livePath('click',	new RegExp('/tasks/([0-9]+)/edit'),				Task.openEdit );
@@ -2561,9 +2562,11 @@ window.initDatepickers = initDatepickers;
 
 
 // Initialise Spinbox fields: (Assumes jquery.spinbox.css is loaded and spinbox-sprite image is available to mimic buttons)
-function initSpinboxes() {
+function initSpinboxes(ui) {
 
-	$("INPUT:text.spinbox:not(.spinbox-active)")
+	var panel = $( ui && ui.panel || !$.isPlainObject(ui) && ui || document )
+
+	$("INPUT:text.spinbox:not(.spinbox-active)", panel)
 			.filter(".exchange_rate").spinbox({
 				max: 1000,
 				step: 0.01,
