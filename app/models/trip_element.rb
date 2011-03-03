@@ -480,6 +480,8 @@ class TripElement
   # Generate a followup for this flight *if* the trip is confirmed:
   def create_task(force = false)
     
+    return nil unless self.saved?
+
     # Check whether there's already a followup for this flight:
     task = self.tasks.first
     
