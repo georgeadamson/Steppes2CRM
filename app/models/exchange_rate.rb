@@ -15,6 +15,9 @@ class ExchangeRate
   has n, :suppliers,  :child_key => [:currency_id]
   has n, :money_outs, :child_key => [:currency_id]  # Formerly known as SupplierPaymentRequests
   
+  # Set the default sort order:
+  default_scope(:default).update( :order => [:name] )
+
   before :save do
 
 		# Apply new_rate immediately if today's date was specified:
