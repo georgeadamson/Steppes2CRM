@@ -200,7 +200,8 @@ jQuery(function($) {
 			Layout.liveForm('success', 'clients:update',								Client.initForm, BoundFields.update );
 			Layout.liveForm('success', 'clients:destroy',								Client.initForm, BoundFields.update );
 
-			// Tours:
+			// Tours: (aka Groups)
+			Layout.livePath('success', /tours$/,										Tour.openIndex );	//open tours index
 			Layout.livePath('click',   /tours\/([0-9]+)$/,								Tour.openShow );	//openTourTab
 			Layout.livePath('success', /tours\/([0-9]+)$/,								Tour.initShow );
 			Layout.livePath('success', /tours\/([0-9]+)\/trips\/([0-9]+)$/,				Trip.initShow );
@@ -3766,7 +3767,26 @@ function initTripInvoiceFormTotals(){
 
 		// Open the Tours list tab: (Groups)
 		openIndex : function(options){
+
+			// Trigger the tab-select method:
 			$('#pageTabs').tabs('select', '/tours');
+
+			// Cache the latest list of tour names to speed up search-as-you-type:
+			var $tourItems = $( "DT:has(A.tour-name)", options.panel );
+
+			// Respond to typing in Quick Search textbox to search-as-you-type:
+			// (Room for some performance improvement here but it is satisfactory)
+			$( '#tour_quick_search', options.panel ).trigger('focus').bind('keyup', function(e){
+
+				var query = $(this).val().toLowerCase();
+
+				// Unhide previously hidden items and hide those that match search text:
+				$tourItems.show().next("DD").show().end()
+					.filter(function(){ return $(this).text().toLowerCase().indexOf(query) == -1; })
+					.hide().next("DD").hide();
+
+			});
+
 		},
 
 		// Close the New Tour tab:
@@ -3774,7 +3794,7 @@ function initTripInvoiceFormTotals(){
 			$('#pageTabs').tabs('remove', '/tours/new');
 		}
 
-	} // End of Tour utilities.
+	} // End of Tour methods.
 
 
 
