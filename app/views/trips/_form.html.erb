@@ -31,10 +31,10 @@
 	
 		client                  = @client_or_tour
 		client_field_prefix     = "trip[clients_attributes][#{ client.id }]"
-		client_sources					= {
-			'Same as before:'  => client.source.name, 
-			'or a new source:' => ClientSource.all(:order=>[:name])
-		}
+		client_sources					= {}
+		client_sources['Same as before:']  = [client.source] if client.source
+		client_sources['or a new source:'] = ClientSource.all(:order=>[:name])
+
 		multiple_select_tooltip = 'Hold down Ctrl to select multiple countries. &#13;(Also try Ctrl + up/down or Spacebar)'
 			
 	end
