@@ -39,9 +39,10 @@
 
 					<%= form :action => resource(:tours), :method => :get, :class => 'auto-submit' do %>
 
-						<%= select		:name => :company_id, :label => 'Filter by',       :collection => companies_list, :selected => selected_company_id.to_s, :value_method => :id, :text_method => :display_name %>
-						<%= check_box :name => :show_old,		:label => 'Show old groups', :checked => params[:show_old], :value => true %>
-						<%= submit		'Refresh' %><!-- Submit button is hidden automatically when in an auto-submit form. -->
+						<%= select			:name => :company_id, :label => 'Show groups by',		:collection => companies_list, :selected => selected_company_id.to_s, :value_method => :id, :text_method => :display_name %>
+						<%= text_field						            :label => 'Quick search',			:value => '', :id => :tour_quick_search %>
+						<%= check_box		:name => :show_old,		:label => 'Show old groups',	:checked => params[:show_old], :value => true %>
+						<%= submit			'Refresh' %><!-- Submit button is hidden automatically when in an auto-submit form. -->
 
 					<% end =%>
 
