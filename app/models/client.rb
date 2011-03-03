@@ -48,7 +48,7 @@ class Client
   property :marketing_id,					Integer, :default => 1, :lazy => [:all], :required => true		# Marketing preferences (email, post etc)
   property :type_id,							Integer, :default => 2, :lazy => [:all], :required => true    #(Default to ClientType.first(:name=>"Client").id)
   property :original_source_id,		Integer, :default => 1, :lazy => [:all], :required => true
-  property :source_id,						Integer, :default => 1, :lazy => [:all]
+  property :source_id,						Integer,                :lazy => [:all]
 
   property :address_client_id,		Integer, :required => false
   property :legacy_contactid,			Integer,								:lazy => [:all]
@@ -248,9 +248,11 @@ class Client
     # This original simpler solution failed. Does not like boolean as first item in order clause: self.client_addresses.all( :order => [ :is_active.desc, :id ] ).each_with_index{ |a,i| a.is_active = (i==0) }
     #self.client_addresses.each_with_index{ |a,i| a.is_active = (i==0) }
     #self.client_addresses.first.is_active = true if self.client_addresses.first
-
+puts "source_id: #{ self.source_id }"
+puts "original_source_id: #{ self.original_source_id }"
     # Might as well assume marketing source is same as original source if necessary: (Helpful when someone uses this field for reposrting)
     self.source_id ||= self.original_source_id
+puts "source_id: #{ self.source_id }"
 
     # Recalculate client total_spend:
     self.update_total_spend
