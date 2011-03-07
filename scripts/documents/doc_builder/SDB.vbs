@@ -1,8 +1,9 @@
-' -------------------------------
+' ----------------------------------------------------
 ' SDB.vbs
 ' Steppes Travel Document Builder
 ' by Nick Casey 2010-04-23
-' -------------------------------
+' Tweaks and enhancements by George Adamson 2010, 2011
+' ----------------------------------------------------
 
 ' Usage: [CScript | WScript] SDB.vbs <jobid>
 
@@ -32,6 +33,7 @@
 ' 0.4 - Improved error handling: closes Word if close error, fails and exits if Word closed (requires CheckError inside loops), reports image not found
 ' 0.5 - Removed array containing named lists and replaced with list_of_* wild card search. Fixed bug reporting errors when inserting images.
 ' 0.6 - Added checks for existence of folders. Changed ERROR output to WARNING for less severe errors. Saving document using file_name instead of name
+' 0.7 - Feb 2011 - Prevented overnight flights from creating row on second day. Added more explicit garbage collection.
 
 Option Explicit 
 
@@ -127,7 +129,7 @@ Sub ReportProgress(strDescription)
 	If IsObject(objSqlConnection) Then
 		strFormattedDescription = "'" & vbLf & Replace(strDescription, "'", "''") & "'"
 		objSqlConnection.Execute "EXEC sp_document_update_job_status " & strJobId & ", null, " & strFormattedDescription
-		If Err.Number <> 0 Then Wscript.Echo "#ERROR# Unable to update job record to report progress."
+		If Err.Number <> 0 Then Wscript.Echo "*SQL ERROR* Failed to update job record to report progress."
 	End If
 	Err.Clear
 	
@@ -219,6 +221,7 @@ Sub GetScriptArguments
 	
 End Sub
 
+
 ' ---Get INI file settings---
 Sub ReadIniFile
 
@@ -276,6 +279,7 @@ Sub ReadIniFile
 	
 End Sub
 
+
 ' --Get particular INI file key--
 Function GetIniFileKey(strIniFileContents, strKeyName)
 
@@ -310,6 +314,7 @@ Function GetIniFileKey(strIniFileContents, strKeyName)
 
 End Function
 
+
 ' ---Open SQL connection---
 Sub OpenSQLConnection
 
@@ -322,6 +327,7 @@ Sub OpenSQLConnection
 	CheckError "Unable to open SQL connection", False
 	
 End Sub
+
 
 ' ---Close SQL connection---
 Sub CloseSqlConnection
@@ -363,17 +369,20 @@ Sub UpdateJobStatus(intStatus)
 
 End Sub
 
+
 ' --- Helper for detecting TEST environment: (Used for debugging) ---
-'     (Warning: Examines DB name so not very reliable!)
+'     (Warning: Examines DB name so not very future proof!)
 Function isTestEnvironment
 	isTestEnvironment = InStr( 1, strConnectionString, "TEST", vbTextCompare )
 End Function
 
+
 ' --- Helper for detecting DEV environment: (Used for debugging) ---
-'     (Warning: Examines DB name so not very reliable!)
+'     (Warning: Examines DB name so not very future proof!)
 Function isDevEnvironment
 	isDevEnvironment = InStr( 1, strConnectionString, "DEV", vbTextCompare )
 End Function
+
 
 ' ---Get Job parameters from the database---
 Sub GetJobParameters
@@ -456,6 +465,7 @@ End Sub
 
 ' ---End of Populate list functions---
 
+
 ' ---Create document by saving a copy of the template---
 Sub InitialiseDocument
 
@@ -466,7 +476,7 @@ Sub InitialiseDocument
 	' Create a Word object
 	Set objWord = CreateObject("Word.Application")
 
-	objWord.Visible = isTestEnvironment() Or isDevEnvironment()	'Visible when running unit tests.
+	objWord.Visible = True	'isTestEnvironment() Or isDevEnvironment()	'Visible when running unit tests.
 	objWord.ScreenUpdating = False
 	
 	Dim strTemplateFolder
@@ -581,6 +591,7 @@ Function PadDate(strDate, intDigits)
 	
 End Function 
 
+
 ' --- Date format yyyy-mm-dd
 Function GetSQLFriendlyDate(strDate)
 
@@ -600,6 +611,7 @@ Function GetSQLFriendlyDate(strDate)
 	CheckError "Unable to get SQL friendly date", True
 
 End Function
+
 
 ' --- Date format dd/mm/yyyy
 Function GetStandardDate(strDate)
@@ -622,6 +634,7 @@ Function GetStandardDate(strDate)
         
 End Function
 
+
 ' --- Date format dddd dd mmm 
 Function GetLongDate(strDate)
 
@@ -642,6 +655,7 @@ Function GetLongDate(strDate)
 	CheckError "Unable to get long date", True
         
 End Function
+
 
 ' --- Date format dd mmm yyyy
 Function GetFullDate(strDate)
@@ -664,6 +678,7 @@ Function GetFullDate(strDate)
         
 End Function
 
+
 Function GetTime(strDate)
 
 	Dim strFormattedDate
@@ -682,6 +697,7 @@ Function GetTime(strDate)
 	CheckError "Unable to get time", True
         
 End Function
+
 
 ' --- Check if table is marked for deletion if empty and delete it if it is empty
 ' Returns True if the table is deleted
@@ -1054,9 +1070,10 @@ Sub populate_list_of_daily_activities
 
 					Do Until objItemsRecordSet.EOF
 
+						' Skip 2nd day of overnight flight:
 						If objItemsFields.Item("type_id") = 1 And CDate(objItemsFields.Item("start_date")) < CDate(strDayDate) Then
 						
-							'ReportProgress "   Skipping 2nd day of overnight flight because we don't need to show flight twice"
+							' ReportProgress "   Skipping 2nd day of overnight flight because we don't need to show flight twice"
 						
 						Else
 
