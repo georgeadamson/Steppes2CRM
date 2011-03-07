@@ -153,6 +153,7 @@ FORM {
 
 	.formField {
 		font-size:1em;
+		line-height:1.6em;	/* Added to prevent top of textboxes from being clipped */
 		min-height:2em;
 		margin-bottom:0.5em;
 	}

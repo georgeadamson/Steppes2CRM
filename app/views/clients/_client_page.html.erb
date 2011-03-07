@@ -51,16 +51,21 @@
 								<%= link_to 'New trip', resource(client,:trips,:new), :class => 'new' %>
 							</li>
 
-							<%# When client is listed on a TOUR, show link(s) to create new fixed-dep based on the tour-template(s): %>
-							<% client.trips.all( :type_id => TripType::TOUR_TEMPLATE ).each do |tour_template| 
+							<!-- Extra tab for CREATE FIXED DEP: -->
+							<%# When client is listed on a TOUR, show link(s) to create new fixed-dep based on the tour-template(s):
+							  # This is made over-complicated because old migrated fixed deps do not relate to their tour template! %>
+							<% tour_templates_count = client.tour_templates.count %>
+							<% client.tour_templates.each do |tour| %>
 
-								# Don't show "New Fixed Dep" link if one has already been created from the tour_template:
-								if client.fixed_deps( tour_template.tour_id ).count == 0 %>
+								<% fixed_deps_count = client.fixed_deps( tour.tour_id ).count %>
+
+								<!-- Don't show "New Fixed Dep" link if one has already been created from the tour_template -->
+								<% if fixed_deps_count == 0 || fixed_deps_count < tour_templates_count %>
 								
 									<!-- Extra tab for CREATE FIXED DEPARTURE trip: -->
-									<li class="trip trip-create" title="Create a new fixed departure based on the group trip &quot;<%= tour_template.name %>&quot;">
-										<%= link_to 'Copy group', resource( client, :trips, :new, :copy_trip_id => tour_template.id ), :class => 'new' %>
-										<small>Based on <%= tour_template.name %></small>
+									<li class="trip trip-create" title="Create a new fixed departure based on the group trip &quot;<%= tour.name %>&quot;">
+										<%= link_to 'Copy group', resource( client, :trips, :new, :copy_trip_id => tour.id ), :class => 'new' %>
+										<small>Based on <%= tour.name %></small>
 									</li>
 
 								<% end %>

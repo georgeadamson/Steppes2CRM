@@ -22,7 +22,23 @@
 			:subject	=> 'Client details',
 			:body			=> @trip.clients.map{|c| '%0A' + partial('clients/traveller_summary',:client=>c) }.join('%0A')
 		}
+
+
+	# If we're creating a new private trip then we should confirm current client's source:
+	confirm_client_source = @trip.new? && ( @trip.tailor_made? || @trip.private_group? ) && !@client_or_tour.new?
+
+	if confirm_client_source
 	
+		client                  = @client_or_tour
+		client_field_prefix     = "trip[clients_attributes][#{ client.id }]"
+		client_sources					= {}
+		client_sources['Same as before:']  = [client.source] if client.source
+		client_sources['or a new source:'] = ClientSource.all(:order=>[:name])
+
+		multiple_select_tooltip = 'Hold down Ctrl to select multiple countries. &#13;(Also try Ctrl + up/down or Spacebar)'
+			
+	end
+
 -%>
 
 <%= hidden_field :version_of_trip_id,		:value => @trip.version_of_trip_id.to_i unless trip.tour %>
@@ -46,12 +62,27 @@
 		</td>
 		<td><%= text_field	:adults,			:label => 'Adults',				:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin1' %></td>
 
+		<% if confirm_client_source %>
+			<td>
+				Please confirm the following for <br/> <%= client.fullname %>:
+			<td>
+		<% end %>
+
 	</tr>
 
 	<tr>
 		<td><%= text_field	:start_date,	:label => 'Start date',	:value => @trip.start_date.formatted(:uidate), :class => 'date start-date travel-date dtstart', :fieldClass => 'fieldFlowHoriz' %></td>
 		<td><%= select			:user_id,			:label => 'Handled by',	:selected => @trip.user_id.to_s, :collection => user_list, :value_method => :id, :text_method => :display_name, :prompt => '- Choose user' %></td>
 		<td><%= text_field	:children,		:label => 'Children',		:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
+
+		<% if confirm_client_source %>
+			<td>
+				<%= fields_for client do %>
+				<%= hidden_field  :id, :name  => "#{ client_field_prefix }[id]" %>
+				<%= select :source_id, :label => "Client source", :name => "#{ client_field_prefix }[source_id]", :collection => client_sources, :selected => '', :prompt => '- Please confirm', :value_method => :id, :text_method => :name %>
+				<% end =%>
+			</td>
+		<% end %>
 
 		<!-- Total count of trip members: -->
 		<!--<td rowspan="4">
@@ -66,6 +97,17 @@
 		<td><%= text_field	:end_date,		:label => 'End date',		:value => @trip.end_date.formatted(:uidate), :class => 'date end-date travel-date dtend', :fieldClass => 'fieldFlowHoriz' %></td>
 		<td><%= select			:company_id,	:label => 'Invoice as', :collection => Company.all(:is_active=>true), :value_method => :id, :text_method => :name, :prompt => '- Choose company' %></td>
 		<td><%= text_field	:infants,			:label => 'Infants',		:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
+
+
+		<% if confirm_client_source %>
+			<!--
+			<td rowspan="2">
+				<%= fields_for @client_or_tour do %>
+				<%= select :interests, :label => "Confirm areas of interest",	:selected => client.interests_ids.all_to_s, :collection => Country.all( :order => [:name] ), :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[interests_ids][]', :title => multiple_select_tooltip, :class => 'height4Fields' %>
+				<% end =%>
+			</td>
+			-->
+		<% end %>
 	</tr>
 
 	<tr>

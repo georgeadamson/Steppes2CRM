@@ -48,7 +48,7 @@ class Client
   property :marketing_id,					Integer, :default => 1, :lazy => [:all], :required => true		# Marketing preferences (email, post etc)
   property :type_id,							Integer, :default => 2, :lazy => [:all], :required => true    #(Default to ClientType.first(:name=>"Client").id)
   property :original_source_id,		Integer, :default => 1, :lazy => [:all], :required => true
-  property :source_id,						Integer, :default => 1, :lazy => [:all]
+  property :source_id,						Integer,                :lazy => [:all]
 
   property :address_client_id,		Integer, :required => false
   property :legacy_contactid,			Integer,								:lazy => [:all]
@@ -436,6 +436,11 @@ class Client
 
   def booked_trips
     return self.active_trips.all( :status_id => [ TripStatus::CONFIRMED, TripStatus::COMPLETED ] )
+  end
+
+  # Helper for listing group templates that the client has joined:
+  def tour_templates
+    return self.trips.all( :is_active_version => true, :type_id => TripType::TOUR_TEMPLATE )
   end
 
   # Used in reports:

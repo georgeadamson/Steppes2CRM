@@ -84,26 +84,24 @@
 	//               " 10  BA 249 Y 15JAN 6 LHRGIG HK1       5  1210 2150   *1A/E*  "
 	function parsePastedAmadeusText(rawAmadeus){
 
-		var flights,
-			isValidAirlineCode = /^([A-Z][A-Z]|[A-Z][0-9]|[0-9][A-Z])$/,
-			lookupMonthNumber  = {'JAN':1,'FEB':2,'MAR':3,'APR':4,'MAY':5,'JUN':6,'JUL':7,'AUG':8,'SEP':9,'OCT':10,'NOV':11,'DEC':12};
 		rawAmadeus = rawAmadeus || '';
+		var flights,
+			isValidAirlineCode = /^([A-Z][A-Z]|[A-Z][0-9]|[0-9][A-Z])$/,	// Two letters, or a number and a letter.
+			lookupMonthNumber  = {'JAN':1,'FEB':2,'MAR':3,'APR':4,'MAY':5,'JUN':6,'JUL':7,'AUG':8,'SEP':9,'OCT':10,'NOV':11,'DEC':12};
 
 		// Separate raw amadesus text into lines and discard any that do not look like flight data:
-		flights = rawAmadeus.toUpperCase().split(/\n/);
-
-		// Discard any rows that do not look like flight data:
 		// We use a regex to identify lines beginning with a line-number and containing times like "0650 0929".
+		flights = rawAmadeus.toUpperCase().split(/\n/);
 		flights = $.grep(flights, function(line){ return /^\s*[1-9][0-9]?\s\s.*[0-9]{4}\s[0-9]{4}/.test(line) });
 
-		// Allow for lazy user's copy-and-paste by ensuring the line begins with the expected number of spaces:
+		// Allow for slapdash copy-and-paste by ensuring the line begins with the expected number of spaces:
 		// This is necessary because we will locate each value by it's position in the line.
 		// (Typically only applies to first line. Prefix must be 2 spaces when line-number is single digit or 1 space when it is 2 digits)
 		flights = $.map( flights, function(line){ return line.replace( /^\s*([1-9]\s)/, '  $1' ).replace( /^\s*([1-9][0-9]\s)/, ' $1' ) });
 
-		console.log(flights, flights[0]);
 		// Parse explicit attributes from raw amadeus line into a hash of properties for each flight:
 		// Note we use Number() because parseInt() would parse '09' as 0 instead of 9.
+		// console.log(flights, flights[0]);
 		flights = $.map(flights, function(line){
 
 			var flight = {
@@ -129,10 +127,10 @@
 			return flight;
 
 		});
-		console.log(flights);
 
 		// Derive implicit attributes such as year, start_date and end_date for each flight:
-		// Beware: Javascript months are zero-based so January is zero.
+		// Beware: Javascript months are zero-based (ie January is zero).
+		// console.log(flights);
 		flights = $.map(flights, function(flight){
 
 			// Derive the month number: (1-12)
@@ -165,13 +163,13 @@
 			return flight;
 
 		});
-		console.log(flights);
 
+		// console.log(flights);
 		return flights;
 
 		// Helper to return number padded with a leading zero if it only had one digit:
 		function twoDigit(num){
-			//return String(num).replace(/^([0-9])$/, '0$1');
+			num = (''+num).slice(0,2);
 			return ('00'+num).slice(-2);
 		}
 
@@ -186,18 +184,33 @@
 	// Helper to add several new rows to the flights grid:
 	function addFlightsToGrid(flights){
 
+		var index = 0;
 		var $table       = $('#trip-elements-grid TBODY');
 		var templateHtml = $('#trip-elements-grid-row-template').html();
 
-		$.each( flights, function(index,flight){
+		// This original loop has been superseded by recursive function below:
+		// $.each( flights, function(index,flight){
+		//   //console.log('Adding flight row for:', flight);
+		//   var $row = newFlightRow(flight, 'new'+index, templateHtml);
+		//   $row.appendTo($table);
+		// });
 
-			console.log('Adding flight row for:', flight);
-			var $row = newFlightRow(flight, 'new'+index, templateHtml);
+		// Recursive function to add a row for each flight:
+		// By using setTimeout, this technique allows the UI to render each new row while processing:
+		(function(){
 
-			$row.appendTo($table);
-			initDatepickers($row);
+			var flight = flights[index++];
 
-		});
+			if(flight){
+				var $row = newFlightRow(flight, 'new'+index, templateHtml);
+				$row.appendTo($table);
+				window.setTimeout( arguments.callee, 0 );
+			}else{
+				// All flights added so lets activate the datepickers:
+				initDatepickers($table);
+			}
+
+		})();
 
 	}
 
@@ -206,22 +219,27 @@
 	function newFlightRow(flight, index, templateHtml){
 
 		// Give the row fields a unique nested_attributes index and ensure the row has no [id] field:
-		var $row = $( templateHtml.replace( '[new]', '['+index+']', 'g' ) );
-		$row.find("INPUT[name *= '[id]' ]").remove();
+		var $row     = $( templateHtml.replace( '[new]', '['+index+']', 'g' ) );
+		var $INPUTs  = $row.find("INPUT");
+		var $SELECTs = $row.find("SELECT");
+		//$row.find("INPUT[name *= '[id]' ]").remove();
+		$INPUTs.filter("[name *= '[id]' ]").remove();
 
-		$row.find("INPUT[name *= '[flight_code]']").val(flight.flight_code);
-		$row.find("INPUT[name *= '[start_date]']" ).val(flight.ui_start_date);
-		$row.find("INPUT[name *= '[start_time]']" ).val(flight.ui_start_time);
-		$row.find("INPUT[name *= '[end_date]']"   ).val(flight.ui_end_date);
-		$row.find("INPUT[name *= '[end_time]']"   ).val(flight.ui_end_time);
+		$INPUTs.filter("[name *= '[flight_code]']").val(flight.flight_code);
+		$INPUTs.filter("[name *= '[start_date]']" ).val(flight.ui_start_date);
+		$INPUTs.filter("[name *= '[start_time]']" ).val(flight.ui_start_time);
+		$INPUTs.filter("[name *= '[end_date]']"   ).val(flight.ui_end_date);
+		$INPUTs.filter("[name *= '[end_time]']"   ).val(flight.ui_end_time);
 
 		// Attempt to select AIRPORTS using airport code: (Eg: "LHR" -> "London Heathrow")
-		// (Hopefully we avoid false-positives because the code is in upper case and the name is mixed case)
-		$row.find("SELECT[name *= '[depart_airport_id]'] OPTION:contains('" + flight.depart_airport_code + "')" ).attr({selected:'selected'});
-		$row.find("SELECT[name *= '[arrive_airport_id]'] OPTION:contains('" + flight.arrive_airport_code + "')" ).attr({selected:'selected'});
+		// (Hopefully we avoid false-positives because the code is in uppercase + space and the name is mixed case)
+		//$row.find("SELECT[name *= '[depart_airport_id]'] OPTION:contains('" + flight.depart_airport_code + " ')" ).attr({selected:'selected'});
+		//$row.find("SELECT[name *= '[arrive_airport_id]'] OPTION:contains('" + flight.arrive_airport_code + " ')" ).attr({selected:'selected'});
+		$SELECTs.filter("[name *= '[depart_airport_id]']").find("OPTION:contains('" + flight.depart_airport_code + " ')").attr({selected:'selected'});
+		$SELECTs.filter("[name *= '[arrive_airport_id]']").find("OPTION:contains('" + flight.arrive_airport_code + " ')").attr({selected:'selected'});
 
 		// Attempt to select AIRLINE (supplier) using airline_code derived from flight_code: (Eg: "BA123" -> "BA" -> "British Airways")
-		selectRowAirline( $row, flight.airline_code );
+		selectRowAirline( $row, flight.airline_code, $INPUTs, $SELECTs );
 
 		return $row;
 	}
@@ -231,16 +249,22 @@
 	// By default this will not overwrite an existing airline selection.
 	// If no airline_code provided then attempt to derive it from flight_code field (Eg: "BA123" -> "BA" -> "British Airways")
 	// (Hopefully we avoid false-positives because the code is in upper case and the name is mixed case)
-	function selectRowAirline( $row, airline_code, overwrite ){
+	function selectRowAirline( $row, airline_code, overwrite, $INPUTs, $SELECTs ){
 
-		var alreadySelected = parseInt( $row.find("SELECT[name *= '[supplier_id]']").val() );
+		$INPUTs  = $INPUTs  || $row.find("INPUT");
+		$SELECTs = $SELECTs || $row.find("SELECT");
+
+		//var alreadySelected = parseInt( $row.find("SELECT[name *= '[supplier_id]']").val() );
+		var $SUPPLIERLIST   = $SELECTs.filter("[name *= '[supplier_id]']");
+		var alreadySelected = parseInt( $SUPPLIERLIST.val() || 0 );
 
 		if( overwrite || !alreadySelected ){
 
 			// If airline_code was not specified, attempt to derive it from the flight_code field:
 			if( !airline_code ){
-				var flight_code = $row.find("INPUT[name *= '[flight_code]']").val();
-				   airline_code = $.trim(flight_code).substr(0,2);
+				//var flight_code = $row.find("INPUT[name *= '[flight_code]']").val();
+				var flight_code = $INPUTs.filter("[name *= '[flight_code]']").val();
+				   airline_code = $.trim(flight_code).slice(0,2);
 			}
 
 			// Set the airline (supplier) by finding one that matches airline_code:
@@ -248,7 +272,8 @@
 
 				var isCodeIn = new RegExp( '\\s' + airline_code + '\\s' );
 
-				$row.find("SELECT[name *= '[supplier_id]'] OPTION").filter(function(){
+				//$row.find("SELECT[name *= '[supplier_id]'] OPTION").filter(function(){
+				$SUPPLIERLIST.find("OPTION").filter(function(){
 
 					var airlineNameAndCode = $(this).text(); 
 					return isCodeIn.test( airlineNameAndCode );
@@ -265,7 +290,7 @@
 	// For dev/test only. Run parser when grid page loads:
 	$(function($){
 
-		parsePastedAmadeusText( $('#amadeus-paste').val() )
+		//parsePastedAmadeusText( $('#amadeus-paste').val() )
 
 	});
 
