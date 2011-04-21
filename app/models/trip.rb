@@ -389,6 +389,10 @@ class Trip
 
     end
     
+    #def secondaries
+    #  return self.clients.all( TripClient.is_primary => false )
+    #end
+
     def flights;	return self.trip_elements.all( :type_id => TripElement::FLIGHT,  :order => [:start_date, :id] ); end
     def handlers; return self.trip_elements.all( :type_id => TripElement::HANDLER, :order => [:start_date, :id] ); end	# AKA Flight agents
     def accomms;	return self.trip_elements.all( :type_id => TripElement::ACCOMM,  :order => [:start_date, :id] ); end
@@ -1500,7 +1504,9 @@ class Trip
         attributes = master.attributes.except(:id).merge( :name => "Copy of #{ master.name }" )
 
         # Important: A copy of a TOUR_TEMPLATE must be a FIXED_DEP:
-        attributes.merge!( :type_id => TripType::FIXED_DEP, :name => "Group: #{ master.name }" ) if master.tour_template?
+        if master.tour_template?
+          attributes.merge! :type_id => TripType::FIXED_DEP, :name => "Group: #{ master.name }"
+        end
 
         clone.attributes = attributes
         
@@ -1590,6 +1596,31 @@ class Trip
 
           clone_elem = clone.trip_elements.new.copy_attributes_from( master_elem, options )
 
+        end
+
+      end
+
+    end
+
+
+    # Helper to make current client the only primary on this trip:
+    def set_primary_client!( client_id, allow_fellow_primaries = false )
+
+      if ( trip_client = self.trip_clients.first( :client_id => client_id ) )
+
+        # Make client primary if not already:
+        if !trip_client.is_primary
+          trip_client.is_primary = true
+          trip_client.save!
+        end
+
+        # Only make other clients non-primary if current client is now primary:
+        if trip_client.is_primary && !allow_fellow_primaries
+
+          self.trip_clients.all( :client_id.not => client_id, :is_primary => true ).each do |other|
+            other.is_primary = false
+            other.save!
+          end
         end
 
       end
