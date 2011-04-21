@@ -36,19 +36,19 @@ TABLE#trip-elements-grid { background-color:#000; }
 #trip-elements-grid .formField .widthHalfField { margin-right:0; }
 
 /* Use 'clip' to hide AIRLINE dropdown-arrow until user hovers or focuses on it: */
-#trip-elements-grid .formField.airport { position:relative; top:0.8em; height:1.5em; width:3.8em; }
-#trip-elements-grid .formField SELECT.airport { position:absolute; clip:rect(auto,2.4em,auto,auto); width:100%; }
+#trip-elements-grid .formField.airport { position:relative; top:0.8em; height:1.5em; width:3.9em; }
+#trip-elements-grid .formField SELECT.airport { position:absolute; clip:rect(auto,2.3em,auto,auto); width:100%; }
 #trip-elements-grid .formField SELECT.airport:hover,
 #trip-elements-grid .formField SELECT.airport:focus { clip:rect(auto,auto,auto,auto); }
 
 /* Use 'clip' to hide SUPPLIER dropdown-arrow until user hovers or focuses on it: */
-#trip-elements-grid .formField.supplier { position:relative; top:0.8em; height:1.5em; width:8em; }
+#trip-elements-grid .formField.supplier { position:relative; top:0.8em; height:1.5em; width:8.2em; }
 #trip-elements-grid .formField SELECT.supplier { position:absolute; clip:rect(auto,6.6em,auto,auto); width:100%; }
 #trip-elements-grid .formField SELECT.supplier:hover,
 #trip-elements-grid .formField SELECT.supplier:focus { clip:rect(auto,auto,auto,auto); }
 
 /* Use 'clip' to hide HANDLER dropdown-arrow until user hovers or focuses on it: */
-#trip-elements-grid .formField.handler { position:relative; top:0.8em; height:1.5em; width:8em; }
+#trip-elements-grid .formField.handler { position:relative; top:0.8em; height:1.5em; width:8.2em; }
 #trip-elements-grid .formField SELECT.handler { position:absolute; clip:rect(auto,6.6em,auto,auto); width:100%; }
 #trip-elements-grid .formField SELECT.handler:hover,
 #trip-elements-grid .formField SELECT.handler:focus { clip:rect(auto,auto,auto,auto); }
