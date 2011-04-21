@@ -190,8 +190,8 @@ describe TripElement do
   it "should save and reload start/end_time without messing up timezones" do
 
     # This may only be a problem during BST!
-    @elem.start_date              =  "08:10"
-    @elem.end_date                =  "12:50"
+    @elem.start_time              =  "08:10"
+    @elem.end_time                =  "12:50"
     @elem.start_time.should       == "08:10"
     @elem.end_time.should         == "12:50"
 	  @elem.save.should be_true
@@ -200,6 +200,8 @@ describe TripElement do
     @elem.end_time.should         == "12:50"
 
     # This may only be a problem during BST!
+    @elem.start_time              =  "13:15"
+    @elem.end_time                =  "14:30"
     @elem.start_date              =  DateTime.civil( 2010, 5, 1,  13, 15, 0, 0 )
     @elem.end_date                =  DateTime.civil( 2010, 6, 10, 14, 30, 0, 0 )
     @elem.start_time.should       == "13:15"
@@ -216,6 +218,8 @@ describe TripElement do
   it "should save and reload start/end_date without messing up timezones" do
 
     # This may only be a problem during BST!
+    @elem.start_time              =  "13:15"
+    @elem.end_time                =  "14:30"
     @elem.start_date = DateTime.civil( 2010, 5, 1,  13, 15, 0, 0 )
     @elem.end_date   = DateTime.civil( 2010, 6, 10, 14, 30, 0, 0 )
     @elem.start_date.to_s.should      == "2010-05-01T13:15:00+00:00" # No +01:00 timezone offset.
@@ -227,6 +231,47 @@ describe TripElement do
     
   end
   
+  it "should save and reload late start/end_time without changing date to next day" do
+    
+    # This may only be a problem during BST!
+    @elem.start_time              =  "23:45"
+    @elem.end_time                =  "01:50"
+    @elem.start_time.should       == "23:45"
+    @elem.end_time.should         == "01:50"
+	  @elem.save.should be_true
+    @elem.reload
+    @elem.start_time.should       == "23:45"
+    @elem.end_time.should         == "01:50"
+    
+    # This may only be a problem during BST!
+    @elem.start_time              =  "23:45"
+    @elem.end_time                =  "06:45"
+    @elem.start_date              =  "01/05/2010"
+    @elem.end_date                =  "10/06/2010"
+    @elem.start_time.should       == "23:45"
+    @elem.end_time.should         == "06:45"
+    @elem.start_date.to_s.should  == "2010-05-01T23:45:00+00:00" # Expecting no +01:00 timezone offset.
+    @elem.end_date.to_s.should    == "2010-06-10T06:45:00+00:00" # Expecting no +01:00 timezone offset.
+	  @elem.save.should be_true
+    @elem.reload
+    @elem.start_time.should       == "23:45"
+    @elem.end_time.should         == "06:45"
+    
+    @elem.attributes = {
+      :start_date => "28/07/2011",
+      :start_time => "23:45",
+      :end_date   => "29/07/2011",
+      :end_time   => "06:45"
+    }
+
+    @elem.start_time.should       == "23:45"
+    @elem.end_time.should         == "06:45"
+    @elem.start_date.to_s.should  == "2011-07-28T23:45:00+00:00" # Expecting no +01:00 timezone offset.
+    @elem.end_date.to_s.should    == "2011-07-29T06:45:00+00:00" # Expecting no +01:00 timezone offset.
+    
+
+  end
+
   it "should derive arrive_next_day flag correctly" do
 
     @elem.start_date = Time.now.to_datetime
@@ -240,7 +285,6 @@ describe TripElement do
     @elem.arrive_next_day.should be_true
 
   end
-
 
 
 
@@ -1412,6 +1456,5 @@ describe TripElement do
     end
     
   end
-
 
 end
