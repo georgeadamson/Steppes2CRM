@@ -125,11 +125,15 @@ class Trips < Application
         
         @trip.copy_countries_from master
         @trip.copy_attributes_from master
+        @trip.user = session.user
           
   		  # Ensure current client is on this new trip:
-        @trip.trip_clients.new( :client_id => client.id ) if client.id && @trip.trip_clients.all( :client_id => client.id ).empty?
-        @trip.user = session.user
+        @trip.trip_clients.new( :client_id => client.id ) if client.id && !@trip.trip_clients.first( :client_id => client.id )
         
+        # Make the current client primary: (Eg: when creating a FIXED DEPARTURE from a tour template)
+        # Beware! This saves the trip so it's not suitable for use here on a new trip!
+        # @trip.set_primary_client!( client.id ) if client.id
+
         message[:notice]  = "Voila! A copy of #{ master.title } to do with as you please...\n(Don't forget to save it!)"
         
       end
@@ -266,13 +270,12 @@ class Trips < Application
 
         end
 
+        # Make the current client primary: (Eg: when creating a FIXED DEPARTURE from a tour template)
+        @trip.set_primary_client!( @client_or_tour.id ) if @client_or_tour.is_a?(Client) && @client_or_tour.id
+
       end
 
-      #if request.ajax?
-        display @trip, :show
-      #else
-      #  redirect resource( @client_or_tour, @trip, :edit ), :message => message
-      #end
+      display @trip, :show
       
     else
 
