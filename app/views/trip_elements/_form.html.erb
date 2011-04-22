@@ -217,20 +217,28 @@
 
 		<%# June 2010 - Deactivated datepicker plugin because it causes CPU meltdown! %>
 
-		<td><%= text_field :start_date, :label => startDateLabel,   :value => element.start_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell date start-date travel-date daterange daterangeStart dtstart', :title => "#{ startDateLabel } format dd/mm/yyyy", :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master %></td>
-		<td><%= text_field :start_time, :label => 'Departure time', :value => element.start_date.formatted(:uitime), :maxlength => 5 , :class => 'tableCell whenFlight time start-time dtstart', :title => 'Departure time format hh:mm', :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %></td>
+		<td><%= text_field :start_date,  :label => startDateLabel,   :value => element.start_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell date start-date travel-date daterange daterangeStart dtstart', :title => "#{ startDateLabel } format dd/mm/yyyy", :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master %></td>
+		<td>
+			<!-- Extra field for Flights only: -->
+			<%= text_field :start_time,  :label => 'Departure time', :value => element.start_date.formatted(:uitime), :maxlength => 5 , :class => 'tableCell whenFlight time start-time dtstart', :title => 'Departure time format hh:mm', :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %>
+		</td>
 
-		<!-- Extra field for Flights only: -->
-		<td><%= select :depart_airport_id,  :label => 'From airport', :class => 'tableCell whenFlight', :selected => element.depart_airport.id.to_s, :collection => depart_airports_list, :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %></td>
+		<td>
+			<!-- Extra field for Flights only: -->
+			<%= select :depart_airport_id, :label => 'From airport', :class => 'tableCell whenFlight', :selected => element.depart_airport.id.to_s, :collection => depart_airports_list, :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %>
+		</td>
 
 	</tr>
 
 	<tr class="tableRow"><!-- END DATE: -->
 
-		<%# June 2010 - Deactivated datepicker plugin because it causes CPU meltdown! %>
-
 		<td><%= text_field :end_date, :label => endDateLabel,   :value => element.end_date.formatted(:uidate), :maxlength => 10, :class => 'tableCell date end-date travel-date daterange daterangeEnd dtend', :title => "#{ endDateLabel } format dd/mm/yyyy", :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master %></td>
-		<td><%= text_field :end_time, :label => 'Arrival time', :value => element.end_date.formatted(:uitime), :maxlength => 5,  :class => 'tableCell whenFlight time end-time dtend', :title => 'Arrival time format hh:mm', :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %></td>
+		<td>
+			<!-- Extra field for Flights only: -->
+			<%= text_field :end_time, :label => 'Arrival time', :value => element.end_date.formatted(:uitime), :maxlength => 5,  :class => 'tableCell whenFlight time end-time dtend', :title => 'Arrival time format hh:mm', :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %>
+			<!-- Extra field for Accomm only: -->
+			<%= text_field :days,          :label => 'Nights', :class => 'tableCell whenAccomm widthHalfField spinbox spinboxMax300', :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.accomm? %>
+		</td>
 
 		<!-- Extra field for Flights only: -->
 		<td><%= select :arrive_airport_id, :label => 'To airport', :class => 'tableCell whenFlight', :selected => element.arrive_airport.id.to_s, :collection => arrive_airports_list, :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %></td>

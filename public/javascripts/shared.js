@@ -3776,19 +3776,30 @@ function initTripInvoiceFormTotals(){
 
 			// Cache the latest list of tour names to speed up search-as-you-type:
 			var $tourItems = $( "DT:has(A.tour-name)", options.panel );
+			var timer;
 
 			// Respond to typing in Quick Search textbox to search-as-you-type:
 			// (Room for some performance improvement here but it is satisfactory)
 			$( '#tour_quick_search', options.panel ).trigger('focus').bind('keyup', function(e){
 
-				var query = $(this).val().toLowerCase();
+				if( timer ){
+					console.log( window.clearTimeout(timer) )
+					timer = null;
+				}
+				var text = $(this).val().toLowerCase();
+				
+				timer = window.setTimeout( function(){ filterGroups(text) }, 100 );
+			});
+
+			function filterGroups(query){
 
 				// Unhide previously hidden items and hide those that match search text:
-				$tourItems.show().next("DD").show().end()
+				$tourItems.filter(":hidden").show().next("DD").show().end().end()
 					.filter(function(){ return $(this).text().toLowerCase().indexOf(query) == -1; })
+					.filter(":visible")
 					.hide().next("DD").hide();
 
-			});
+			}
 
 		},
 
