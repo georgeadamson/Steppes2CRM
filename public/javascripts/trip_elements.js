@@ -321,7 +321,7 @@ $(function($){
 			var start_string = $form.find("#trip_element_start_date").val();
 			var end_date     = $.datepicker.parseDate( uidateformat, start_string );
 
-			end_date.setDate( start_date.getDate() + days );
+			end_date.setDate( end_date.getDate() + days );
 			var end_string   = $.datepicker.formatDate( uidateformat, end_date )
 
 			$form.find("#trip_element_end_date").val(end_string);
