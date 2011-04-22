@@ -286,10 +286,49 @@ function selectRowAirline( $row, airline_code, overwrite, $INPUTs, $SELECTs ){
 }
 
 
-// For dev/test only. Run parser when grid page loads:
 $(function($){
 
+	// For dev/test only. Run parser when grid page loads:
 	//parsePastedAmadeusText( $('#amadeus-paste').val() )
+
+	var uidateformat = 'dd/mm/yy';
+
+	// Adjust Trip Element "Number of Nights/Days" field when user changes start/end dates:
+	$("#trip_element_start_date, #trip_element_end_date").live('change', function(){
+
+		try{
+
+			var $form        = $(this).closest("FORM");
+			var start_string = $form.find("#trip_element_start_date").val();
+			var end_string   = $form.find("#trip_element_end_date").val();
+
+			var start_date = $.datepicker.parseDate( uidateformat, start_string || end_string );
+			var end_date   = $.datepicker.parseDate( uidateformat, end_string || start_string );
+
+			$("#trip_element_days").val( (end_date-start_date) / 86400000 );	// Milliseconds to days: Divide by 1000*60*60*24
+
+		}catch(e){}
+
+	});
+
+	// Adjust end_date ("Check out" date) when user changes "Number of Nights/Days" field:
+	$("#trip_element_days").live('change', function(){
+
+		try{
+
+			var $form        = $(this).closest("FORM");
+			var days         = parseInt( $(this).val() ) || 0;
+			var start_string = $form.find("#trip_element_start_date").val();
+			var end_date     = $.datepicker.parseDate( uidateformat, start_string );
+
+			end_date.setDate( start_date.getDate() + days );
+			var end_string   = $.datepicker.formatDate( uidateformat, end_date )
+
+			$form.find("#trip_element_end_date").val(end_string);
+
+		}catch(e){}
+
+	});
 
 });
 
