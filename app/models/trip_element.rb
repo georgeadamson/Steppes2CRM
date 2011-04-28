@@ -408,6 +408,7 @@ class TripElement
 
       #t = datetime.to_time.to_datetime if self.new? && t.hour == 0 && t.min == 0
       t = datetime if self.new? && t.hour == 0 && t.min == 0
+      t = t.to_datetime
 
       return self.attribute_set attr, DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
       
@@ -423,12 +424,16 @@ class TripElement
 		if dd_mm_yyyy.blank?
 			
 			valid_date = nil
-
-    elsif dd_mm_yyyy.is_a?(DateTime) || dd_mm_yyyy.is_a?(Date)
-
+      
+    elsif dd_mm_yyyy.is_a? DateTime
+      
       valid_date = dd_mm_yyyy
+      
+    elsif dd_mm_yyyy.is_a? Date
+      
+      valid_date = dd_mm_yyyy.to_datetime
 
-    elsif dd_mm_yyyy.is_a?(Time)
+    elsif dd_mm_yyyy.is_a? Time
 
       valid_date = dd_mm_yyyy.to_datetime
 

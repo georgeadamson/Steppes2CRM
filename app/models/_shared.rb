@@ -758,7 +758,18 @@ end
 
 	end
 	
-  
+
+class Date
+
+  # Provide Date.to_datetime helper to maintain my sanity! (Accepts optional time params too)
+  def to_datetime( hour = 0, minute = 0, second = 0 )
+    return DateTime.civil(self.year, self.month, self.day, hour, minute, second)
+  end
+
+end
+
+
+
   
 
 #  # DEPRICATED

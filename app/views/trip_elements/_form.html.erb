@@ -236,8 +236,11 @@
 		<td>
 			<!-- Extra field for Flights only: -->
 			<%= text_field :end_time, :label => 'Arrival time', :value => element.end_date.formatted(:uitime), :maxlength => 5,  :class => 'tableCell whenFlight time end-time dtend', :title => 'Arrival time format hh:mm', :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.flight? %>
+
 			<!-- Extra field for Accomm only: -->
-			<%= text_field :days,          :label => 'Nights', :class => 'tableCell whenAccomm widthHalfField spinbox spinboxMax300', :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master if element.accomm? %>
+			<% min_days = element.accomm? ? 0 : 1 %>
+			<%= text_field :days,     :label => "#{ element.accomm? ? 'Nights' : 'Days' }", :class => "tableCell whenAccomm whenGround widthHalfField spinbox spinboxMin#{min_days} spinboxMax300", :disabled => bound_to_pnr_or_master, :readonly => bound_to_pnr_or_master, :name => '' %>
+
 		</td>
 
 		<!-- Extra field for Flights only: -->

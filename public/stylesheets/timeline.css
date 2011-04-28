@@ -252,8 +252,9 @@
 
 		/* Little number indicating how many days or nights: */
 		.tripBuilder .timelineContent .timelineElements .timelineElement A SPAN {
-			-moz-border-radius:0em 1em 0em 1em;
-			-webkit-border-radius:0em 1em 0em 1em; /* Wierd radius shape cunningly hides the hover-underline! */
+			-moz-border-radius:1em;
+			-webkit-border-radius:1em;
+			border-radius:1em;
 			color:#000;
 			display:inline-block;
 			padding:0 0.5em 0;
