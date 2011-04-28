@@ -289,23 +289,41 @@ function selectRowAirline( $row, airline_code, overwrite, $INPUTs, $SELECTs ){
 $(function($){
 
 	// For dev/test only. Run parser when grid page loads:
-	//parsePastedAmadeusText( $('#amadeus-paste').val() )
+	// parsePastedAmadeusText( $('#amadeus-paste').val() )
 
 	var uidateformat = 'dd/mm/yy';
 
+
+	// TRIP ELEMENT DATE handlers...
+
 	// Adjust Trip Element "Number of Nights/Days" field when user changes start/end dates:
-	$("#trip_element_start_date, #trip_element_end_date").live('change', function(){
+	$('#trip_element_start_date, #trip_element_end_date').live('change', function(){
+
+		var $form          = $(this).closest('FORM');
+		var start_string   = $form.find('#trip_element_start_date').val();
+		var end_string     = $form.find('#trip_element_end_date').val();
+		var day_or_night = $form.find('#trip_element_type_id').val() == 4 ? 0 : 1;	// Only add offset when calculating days, not when calculating accommodation nights.
 
 		try{
-
-			var $form        = $(this).closest("FORM");
-			var start_string = $form.find("#trip_element_start_date").val();
-			var end_string   = $form.find("#trip_element_end_date").val();
 
 			var start_date = $.datepicker.parseDate( uidateformat, start_string || end_string );
 			var end_date   = $.datepicker.parseDate( uidateformat, end_string || start_string );
 
-			$("#trip_element_days").val( (end_date-start_date) / 86400000 );	// Milliseconds to days: Divide by 1000*60*60*24
+			// Helpfully adjust end_date whenever start_date changes:
+			if( $(this).is('#trip_element_start_date') ){
+
+				var days       = Number( $form.find('#trip_element_days').val() ) || 0;
+				end_date.setDate( start_date.getDate() + days + day_or_night );
+				var end_string = $.datepicker.formatDate( uidateformat, end_date )
+				$form.find('#trip_element_end_date').val(end_string);
+
+			// Otherwise update number of days whenever end_date changes:
+			}else{
+
+				var days = (end_date-start_date) / 86400000;	// Milliseconds to days: Divide by 1000*60*60*24
+				$form.find('#trip_element_days').val(days + day_or_night);
+
+			}
 
 		}catch(e){}
 
@@ -314,14 +332,15 @@ $(function($){
 	// Adjust end_date ("Check out" date) when user changes "Number of Nights/Days" field:
 	$("#trip_element_days").live('change', function(){
 
+		var $form        = $(this).closest("FORM");
+		var days         = Number( $(this).val() ) || 0;
+		var start_string = $form.find("#trip_element_start_date").val();
+		var day_or_night = $form.find('#trip_element_type_id').val() == 4 ? 0 : 1;	// Only add offset when calculating days, not when calculating accommodation nights.
+
 		try{
 
-			var $form        = $(this).closest("FORM");
-			var days         = parseInt( $(this).val() ) || 0;
-			var start_string = $form.find("#trip_element_start_date").val();
-			var end_date     = $.datepicker.parseDate( uidateformat, start_string );
-
-			end_date.setDate( end_date.getDate() + days );
+			var start_date   = $.datepicker.parseDate( uidateformat, start_string );
+			var end_date     = start_date; end_date.setDate( start_date.getDate() + days - day_or_night );
 			var end_string   = $.datepicker.formatDate( uidateformat, end_date )
 
 			$form.find("#trip_element_end_date").val(end_string);
