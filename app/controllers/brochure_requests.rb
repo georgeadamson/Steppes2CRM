@@ -78,8 +78,6 @@ class BrochureRequests < Application
 
     if params[:generate_doc_now]
 
-      @brochure_request.generate_doc()
-
       if @brochure_request.generate_doc() && @brochure_request.doc_file_exist?
 
         message[:notice] = "Brochure request letter has been created"
