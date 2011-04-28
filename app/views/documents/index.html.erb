@@ -20,30 +20,43 @@
 
 	trip_ids   = []
 	user_ids   = []
-	client_ids = []				
+	client_ids = []
+	
+	lookup = {}
 
 	# Prevent multiple queries by preloading related rows that we reference repeatedly as we generate the doc list:
 	# (Datamapper should prevent this for us but does not seem to!)
 	@documents.each{ |doc|
+	
 		trip_ids   << doc.trip_id   if doc.trip_id
 		user_ids   << doc.user_id   if doc.user_id
 		client_ids << doc.client_id if doc.client_id
+		
+		lookup[doc.id] = {
+			:trip_id => doc.trip_id
+		}
+		
 	}
 	trips   = Trip.all(   :id => trip_ids   ).reload
 	users   = User.all(   :id => user_ids   ).reload
 	clients = Client.all( :id => client_ids ).reload
 
+	#trips = {}
+	#Trip.all(   :id => trip_ids   ).each{ |t| trips[:id] = { :name => t.name, :start_date => t.start_date, :dateSummary => t.dateSummary } }
+
 	# Sort the documents ready for display...
-	@documents = @documents.
+	@documents = @documents.reload.
 	
 		# Sort by descending order of start_date:
 		# Notice how we cache the trips during this loop, to reduce sql calls later:
 		sort_by{ |doc|
-			doc.trip_id && (trip = trips.get(doc.trip_id)) && trip.start_date ? -trips.get(doc.trip_id).start_date.jd : 0
+			doc.trip_id && (trip = trips.get(doc.trip_id)) && trip.start_date ? -trip.start_date.jd : 0
 		}.
 
 		# Then bring non-trip docs to the top without upsetting the previous sort:
 		sort_by{ |doc| doc.trip_id ? 1 : 0 }
+
+	 
 
 
 
