@@ -1838,7 +1838,7 @@ return
 		multiple			: false,
 		multipleSeparator	: ",",
 		dataType			: "json",
-		scrollHeight		: 400,
+		scrollHeight		: 520,
 		width				: 576,
 		offsetLeft			: -300,
 		//highlight		   : function(val,q){ return tag("em",val); },
