@@ -33,22 +33,22 @@
 			<%= text_field									:label => 'Type',							:name => :supplier_type_name, :value => supplier.type.supplier_type_name, :readonly => :readonly %>
 			<%= text_field :code,						:label => 'Airline code',			:maxlength => @properties[:code].length, :class => 'widthHalfField uppercase' if supplier.type_id == 1 %>
 
-			<%= text_field :name,						:label => "#{ supplier.type.supplier_type_name } name",		:maxlength => @properties[:name].length, :class => 'width2Fields' %>
+			<%= text_field :name,						:label => "* Name",						:maxlength => @properties[:name].length, :class => 'width2Fields' %>
 			<%= text_field :location,				:label => 'Location',					:maxlength => @properties[:location].length, :class => 'width2Fields' if supplier.accomm? %>
-			<%#= text_field :image_file,			:label => 'Image',						:maxlength => @properties[:image_file].length, :class => 'width2Fields' if supplier.accomm? %>
+			<%#= text_field :image_file,		:label => 'Image',						:maxlength => @properties[:image_file].length, :class => 'width2Fields' if supplier.accomm? %>
 			<%= select :image_file,					:label => 'Image',						:selected => supplier.image_file,       :collection => image_filenames, :class => 'width2Fields', :prompt => '- Choose an image to use in Itineraries' if supplier.accomm? %>
-			<%= select :currency_id,				:label => 'Currency',					:selected => supplier.currency_id.to_s,	:collection => collection_for(supplier, :currency),	:class => 'width1Field' %>
+			<%= select :currency_id,				:label => '* Currency',				:selected => supplier.currency_id.to_s,	:collection => collection_for(supplier, :currency),	:class => 'width1Field' %>
 			<%= select :country_id,					:label => 'Country',					:selected => supplier.country_id.to_s,	:collection => collection_for(supplier, :country),	:class => 'width1Field' %>
 			<%= select :linked_supplier_id,	:label => 'Default handler',	:selected => supplier.linked_supplier_id.to_s,	:collection => collection_for(supplier, :linked_supplier, :conditions => {:type_id=>5}, :prevent_empty => false ), :prompt => '- none', :class => 'width1Field' if supplier.is_accomm? %>
 			<%= select :name => 'supplier[companies_ids][]', :label => "Companies <small>(#{ supplier.companies.length })</small>", :selected => supplier.companies_ids(:to_s),	:collection => Company.all( :is_active=>true, :order=>[:name] ), :multiple => true, :value_method => :id, :text_method => :name, :class => 'width1Field xheight4Fields' %>
-			<%#= select :name => "supplier[companies_attributes][][id]", :label => "Companies <small>(#{ supplier.companies.length })</small>", :selected => supplier.companies_ids(:to_s),	:collection => Company.all( :is_active=>true, :order=>[:name] ), :multiple => true, :value_method => :id, :text_method => :name, :class => 'width1Field xheight4Fields' %>
-			<%#= select :name => "supplier[companies_attributes][][id]", :label => "Companies <small>(#{ supplier.companies.length })</small>", :selected => supplier.companies_ids(:to_s),	:collection => linked_suppliers_list, :multiple => true, :class => 'width1Field xheight4Fields' %>
+
+			<%= text_field	:bankline_template,	:label => 'Bankline template',	:maxlength => @properties[:bankline_template].length, :class => 'width2Fields' %>
 
 			<%= text_area :description,			:label => 'Description <br/><small>May appear in client correspondence</small>',			:maxlength => @properties[:description].length, :class => 'width2Fields height5Fields' %>
 
 			<%= text_field	:default_room_type,	:label => 'Default room',	:maxlength => @properties[:default_room_type].length if supplier.is_accomm? %>
 			<%= select			:default_meal_plan,	:label => 'Default meal',	:selected => supplier.default_meal_plan,	:collection => %w[BB HB FB RO], :prompt => '- none',	:class => 'width1Field' if supplier.is_accomm? %>
-				
+
 			<br/>
 			<%= tag :p, '<span class="ui-icon ui-icon-info"></span> Supplying the Airline code allows us to import flight data automatically from Amadeus PNRs.' if supplier.is_airline? %>
 
