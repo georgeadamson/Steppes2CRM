@@ -27,34 +27,36 @@ class Supplier
   property :notes,              String,   :length => 255
   property :default_room_type,	String
   property :default_meal_plan,	String
-  property :image_file,         String,   :length => 100  # Migrate to images table
+  property :image_file,         String,   :length => 100                # Migrate to images table
   
-  property :bank_name,        	                  String
-  property :bank_account_holder_name,             String
-  property :bank_account_number,        	        String,   :length => 20
-  property :bank_sort_code,        	              String,   :length => 10
-  property :bank_swift_code,        	            String,   :length => 20
-  property :bank_charges_code,        	          String
-  property :bank_intermediary_name,               String
-  property :bank_intermediary_swift_code,         String,   :length => 20
-  property :bank_currency_id,        	            Integer
-  property :bank_address_id,        	            Integer
+  property :bankline_template,  String,   :length => 20,  :lazy => true # Alphanumeric code used by Steppes accounts system. Added May 2011 by GA
 
-  property :facilities_number_of_rooms,        	  String
-  property :facilities_mobile_reception,        	String
-  property :facilities_electricity,        	      String
-  property :facilities_internet,        	        String
-  property :facilities_activities,        	      String,   :length => 250
-  property :facilities_health_and_safety,        	String,   :length => 250
-  property :facilities_money_exchange,        	  String
-  property :facilities_credit_card,        	      String
-  property :facilities_room_description,        	String,   :length => 250
-  property :facilities_region_description,        String,   :length => 250
-  property :facilities_air_transfer_description,  String,   :length => 250
-  property :facilities_road_transfer_description, String,   :length => 250
-  property :facilities_misc,        	            String,   :length => 250
-  property :facilities_inspected_by,        	    String,   :length => 100
-  property :facilities_inspected_date,        	  Date
+  property :bank_name,        	                  String, :lazy => true
+  property :bank_account_holder_name,             String, :lazy => true
+  property :bank_account_number,        	        String, :lazy => true,   :length => 20
+  property :bank_sort_code,        	              String, :lazy => true,   :length => 10
+  property :bank_swift_code,        	            String, :lazy => true,   :length => 20
+  property :bank_charges_code,        	          String, :lazy => true
+  property :bank_intermediary_name,               String, :lazy => true
+  property :bank_intermediary_swift_code,         String, :lazy => true,   :length => 20
+  property :bank_currency_id,        	            Integer,:lazy => true
+  property :bank_address_id,        	            Integer,:lazy => true
+
+  property :facilities_number_of_rooms,        	  String, :lazy => true
+  property :facilities_mobile_reception,        	String, :lazy => true
+  property :facilities_electricity,        	      String, :lazy => true
+  property :facilities_internet,        	        String, :lazy => true
+  property :facilities_activities,        	      String, :lazy => true,   :length => 250
+  property :facilities_health_and_safety,        	String, :lazy => true,   :length => 250
+  property :facilities_money_exchange,        	  String, :lazy => true
+  property :facilities_credit_card,        	      String, :lazy => true
+  property :facilities_room_description,        	String, :lazy => true,   :length => 250
+  property :facilities_region_description,        String, :lazy => true,   :length => 250
+  property :facilities_air_transfer_description,  String, :lazy => true,   :length => 250
+  property :facilities_road_transfer_description, String, :lazy => true,   :length => 250
+  property :facilities_misc,        	            String, :lazy => true,   :length => 250
+  property :facilities_inspected_by,        	    String, :lazy => true,   :length => 100
+  property :facilities_inspected_date,        	  Date,   :lazy => true
   
   property :created_at,                           Date
   property :updated_at,                           Date
