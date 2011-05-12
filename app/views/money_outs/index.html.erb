@@ -51,12 +51,18 @@
 					# Skip suppliers that are not owed money and have no payment requests:
 					next if total_cost_of_supplier == 0 && supplier_payment_requests.length == 0
 					
+					supplier_type = supplier.type.supplier_type_name || supplier.type.name
+
 				%>
 
 				<!-- SUPPLIER name: -->
 				<tr class="supplier">
-					<% supplier_type = supplier.type.supplier_type_name || supplier.type.name %>
-					<td><strong><%= supplier.name %></strong> - <%= supplier_type %> - <%= supplier.country.name %></td>
+					<td>
+						<strong><%= supplier.name %></strong> 
+						<%= tag(:span, "(#{ supplier.bankline_template })", :title => 'Bankline template') unless supplier.bankline_template.blank? %> - 
+						<%= supplier_type %> - 
+						<%= supplier.country.name %>
+					</td>
 					<td></td>
 					<td><%= total_cost_of_supplier %></td>
 					<td><%#= request.amount_paid %></td>
