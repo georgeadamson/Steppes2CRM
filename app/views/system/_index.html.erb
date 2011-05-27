@@ -9,7 +9,9 @@
 
 	single_label	||= model.to_s.gsub('_',' ')
 	plural_label	||= controller.to_s.gsub('_',' ')
-
+	
+	index_filter		= params[:index_filter] || 'A'
+		
 	url_params		||= params[:url_params] || '{}'
 	url_params			= CGI::unescape(url_params) if url_params =~ /^%7B/	# Check for escaped "{"
 	url_params			= JSON.parse( url_params ) unless url_params.is_a? Hash
@@ -24,6 +26,17 @@
 	name_attr			||= @collection.model.new.respond_to?(:display_name) ? :display_name : :name
 	@collection			= @collection.all( :order => [ :order_by, :name ] ) if @collection.model.new.respond_to?(:order_by)
 
+	filters          = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#+*'.chars.to_a			# Array of characters to filter by.
+	filter_wildcards = { '#' => '0-9', '+' => 'Other', '*' => 'All' }	# How some characters should be displayed.
+	relevant_filters = []
+
+	@collection.map do |item|
+		#item_char = 
+		#relevant_filters << item.name.slice(1) if 
+	end
+	
+	@collection			= @collection.all( :name.like => "#{ index_filter }%" ) if index_filter
+
 -%>
 <div class="sectionContainer">
 
@@ -31,12 +44,17 @@
 
 	<div id="sysAdminAjaxPanel" class="sectionBody formSurround">
 
+		<% filters.each do |filter| -%><%=
+			label = filter_wildcards[filter] || filter
+			link_to label, resource( controller, :model => model, :index_filter => filter ), :class => 'filter-button'
+		%><% end -%>
+
 		<%= fields_for model do %>
 
 			<% if !@collection.is_a?(Array) %>
-				<%= select :id, :label => label_edit, :prompt => '- Choose one to modify', :rel => '.ajaxPanel', :href => resource_edit, :selected => '', :collection => @collection, :class => 'width2Fields' %>
+				<%= select :id, :label => label_edit, :prompt => '- Choose one to modify', :rel => '.ajaxPanel', :href => resource_edit, :selected => '', :collection => @collection, :class => 'width2Fields height6Fields', :multiple => true %>
 			<% else %>
-				<%= select :id, :label => label_edit, :prompt => '- Choose one to modify', :rel => '.ajaxPanel', :href => resource_edit, :selected => '', :collection => @collection, :class => 'width2Fields', :value_method => :id, :text_method => name_attr %>
+				<%= select :id, :label => label_edit, :prompt => '- Choose one to modify', :rel => '.ajaxPanel', :href => resource_edit, :selected => '', :collection => @collection, :class => 'width2Fields height6Fields', :multiple => true, :value_method => :id, :text_method => name_attr %>
 			<% end %>
 
 		<%end =%>

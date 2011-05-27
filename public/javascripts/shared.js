@@ -267,8 +267,9 @@ jQuery(function($) {
 
 			// SysAdmin:
 			Layout.livePath('success', new RegExp('/system$'),							SysAdmin.initShow );
-			Layout.match(/exchange_rates/).on('success').to(initSpinboxes);
-			Layout.match(/companies\/([0-9]+)\/edit/).on('success').to(initSpinboxes);
+			Layout.match(/exchange_rates/)												.on('success').to(initSpinboxes);
+			Layout.match(/companies\/([0-9]+)\/edit/)									.on('success').to(initSpinboxes);
+			Layout.match(/^\/?(.*)\/?\?.*index_filter=(.+)/)							.on('success').to(SysAdmin.refreshIndex);
 
 			// Tasks: (AKA Followups / Reminders)
 			Layout.livePath('click',	new RegExp('/tasks/([0-9]+)/edit'),				Task.openEdit );
@@ -3845,6 +3846,13 @@ function initTripInvoiceFormTotals(){
 
 			});
 
+		},
+		
+		refreshIndex : function(ui){
+		
+			console.log(ui)
+			alert(ui)
+		
 		}
 	
 	} // End of SysAdmin methods.

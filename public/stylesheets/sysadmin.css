@@ -39,3 +39,31 @@ TABLE.pnrs TBODY TD {
 TABLE.pnrs TBODY TD.left {
 	text-align:left;
 }
+
+
+
+
+
+A.filter-button 
+{
+    -ie-border-radius: 4px;
+    -opera-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    border: 1px solid #D3D3D3;
+    display: inline-block;
+    font-size: 1.4em;
+    font-weight: bold;
+    height: 24px;
+    min-width: 24px;
+    padding:0 0.25em 0 0.25em;
+    line-height: 1.45em;
+    margin-right: 2px;
+    text-align: center;
+    text-decoration: none;
+}
+A.filter-button:hover 
+{
+	text-decoration:underline;
+}
