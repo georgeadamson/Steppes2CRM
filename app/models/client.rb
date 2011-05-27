@@ -388,14 +388,14 @@ class Client
     end
   end
 	
-  # All clients who are on trips with this client:
-  def fellow_travellers
-		return Client.all( Client.trips.id => self.trips_ids, :id.not => self.id )
+  # All clients who are on trips with this client: (AKA Fellow travellers)
+  def companions( trip_type_ids = [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP ] )
+		return Client.all( Client.trips.id => self.trips_ids, Client.trips.type_id => trip_type_ids, :id.not => self.id )
   end
 
 
-  # All clients who share an address with this client:
-  def fellow_dwellers
+  # All clients who share an address with this client: (AKA Fellow dwellers)
+  def cohabiters
     #return Client.all( :address_client_id => address_client.id, :address_client_id.not => nil, :id.not => id )
     return Client.all( :conditions => ["id != ? AND ( address_client_id = ? OR address_client_id = ? )", self.id, self.id, self.address_client.id.to_i ] )
   end
