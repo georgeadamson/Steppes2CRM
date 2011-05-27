@@ -21,19 +21,21 @@
 
 			<br/>
 			<div>
-				<!-- Warning: Update fails if this field is blank! --><!--
-				<%#= select :address_client_id, :label=>"Same address as", :fieldClass=>"fieldFlowHoriz", :selected => (client.address_client || client).id.to_s, :collection => client.fellow_travellers, :prompt=>"Shown below", :value_method => :id, :text_method => :fullname %>
+				<!-- Warning: Update fails if this field is blank! -->
+				<!--
+				<%#= select :address_client_id, :label=>"Same address as", :fieldClass=>"fieldFlowHoriz", :selected => (client.address_client || client).id.to_s, :collection => client.companions, :prompt=>"Shown below", :value_method => :id, :text_method => :fullname %>
 				<%#= select :address_client_id, :label=>"Same address as", :fieldClass=>"fieldFlowHoriz", :selected => (client.address_client || client).id.to_s, :prompt=>"Shown below", :value_method => :id, :text_method => :fullname %>
-				<%#= link_to "test", resource(@client.fellow_travellers.first) %>
+				<%#= link_to "test", resource(@client.companions.first) %>
 				<small>
 				&nbsp; and also 
-				<% if !client.fellow_dwellers.empty? %>
-					<% client.fellow_dwellers.each do |c| %>
-					<%= link_to c.forename[0,1] + " " + c.name, resource(c, :label=>c.shortname), :rel=>c.contextId %>, 
-					<% end %>
-				<% end %>
-				<%= link_to "someone new", resource(:clients, :new, :addressClientId=>client.id), :class=>"new", :rel=>resource(:clients, :new, :addressClientId=>client.id), :title=>"Add a new client" %>
-				</small>-->
+				<%# if !client.cohabiters.empty? %>
+					<%# client.cohabiters.each do |c| %>
+					<%#= link_to c.forename[0,1] + " " + c.name, resource(c, :label=>c.shortname), :rel=>c.contextId %>, 
+					<%# end %>
+				<%# end %>
+				<%#= link_to "someone new", resource(:clients, :new, :addressClientId=>client.id), :class=>"new", :rel=>resource(:clients, :new, :addressClientId=>client.id), :title=>"Add a new client" %>
+				</small>
+				-->
 			</div>
 		</fieldset>
 

@@ -13,11 +13,11 @@ company ||= @company
 <%= text_field :invoice_prefix,	:label => 'Invoice prefix',		:maxlength => @properties[:invoice_prefix].length,	:class => 'widthHalfField' %>
 <%= text_field :logo_url,				:label => 'Logo image path',	:maxlength => @properties[:logo_url].length,				:class => 'width2Fields' %>
 <%= text_field :images_folder,	:label => 'Images folder',		:maxlength => @properties[:images_folder].length,		:class => 'width2Fields' %>
-<%= text_field :brochure_followup_days,	:label => 'Followup days', :maxlength => 2,																:class => 'widthHalfField numeric' %>
-<%= text_field :due_days,				:label => 'Due days',					:maxlength => 3,																		:class => 'widthHalfField numeric' %>
-<%= text_field :cc_sup,					:label => 'Credit card %',		:maxlength => 2,																		:class => 'widthHalfField numeric' %>
-<%= text_field :booking_fee,		:label => 'Booking fee',			:maxlength => 2,																		:class => 'widthHalfField numeric' %>
-<%= text_field :default_deposit,:label => 'Default deposit',	:maxlength => 3,																		:class => 'widthHalfField numeric' %>
+<%= text_field :brochure_followup_days,	:label => 'Followup days', :maxlength => 2,																:class => 'widthHalfField integer spinbox spinboxMin0 spinboxMax100' %>
+<%= text_field :due_days,				:label => 'Due days',					:maxlength => 3,																		:class => 'widthHalfField integer spinbox spinboxMin0 spinboxMax100' %>
+<%= text_field :cc_sup,					:label => 'Credit card %',		:maxlength => 3,																		:class => 'widthHalfField numeric spinbox spinboxMin1 spinboxMax10 spinboxStep0.1' %>
+<%= text_field :booking_fee,		:label => 'Booking fee',			:maxlength => 2,																		:class => 'widthHalfField integer spinbox spinboxMin1 spinboxMax500' %>
+<%= text_field :default_deposit,:label => 'Default deposit',	:maxlength => 3,																		:class => 'widthHalfField integer spinbox spinboxMin1 spinboxMax5000  spinboxStep5' %>
 <%= check_box :is_active,				:label => 'Company is operating', :class => 'width3Fields' %>
 
 <br/>

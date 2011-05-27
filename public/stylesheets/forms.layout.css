@@ -1190,3 +1190,11 @@ BLOCKQUOTE.amadeus_air
 
 	/* Bottom border: */
 	.checkbox-grid TBODY TR:last-child TD { border-bottom:1px solid #D9D9D9; }
+
+
+
+/* Specific to trip-search (in copy trip page) */
+
+	#trip-search-results .radio-list LI { white-space:nowrap; }
+	#trip-search-results .radio-list SPAN.ui-icon { margin:0 1em 0 1em; }
+	#trip-search-results + .sectionFoot { border-top:none; }
