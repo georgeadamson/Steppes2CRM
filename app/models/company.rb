@@ -3,18 +3,18 @@ class Company
   
   property :id, Serial
 
-  property :name,										String,		:required => true,	:unique => true,	:default => 'New company'
-  property :short_name,							String,		:required => true,	:length => 10,		:unique => true, :default => 'Company'
-  property :initials,								String,		:required => true,	:length => 3,			:unique => true, :default => 'S'
-  property :invoice_prefix,					String,		:required => true,	:length => 2,			:unique => true, :default => 0
-  property :logo_url,								String,		:required => true,	:length => 250,		:default => 'images/logo.jpg'
-  property :images_folder,					String,		:required => true,	:length => 50,		:default => 'SteppesEast/_Photos'
-  property :due_days,								Integer,	:required => true,	:default => 84
-  property :cc_sup,									Integer,	:required => true,	:default => 2
-  property :booking_fee,						Integer,	:required => true,	:default => 51
-  property :brochure_followup_days,	Integer,	:required => true,	:default => 7
-  property :default_deposit,				String,		:required => true,	:length => 4,			:default => 300
-  property :is_active,							Boolean,	:required => true,	:default => true
+  property :name,										String,		  :required => true,	:unique => true,	:default => 'New company'
+  property :short_name,							String,		  :required => true,	:length => 10,		:unique => true, :default => 'Company'
+  property :initials,								String,		  :required => true,	:length => 3,			:unique => true, :default => 'S'
+  property :invoice_prefix,					String,		  :required => true,	:length => 2,			:unique => true, :default => 0
+  property :logo_url,								String,		  :required => true,	:length => 250,		:default => 'images/logo.jpg'
+  property :images_folder,					String,		  :required => true,	:length => 50,		:default => 'SteppesEast/_Photos'
+  property :due_days,								Integer,	  :required => true,	:default => 84
+  property :cc_sup,									BigDecimal,	:required => true,	:default => 2,    :precision=>6, :scale=>2
+  property :booking_fee,						Integer,	  :required => true,	:default => 51
+  property :brochure_followup_days,	Integer,	  :required => true,	:default => 7
+  property :default_deposit,				String,		  :required => true,	:length => 4,			:default => 300
+  property :is_active,							Boolean,	  :required => true,	:default => true
 
   has n, :tours
   has n, :articles		# TBD
