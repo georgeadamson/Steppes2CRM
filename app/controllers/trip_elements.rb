@@ -193,8 +193,6 @@ class TripElements < Application
 
     end
 
-    puts trip_element.inspect
-
     @element.attributes = trip_element
 
     if @element.valid?(:complete) && @element.save! # <-- Note use of exclamation mark. See following comments!
@@ -239,7 +237,7 @@ class TripElements < Application
     
     # Fetch a reference to the trip itself:
     @trip = @element.trip || Trip.get(params[:trip_id]) || Trip.new
-puts "about to destroy element"
+
     if @element.destroy
 
       message[:notice] = "The element has been deleted from your trip"

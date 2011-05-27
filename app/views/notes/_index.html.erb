@@ -3,6 +3,7 @@
 	client ||= @client if @client
 	notes  ||= @notes					# Either provide a notes array or we derive it from client
 	notes  ||= client.notes if client	# client is required to generate link to notes/new
+	notes    = notes.all( :order => [:created_at.desc] )
 	
 	add_note_label = notes.empty? ? 'Be the first to add a note' : 'Add another note'
 	
@@ -26,8 +27,16 @@
 					<span class="ui-icon ui-icon-comment"></span>
 				</td>
 				<td>
-					<%= partial 'notes/show', :note => note %>
-					<br/><hr/><br/>
+					<%= note.name %>
+				</td>
+				<td class="nowrap">
+					<%
+						tooltip			= "Created: #{ note.created_at.formatted(:uidatetime) }"
+						tooltip			= "Last modified: #{ note.updated_at.formatted(:uidatetime) } #{ tooltip }" unless note.updated_at == note.created_at
+						ui_target	||= "##{ nested_resource(note.client,true) }notes"
+					%>
+					<small title="<%= tooltip %>" class="note_updated_at"><%= note.updated_at.formatted(:uidate) %></small>
+					<%= link_to 'Edit', nested_resource( note.client, note, :edit), :"data-target" => "#{ ui_target }", :class => '' %>
 				</td>
 			</tr>
 			<% end %>

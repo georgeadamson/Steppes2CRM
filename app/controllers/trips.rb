@@ -125,11 +125,15 @@ class Trips < Application
         
         @trip.copy_countries_from master
         @trip.copy_attributes_from master
+        @trip.user = session.user
           
   		  # Ensure current client is on this new trip:
-        @trip.trip_clients.new( :client_id => client.id ) if client.id && @trip.trip_clients.all( :client_id => client.id ).empty?
-        @trip.user = session.user
+        @trip.trip_clients.new( :client_id => client.id ) if client.id && !@trip.trip_clients.first( :client_id => client.id )
         
+        # Make the current client primary: (Eg: when creating a FIXED DEPARTURE from a tour template)
+        # Beware! This saves the trip so it's not suitable for use here on a new trip!
+        # @trip.set_primary_client!( client.id ) if client.id
+
         message[:notice]  = "Voila! A copy of #{ master.title } to do with as you please...\n(Don't forget to save it!)"
         
       end
@@ -229,6 +233,17 @@ class Trips < Application
     
 		@trip.updated_by					||= session.user.fullname
     @trip.clients							<<	@client_or_tour unless @trip.tour
+
+    if @client_or_tour.is_a? Client
+      
+      # This applies to new private trips only:
+      # Hack: Don't know why trip[:clients_attributes][x][:source_id] is not being saved so we set it explicitly:
+      new_source_id = trip[:clients_attributes] \
+        && trip[:clients_attributes][@client_or_tour.id.to_s] \
+        && trip[:clients_attributes][@client_or_tour.id.to_s][:source_id]
+      @client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
+
+    end
 		
 		# Alas this does not seem to affect the row in the trip_clients table:
 		@trip.trip_clients.each{ |relationship| relationship.created_by = @trip.created_by }
@@ -255,18 +270,17 @@ class Trips < Application
 
         end
 
+        # Make the current client primary: (Eg: when creating a FIXED DEPARTURE from a tour template)
+        @trip.set_primary_client!( @client_or_tour.id ) if @client_or_tour.is_a?(Client) && @client_or_tour.id
+
       end
 
-      #if request.ajax?
-        display @trip, :show
-      #else
-      #  redirect resource( @client_or_tour, @trip, :edit ), :message => message
-      #end
+      display @trip, :show
       
     else
 
-      collect_error_messages_for @trip, :clients
-      collect_error_messages_for @trip, :trip_clients
+      collect_error_messages_for @trip, :clients      unless @trip.new?
+      collect_error_messages_for @trip, :trip_clients unless @trip.new?
       collect_error_messages_for @trip, :countries
 
 #      @trip.model.relationships.each do | name, association |

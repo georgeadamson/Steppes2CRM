@@ -1,10 +1,12 @@
 source 'http://rubygems.org'
 
 # Top tip: use "jruby -S bundle check" to verify dependencies.
+# Top tip: Install missing gems with "jruby -S bundle install"
 
 # dependencies are generated using a strict version, don't forget to edit the gem versions when upgrading.
 merb_gems_version = "1.0.15"  # "1.0.15" "1.1.0"
 dm_gems_version   = "0.10.2"  # "0.10.2" "0.10.3"
+#dm_gems_version   = "1.0.2"  # "0.10.2" "0.10.3"
 do_gems_version   = "0.10.1"  # "0.10.1" "0.10.2"
 
 gem "merb-core", merb_gems_version 

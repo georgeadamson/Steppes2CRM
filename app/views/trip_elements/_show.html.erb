@@ -47,6 +47,9 @@ end
 if element.is_flight? && ( !element.flight_code.blank? || ( element.supplier && !element.supplier.code.blank? ) )
 	element_label = "#{ element.flight_code.blank? ? element.supplier.code : element.flight_code }"
 	element_label << " (#{ element.depart_airport.code_or_name } - #{  element.arrive_airport.code_or_name })" if element.depart_airport && element.arrive_airport
+elsif element.is_accomm?
+	days_tooltip  = "#{element.days} night#{ 's' unless element.days == 1 }"
+	element_label = "#{ element.display_name } #{ tag :span, element.days, :title => days_tooltip }"
 else
 	element_label = element.display_name
 end

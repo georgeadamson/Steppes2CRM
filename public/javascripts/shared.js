@@ -200,7 +200,8 @@ jQuery(function($) {
 			Layout.liveForm('success', 'clients:update',								Client.initForm, BoundFields.update );
 			Layout.liveForm('success', 'clients:destroy',								Client.initForm, BoundFields.update );
 
-			// Tours:
+			// Tours: (aka Groups)
+			Layout.livePath('success', /tours$/,										Tour.openIndex );	//open tours index
 			Layout.livePath('click',   /tours\/([0-9]+)$/,								Tour.openShow );	//openTourTab
 			Layout.livePath('success', /tours\/([0-9]+)$/,								Tour.initShow );
 			Layout.livePath('success', /tours\/([0-9]+)\/trips\/([0-9]+)$/,				Trip.initShow );
@@ -266,6 +267,7 @@ jQuery(function($) {
 
 			// SysAdmin:
 			Layout.livePath('success', new RegExp('/system$'),							SysAdmin.initShow );
+			Layout.match(/exchange_rates/).on('success').to(initSpinboxes);
 
 			// Tasks: (AKA Followups / Reminders)
 			Layout.livePath('click',	new RegExp('/tasks/([0-9]+)/edit'),				Task.openEdit );
@@ -1839,7 +1841,7 @@ return
 		multiple			: false,
 		multipleSeparator	: ",",
 		dataType			: "json",
-		scrollHeight		: 400,
+		scrollHeight		: 520,
 		width				: 576,
 		offsetLeft			: -300,
 		//highlight		   : function(val,q){ return tag("em",val); },
@@ -2563,9 +2565,11 @@ window.initDatepickers = initDatepickers;
 
 
 // Initialise Spinbox fields: (Assumes jquery.spinbox.css is loaded and spinbox-sprite image is available to mimic buttons)
-function initSpinboxes() {
+function initSpinboxes(ui) {
 
-	$("INPUT:text.spinbox:not(.spinbox-active)")
+	var panel = $( ui && ui.panel || !$.isPlainObject(ui) && ui || document )
+
+	$("INPUT:text.spinbox:not(.spinbox-active)", panel)
 			.filter(".exchange_rate").spinbox({
 				max: 1000,
 				step: 0.01,
@@ -3769,7 +3773,37 @@ function initTripInvoiceFormTotals(){
 
 		// Open the Tours list tab: (Groups)
 		openIndex : function(options){
+
+			// Trigger the tab-select method:
 			$('#pageTabs').tabs('select', '/tours');
+
+			// Cache the latest list of tour names to speed up search-as-you-type:
+			var $tourItems = $( "DT:has(A.tour-name)", options.panel );
+			var timer;
+
+			// Respond to typing in Quick Search textbox to search-as-you-type:
+			// (Room for some performance improvement here but it is satisfactory)
+			$( '#tour_quick_search', options.panel ).trigger('focus').bind('keyup', function(e){
+
+				if( timer ){
+					console.log( window.clearTimeout(timer) )
+					timer = null;
+				}
+				var text = $(this).val().toLowerCase();
+				
+				timer = window.setTimeout( function(){ filterGroups(text) }, 100 );
+			});
+
+			function filterGroups(query){
+
+				// Unhide previously hidden items and hide those that match search text:
+				$tourItems.filter(":hidden").show().next("DD").show().end().end()
+					.filter(function(){ return $(this).text().toLowerCase().indexOf(query) == -1; })
+					.filter(":visible")
+					.hide().next("DD").hide();
+
+			}
+
 		},
 
 		// Close the New Tour tab:
@@ -3777,7 +3811,7 @@ function initTripInvoiceFormTotals(){
 			$('#pageTabs').tabs('remove', '/tours/new');
 		}
 
-	} // End of Tour utilities.
+	} // End of Tour methods.
 
 
 

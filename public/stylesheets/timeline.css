@@ -231,6 +231,8 @@
 			opacity:1;
 		}
 
+
+
 		/* Special icon to indicate element that is linked to a master element: (Typically on a Fixed Dep trip) */
 		.tripBuilder .timelineContent .timelineElements .timelineElement .ui-icon.slave {
 			position:absolute;
@@ -245,6 +247,22 @@
 			right:0px;
 			top:0px;
 		}
+
+
+
+		/* Little number indicating how many days or nights: */
+		.tripBuilder .timelineContent .timelineElements .timelineElement A SPAN {
+			-moz-border-radius:1em;
+			-webkit-border-radius:1em;
+			border-radius:1em;
+			color:#000;
+			display:inline-block;
+			padding:0 0.5em 0;
+		}
+
+			.tripBuilder .timelineContent .timelineElements .timelineElement.isAccomm A SPAN {
+				background-color:#D17519;
+			}
 
 
 	.timelineElement.isFlight,

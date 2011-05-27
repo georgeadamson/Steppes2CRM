@@ -32,10 +32,10 @@
 	@show_all_required_field_message = true
 	
 -%>
-<%= text_field	:name,			:label => 'Currency name',	:maxlength => @properties[:name].length %>
-<%= text_field	:rate,			:label => 'Current rate',	:readonly	=> true %>
-<%= text_field	:new_rate,	:label => 'New rate', :class => 'spinbox spinboxStep0.01 spinboxMin0.1 spinboxMax1000' %>
-<%= select			:new_rate_on_date, :label => 'Apply new rate', :selected => selected.to_s, :collection => date_list %>
+<%= text_field	:name,							:label => 'Currency name',	:maxlength => @properties[:name].length %>
+<%= text_field	:rate,							:label => 'Current rate',	  :readonly	=> true %>
+<%= text_field	:new_rate,					:label => 'New rate',       :maxlength => 10, :class => 'spinbox spinboxStep0.01 spinboxMin0.1 spinboxMax99999999.9 decimal' %>
+<%= select			:new_rate_on_date,	:label => 'Apply new rate', :selected => selected.to_s, :collection => date_list %>
 
 <%= hidden_field :created_by, :value => session.user.fullname if exchange_rate.created_by.blank? %>
 <%= hidden_field :updated_by, :value => session.user.fullname %>

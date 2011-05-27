@@ -105,15 +105,11 @@ class Trip
     property :created_by, String, :default => ''
     property :updated_at, Date
     property :updated_by, String, :default => ''
-    
-    # Alas validations on date fields never seem to work!
-    #	validates_with_block :end_date do
-    #		return [ false, 'pants' ] if self.end_date < self.start_date
-    #		true
-    #	end
 
-    accepts_nested_attributes_for :countries  # See http://github.com/snusnu/dm-accepts_nested_attributes
-    accepts_nested_attributes_for :trip_countries
+    # See http://github.com/snusnu/dm-accepts_nested_attributes
+    accepts_nested_attributes_for :clients        # Only used for confirming client source on new trips.
+    accepts_nested_attributes_for :countries      # trip destinations
+    accepts_nested_attributes_for :trip_countries # trip destinations
     accepts_nested_attributes_for :trip_clients,  :allow_destroy => true
     accepts_nested_attributes_for :trip_elements, :allow_destroy => true
     
@@ -145,11 +141,21 @@ class Trip
     #  def start_date; get_datetime_property_of( self, :start_date ); end
     #  def end_date;   get_datetime_property_of( self, :end_date   ); end
     
+    # Alas validations on date fields never seem to work!
+    #	validates_with_block :end_date do
+    #		return [ false, 'pants' ] if self.end_date < self.start_date
+    #		true
+    #	end
     
     # TODO!
     #validates_absence_of  :tour_id, :if => Proc.new{ |trip| trip.type_id != TOUR_TEMPLATE }
     #validates_presence_of :tour_id, :if => Proc.new{ |trip| trip.type_id == TOUR_TEMPLATE }
-    
+
+
+    # Require user to confirm client source when creating a new private trip:
+    validates_with_method :check_client_source_on_new_trip, :if => lambda{|t| t.new? && ( t.tailor_made? || t.private_group? ) }
+
+
     
     # OVERRIDE standard save method to workaround a bug where save! has no effect inside the "after :save" hook
     # Call super to run save as normal then ensure the version_of_trip_ is set to to self:
@@ -383,6 +389,10 @@ class Trip
 
     end
     
+    #def secondaries
+    #  return self.clients.all( TripClient.is_primary => false )
+    #end
+
     def flights;	return self.trip_elements.all( :type_id => TripElement::FLIGHT,  :order => [:start_date, :id] ); end
     def handlers; return self.trip_elements.all( :type_id => TripElement::HANDLER, :order => [:start_date, :id] ); end	# AKA Flight agents
     def accomms;	return self.trip_elements.all( :type_id => TripElement::ACCOMM,  :order => [:start_date, :id] ); end
@@ -439,7 +449,7 @@ class Trip
         elements.each do |elem|
           elements.delete(elem) if elem.accomm? && elem.end_date.jd == date.jd && elem.start_date.jd < elem.end_date.jd
         end
-        # For some reason this equivalent delete_if syntax does not work:
+        # For some reason this equivalent delete_if syntax did not work:
         #	elements.delete_if{ |elem|
         #		return elem.type_id == TripElement::ACCOMM && elem.end_date.jd == date.jd && elem.start_date.jd < elem.end_date.jd
         #	}
@@ -472,7 +482,7 @@ class Trip
     
     # Handy shortcuts for common attributes:
     def tailor_made?;   return self.type_id   == TripType::TAILOR_MADE;   end
-    def private_group?; return self.type_id   == TripType::PRIVATE_GROUP; end # Depricated?
+    def private_group?; return self.type_id   == TripType::PRIVATE_GROUP; end
     def tour_template?; return self.type_id   == TripType::TOUR_TEMPLATE; end
     def fixed_dep?;     return self.type_id   == TripType::FIXED_DEP;     end
     def unconfirmed?;   return self.status_id == TripState::UNCONFIRMED;  end
@@ -1497,7 +1507,9 @@ class Trip
         attributes = master.attributes.except(:id).merge( :name => "Copy of #{ master.name }" )
 
         # Important: A copy of a TOUR_TEMPLATE must be a FIXED_DEP:
-        attributes.merge!( :type_id => TripType::FIXED_DEP, :name => "Group: #{ master.name }" ) if master.tour_template?
+        if master.tour_template?
+          attributes.merge! :type_id => TripType::FIXED_DEP, :name => "Group: #{ master.name }"
+        end
 
         clone.attributes = attributes
         
@@ -1593,6 +1605,31 @@ class Trip
 
     end
 
+
+    # Helper to make current client the only primary on this trip:
+    def set_primary_client!( client_id, allow_fellow_primaries = false )
+
+      if ( trip_client = self.trip_clients.first( :client_id => client_id ) )
+
+        # Make client primary if not already:
+        if !trip_client.is_primary
+          trip_client.is_primary = true
+          trip_client.save!
+        end
+
+        # Only make other clients non-primary if current client is now primary:
+        if trip_client.is_primary && !allow_fellow_primaries
+
+          self.trip_clients.all( :client_id.not => client_id, :is_primary => true ).each do |other|
+            other.is_primary = false
+            other.save!
+          end
+        end
+
+      end
+
+    end
+
     
     def initialize(*)
       super
@@ -1645,9 +1682,9 @@ class Trip
       @@cached_status_code[self.status_id] ||= self.status.code
     end
 
-    
-    # Class methods:
-    
+
+# Class methods:
+
     # Helper to provide a consistent 'friendly' name: (Used when users select content for reports etc)
     def self.class_display_name
       return 'Trip'
@@ -1663,7 +1700,35 @@ class Trip
       :primary_clients_names, :type_name, :total_invoiced, :invoice_first_date, :total_margin_percent ]
 
     end
-    
+
+
+private
+
+    # Validator to confirm client source when creating a new private trip:
+    def check_client_source_on_new_trip
+
+      # Fail validation if client nested attributes contain blank source:
+      if self.new? \
+      && ( self.tailor_made? || self.private_group? ) \
+      && self.respond_to?(:clients_attributes) \
+      && self.clients_attributes \
+      && ( blank_sources = self.clients_attributes.select{|k,v| v[:source_id].to_i.zero?} ) \
+      &&  !blank_sources.empty?
+
+          # Derive name of affected client, just to be helpful:
+          affected_client_ids   = blank_sources.map{|k,v| v[:id]}
+          affected_clients      = Client.all( :id => affected_client_ids )
+          affected_client_names = affected_clients.map{|c| c.fullname}.join(', ')
+          affected_client_names = "for #{ affected_client_names }" unless affected_clients.empty?
+
+          return [ false, "First you'll need to confirm the client source #{ affected_client_names }" ]
+
+      else
+        return true
+      end
+
+    end
+
 end
 
 

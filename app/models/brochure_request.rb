@@ -96,7 +96,7 @@ class BrochureRequest
         :created_by                 => current_user && current_user.preferred_name || 'Unknown user',
         :brochure_request           => self,
         :document_type_id           => DocumentType::BROCHURE,
-        #:document_template_file     => self.document_template_file,
+        :document_template_file     => self.document_template_file, #569: Use template that was chosen when brochure requested on client home page
 				:generate_doc_after_create	=> !self.skip_doc_generation,
 				:generate_doc_later	        => false  # This feature not yet available within models.
 			)

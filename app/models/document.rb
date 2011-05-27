@@ -293,7 +293,8 @@ class Document
 
   # Helper for deriving the network file location of the document:
   def doc_url
-    "file:///#{ URI.escape( self.doc_path.gsub('/','\\') ) }"
+    #"file:///#{ URI.escape( self.doc_path.gsub('/','\\') ) }"
+    "file:///#{ self.doc_path.gsub('/','\\') }"
   end
 
 

@@ -234,9 +234,10 @@ private
     documents = Document.all( :limit => 1000, :order => [ :trip_id, :created_at.desc ] )
     documents = documents.all( :trip_id => params[:trip_id] ) if params[:trip_id]
     
+    # Get all related documents too: (Those belonging to fellow travellers)
     # Maybe this could be done in one query but I'm not sure how:
     if params[:client_id] && @client = Client.get(params[:client_id])
-		
+		  
 		  trips_ids = @client.trips_ids || []
 
 		  documents         = documents.all( :client_id => @client.id )

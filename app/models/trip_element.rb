@@ -151,29 +151,29 @@ class TripElement
   
   # Require departure/arrival AIRPORTS on flight created automatically by a PNR:
   validates_present :depart_airport_id, :if => Proc.new {|elem| elem.bound_to_pnr? },
-  :message => "The Departure Airport code was not recognised. (Try examining the PNR and ensure the airport has an Airport Code defined in the System Admin pages)"
+    :message => "The Departure Airport code was not recognised. (Try examining the PNR and ensure the airport has an Airport Code defined in the System Admin pages)"
   validates_present :arrive_airport_id, :if => Proc.new {|elem| elem.bound_to_pnr? },
-  :message =>   "The Arrival Airport code was not recognised. (Try examining the PNR and ensure the airport has an Airport Code defined in the System Admin pages)"
+    :message =>   "The Arrival Airport code was not recognised. (Try examining the PNR and ensure the airport has an Airport Code defined in the System Admin pages)"
 	
   
   # Require HANDLER on flight NOT created automatically by a PNR:
   #validates_present :handler_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? },
   validates_present :handler_id,
-  :if      => Proc.new {|elem| elem.flight? && !elem.bound_to_pnr? },
-  :when    => [:complete],
-  :message => "The Flight agent cannot be left blank"
+    :if      => Proc.new {|elem| elem.flight? && !elem.bound_to_pnr? },
+    :when    => [:complete],
+    :message => "The Flight agent cannot be left blank"
   
   # Require SUPPLIER on element NOT created automatically by a PNR:
   validates_present :supplier_id,
-  :unless  => Proc.new {|elem| elem.bound_to_pnr? },
-  :when    => [:complete]
+    :unless  => Proc.new {|elem| elem.bound_to_pnr? },
+    :when    => [:complete]
   
   # Require SUPPLIER (airline) on flight created automatically by a PNR:
   validates_present :supplier_id,
-  :if      => Proc.new {|elem| elem.bound_to_pnr? },
-  :when    => [:complete],
-  :message => "The Airline code was not recognised. (Try examining the PNR and ensure the airline has an Airline Code defined in the System Admin pages)"
-  
+    :if      => Proc.new {|elem| elem.bound_to_pnr? },
+    :when    => [:complete],
+    :message => "The Airline code was not recognised. (Try examining the PNR and ensure the airline has an Airline Code defined in the System Admin pages)"
+    
   
   # WARNING: Use attribute_set to set both date and time! Because the standard .start/end_date methods have been overwritten to ignore time. #514
   # Ugly workaround for the way datamapper returns datetime properties!
@@ -388,7 +388,7 @@ class TripElement
       
       if ( hh_mm = clean_time(hh_mm) )
         
-	      d = self.attribute_get(attr).to_time
+	      d = self.attribute_get(attr).to_datetime  # Warning: Do not use to_time because it may add +1 timezone offset that can cause a late night flight to change to next day!
 	      t = DateTime.strptime(hh_mm, '%H:%M')
 	      return self.attribute_set attr, DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
         
@@ -401,12 +401,14 @@ class TripElement
   # Helper for merging a DATE onto a datetime object:
   def set_date( attr, dd_mm_yyyy )
 
-    if ( dd_mm_yyyy = clean_date(dd_mm_yyyy) )
+    if ( datetime = clean_date(dd_mm_yyyy) )
     
-      d = dd_mm_yyyy.to_date        # Use new day, month and year but
+      d = datetime.to_date          # Use new day, month and year but
       t = self.attribute_get(attr)  # retain existing hour and minute.
 
-      t = dd_mm_yyyy.to_time.to_datetime if self.new? && t.hour == 0 && t.min == 0
+      #t = datetime.to_time.to_datetime if self.new? && t.hour == 0 && t.min == 0
+      t = datetime if self.new? && t.hour == 0 && t.min == 0
+      t = t.to_datetime
 
       return self.attribute_set attr, DateTime.civil(d.year, d.month, d.day, t.hour, t.min)
       
@@ -422,12 +424,16 @@ class TripElement
 		if dd_mm_yyyy.blank?
 			
 			valid_date = nil
-
-    elsif dd_mm_yyyy.is_a?(DateTime) || dd_mm_yyyy.is_a?(Date)
-
+      
+    elsif dd_mm_yyyy.is_a? DateTime
+      
       valid_date = dd_mm_yyyy
+      
+    elsif dd_mm_yyyy.is_a? Date
+      
+      valid_date = dd_mm_yyyy.to_datetime
 
-    elsif dd_mm_yyyy.is_a?(Time)
+    elsif dd_mm_yyyy.is_a? Time
 
       valid_date = dd_mm_yyyy.to_datetime
 
@@ -440,7 +446,7 @@ class TripElement
 			
 			begin
 				# Try to parse date string into format ready for database: (dd/mm/yyyy => yyyy/mm/dd)
-				valid_date = Date.strptime( dd_mm_yyyy, '%d/%m/%Y' )
+				valid_date = DateTime.strptime( dd_mm_yyyy, '%d/%m/%Y' )
 			rescue
 				# Ignore invalid date. It'll be picked up by the validations. 
         valid_date = nil
@@ -480,6 +486,8 @@ class TripElement
   # Generate a followup for this flight *if* the trip is confirmed:
   def create_task(force = false)
     
+    return nil unless self.saved?
+
     # Check whether there's already a followup for this flight:
     task = self.tasks.first
     
@@ -548,8 +556,10 @@ class TripElement
     
     # Set flight times back the way they were: # TODO: Find a simpler way to set hour/minute.
     if self.flight?
-      self.start_date = DateTime.civil(self.start_date.year, self.start_date.month, self.start_date.day, orig_start_time.hour, orig_start_time.min)
-      self.end_date   = DateTime.civil(self.end_date.year,   self.end_date.month,   self.end_date.day,   orig_end_time.hour,   orig_end_time.min)
+      a = self.start_date
+      b = self.end_date
+      self.start_date = DateTime.civil( a.year, a.month, a.day, orig_start_time.hour, orig_start_time.min )
+      self.end_date   = DateTime.civil( b.year, b.month, b.day,   orig_end_time.hour,   orig_end_time.min )
     end
     
   end

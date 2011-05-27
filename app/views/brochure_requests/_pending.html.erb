@@ -71,10 +71,10 @@
 										</td>
 
 										<td>
-											<%#= icon :client %>
 											<%= link_to brochure.client.fullname, resource( brochure.client, :label => brochure.client.shortname ) %>
-											<%#= brochure.client.fullname %><br/>
-											<%#= link_to brochure.client.email1, "mailto:#{ brochure.client.email1 }?subject=Thank you for requesting a Steppes brochure&body=Dear #{ brochure.client.salutation }, #{ brochure.custom_text }", :title => "Click to send email to #{ brochure.client.fullname }" %>
+											<br/>
+											<%#= link_to brochure.client.email1, "mailto:#{ brochure.client.email1 }?subject=Thank you for requesting a Steppes brochure&body=Dear #{ brochure.client.salutation }, #{ brochure.custom_text }", :title => "Click to send email to #{ brochure.client.fullname }" 
+											%>
 										</td>
 
 										<td>
