@@ -268,6 +268,7 @@ jQuery(function($) {
 			// SysAdmin:
 			Layout.livePath('success', new RegExp('/system$'),							SysAdmin.initShow );
 			Layout.match(/exchange_rates/).on('success').to(initSpinboxes);
+			Layout.match(/companies\/([0-9]+)\/edit/).on('success').to(initSpinboxes);
 
 			// Tasks: (AKA Followups / Reminders)
 			Layout.livePath('click',	new RegExp('/tasks/([0-9]+)/edit'),				Task.openEdit );

@@ -470,5 +470,5 @@ BODY * {
 /* Temporarily hide this button because the functionality is broken! #559 */
 A[title *= 'Copy details from another trip'] 
 {
-	visibility:hidden;
+	/* visibility:hidden; */
 }
