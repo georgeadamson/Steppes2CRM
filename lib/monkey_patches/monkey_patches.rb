@@ -42,7 +42,10 @@ module Merb::Helpers::Form::Builder
     def unbound_select(attrs = {})
       update_unbound_controls(attrs, "select")
       # attrs[:name] << "[]" if attrs[:multiple] && !(attrs[:name] =~ /\[\]$/)
-        attrs[:name] << "[]" if attrs[:multiple] && !(attrs[:name] =~ /\[\]/)   # <-- Removed '$' from regex.
+      # attrs[:name] << "[]" if attrs[:multiple] && !(attrs[:name] =~ /\[\]/)   # <-- Removed '$' from regex.
+      if attrs[:multiple] && !(attrs[:name] =~ /\[\]/)   # <-- Removed '$' from regex.
+        attrs[:name] = attrs[:name].class == Symbol ? "#{ attrs[:name] }[]".to_sym : "#{ attrs[:name] }[]"
+      end
       tag(:select, options_for(attrs), attrs)
     end
 

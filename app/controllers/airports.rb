@@ -1,5 +1,6 @@
 class Airports < Application
   # provides :xml, :yaml, :js
+  provides :html, :json
 
 	# Assume ajax requests should respond without layout:
 	#before Proc.new{ self.class.layout( request.ajax? ? :ajax : :application) }
