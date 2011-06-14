@@ -3847,14 +3847,20 @@ function initTripInvoiceFormTotals(){
 			});
 
 		},
-		
+
 		refreshIndex : function(ui){
-		
-			console.log(ui)
-			alert(ui)
-		
+
+			// Set the focus on the filter-button that represents the currently applied index_filter param:
+			var index_filter_label = $(ui.target).find("[name=index_filter_label]").val();
+
+			$(".filter-button")
+				//.removeClass("ui-state-default")
+				.filter(":contains('" + index_filter_label + "')")
+					//.addClass("ui-state-default")
+					.focus();
+
 		}
-	
+
 	} // End of SysAdmin methods.
 
 

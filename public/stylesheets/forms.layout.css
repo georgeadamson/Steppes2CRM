@@ -376,6 +376,18 @@ FORM {
 	.formField TEXTAREA.height6Fields { height:10.5em; }
 	.formField SELECT[multiple].height6Fields { height:10.5em; }
 
+	.formField TEXTAREA.height7Fields { height:12.25em; }
+	.formField SELECT[multiple].height7Fields { height:12.25em; }
+
+	.formField TEXTAREA.height8Fields { height:14.0em; }
+	.formField SELECT[multiple].height8Fields { height:14.0em; }
+
+	.formField TEXTAREA.height9Fields { height:15.75em; }
+	.formField SELECT[multiple].height9ields { height:15.75em; }
+
+	.formField TEXTAREA.height10Fields { height:17.5em; }
+	.formField SELECT[multiple].height10Fields { height:17.5em; }
+
 
 
 
