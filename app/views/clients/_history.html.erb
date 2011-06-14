@@ -1,5 +1,6 @@
 <%
-	client ||= @client
+	client   ||= @client
+	companions = client.companions
 -%>
 
 <dl class="accordion clientHistory">
@@ -25,7 +26,8 @@
 		<dt>
 			Brochures <small id="<%= brochures_panel_uid %>count">(<%= client.brochure_requests.length %>)</small>
 		</dt>
-		<dd class="">
+		<dd
+		>
 			<div id="<%= brochures_panel_uid %>" class="ajaxPanel sectionContainer">
 				<%= partial 'brochure_requests/list', :brochure_requests => client.brochure_requests, :client_id => client.id %>
 			</div>
@@ -34,23 +36,26 @@
 		<dt>
 			Web requests <small>(<%= client.web_requests.length %>)</small>
 		</dt>
-		<dd class="">
+		<dd>
 				<%= partial 'web_requests/summary', :web_requests => client.web_requests %>
 		</dd>
 
-<!--		<dt>Fellow travellers <small>(<%= client.fellow_travellers.length %>)</small></dt>
-		<dd class="">
+		<dt>Travelled with <small>(<%= companions.length %>)</small></dt>
+		<dd>
 
+			<% if !companions.empty? %>
 			<ul>
-				<% client.fellow_travellers.each do |chum| %>
+				<% companions.each do |chum| %>
 					<li>
 						<span class="ui-icon ui-icon-client"></span>
-						<%= link_to "#{ chum.title } #{ chum.forename } #{ chum.name }", "#{ resource(chum) }?label=#{ chum.shortname }" %>
+						<%= link_to "#{ chum.fullname }", "#{ resource(chum) }?label=#{ chum.shortname }" %>
 					</li>
 				<% end %>
 			</ul>
+			<% else %>
+				<p>This client has not booked a private/tailor-made trip with anyone else.</p>
+			<% end %>
 
 		</dd>
--->
 
 </dl>
