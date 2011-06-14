@@ -47,7 +47,7 @@
 			<%= text_area :description,			:label => 'Description <br/><small>May appear in client correspondence</small>',			:maxlength => @properties[:description].length, :class => 'width2Fields height5Fields' %>
 
 			<%= text_field	:default_room_type,	:label => 'Default room',	:maxlength => @properties[:default_room_type].length if supplier.is_accomm? %>
-			<%= select			:default_meal_plan,	:label => 'Default meal',	:selected => supplier.default_meal_plan,	:collection => %w[BB HB FB RO], :prompt => '- none',	:class => 'width1Field' if supplier.is_accomm? %>
+			<%= select			:default_meal_plan,	:label => 'Default meal plan',	:selected => supplier.default_meal_plan,	:collection => TripElement::MEALPLANS, :prompt => '- none',	:class => 'width1Field' if supplier.is_accomm? %>
 
 			<br/>
 			<%= tag :p, '<span class="ui-icon ui-icon-info"></span> Supplying the Airline code allows us to import flight data automatically from Amadeus PNRs.' if supplier.is_airline? %>
