@@ -1682,6 +1682,29 @@ class Trip
 
 # Class methods:
 
+    # Find all the confirmed trips that ended yesterday: (Used by automated status change in app/controllers/application.rb)
+    def self.all_ready_to_complete( today = nil )
+
+      today ||= Date.today
+      active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :end_date.lt => today )
+      other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+
+      return active_versions + other_versions
+
+    end
+
+    # Find all the unconfirmed trips that [would have] started yesterday: (Used by automated status change in app/controllers/application.rb)
+    def self.all_ready_to_abandon( today = nil )
+
+      today ||= Date.today
+      active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::UNCONFIRMED, :start_date.lt => today )
+      other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+
+      return active_versions + other_versions
+
+    end
+
+
     # Helper to provide a consistent 'friendly' name: (Used when users select content for reports etc)
     def self.class_display_name
       return 'Trip'
@@ -1697,6 +1720,7 @@ class Trip
       :primary_clients_names, :type_name, :total_invoiced, :invoice_first_date, :total_margin_percent ]
 
     end
+
 
 
 private
