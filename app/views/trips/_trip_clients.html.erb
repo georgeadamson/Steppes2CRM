@@ -41,18 +41,15 @@
 
 
 	# Decide which tooltip to show on this row: (The order of these conditions is significant)
-	case when html_template
-		tooltip = "Client added but not saved yet!"
-			
-	when client && client_is_open_in_ui
-		tooltip = "You are working on a trip for #{ client.shortname } so you won't be able to remove them!"
-		
-	when client && trip_client.is_primary
-		tooltip = "You won't be able to remove #{ client.shortname } while they are a primary contact."
-		
-	else
-		tooltip = ''
-			
+	tooltip = case 
+		when html_template
+			then 'Client added but not saved yet!'
+		when client && client_is_open_in_ui
+			then "You are working on a trip for #{ client.shortname } so you won't be able to remove them!"
+		when client && trip_client.is_primary
+			then "You won't be able to remove #{ client.shortname } while they are a primary contact."
+		else
+			''
 	end
 
 	
@@ -114,12 +111,13 @@
 		<%= fields_for trip_client do %>
 
 			<td>
-				<div><%# <-- This div only exists to improve the animation when clients are added. %>
+				<div><%# << This div only exists to improve the animation when clients are added. 
+						 %>
 
 					<span class="ui-icon ui-icon-client"></span>
 
 					<%=
-						# No need to provide a link when client is currently open:
+						# No need to make client name a clickable link when it's the currently open client:
 						if client_is_open_in_ui
 							client_label
 						else
@@ -128,12 +126,12 @@
 					%>
 
 					<!-- client_id is only used when adding clients and to prevent duplication: -->
-					<%= hidden_field		:name => "trip[trip_clients_attributes][#{ index }][client_id]",	:value => client_id %>
+					<%= hidden_field :name => "trip[trip_clients_attributes][#{ index }][client_id]",	:value => client_id %>
 
 					<!-- trip_client.id field is only needed when updating a trip: -->
 					<%=
 						unless trip.new? || html_template
-							hidden_field		:name => "trip[trip_clients_attributes][#{ index }][id]",					:value => trip_client.id
+							hidden_field :name => "trip[trip_clients_attributes][#{ index }][id]",				:value => trip_client.id
 						end
 					%>
 
@@ -147,11 +145,10 @@
 						email = {
 							:subject	=> 'Client details',
 							:body			=> partial('clients/traveller_summary', :client => client)	# <-- Separate each item with a mailto-friendly line feed.
-							#:body			=> 'test'	# <-- Separate each item with a mailto-friendly line feed.
 						}
-			
+
 						link_to icon(:'mail-closed'), "mailto:&#{ email.to_params }"
-						
+
 					end
 				%>
 			</td>
@@ -160,10 +157,13 @@
 				
 				<%#= link_to icon(:add), resource( client, :trips, :new, :copy_trip_id => trip.id ) if client && trip.tour_template? %>
 			</td>-->
-			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_single]",						:checked => trip_client.is_single,			:boolean => true %></td>
-			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_primary]",						:checked => trip_client.is_primary,			:boolean => true %></td>
-			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_invoicable]",				:checked => trip_client.is_invoicable,	:boolean => true %></td>
-			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][confirmation_status]",	:checked => trip_client.is_confirmed,	  :disabled => true, :readonly => true unless html_template %></td><!-- Disabled because this field is for info only and never needs to be submitted -->
+			<% if trip.tour_template? %>
+				<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_flight_with_us]",		:checked => trip_client.is_flight_with_us,:boolean => true %></td>
+			<% end %>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_single]",						:checked => trip_client.is_single,				:boolean => true %></td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_primary]",						:checked => trip_client.is_primary,				:boolean => true %></td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][is_invoicable]",				:checked => trip_client.is_invoicable,		:boolean => true %></td>
+			<td><%= orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][confirmation_status]",	:checked => trip_client.is_confirmed,			:disabled => true, :readonly => true unless html_template %></td><!-- Disabled because this field is for info only and never needs to be submitted -->
 			<td><%= 
 					unless html_template	# Checkbox for Remove:
 						orig_check_box	:name => "trip[trip_clients_attributes][#{ index }][_delete]",								:checked => false, :disabled => client_not_removable, :readonly => client_not_removable
