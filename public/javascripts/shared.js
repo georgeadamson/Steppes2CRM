@@ -1286,6 +1286,9 @@ return
 
 
 
+
+
+
 // React to any "SHOW MORE..." option in pick lists:
 // Simply fetch new list items from the specified url into the list:
 // Eg: <option value="/suppliers/?list=option&type_id=4">+ Show more...</option>

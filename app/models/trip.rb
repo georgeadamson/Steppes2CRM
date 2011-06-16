@@ -626,6 +626,9 @@ class Trip
     alias client_summary traveller_summary
     alias travellerSummary traveller_summary	# Depricated
     
+    def summary
+      "#{ self.date_summary } - #{ self.status_name } - #{ self.traveller_summary }"
+    end
 
     # Return a readable summary of the trip_clients' statuses: (Eg: 1 Unconfirmed, 2 Waitlisted, 3 Confirmed)
     def client_status_summary
