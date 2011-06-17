@@ -8,7 +8,7 @@ class Suppliers < Application
 
     @supplier_type_id = session[:recent_supplier_type_id].to_i
     
-		@suppliers = Supplier.all( :order => [:name], :limit => 500 )
+		@suppliers = Supplier.all( :order => [:name], :limit => 10000 ) # TODO: Find a way to show less! (Eg: Of the ~9000 suppliers, approx ~900 begin with H)
 		@suppliers = @suppliers.all( :type_id => @supplier_type_id ) if @supplier_type_id > 0
 
     display @suppliers
