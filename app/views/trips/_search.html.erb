@@ -35,7 +35,8 @@
 				# Prepare trip summary text: (Equivalent to "trip.countries_names.join(', ')" but hopefully a little faster)
 				client_names  = trip.trip_clients.all(  :trip_id => trip.id).map{|c| lookup_client[c.client_id]   }.uniq.join(', ')
 				#country_names = trip.trip_countries.all(:trip_id => trip.id).map{|c| lookup_country[c.country_id] }.join(', ')
-				trip_summary  = "#{ client_names.blank? ? '(Unamed client)' : client_names } &quot;#{ trip.title }&quot; <small>- #{ trip.client_summary } - #{ trip.trip_countries.count } countries - #{ trip.duration } days - #{ trip.elements.count } elements</small>"
+				#trip_summary  = "#{ client_names.blank? ? '(Unamed client)' : client_names } &quot;#{ trip.title }&quot; <small>- #{ trip.client_summary } - #{ trip.trip_countries.count } countries - #{ trip.duration } days - #{ trip.elements.count } elements</small>"
+				trip_summary  = "#{ client_names.blank? ? '(Unamed client)' : client_names } &quot;#{ trip.title }&quot; <small>- #{ trip.client_summary } - #{ trip.trip_countries.count } countries - #{ trip.duration } days</small>"
 				ui_id					= "copy-trip#{ trip.id }"
 			%>
 
