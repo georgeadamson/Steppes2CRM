@@ -3570,8 +3570,12 @@ function initTripInvoiceFormTotals(){
 					options.url = options.url + '?limit=500'
 					Layout.load(options.url,options);
 				},
+				close		: function(e,ui){
+					// Prevent odd effects later by removing dialog from DOM:
+					$(this).remove();
+				},
 				buttons		: {
-					'Cancel'			: function(){ $(this).dialog('close').remove() },
+					'Close'				: function(){ $(this).dialog('close').remove() },
 					'Copy from trip'	: function(){ $('FORM:last',this).submit() }	// First form is for searching the second (last) is to perform the copy.
 				}
 			});
