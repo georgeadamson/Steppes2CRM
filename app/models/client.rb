@@ -448,6 +448,16 @@ class Client
     return self.booked_trips.count
   end
 
+  def trip_versions_count
+    return self.trips.count
+  end
+
+  def active_trips_count
+    return self.active_trips.count
+  end
+
+  alias trips_count active_trips_count
+
   # Used in reports:
   def companies_names
     return self.companies.map{|c|c.name}.join(', ')
@@ -564,10 +574,12 @@ class Client
   # Define which properties are available in reports  
   def self.potential_report_fields
 
-    return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :companies_names, :companies_initials, :client_type, :areas_of_interest, :original_company, :money_ins, :trips, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :created_at, 
+    # WARNING: We don't include :trips here because TripsCount would conflict with our custom :trips_count!
+
+    return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :marketing, :companies_names, :companies_initials, :client_type, :areas_of_interest, :original_company, :money_ins, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :created_at, 
 
       # ...and the following are special custom methods especially for reports:
-      :booked_trips_count, :invoice_total, :invoice_first_date, :brochure_last_date, :marketing_summary, :marketing_summary_email, :marketing_summary_postal ]
+      :booked_trips_count, :trips_count, :trip_versions_count, :invoice_total, :invoice_first_date, :brochure_last_date, :marketing_summary, :marketing_summary_email, :marketing_summary_postal ]
 
   end
 

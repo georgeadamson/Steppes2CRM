@@ -6,8 +6,10 @@ class Suppliers < Application
 
   def index
 
-		@suppliers = Supplier.all( :order => [:name] )
-		@suppliers = @suppliers.all( :type_id => params[:type_id] ) if params[:type_id].to_i > 0
+    @supplier_type_id = session[:recent_supplier_type_id].to_i
+    
+		@suppliers = Supplier.all( :order => [:name], :limit => 500 )
+		@suppliers = @suppliers.all( :type_id => @supplier_type_id ) if @supplier_type_id > 0
 
     display @suppliers
   end
@@ -19,9 +21,10 @@ class Suppliers < Application
   end
 
   def new
+    @supplier_type_id = session[:recent_supplier_type_id] || 1
     only_provides :html
     @supplier = Supplier.new()
-    @supplier.type_id = params[:type_id] || 1
+    @supplier.type_id = @supplier_type_id
     display @supplier
   end
 

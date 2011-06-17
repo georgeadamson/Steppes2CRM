@@ -267,8 +267,9 @@ jQuery(function($) {
 
 			// SysAdmin:
 			Layout.livePath('success', new RegExp('/system$'),							SysAdmin.initShow );
-			Layout.match(/exchange_rates/).on('success').to(initSpinboxes);
-			Layout.match(/companies\/([0-9]+)\/edit/).on('success').to(initSpinboxes);
+			Layout.match(/exchange_rates/)												.on('success').to(initSpinboxes);
+			Layout.match(/companies\/([0-9]+)\/edit/)									.on('success').to(initSpinboxes);
+			Layout.match(/^\/?(.*)\/?\?.*index_filter=(.+)/)							.on('success').to(SysAdmin.refreshIndex);
 
 			// Tasks: (AKA Followups / Reminders)
 			Layout.livePath('click',	new RegExp('/tasks/([0-9]+)/edit'),				Task.openEdit );
@@ -3569,8 +3570,12 @@ function initTripInvoiceFormTotals(){
 					options.url = options.url + '?limit=500'
 					Layout.load(options.url,options);
 				},
+				close		: function(e,ui){
+					// Prevent odd effects later by removing dialog from DOM:
+					$(this).remove();
+				},
 				buttons		: {
-					'Cancel'			: function(){ $(this).dialog('close').remove() },
+					'Close'				: function(){ $(this).dialog('close').remove() },
 					'Copy from trip'	: function(){ $('FORM:last',this).submit() }	// First form is for searching the second (last) is to perform the copy.
 				}
 			});
@@ -3845,8 +3850,21 @@ function initTripInvoiceFormTotals(){
 
 			});
 
+		},
+
+		refreshIndex : function(ui){
+
+			// Set the focus on the filter-button that represents the currently applied index_filter param:
+			var index_filter_label = $(ui.target).find("[name=index_filter_label]").val();
+
+			$(".filter-button")
+				//.removeClass("ui-state-default")
+				.filter(":contains('" + index_filter_label + "')")
+					//.addClass("ui-state-default")
+					.focus();
+
 		}
-	
+
 	} // End of SysAdmin methods.
 
 

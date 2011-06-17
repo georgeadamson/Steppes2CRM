@@ -253,7 +253,7 @@
 	<tr class="tableRow">
 
 		<td><%= text_field :room_type,		:label => 'Room type',		:class => 'tableCell whenAccomm width1Field' %></td>
-		<td><%= select :meal_plan,				:label => 'Meal plan',		:class => 'tableCell whenAccomm widthHalfField', :selected => element.meal_plan, :collection => %w[BB HB FB RO], :prompt => "n/a" %></td>
+		<td><%= select :meal_plan,				:label => 'Meal plan',		:class => 'tableCell whenAccomm widthHalfField', :selected => element.meal_plan, :collection => TripElement::MEALPLANS, :prompt => "n/a" %></td>
 
 	</tr>
 	<% end %>
