@@ -60,7 +60,7 @@ class Client
   property :updated_by,           String
   
   property :deleted_at,           DateTime, :required => false  # See custom "archive" method below.
-  property :deleted_by,           String,   :required => false, :lazy => true
+  property :deleted_by,           String,   :required => false, :lazy => [:all]
   
   belongs_to :titlename,        :model => "Title",            :child_key => [:title_id]
   #belongs_to :type,             :model => "ClientType",       :child_key => [:type_id]

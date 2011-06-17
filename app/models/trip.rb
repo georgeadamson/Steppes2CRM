@@ -40,13 +40,13 @@ class Trip
     alias single_supps singles
     
     # Price per person: (entered on the trip_element form)
-    property :price_per_adult,		        BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_child,		        BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_infant,		        BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_adult_biz_supp,		BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_child_biz_supp,		BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_infant_biz_supp,	BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_single_supp,		  BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_adult,		        Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_child,		        Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_infant,		        Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_adult_biz_supp,		Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_child_biz_supp,		Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_infant_biz_supp,	Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_single_supp,		  Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
     
     property :type_id,						        Integer,	  :default  => TripType::TAILOR_MADE, :required => true
     property :status_id,					        Integer,	  :default  => TripState::UNCONFIRMED	  # 1=Unconfirmed, 2=Confirmed, 3=Completed, 4=Abandonned, 5=Canceled
@@ -376,7 +376,7 @@ class Trip
 
     def primaries
 
-      primaries = self.clients.all( TripClient.is_primary => true )
+      primaries = self.clients.all( Client.trip_clients.is_primary => true )
 
       # Attempt to correct trip with no primary client!
       if primaries.empty? && ( first_trip_client = self.trip_clients.first( :order => [:id] ) )
@@ -1188,14 +1188,14 @@ class Trip
       
       elems = self.trip_elements.all( :supplier => supplier ) | self.flights.all( :handler => supplier )
       
-      return  self.adults     * elems.sum( :cost_per_adult  ) +
-              self.children   * elems.sum( :cost_per_child  ) +
-              self.infants    * elems.sum( :cost_per_infant ) +
-              self.singles    * elems.sum( :single_supp ) +
-              self.adults     * elems.sum( :biz_supp_per_adult  ) +
-              self.children   * elems.sum( :biz_supp_per_child  ) +
-              self.infants    * elems.sum( :biz_supp_per_infant ) +
-              self.travellers * elems.sum( :taxes )
+      return  self.adults     * ( elems.sum( :cost_per_adult  )     || 0 ) +
+              self.children   * ( elems.sum( :cost_per_child  )     || 0 ) +
+              self.infants    * ( elems.sum( :cost_per_infant )     || 0 ) +
+              self.singles    * ( elems.sum( :single_supp )         || 0 ) +
+              self.adults     * ( elems.sum( :biz_supp_per_adult  ) || 0 ) +
+              self.children   * ( elems.sum( :biz_supp_per_child  ) || 0 ) +
+              self.infants    * ( elems.sum( :biz_supp_per_infant ) || 0 ) +
+              self.travellers * ( elems.sum( :taxes ) || 0 )
       
     end
     
@@ -1682,6 +1682,29 @@ class Trip
 
 # Class methods:
 
+    # Find all the confirmed trips that ended yesterday: (Used by automated status change in app/controllers/application.rb)
+    def self.all_ready_to_complete( today = nil )
+
+      today ||= Date.today
+      active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :end_date.lt => today )
+      other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+
+      return active_versions + other_versions
+
+    end
+
+    # Find all the unconfirmed trips that [would have] started yesterday: (Used by automated status change in app/controllers/application.rb)
+    def self.all_ready_to_abandon( today = nil )
+
+      today ||= Date.today
+      active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::UNCONFIRMED, :start_date.lt => today )
+      other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+
+      return active_versions + other_versions
+
+    end
+
+
     # Helper to provide a consistent 'friendly' name: (Used when users select content for reports etc)
     def self.class_display_name
       return 'Trip'
@@ -1697,6 +1720,7 @@ class Trip
       :primary_clients_names, :type_name, :total_invoiced, :invoice_first_date, :total_margin_percent ]
 
     end
+
 
 
 private

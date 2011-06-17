@@ -178,24 +178,50 @@
 									<input type="text" class="trip-client-search" placeholder="Client search">
 								<% end -%>
 							</th>
-							<th title="Create a letter document"><span class="vertical">Create letter</span></th>
-							<th title="Create email with all client details"><span class="vertical"><%= trip.clients.empty? || !email_all ? 'Email details' : link_to('Email details', "mailto:&#{ email_all.to_params }") %></span></th>
-							<th title="Requires single room"		><span class="vertical">Single</span></th>
-							<th title="Who to send documents to (Primary contacts)"><span class="vertical">Primary</span></th>
-							<th title="Who to send invoices to"	><span class="vertical">Invoicable</span></th>
-							<th title="Who has confirmed"				><span class="vertical">Confirmed</span></th>
-							<th title="Remove from trip"				><span class="vertical">Remove</span></th>
+							<th title="Create a letter document">
+								<%= icon :'triangle-1-s' %><!-- :document  -->
+								<span class="vertical">Create letter</span>
+							</th>
+							<th title="Create email with all client details">
+								<%= icon :'triangle-1-s' %><!-- :'mail-closed' -->
+								<span class="vertical">
+								<%= trip.clients.empty? || !email_all ? 'Send email' : link_to('Send email', "mailto:&#{ email_all.to_params }") %></span>
+							</th>
+							<% if trip.tour_template? %>
+								<th title="We are handling flights for this client"							>
+									<%= icon :'triangle-1-s' %><!-- :flight -->
+									<span class="vertical">Flights with us</span>
+								</th>
+							<% end %>
+							<th title="Requires single room"		>
+								<%= icon :'triangle-1-s' %><!-- :'radio-on' -->
+								<span class="vertical">Single</span>
+							</th>
+							<th title="Who to send documents to (Primary contacts)">
+								<%= icon :'triangle-1-s' %><!-- :comment -->
+								<span class="vertical">Primary</span>
+							</th>
+							<th title="Who to send invoices to"	>
+								<%= icon :'triangle-1-s' %><!-- :'document-b' -->
+								<span class="vertical">Invoicable</span>
+							</th>
+							<th title="Who has confirmed"				>
+								<%= icon :'triangle-1-s' %><!-- :check -->
+								<span class="vertical">Confirmed</span>
+							</th>
+							<th title="Remove from trip"				>
+								<%= icon :'triangle-1-s' %><!-- :close -->
+								<span class="vertical">Remove</span>
+							</th>
 						</tr>
 						
 					</thead>
 	
 					<tbody>
 
-						<!-- NOT a script but a client-side HTML MICRO-TEMPLATE used when browser script adds clients to trip: -->
+						<!-- A client-side HTML MICRO-TEMPLATE used when browser script adds clients to trip: -->
 						<script type="text/html" class="template" id="trip-traveller-row-template">
-
 							<%= partial 'trips/trip_clients', :trip => @trip, :html_template => true %>
-
 						</script>
 
 						<!-- One row for each client on the trip: -->

@@ -3567,7 +3567,7 @@ function initTripInvoiceFormTotals(){
 				open		: function(e,ui){
 					ui.panel = this;
 					options.target = '#' + $(ui.panel).id();
-					options.url = options.url + '?limit=500'
+					options.url = options.url
 					Layout.load(options.url,options);
 				},
 				close		: function(e,ui){

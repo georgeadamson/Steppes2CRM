@@ -18,13 +18,13 @@ class MoneyIn
   property :name,               String,     :required => true,  :default => DEFAULT_NEW_MAIN_INVOICE_NAME   # AKA PaymentRef or InvoiceNumber in old database
   property :trip_id,            Integer,    :required => true   # The trip that the client is paying for.
   property :client_id,          Integer,    :required => true   # The client being invoiced.
-  property :amount,             BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # AMOUNT DUE
-  property :biz_supp_amount,    BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
-  property :single_supp_amount, BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
-  property :adjustment_amount,  BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
+  property :amount,             Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # AMOUNT DUE
+  property :biz_supp_amount,    Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
+  property :single_supp_amount, Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
+  property :adjustment_amount,  Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
   property :adjustment_name,    String,     :required => true,  :default => 'Custom adjustment'
-  property :total_amount,       BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # INCLUDES amounts already paid!
-  property :amount_received,    BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
+  property :total_amount,       Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # INCLUDES amounts already paid!
+  property :amount_received,    Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
   property :due_date,           Date,       :required => true,  :default => lambda{ |obj,prop| obj.default_due_date }
   property :received_date,      DateTime
   property :is_deposit,         Boolean,    :required => true,  :default => false

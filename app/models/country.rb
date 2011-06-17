@@ -3,6 +3,9 @@ require "dm-accepts_nested_attributes"
 class Country
   include DataMapper::Resource
   
+  # Special constant for the UK's country id: (Was '6' at time of writing)
+  UK = repository(:default).adapter.select("SELECT TOP 1 id FROM countries WHERE code = 'UK'").first || 0 unless defined? UK
+  
   property :id,								Serial
   property :name,							String,		:required => true,	:unique => true, :default => 'New country'
   property :code,							String,		:length => 2,				:unique => true		# Eg: GB, US
@@ -42,9 +45,12 @@ class Country
   #accepts_nested_attributes_for :trips	# See: http://github.com/snusnu/dm-accepts_nested_attributes
 
   #cache_attributes_for :name, :code
-  
 
 	validates_with_method :require_one_or_more_companies
+
+
+
+
 
 	def require_one_or_more_companies
 		
@@ -61,5 +67,6 @@ class Country
   def id_and_name
     [ self.id, self.name ]
   end
-    
+
+
 end

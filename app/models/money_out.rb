@@ -9,8 +9,8 @@ class MoneyOut
   property :trip_id,          Integer,    :required => true
   property :user_id,          Integer,    :required => true
   property :currency_id,      Integer,    :required => true,  :default => 1
-  property :amount_requested, BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # AMOUNT REQUESTED
-  property :amount_paid,      BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
+  property :amount_requested, Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # AMOUNT REQUESTED
+  property :amount_paid,      Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
   property :requested_date,   DateTime,   :required => true,  :default => lambda{ |obj,prop| DateTime.now }
   property :notes,            Text,       :required => false, :default => ''
   property :user_fullname,    String,     :required => true   # Only used because of legacy migrated data.
