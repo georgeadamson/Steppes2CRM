@@ -1,36 +1,59 @@
 module DataMapper
   module NestedAttributes
+    class BackwardsCompatibilityHash < Hash
+      def initialize(model)
+        @model = model
+      end
+
+      def [](key)
+        if key.is_a?(DataMapper::Associations::Relationship)
+          warn "#{@model}#options_for_nested_attributes: Using a relationship " +
+               "as key is deprecated. Use the relationship name (i.e. " +
+               "#{key.name.inspect}) as key."
+          key = key.name
+        end
+        super(key)
+      end
+
+      def []=(key, value)
+        if key.is_a?(DataMapper::Associations::Relationship)
+          warn "#{@model}#options_for_nested_attributes: Using a relationship " +
+               "as key is deprecated. Use the relationship name (i.e. " +
+               "#{key.name.inspect}) as key."
+          key = key.name
+        end
+        super(key, value)
+      end
+    end
 
     ##
-    # Named plugin exception that gets raised by
-    # @see accepts_nested_attributes_for
-    # if the passed options don't make sense
+    # Named plugin exception that is raised by {Model#accepts_nested_attributes_for}
+    # if the passed options are invalid.
     class InvalidOptions < ArgumentError; end
 
     module Model
 
       ##
-      # Allows any association to accept nested attributes.
+      # Allows an association to accept nested attributes.
       #
       # @param [Symbol, String] association_name
-      #   The name of the association that should accept nested attributes
+      #   The name of the association that should accept nested attributes.
       #
-      # @param [Hash, nil] options
-      #   List of resources to initialize the Collection with
+      # @param [Hash?] options
+      #   List of resources to initialize the collection with.
       #
-      # @option [Symbol, String, #call] :reject_if
+      # @option options [Symbol, String, #call] :reject_if
       #   An instance method name or an object that respond_to?(:call), which
       #   stops a new record from being created, if it evaluates to true.
       #
-      # @option [true, false] :allow_destroy
-      #   If true, allow destroying the association via the generated writer
-      #   If false, prevent destroying the association via the generated writer
-      #   defaults to false
+      # @option options [Boolean] :allow_destroy (false)
+      #   If true, allows destroying the association via the generated writer.
+      #   If false, prevents destroying the association via the generated writer.
       #
       # @raise [DataMapper::NestedAttributes::InvalidOptions]
-      #   A named exception class indicating invalid options
+      #   A named exception class indicating invalid options.
       #
-      # @return nil
+      # @return [void]
       #
       def accepts_nested_attributes_for(association_name, options = {})
 
@@ -52,19 +75,9 @@ module DataMapper
         #                       should be safe to go from here
         # ----------------------------------------------------------------------------------
 
-        options_for_nested_attributes[relationship] = options
+        options_for_nested_attributes[relationship.name] = options
 
         include ::DataMapper::NestedAttributes::Resource
-
-        # TODO i wonder if this is the best place here?
-        # the transactional save behavior is definitely not needed for all resources,
-        # but it's necessary for resources that accept nested attributes
-        # FIXME this leads to weird "no such table" errors when specs are run
-        add_transactional_save_behavior # TODO if repository.adapter.supports_transactions?
-
-        # TODO make this do something
-        # it's only here now to remind me that this is probably the best place to put it
-        add_error_collection_behavior if DataMapper.const_defined?('Validate')
 
         type = relationship.max > 1 ? :collection : :resource
 
@@ -80,53 +93,29 @@ module DataMapper
 
       end
 
+      # Returns a hash with the options for all associations (using the
+      # corresponding relationship as key) that accept nested attributes.
+      #
+      # @return [Hash{DataMapper::Associations::Relationship => Hash}]
       def options_for_nested_attributes
-        @options_for_nested_attributes ||= {}
+        @options_for_nested_attributes ||= DataMapper::NestedAttributes::BackwardsCompatibilityHash.new(self)
       end
 
 
       private
 
       ##
-      # Provides a hook to include or disable customized transactional save behavior.
-      # Override this method to customize the implementation or disable it altogether.
-      # The current implementation in @see DataMapper::NestedAttributes::TransactionalSave
-      # simply wraps the saving of the complete object tree inside a transaction
-      # and rolls back in case any exceptions are raised, or any of the calls to
-      # @see DataMapper::Resource#save returned false
-      #
-      # @return Not specified
-      #
-      def add_transactional_save_behavior
-        require 'dm-accepts_nested_attributes/transactional_save'
-        include ::DataMapper::NestedAttributes::TransactionalSave
-      end
-
-      ##
-      # Provides a hook to include or disable customized error collecting behavior.
-      # Overwrite this method to customize the implementation or disable it altogether.
-      # The current implementation in @see DataMapper::NestedAttributes::ValidationErrorCollecting
-      # simply attaches all errors of related resources to the object that was initially saved.
-      #
-      # @return Not specified
-      #
-      def add_error_collection_behavior
-        require 'dm-accepts_nested_attributes/error_collecting'
-        include ::DataMapper::NestedAttributes::ValidationErrorCollecting
-      end
-
-      ##
-      # Checks options passed to @see accepts_nested_attributes_for
+      # Checks options passed to {#accepts_nested_attributes_for}.
       # If any of the given options is invalid, this method will raise
-      # @see DataMapper::NestedAttributes::InvalidOptions
+      # {DataMapper::NestedAttributes::InvalidOptions}.
       #
-      # @param [Hash, nil] options
-      #   The options passed to @see accepts_nested_attributes_for
+      # @param [Hash?] options
+      #   The options passed to {#accepts_nested_attributes_for}.
       #
       # @raise [DataMapper::NestedAttributes::InvalidOptions]
-      #   A named exception class indicating invalid options
+      #   A named exception class indicating invalid options.
       #
-      # @return [nil]
+      # @return [void]
       #
       def assert_valid_options_for_nested_attributes(options)
 

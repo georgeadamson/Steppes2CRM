@@ -37,7 +37,7 @@ def reload_app_settings
 
 		value = opt.value
 		value = value.to_i  if opt.value_type =~ /Integer/i
-		value = value.to_f  if opt.value_type =~ /BigDecimal/i
+		value = value.to_f  if opt.value_type =~ /Decimal/i
 
 		CRM[ opt.name.to_sym ] = value
 
@@ -66,7 +66,7 @@ def seed_app_settings
 				if value.is_a?(String)
 					value_type = 'String'
 				elsif value.to_s =~ /\./
-					value_type = 'BigDecimal'
+					value_type = 'Decimal'
 				else
 					value_type = 'Integer'
 				end

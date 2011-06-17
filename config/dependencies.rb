@@ -1,3 +1,5 @@
+=begin
+
 # dependencies are generated using a strict version, don't forget to edit the dependency versions when upgrading.
 merb_gems_version = "1.0.15"  # "1.0.15" "1.1.0"
 dm_gems_version   = "0.10.2"  # "0.10.2" "0.10.3"
@@ -39,3 +41,5 @@ dependency "merb-parts", "0.9.8" #merb_gems_version
 
 #dependency "uuid", "2.0.2"
 dependency "uuidtools", "2.1.1"
+
+=end

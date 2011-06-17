@@ -63,12 +63,12 @@ class Supplier
  
   belongs_to :address
   belongs_to :country
-  belongs_to :type,		          :model => "TripElementType",	:child_key => [:type_id]
   belongs_to :currency,         :model => "ExchangeRate",			:child_key => [:currency_id]
   belongs_to :linked_supplier,  :model => "Supplier",         :child_key => [:linked_supplier_id] # AKA Default handler for Accommodation. TODO: Use for Airlines too?
   belongs_to :bank_currency,    :model => "ExchangeRate",     :child_key => [:bank_currency_id]
   belongs_to :bank_address,     :model => "Address",          :child_key => [:bank_address_id]
-
+  belongs_to :supplier_type,		:model => "TripElementType",	:child_key => [:type_id]
+  alias type supplier_type      # Workaround for conflict with datamapper's .type attribute since DM v1.1.0
 	
   has n, :trip_elements,  :child_key => [:supplier_id]		# Trip Element Supplier
   has n, :trip_elements,  :child_key => [:handler_id]		# Trip Element Handler AKA Flight Agent, Flight Handler
