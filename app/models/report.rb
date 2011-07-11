@@ -8,7 +8,7 @@ class Report
   
   property :source,       String,   :required => true,  :default => MoneyIn.to_s  # Every report must be based on something.
   property :sort_by,      String,   :required => true,  :default => 'name'
-  property :limit,        Integer,  :required => true,  :default => 500
+  property :row_limit,    Integer,  :required => true,  :default => 500, :field => 'limit'
   
   has n, :report_fields,  :filter_operator      => nil  #, :constraint => :destroy
   has n, :report_filters, :filter_operator.not  => nil, :model => 'ReportField'
@@ -112,7 +112,7 @@ class Report
   # we add each condition one by one: This allows us to apply more than one filter value per field when necessary.
   def run( aggregate = false, sum_field = nil )
     
-    default_conditions = { :limit => self.limit }
+    default_conditions = { :limit => self.row_limit }
     filtered_results   = self.source_model.all(default_conditions)
 
     # Apply each condition one by one so that more than one filter can be applied to each field: 

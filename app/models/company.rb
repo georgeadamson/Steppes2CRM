@@ -10,7 +10,7 @@ class Company
   property :logo_url,								String,		  :required => true,	:length => 250,		:default => 'images/logo.jpg'
   property :images_folder,					String,		  :required => true,	:length => 50,		:default => 'SteppesEast/_Photos'
   property :due_days,								Integer,	  :required => true,	:default => 84
-  property :cc_sup,									BigDecimal,	:required => true,	:default => 2,    :precision=>6, :scale=>2
+  property :cc_sup,									Decimal,	:required => true,	:default => 2,    :precision=>6, :scale=>2
   property :booking_fee,						Integer,	  :required => true,	:default => 51
   property :brochure_followup_days,	Integer,	  :required => true,	:default => 7
   property :default_deposit,				String,		  :required => true,	:length => 4,			:default => 300

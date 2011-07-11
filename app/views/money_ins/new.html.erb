@@ -28,7 +28,7 @@
 	
 	is_first_main_invoice_for_this_trip = trip_main_invoices.empty?
 	
-	invoiceable_clients = @trip.clients.all( TripClient.is_invoicable => true )
+	invoiceable_clients = @trip.clients.all( Client.trip_clients.is_invoicable => true )
 
 	if @trip.company.default_deposit =~ /%/
 		default_deposit = "#{ @trip.company.default_deposit } of total price"

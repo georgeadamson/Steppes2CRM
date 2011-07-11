@@ -30,7 +30,7 @@
 		<p>
 			<%
 				# Are we showing all the results?
-				is_within_limit = @results.length < @report.limit
+				is_within_limit = @results.length < @report.row_limit
 				total_row_count = is_within_limit ? @results.length : @report.run(:count)
 			-%>
 			Showing <%= is_within_limit ? 'all' : "#{ @results.length } of" %> <%= total_row_count %> results. 

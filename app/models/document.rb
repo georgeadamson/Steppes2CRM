@@ -38,7 +38,7 @@ class Document
   property :document_status_id,     Integer, :required => true,  :default => PENDING  # 0=Pending, 1=Running, 2=Failed, 3=Succeeded
   property :document_template_id,   Integer, :required => true,  :default => 1  # DEPRICATED?
   property :document_template_file, String,  :required => true,  :default => '', :auto_validation => false, :length => 255
-  property :parameters,             Text,    :required => true,  :default => '' # Xml. Parameters are provided in xml for the Steppes Document Builder to use when querying for data.
+  property :parameters,             String,  :required => true,  :default => '', :lazy => false # Xml. Parameters are provided in xml for the Steppes Document Builder to use when querying for data.
   
   property :doc_builder_output,     Text,    :required => false, :default => '' # String for feedback from the generation process.
   property :pdf_builder_output,     Text,    :required => false, :default => '' # String for feedback from the generation process.
