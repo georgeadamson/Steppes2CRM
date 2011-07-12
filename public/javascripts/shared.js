@@ -1842,7 +1842,7 @@ return
 		dataType			: "json",
 		scrollHeight		: 520,
 		width				: 576,
-		offsetLeft			: -300,
+		offsetLeft			: -370,
 		//highlight		   : function(val,q){ return tag("em",val); },
 
 		// Parse json as soon as it loads, to rearrange results as array of objects each with {data, value, result} attributes for autocompleter. More info: http://blog.schuager.com/2008/09/jquery-autocomplete-json-apsnet-mvc.html

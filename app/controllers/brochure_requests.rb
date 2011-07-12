@@ -30,7 +30,7 @@ class BrochureRequests < Application
     if params[:brochure_request_ids] && !params[:brochure_request_ids].blank?
 
       @brochure_requests = BrochureRequest.all( :id => params[:brochure_request_ids] )
-      puts "#{@brochure_requests} brochure_requests... #{params[:submit]}..."
+
       # WARNING! This text must match button label: (TODO: Find a better way to distinguish Run and Clear!)
       if params[:submit] =~ /Run.*merge/ || params[:form_submit] =~ /Run.*merge/
 

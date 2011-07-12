@@ -1,0 +1,56 @@
+require 'rubygems'
+require 'rake'
+
+# Load this library's version information
+require File.expand_path('../lib/merb-cache/version', __FILE__)
+
+require 'spec/rake/spectask'
+Spec::Rake::SpecTask.new(:spec) do |spec|
+  spec.spec_opts << '--options' << 'spec/spec.opts' if File.exists?('spec/spec.opts')
+  spec.libs << 'lib' << 'spec'
+  spec.spec_files = FileList['spec/**/*_spec.rb']
+end
+
+Spec::Rake::SpecTask.new(:rcov) do |spec|
+  spec.libs << 'lib' << 'spec'
+  spec.pattern = 'spec/**/*_spec.rb'
+  spec.rcov = true
+end
+
+task :default => :spec
+
+require 'rake/rdoctask'
+Rake::RDocTask.new do |rdoc|
+  rdoc.rdoc_dir = 'rdoc'
+  rdoc.title = "test_gem #{Merb::Cache::VERSION}"
+  rdoc.rdoc_files.include('README*')
+  rdoc.rdoc_files.include('lib/**/*.rb')
+end
+
+
+##############################################################################
+# memcached
+##############################################################################
+
+MEMCACHED_PORTS = 43042..43043
+
+namespace :memcached do
+  desc "Start the memcached instances for specs"
+  task :start do
+    log = "/tmp/memcached.log"
+    system ">#{log}"
+
+    verbosity = (ENV['DEBUG'] ? "-vv" : "")
+
+    (MEMCACHED_PORTS).each do |port|
+      system "memcached #{verbosity} -p #{port} >> #{log} 2>&1 &"
+    end
+  end
+
+  desc "Kill the memcached instances"
+  task :kill do
+    `ps awx`.split("\n").grep(/#{MEMCACHED_PORTS.to_a.join('|')}/).map do |process| 
+      system("kill -9 #{process.to_i}") rescue nil
+    end
+  end
+end
