@@ -2,11 +2,19 @@ class Tasks < Application
   # provides :xml, :yaml, :js
 
   def index
-    @tasks  = Task.all  #( :order => [:status_id, :due_date, :closed_date] )
-    @user   = User.get(params[:user_id])        if params[:user_id].to_i > 0
-    @client = Client.get(params[:client_id])    if params[:client_id].to_i > 0
-    @tasks  = @tasks.all( :client => @client )  if @client
+    only_provides :html, :json
+
+    @client   = Client.get(params[:client_id])        if params[:client_id].to_i > 0
+    @user     = User.get(params[:user_id])            if params[:user_id].to_i > 0
+    @user   ||= session.user                          unless @client
+
+    @tasks  = Task.all
+    @tasks  = @tasks.all( :user   => @user   )        if @user
+    @tasks  = @tasks.all( :client => @client )        if @client
+    @tasks  = @tasks.all( :limit  => params[:limit] ) if params[:limit].to_i > 0
+
     display @tasks
+
   end
 
   def show(id)

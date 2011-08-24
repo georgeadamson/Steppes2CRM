@@ -36,6 +36,7 @@ end
 
 Merb::BootLoader.before_app_loads do
   # This will get executed after dependencies have been loaded but before your app's classes have loaded.
+  puts "PROCESS ID IN TASK MANAGER: #{ Process.pid }"
 end
 
 Merb::BootLoader.after_app_loads do
@@ -48,5 +49,12 @@ end
 #  register( MemcachedStore )
 #end
 
+# The following were attempts to display Windows PID when app shuts down, but these commands are not relevant in jruby:
+#Merb::BootLoader.before_worker_shutdown do
+#  puts "PROCESS ID IN TASK MANAGER: #{ Process.pid }"
+#end
+#Merb::BootLoader.before_master_shutdown do
+#  puts "PROCESS ID IN TASK MANAGER: #{ Process.pid }"
+#end
 
 Extlib::Inflection.plural_word 'status', 'statuses' # This does not seem to fix DataMapper "TripStatu" problem :(
