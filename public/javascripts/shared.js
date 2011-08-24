@@ -276,9 +276,12 @@ jQuery(function($) {
 			Layout.livePath('click',    new RegExp('/tasks/new'),						Task.openNew );
 			Layout.livePath('success',	new RegExp('/tasks/([0-9]+)/edit'),				Task.initForm, initDatepickers );
 			Layout.livePath('success',  new RegExp('/tasks/new'),						Task.initForm, initDatepickers );
-			Layout.livePath('success',  new RegExp('/tasks/?$'),						Task.initIndex );	// Refresh list of tasks.
+			//Layout.livePath('success',  new RegExp('tasks'),						Task.initIndex );	// Refresh list of tasks.
 			Layout.liveForm('success',  'tasks:create',									Task.onCreateSuccess );
 			Layout.liveForm('success',  'tasks:update',									Task.onCreateSuccess );
+			Layout.match(/tasks/)													.on('success').to(Task.initIndex);
+
+			window.setTimeout( Task.loadIndex, 5000 );
 
 			// AutoText:
 			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
@@ -326,7 +329,7 @@ jQuery(function($) {
 								$(document).trigger('path:error', [xhr, status, 'custom']);
 
 							} else {
-								
+								//debugger;
 								Layout.onSuccess(data, status, xhr, options);
 								$(document).trigger('path:success', [data, status, xhr]);
 
@@ -334,7 +337,8 @@ jQuery(function($) {
 
 						},
 
-						error: function(xhr, status, error) {console.log(xhr, status, error);alert(status)
+						error: function(xhr, status, error) {
+							console.log(xhr, status, error); alert(status + ' ' + error);
 							$(document).trigger('path:error', [xhr, status, error]);
 						},
 
@@ -3931,12 +3935,26 @@ function initTripInvoiceFormTotals(){
 			});
 
 		},
-		
-		initIndex : function(ui){
-			// unused
-			console.log(ui)
+
+		loadIndex : function(){
+
+			// TODO NEXT: get callback to fire! (preferably via the Layout.match process)
+			Layout.load( '/tasks.json', { success: Task.initIndex } );
+
+			if( !$.template["task"] ){
+				console.log("Compiling 'task' template");
+				$('#tmpl-for-task').template("task");
+			}
+
 		},
-		
+
+		initIndex : function(ui){
+
+			
+			
+			console.log('Task.initIndex',ui)
+		},
+
 		initForm : function(ui){
 
 			$("SELECT[name='task[status_id]']").change(Task.toggleClosedTaskFields).trigger('change');

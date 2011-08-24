@@ -38,6 +38,7 @@ gem "dm-types", dm_gems_version
 gem "dm-validations", dm_gems_version  
 gem "dm-serializer", dm_gems_version   
 gem "dm-sqlserver-adapter", dm_gems_version
+#gem "dm-accepts_nested_attributes"
 #gem "dm-accepts_nested_attributes", :git => 'https://github.com/snusnu/dm-accepts_nested_attributes.git'
 
 gem "merb-parts", "0.9.8" #merb_gems_version

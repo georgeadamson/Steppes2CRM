@@ -192,6 +192,9 @@ class TripElements < Application
       #  trip_element.delete("end_time")
 
     end
+    
+    # Ensure the id property is not set and marked as dirty when accidentally submitted amongst other fields:
+    trip_element.delete("id")
 
     @element.attributes = trip_element
 

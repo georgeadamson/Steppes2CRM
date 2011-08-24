@@ -1,14 +1,16 @@
 <%
 
+	# TODO: Discard these filters if they're all already applied by the controller:
+
 	client ||= nil
-	user   ||= nil
-	limit  ||= params[:limit].to_i > 0 ? params[:limit].to_i : 200
+	user   ||= @user
+	#limit  ||= params[:limit].to_i > 0 ? params[:limit].to_i : 200
 
 	# Filter by user if specified, otherwise only default to current user if there's no client filter:
 	user   = User.get( params[:user_id] ) if params[:user_id]
 	user ||= request.session.user         unless client
 
-	tasks ||= Task.all( :due_date.gte => Date.today-10, :type_id.not => TaskType::NOTE, :limit => limit )
+	tasks ||= Task.all( :due_date.gte => Date.today-10, :type_id.not => TaskType::NOTE )
 	tasks   = tasks.all( :user => user )  if user
 	
 %>

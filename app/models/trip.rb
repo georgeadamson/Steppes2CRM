@@ -1697,7 +1697,7 @@ class Trip
     def self.all_ready_to_abandon( today = nil )
 
       today ||= Date.today
-      active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::UNCONFIRMED, :start_date.lt => today )
+      active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::UNCONFIRMED, :start_date.lt => today, :created_at.lt => today )
       other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
 
       return active_versions + other_versions
