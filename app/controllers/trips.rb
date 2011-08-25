@@ -211,6 +211,9 @@ class Trips < Application
 
   def create(trip)
     
+    @trip		        = Trip.new
+    @client_or_tour = Tour.get(params[:tour_id]) || Client.get(params[:client_id]) || session.user.most_recent_client
+
 		# Workaround for when no checkboxes are ticked: (Because posted params will not contain an array of ids)
 		trip[:countries_ids] ||= []
     
@@ -228,22 +231,31 @@ class Trips < Application
     # Remember whether we need to copy elements etc from another trip:
     do_copy_trip_id = trip.delete(:do_copy_trip_id)
 
-    @trip		        = Trip.new(trip)
-    @client_or_tour = Tour.get(params[:tour_id]) || Client.get(params[:client_id]) || session.user.most_recent_client
-    
-		@trip.updated_by					||= session.user.fullname
-    @trip.clients							<<	@client_or_tour unless @trip.tour
-
     if @client_or_tour.is_a? Client
       
       # This applies to new private trips only:
       # Hack: Don't know why trip[:clients_attributes][x][:source_id] is not being saved so we set it explicitly:
-      new_source_id = trip[:clients_attributes] \
-        && trip[:clients_attributes][@client_or_tour.id.to_s] \
-        && trip[:clients_attributes][@client_or_tour.id.to_s][:source_id]
+      #new_source_id = trip[:clients_attributes] \
+      #  && trip[:clients_attributes][@client_or_tour.id.to_s] \
+      #  && trip[:clients_attributes][@client_or_tour.id.to_s][:source_id]
+      #@client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
+
+      new_source_id = trip[:trip_clients_attributes] &&
+        trip[:trip_clients_attributes]['0'] &&
+        trip[:trip_clients_attributes]['0'][:source_id] &&
+        trip[:trip_clients_attributes]['0'].delete(:source_id)
+puts '', "new_source_id", new_source_id, ''
       @client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
 
     end
+
+    @trip.attributes = trip
+    #@trip		        = Trip.new(trip)
+    #@client_or_tour = Tour.get(params[:tour_id]) || Client.get(params[:client_id]) || session.user.most_recent_client
+    
+		@trip.updated_by					||= session.user.fullname
+    @trip.clients							<<	@client_or_tour unless @trip.tour
+
 		
 		# Alas this does not seem to affect the row in the trip_clients table:
 		@trip.trip_clients.each{ |relationship| relationship.created_by = @trip.created_by }
