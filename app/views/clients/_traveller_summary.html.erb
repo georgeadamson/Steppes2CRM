@@ -9,24 +9,35 @@
 	new_line ||= '%0A'
 
 	# Format the output by separating items by the new_line character:
-	[
+  #	h [
+  #
+  #		client.fullname,
+  #		"DoB: #{ client.birth_date.formatted(:uidisplay) }",
+  #		"Age: #{ client.age }",
+  #		"Name on passport: #{ client.passport_name }",
+  #		"Passport expires: #{ client.passport_expiry_date.formatted(:uidisplay) }",
+  #		"Passport issue date: #{ client.passport_issue_date.formatted(:uidisplay) }",
+  #		"Passport number: #{ client.passport_number }",
+  #		"Airline number: #{ client.notes_frequent_flyer }",
+  #		"Airline preference: #{ client.notes_airline }",
+  #		"Seat preference: #{ client.notes_airline }",
+  #		"Meal preference: #{ client.notes_food }",
+  #		"General preference: #{ client.notes_general }",
+  #		"Nationality: #{ client.nationality }",
+  #		"Occupation: #{ client.occupation }",
+  #		"Notes: #{ client.notes.map{|note| note.text }.join('; ') }"
+  #
+  #	].join(new_line).gsub(/[\r\n]+/,new_line)
 
-		'Details of client:',
-		client.fullname,
-		"DOB: #{ h client.birth_date.formatted(:uidisplay) }",
-		"Age: #{ client.age }",
-		"Name on passport: #{ h client.passport_name }",
-		"Passport expires: #{ h client.passport_expiry_date.formatted(:uidisplay) }",
-		"Passport issue date: #{ h client.passport_issue_date.formatted(:uidisplay) }",
-		"Passport number: #{ h client.passport_number }",
-		"Airline number: #{ h client.notes_frequent_flyer }",
-		"Airline preference: #{ h client.notes_airline }",
-		"Seat preference: #{ h client.notes_airline }",
-		"Meal preference: #{ h client.notes_food }",
-		"General preference: #{ h client.notes_general }",
-		"Nationality: #{ h client.nationality }",
-		"Occupation: #{ h client.occupation }"
 
-	].join(new_line)
+  # This shorter alternative was chosen in order to work around the Outlook mailto length limit:
+	h [
+
+		client.passport_name.strip.blank? ? client.fullname : client.passport_name,
+		"DoB: #{ client.birth_date.formatted(:uidatelong) }",
+		"Passport: #{ client.passport_number } #{ client.nationality }",
+		"Notes:"
+
+	].join(new_line).gsub(/[\r\n]+/,new_line)
 
 %>

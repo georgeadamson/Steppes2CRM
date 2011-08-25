@@ -18,10 +18,11 @@
 	
 	
 	# Prepare content for the all-client-details mailto link:
-		email_all = @trip.new? ? nil : {
-			:subject	=> 'Client details',
-			:body			=> @trip.clients.map{|c| '%0A' + partial('clients/traveller_summary',:client=>c) }.join('%0A')
-		}
+	# Alas mailto links seem to be limited to around 1600 characters! An Outlook limitation. May need a plugin to handle these instead :(
+	email_all = @trip.new? ? nil : {
+		:subject	=> 'Client details',
+		:body			=> @trip.clients.map{|c| '%0A' + partial('clients/traveller_summary',:client=>c) }.join('%0A')
+	}
 
 
 	# If we're creating a new private trip then we should confirm current client's source:
@@ -187,7 +188,8 @@
 							<th title="Create email with all client details">
 								<%= icon :'triangle-1-s' %><!-- :'mail-closed' -->
 								<span class="vertical">
-								<%= trip.clients.empty? || !email_all ? 'Send email' : link_to('Send email', "mailto:&#{ email_all.to_params }") %></span>
+								<!-- Alas mailto links seem to be limited to around 1600 characters! An Outlook limitation. May need a plugin to handle these instead -->
+								<%= trip.clients.empty? || !email_all ? 'Send email' : link_to('Send email', "mailto:&#{ email_all.to_params.slice(0,1610) }") %></span>
 							</th>
 							<% if trip.tour_template? %>
 								<th title="We are handling flights for this client"							>
