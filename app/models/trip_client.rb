@@ -28,6 +28,9 @@ class TripClient
 
   alias confirmation_status status_id # Support for depricated field name
 
+  # Bit of a hack: This is used to set the client.source_id when a new trip is being saved:
+  # See /models/trip.rb and /controllers/trips.rb and /views/trips/_form.html.erb
+  attr_accessor :source_id
 
 #	before :valid? do
 #		# Ensure required fields are not nil:

@@ -1729,18 +1729,20 @@ private
     def check_client_source_on_new_trip
 
       # Fail validation if client nested attributes contain blank source:
-      if self.new? \
-      && ( self.tailor_made? || self.private_group? ) \
-      #&& self.respond_to?(:clients_attributes) \
-      #&& self.clients_attributes \
-      #&& ( blank_sources = self.clients_attributes.select{|k,v| v[:source_id].to_i.zero?} ) \
-      ( blank_sources = self.clients.select{|client| client.source_id.to_i.zero? } ) \
-      &&  !blank_sources.empty?
+      if self.new? &&
+        ( self.tailor_made? || self.private_group? ) &&
+        ( blank_sources = self.trip_clients.select{ |trip_client|
+          # Set client.source_id from the fake source_id attribute on trip_client, then
+          # Return true if the record is new and has no source_id:
+          trip_client.client.source_id = trip_client.source_id.to_i
+          trip_client.new? && trip_client.source_id.to_i.zero? 
+        }) &&
+        !blank_sources.empty?
 
           # Derive name of affected client, just to be helpful:
-          affected_client_ids   = blank_sources.map{|k,v| v[:id]}
+          affected_client_ids   = blank_sources.map{|trip_client| trip_client[:client_id] }
           affected_clients      = Client.all( :id => affected_client_ids )
-          affected_client_names = affected_clients.map{|c| c.fullname}.join(', ')
+          affected_client_names = affected_clients.map{|client| client.fullname}.join(', ')
           affected_client_names = "for #{ affected_client_names }" unless affected_clients.empty?
 
           return [ false, "First you'll need to confirm the client source #{ affected_client_names }" ]
