@@ -30,7 +30,8 @@
 	if confirm_client_source
 	
 		client                  = @client_or_tour
-		client_field_prefix     = "trip[clients_attributes][#{ client.id }]"
+		#client_field_prefix     = "trip[clients_attributes][#{ client.id }]"  #trip[trip_clients_attributes][0][is_single]
+		client_field_prefix     = "trip[trip_clients_attributes][0]"
 		client_sources					= {}
 		client_sources['Same as before:']  = [client.source] if client.source
 		client_sources['or a new source:'] = ClientSource.all(:order=>[:name])
@@ -78,7 +79,7 @@
 		<% if confirm_client_source %>
 			<td>
 				<%= fields_for client do %>
-				<%= hidden_field  :id, :name  => "#{ client_field_prefix }[id]" %>
+				<%#= hidden_field  :id, :name  => "#{ client_field_prefix }[id]" %>
 				<%= select :source_id, :label => "Client source", :name => "#{ client_field_prefix }[source_id]", :collection => client_sources, :selected => '', :prompt => '- Please confirm', :value_method => :id, :text_method => :name %>
 				<% end =%>
 			</td>
@@ -100,11 +101,11 @@
 
 
 		<% if confirm_client_source %>
-			<!--
+			<!-- UNUSED!
 			<td rowspan="2">
-				<%= fields_for @client_or_tour do %>
-				<%= select :interests, :label => "Confirm areas of interest",	:selected => client.interests_ids.all_to_s, :collection => Country.all( :order => [:name] ), :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[interests_ids][]', :title => multiple_select_tooltip, :class => 'height4Fields' %>
-				<% end =%>
+				<%#= fields_for @client_or_tour do %>
+				<%#= select :interests, :label => "Confirm areas of interest",	:selected => client.interests_ids.all_to_s, :collection => Country.all( :order => [:name] ), :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[interests_ids][]', :title => multiple_select_tooltip, :class => 'height4Fields' %>
+				<%# end =%>
 			</td>
 			-->
 		<% end %>

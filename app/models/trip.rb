@@ -1731,9 +1731,10 @@ private
       # Fail validation if client nested attributes contain blank source:
       if self.new? \
       && ( self.tailor_made? || self.private_group? ) \
-      && self.respond_to?(:clients_attributes) \
-      && self.clients_attributes \
-      && ( blank_sources = self.clients_attributes.select{|k,v| v[:source_id].to_i.zero?} ) \
+      #&& self.respond_to?(:clients_attributes) \
+      #&& self.clients_attributes \
+      #&& ( blank_sources = self.clients_attributes.select{|k,v| v[:source_id].to_i.zero?} ) \
+      ( blank_sources = self.clients.select{|client| client.source_id.to_i.zero? } ) \
       &&  !blank_sources.empty?
 
           # Derive name of affected client, just to be helpful:
