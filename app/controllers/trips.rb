@@ -231,23 +231,24 @@ class Trips < Application
     # Remember whether we need to copy elements etc from another trip:
     do_copy_trip_id = trip.delete(:do_copy_trip_id)
 
-    if @client_or_tour.is_a? Client
-      
-      # This applies to new private trips only:
-      # Hack: Don't know why trip[:clients_attributes][x][:source_id] is not being saved so we set it explicitly:
-      #new_source_id = trip[:clients_attributes] \
-      #  && trip[:clients_attributes][@client_or_tour.id.to_s] \
-      #  && trip[:clients_attributes][@client_or_tour.id.to_s][:source_id]
-      #@client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
-
-      new_source_id = trip[:trip_clients_attributes] &&
-        trip[:trip_clients_attributes]['0'] &&
-        trip[:trip_clients_attributes]['0'][:source_id] &&
-        trip[:trip_clients_attributes]['0'].delete(:source_id)
-puts '', "new_source_id", new_source_id, ''
-      @client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
-
-    end
+    # Deprecated: This is now handled in trip#check_client_source_on_new_trip
+    #if @client_or_tour.is_a? Client
+    #  
+    #  # This applies to new private trips only:
+    #  # Hack: Don't know why trip[:clients_attributes][x][:source_id] is not being saved so we set it explicitly:
+    #  #new_source_id = trip[:clients_attributes] \
+    #  #  && trip[:clients_attributes][@client_or_tour.id.to_s] \
+    #  #  && trip[:clients_attributes][@client_or_tour.id.to_s][:source_id]
+    #  #@client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
+    #
+    #  new_source_id = trip[:trip_clients_attributes] &&
+    #    trip[:trip_clients_attributes]['0'] &&
+    #    trip[:trip_clients_attributes]['0'][:source_id]
+    #    #trip[:trip_clients_attributes]['0'].delete(:source_id)
+    #
+    #  @client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
+    #
+    #end
 
     @trip.attributes = trip
     #@trip		        = Trip.new(trip)

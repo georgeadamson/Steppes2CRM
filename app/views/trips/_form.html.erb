@@ -78,6 +78,7 @@
 
 		<% if confirm_client_source %>
 			<td>
+			  <!-- This fake trip_client.source_id attribute get assigned to the client.source_id when the new trip is submitted: -->
 				<%= fields_for client do %>
 				<%#= hidden_field  :id, :name  => "#{ client_field_prefix }[id]" %>
 				<%= select :source_id, :label => "Client source", :name => "#{ client_field_prefix }[source_id]", :collection => client_sources, :selected => '', :prompt => '- Please confirm', :value_method => :id, :text_method => :name %>
