@@ -1,9 +1,10 @@
 <%
 
-company ||= @company
-@properties = company.method(:properties).call
-
-@show_all_required_field_message = true
+  company ||= @company
+  @properties = company.method(:properties).call
+  
+  @show_delete = false
+  @show_all_required_field_message = true
 
 -%>
 
