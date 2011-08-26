@@ -33,10 +33,11 @@
   # This shorter alternative was chosen in order to work around the Outlook mailto length limit:
 	h [
 
-		client.passport_name.strip.blank? ? client.fullname : client.passport_name,
-		"DoB: #{ client.birth_date.formatted(:uidatelong) }",
-		"Passport: #{ client.passport_number } #{ client.nationality }",
-		"Notes:"
+		#client.passport_name.strip.blank? ? client.fullname : client.passport_name,
+		client.fullname,
+		"DOB: #{ client.birth_date.formatted(:uidatelong) }",
+		"PASSPORT: #{ client.passport_number } #{ client.nationality }",
+		"NOTES:"
 
 	].join(new_line).gsub(/[\r\n]+/,new_line)
 
