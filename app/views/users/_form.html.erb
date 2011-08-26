@@ -17,6 +17,7 @@
 <%= text_field	:email,						:label => 'Email address',		:maxlength => @properties[:email].length,						:class => 'width2Fields' %> 
 <%= text_field	:signature_file,	:label => 'Signature file',		:maxlength => @properties[:signature_file].length,	:class => 'width2Fields' %>
 <%= text_field	:portrait_file,		:label => 'Portrait file',		:maxlength => @properties[:portrait_file].length,		:class => 'width2Fields' %>
+<%= text_field	:job_title,		    :label => 'Job title',		    :maxlength => @properties[:job_title].length,		    :class => 'width2Fields' %>
 <%= text_area		:profile,					:label => 'Profile',					:maxlength => @properties[:profile].length,					:class => 'width2Fields' %> 
 <%= check_box		:is_active,				:label => 'Active' %>
 <hr/><br/>
