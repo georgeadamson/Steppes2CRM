@@ -38,7 +38,7 @@
 			<%	# Apply the @show_delete flag if the form set it: 
 					label_for_delete = @show_delete if defined?( @show_delete )
 			%>
-			
+
 			<%= partial 'shared/sectionFoot_with_buttons',
 
 					:foot_class				=> 'formSurround',
@@ -61,6 +61,7 @@
 
 		<!-- Important: This delete button is HIDDEN and exists in it's own little form.
 		     It has an associated <label> defined above that can be clicked in the preceeding sectionFoot! -->
-		<%= delete_button resource( @obj, :url_params => url_params.to_json ), delete_caption,	:class => "hidden", :id => delete_uid %>
+		<%= delete_button resource( @obj, :url_params => url_params.to_json ), delete_caption,	:class => "hidden", :id => delete_uid, 
+		  :'data-confirm' => 'Delete this? Really? Are you mad? Who knows what might happen?! Only delete this if you&apos;re sure it&apos;s not needed by any other parts of the system' %>
 
 </div>
