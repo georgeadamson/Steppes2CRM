@@ -17,12 +17,30 @@
 	user_list << @trip.user
 	
 	
-	# Prepare content for the all-client-details mailto link:
-		email_all = @trip.new? ? nil : {
-			:subject	=> 'Client details',
-			:body			=> @trip.clients.map{|c| '%0A' + partial('clients/traveller_summary',:client=>c) }.join('%0A')
-		}
+	if @trip.new?
 
+	  mailto_all = nil
+
+	else
+
+  	# Prepare content for the all-client-details mailto link:
+  	# Important: mailto links seem to be limited to around 1600 characters for Oulook 2007! An Outlook limitation. May need a firefox plugin to handle these better :(
+  	mailto_character_limit = 1580
+  	mailto_all_body = @trip.clients.map{|c| partial('clients/traveller_summary',:client=>c) }.join('%0A%0A')
+
+  	if mailto_all_body.length > mailto_character_limit
+  	  mailto_all_prefix = '(Oh no! Some details had to be omitted from the end because of a limitaion imposed by Outlook)%0A%0A'
+  	  mailto_all_suffix = '...'
+  	  mailto_all_truncated_length = mailto_character_limit - mailto_all_prefix.length - mailto_all_suffix.length
+  	  mailto_all_body   = mailto_all_prefix + mailto_all_body.slice(0,mailto_all_truncated_length).sub(/\%.{0,2}$/,'') + mailto_all_suffix
+    end
+
+  	mailto_all = {
+  		:subject	=> 'Client details',
+  		:body			=> mailto_all_body
+  	}
+
+  end
 
 	# If we're creating a new private trip then we should confirm current client's source:
 	confirm_client_source = @trip.new? && ( @trip.tailor_made? || @trip.private_group? ) && !@client_or_tour.new?
@@ -187,7 +205,8 @@
 							<th title="Create email with all client details">
 								<%= icon :'triangle-1-s' %><!-- :'mail-closed' -->
 								<span class="vertical">
-								<%= trip.clients.empty? || !email_all ? 'Send email' : link_to('Send email', "mailto:&#{ email_all.to_params }") %></span>
+								<!-- Alas mailto links seem to be limited to around 1600 characters! An Outlook limitation. May need a plugin to handle these instead -->
+								<%= trip.clients.empty? || !mailto_all ? 'Send email' : link_to('Send email', "mailto:&#{ mailto_all.to_params.slice(0,1610) }") %></span>
 							</th>
 							<% if trip.tour_template? %>
 								<th title="We are handling flights for this client"							>
