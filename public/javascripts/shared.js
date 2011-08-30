@@ -55,7 +55,9 @@ jQuery(function($) {
 		WEB_REQUESTS_ADMIN_LABEL		= 'Web requests',
 		BROCHURE_REQUESTS_ADMIN_LABEL	= 'Brochure merge',
 		REPORTS_PAGE_LABEL				= 'Reports',
-		DOWNLOADABLE_EXT				= { doc:true, pdf:true, xls:true, csv:true },
+
+		DOWNLOADABLE_EXT				= { doc:true, pdf:true, xls:true, csv:true },
+
 		ELEMENT_URL_ATTR				= 'data-ajax-url',
 
 		// Global ajax timeout:
@@ -409,8 +411,13 @@ jQuery(function($) {
 				}
 			//}
 
-			// Display any error/notice messages found in the response:
-			//showMessage( Layout.getMessagesFrom( xhr.responseText || data ) );
+			// Display error/notice messages found in the response:
+			if( xhr && xhr.length && $(xhr[0]).length && $(xhr[0]).is('[method=post]') ){
+			  // Ignore the response from forms because their message is handled elsewhere.
+			}else{
+			  // Show message from GET Request:
+			  showMessage( Layout.getMessagesFrom( xhr.responseText || data ) );
+		  }
 
 			// Update the location hash and trigger matching livePath handlers: (but do not trigger the hashchange event)
 			if(path){
@@ -496,6 +503,7 @@ jQuery(function($) {
 				if( $link.parents('UL').is('.ui-tabs-nav, .ui-datepicker') ){ return }
 				if( DOWNLOADABLE_EXT[ext] || $link.is('.download') || $(this).is('.ajaxDownload') ){ return }
 				if( $link.is("[class *= 'datepicker']") ||  $link.parent().is("[class *= 'datepicker']") ){ return }
+				if( $link.is('[data-confirm]') && !confirm( $link.attr('data-confirm')) ){ e.preventDefault(); return }
 
 				// Derive a {resource}_id property for each resource in the path: (Eg: "clients/1/trips/2" => {client_id:1, trip_id:2}
 				$.extend( options, Layout.getResourceIDsFrom(path) );
@@ -2017,7 +2025,26 @@ return
 
 
 
-	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	// Depricated because users need to be able to enter number of singles before adding named clients.	//	// Refresh the singles field when user un/ticks single checkboxes:	//	// (ONLY if ticked quantity is greater than the singles box)	//	$(":checkbox:visible[name *= 'is_single']").live('change', function(){	//		var $form    = $(this).closest('FORM');	//		var singles  = $form.find(":checkbox[name *= is_single]:checked").length;	//		var $singles = $form.find("[name = 'trip[singles]']");	//			//		if( singles > parseInt($singles.val()) ){ $singles.val(singles) }	//	});	
+
+	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)
+	$(":checkbox:visible[name *= 'is_primary']")
+		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );
+
+	$(":checkbox:visible[name *= 'is_invoicable']")
+		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });
+
+	// Depricated because users need to be able to enter number of singles before adding named clients.
+	//	// Refresh the singles field when user un/ticks single checkboxes:
+	//	// (ONLY if ticked quantity is greater than the singles box)
+	//	$(":checkbox:visible[name *= 'is_single']").live('change', function(){
+
+	//		var $form    = $(this).closest('FORM');
+	//		var singles  = $form.find(":checkbox[name *= is_single]:checked").length;
+	//		var $singles = $form.find("[name = 'trip[singles]']");
+	//		
+	//		if( singles > parseInt($singles.val()) ){ $singles.val(singles) }
+
+	//	});	
 
 
 
@@ -4221,7 +4248,37 @@ function numVal(selector, $fields, defaultAlternative) {
 };
 
 
-// QUnit testing://$.getScript('/javascripts/testing/qunit.js', function(){//	$.getScript('/javascripts/testing/test-specs.js')//});
+
+// QUnit testing:
+//$.getScript('/javascripts/testing/qunit.js', function(){
+//	$.getScript('/javascripts/testing/test-specs.js')
+//});
+
+
+
 	// Initialise all our custom Layout event handling:
 	Layout.init();
-	// Intercept accidental attempts to use the BACK BUTTONS etc:	// Note: We only intercept page-unload when there are client tabs open. That way testing individual controller pages is not annoying!	// TODO: Allow use of back buttons by adding to the browser history while user navigates around the tabs.	window.onbeforeunload = function(e){		// Derive file extension of clicked link if applicable: (Eg 'doc', 'pdf')		var elem = e.target.activeElement;		var href = !!elem && elem.href || '';		var file_extension = href.split(/#|\?/).shift().split('.').pop();	// Get text between the last dot and the first # or ?, if any.		if( $('#pageTabsNav > LI').length > 1 && !DOWNLOADABLE_EXT[file_extension] ){			return "- Tip: If you are simply trying to reload the page then press OK to continue.\n\n" +				"- More info:\n This site is more like an application than an ordinary web page, so " +				"using your browser's back and forward buttons will not navigate you around this application."		}	};});	// End of jQuery ready handler.
+
+
+
+	// Intercept accidental attempts to use the BACK BUTTONS etc:
+	// Note: We only intercept page-unload when there are client tabs open. That way testing individual controller pages is not annoying!
+	// TODO: Allow use of back buttons by adding to the browser history while user navigates around the tabs.
+	window.onbeforeunload = function(e){
+
+		// Derive file extension of clicked link if applicable: (Eg 'doc', 'pdf')
+		var elem = e.target.activeElement;
+		var href = !!elem && elem.href || '';
+		var file_extension = href.split(/#|\?/).shift().split('.').pop();	// Get text between the last dot and the first # or ?, if any.
+
+		if( $('#pageTabsNav > LI').length > 1 && !DOWNLOADABLE_EXT[file_extension] ){
+
+			return "- Tip: If you are simply trying to reload the page then press OK to continue.\n\n" +
+				"- More info:\n This site is more like an application than an ordinary web page, so " +
+				"using your browser's back and forward buttons will not navigate you around this application."
+
+		}
+
+	};
+
+});	// End of jQuery ready handler.

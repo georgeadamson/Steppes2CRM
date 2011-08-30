@@ -174,6 +174,24 @@ class Documents < Application
 
   end
 
+  def recreate(id)
+
+    @document = Document.get(id)
+    raise NotFound unless @document
+
+    # This property will only be saved if generation succeeds:
+    @document.generated_by = session.user.preferred_name
+
+    if @document.generate_doc
+      message[:notice] = "The document has been recreated using the latest details"
+    else
+      message[:error] = "Hmm, there was a hiccup while attempting to re-generate the document. #{ @document.errors.full_messages.join("\n") }"
+    end
+
+    @documents = get_filtered_documents()
+    render :index
+
+  end
 
   # UNUSED?
   def update(id, document)
@@ -224,6 +242,7 @@ class Documents < Application
   #      raise InternalServerError
   #    end
   #  end
+
 
 
 

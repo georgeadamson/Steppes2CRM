@@ -85,10 +85,17 @@
 		<h3>
 			<span class="ui-icon ui-icon-document"></span>
 			Client's documents
+			<!-- Link to download patch for customising Firefox security: -->
 			<small style="float:right;">
-				<!-- Link to download patch for customising Firefox security: -->
-				<a href="/help/security/user.js" class="right-click" title="To make Firefox open links to documents on the network: Right-click and save this file to 'C:\Documents and Settings\YourUsername\Application Data\Mozilla\Firefox\Profiles\xyz.default\user.js' and then restart Firefox">(Download to change Firefox security)</span>
-			</small>
+        <!--
+				<a href="/help/security/user.js" class="right-click" 
+				  title="To make Firefox open links to documents on the network: Right-click and save this file to 'C:\Documents and Settings\YourUsername\Application Data\Mozilla\Firefox\Profiles\xyz.default\user.js' and then restart Firefox">
+				  (Download to change Firefox security)</a>
+		    -->
+		    <a href="https://addons.mozilla.org/en-US/firefox/addon/locallink/" target="_tab" class="noajax">
+		      &quot;LocalLink&quot; Firefox add-on for opening network documents
+		    </a>
+		  </small>
 		</h3>
 	</div>
 
@@ -104,14 +111,15 @@
 
 		<thead>
 			<tr>
-				<th>Description</th>
+				<th>Document name</th>
 				<!--<th>Modify<br/>original</th>-->
 				<th>Produced for</th>
 				<th>Created</th>
 				<!--<th>Created on</th>-->
-				<th>Actions</th>
 				<th>Status</th>
 				<th>Download<br/>a copy as</th>
+				<th>'tis witchcraft</th>
+				<!--<th>Recreate</th>-->
 			</tr>
 		</thead>
 
@@ -123,12 +131,13 @@
 			client				= clients.get( doc.client_id )	|| doc.client || ( params[:client_id] && Client.get(params[:client_id]) )
 
 			doc_type_name	= "#{ cached(:document_types_hash)[doc.document_type_id] }"
-			doc_is_recent	= ( doc.created_at && doc.created_at.to_time.to_date <=> Time.now.to_date ) == 0	# Created today?
+			doc_is_recent	= ( ( doc.generated_at || doc.created_at ) && ( doc.generated_at || doc.created_at ).to_time.to_date <=> Time.now.to_date ) == 0	# Created today?
 			
-			doc_date			= case 
-				when doc_is_recent	then doc.created_at.formatted(:uidatetime)
-				else                     doc.created_at.formatted(:uidate)
-			end
+			#doc_date			= case 
+			#	when doc_is_recent	then doc.generated_at.formatted(:uidatetime)
+			#	else                     doc.generated_at.formatted(:uidate)
+			#end
+			doc_date = ( doc.generated_at || doc.created_at ).formatted( doc_is_recent ? :uidatetime : :uidate )
 			
 			doc_status		= case
 				when	doc.document_status_id == 1										then 'Creating now!'
@@ -202,12 +211,6 @@
 
 				<%= tag :td, "#{ client.fullname unless client.nil? }" %>
 				<%= tag :td, link_to( "#{ doc_date }<br/>by #{ ( doc.user && user.preferred_name ) || doc.user_name }", resource(client, doc)), :title => h(doc_tooltip) %>
-				<%= tag :td do
-							# Show delete button unless document is still being created *today*
-							# Note: When documents are deleted they are actually moved to the '/documents/deleted/' folder, just in case!
-							link_to( 'Delete', resource(client, doc, :delete), :class => 'delete ui-priority-secondary ui-state-default' ) unless client.nil? || ( doc.document_status_id == 1 && doc_is_recent )
-						end
-				%>
 				<%= tag :td, doc_status %>
 
 				<%=
@@ -216,6 +219,24 @@
 						link_to( " pdf", resource( client, doc, :format => :pdf ), :class => 'noajax strikethough', :title => 'Sorry folks, the Microsoft PDF converter is buggy and may crash the server!' )
 					end if doc.file_exist?
 				%>
+
+        <td>
+  				<%=
+  					# Show delete button unless document is still being created *today*
+  					# Note: When documents are deleted they are actually moved to the '/documents/deleted/' folder, just in case!
+  					unless client.nil? || ( doc.document_status_id == 1 && doc_is_recent )
+  					  link_to icon(:close), resource(client, doc, :delete), :class => 'delete ui-icon-only', :title => 'Delete this document', 'data-confirm' => 'Delete this? Awe shame, and it looked so nice...'
+  					end
+  				%>
+          &nbsp;
+          <%=
+            if doc.created_by_legacy_crm
+              'n/a'
+            else
+              link_to icon(:refresh), url( :document_recreate, doc.client_id, doc.id ), :title => 'Recreate this document using the latest details', :class => 'ui-icon-only', 'data-confirm' => ( doc.file_exist? ? 'Recreate this document? Yeah go for it, but bear in mind that the existing document will be overwritten and gone forever and ever after' : nil )
+            end
+          %>
+        </td>
 
 			</tr>
 
