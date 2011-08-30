@@ -2919,13 +2919,19 @@ function initMVC(context) {
 // Filter user's typing in numeric fields etc:
 function initKeyPressFilters(){
 
+
 	// TODO: Validate pasted values too?
-	$( "INPUT:text, INPUT:tel" ).live( 'keydown', function(e){
+	$( "INPUT:text, INPUT:tel, INPUT:search" ).live( 'keydown', function(e){
 
-    var $textbox = $(this);
+    var $textbox  = $(this),
+        text      = $textbox.val(),
+        cursorPos = $textbox.attr('selectionStart');  // TODO: Other non-mozilla browsers.
 
-    // Prevent space at beginning of text fields:
-		if( e.keyCode == KEY.space && !$textbox.val() ){
+    // Prevent space at beginning of text fields, or multiple spaces within the text: (Could be made smarter!)
+		if( e.keyCode === KEY.space && ( cursorPos === 0 || /^$|\s{2,}|^\s|\s$/.test(text) ) ){
+		  // Might as well trim unwanted spaces while we're at it:
+		  if( /^\s|\s$/.test(text) ){ $textbox.val( $.trim(text) ) }                // Trim if it begins or ends with space.
+		  if( /\s\s/   .test(text) ){ $textbox.val( text.replace(/\s{2,}/g,' ') ) } // Remove multiple contiguous spaces.
 			return false;
 		}
 
