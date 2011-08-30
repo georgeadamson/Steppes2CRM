@@ -99,6 +99,10 @@ $.extend($.expr[':'],{
     $.expr[':'].search = function(elem){ return "search" === elem.type; }
   }
 
+  // Custom :email selector in case it's not defined in this version of jQuery:
+  if( !$.expr[':'].email ){
+    $.expr[':'].email = function(elem){ return "email" === elem.type; }
+  }
 
 	//alert( (new RegExp( '\/clients\/[0-9]+\/?([\?#]|$)', 'i' )).test( '/clients/1234' )  )
 

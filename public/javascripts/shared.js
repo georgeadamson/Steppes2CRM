@@ -2921,19 +2921,28 @@ function initKeyPressFilters(){
 
 
 	// TODO: Validate pasted values too?
-	$( "INPUT:text, INPUT:tel, INPUT:search" ).live( 'keydown', function(e){
+	$( "INPUT:text, INPUT:tel, INPUT:email, INPUT:search" ).live( 'keydown', function(e){
 
     var $textbox  = $(this),
         text      = $textbox.val(),
         cursorPos = $textbox.attr('selectionStart');  // TODO: Other non-mozilla browsers.
 
-    // Prevent space at beginning of text fields, or multiple spaces within the text: (Could be made smarter!)
-		if( e.keyCode === KEY.space && ( cursorPos === 0 || /^$|\s{2,}|^\s|\s$/.test(text) ) ){
-		  // Might as well trim unwanted spaces while we're at it:
-		  if( /^\s|\s$/.test(text) ){ $textbox.val( $.trim(text) ) }                // Trim if it begins or ends with space.
-		  if( /\s\s/   .test(text) ){ $textbox.val( text.replace(/\s{2,}/g,' ') ) } // Remove multiple contiguous spaces.
-			return false;
-		}
+    if( e.keyCode === KEY.space ){
+
+      // Prevent spaces in email addresses: // TODO: Prevent other invalid characters too!
+      if( $textbox.is(':email') ){
+        return false;
+      }
+
+      // Prevent space at beginning of text fields, or multiple spaces within the text: // TODO Make it smarter by checking for cursor next to space
+  		if( cursorPos === 0 || /^$|\s{2,}|^\s|\s$/.test(text) ){
+  		  // Might as well trim unwanted spaces while we're at it:
+  		  if( /^\s|\s$/.test(text) ){ $textbox.val( $.trim(text) ) }                // Trim if it begins or ends with space.
+  		  if( /\s\s/   .test(text) ){ $textbox.val( text.replace(/\s{2,}/g,' ') ) } // Remove multiple contiguous spaces.
+  			return false;
+  		}
+
+    }
 
 		// Only allow POSITIVE values: (Simply by stopping the user form typing a minus)
     if( $textbox.is('.positive') && isKeyCodeLikeFilter( e.keyCode, KEY.minus ) ){
