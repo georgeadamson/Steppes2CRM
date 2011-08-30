@@ -105,6 +105,7 @@ jQuery(function($) {
 			minus			: 109,
 			tab				: 9,
 			enter			: 13,
+			space     : 32,
 			backspace		: 8,
 			'delete'		: /[\x2E\x90]/,								// Allows for number-pad delete too.
 			pageUpDown		: /[\x21-\x22]/,
@@ -2918,8 +2919,76 @@ function initMVC(context) {
 // Filter user's typing in numeric fields etc:
 function initKeyPressFilters(){
 
-	// Only allow POSITIVE values: (Simply by stopping the user form typing a minus)
 	// TODO: Validate pasted values too?
+	$( "INPUT:text, INPUT:tel" ).live( 'keydown', function(e){
+
+    var $textbox = $(this);
+
+    // Prevent space at beginning of text fields:
+		if( e.keyCode == KEY.space && !$textbox.val() ){
+			return false;
+		}
+
+		// Only allow POSITIVE values: (Simply by stopping the user form typing a minus)
+    if( $textbox.is('.positive') && isKeyCodeLikeFilter( e.keyCode, KEY.minus ) ){
+			return false;
+		}
+
+    // Only allow INTEGER values:
+    if( $textbox.is('.integer') ){
+
+  		var keys = [ KEY.integer, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
+  
+  		if( ( isKeyCodeInList( e.keyCode, keys ) && !e.shiftKey ) || e.ctrlKey || e.altKey ){
+  
+  			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
+  			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $textbox.is("[value *= '-']") ){ return false }
+  			if( isKeyCodeLikeFilter( e.keyCode, KEY.dot   ) && $textbox.is("[value *= '.']") ){ return false }
+  
+  			return true;
+  
+  		}else{
+  			return false;
+  		}
+
+    }
+
+    // Only allow DECIMAL values:
+	  if( $textbox.is('.decimal,.money') ){
+
+  		var keys = [ KEY.decimal, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
+  
+  		if( ( isKeyCodeInList( e.keyCode, keys ) && !e.shiftKey ) || e.ctrlKey || e.altKey ){
+  
+  			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
+  			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
+  			if( isKeyCodeLikeFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
+  
+  			return true;
+  
+  		}else{
+  			return false;
+  		}
+
+    }
+
+	});
+
+
+  // The following keydown events have been replaced by the single conditional event above, for speed:
+  /*
+
+	// Prevent space at beginning of text fields: // TODO: Validate pasted values too?
+	$( "INPUT:text, INPUT:tel" ).live( 'keydown', function(e){
+
+		if( e.keyCode == KEY.space && !$(this).val() ){
+			return false;
+		}
+
+	});
+
+
+	// Only allow POSITIVE values: (Simply by stopping the user form typing a minus) // TODO: Validate pasted values too?
 	$( "INPUT:text.positive" ).live( 'keydown', function(e){
 
 		if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) ){
@@ -2930,8 +2999,7 @@ function initKeyPressFilters(){
 
 	
 
-	// Only allow INTEGER values:
-	// TODO: Validate pasted values too?
+	// Only allow INTEGER values: // TODO: Validate pasted values too?
 	$( "INPUT:text.integer" ).live( 'keydown', function(e){
 
 		var keys = [ KEY.integer, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
@@ -2950,8 +3018,7 @@ function initKeyPressFilters(){
 
 	});
 
-	// Only allow DECIMAL values:
-	// TODO: Validate pasted values too? And other number formats? (eg in France they use commas and dots the other way around)
+	// Only allow DECIMAL values: // TODO: Validate pasted values too? And other number formats? (eg in France they use commas and dots the other way around)
 	$( "INPUT:text.decimal, INPUT:text.money" ).live( 'keydown', function(e){
 
 		var keys = [ KEY.decimal, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
@@ -2969,6 +3036,8 @@ function initKeyPressFilters(){
 		}
 
 	});
+
+  */
 
 
 	// Helper for testing whether keyCode matches any of the specified character codes or regexs:
