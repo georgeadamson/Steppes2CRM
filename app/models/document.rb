@@ -44,8 +44,12 @@ class Document
   property :pdf_builder_output,     Text,    :required => false, :default => '' # String for feedback from the generation process.
   
 	property :created_at,	            DateTime
-	property :created_by,	            String,  :required => true, :length => 50, :auto_validation => false	  # Consultant name
-	#property :user_name,	            String,  :required => true, :length => 50,  :default => ''	# Consultant name
+	property :created_by,	            String,  :required => true,  :length => 50, :auto_validation => false	  # Consultant name
+	
+	# Properties set after successful doc generation:
+	property :generated_at,	          DateTime,:required => false
+	property :generated_by,	          String,  :required => false, :length => 50, :auto_validation => false	  # Consultant name
+
   
 	belongs_to :document_template  
 	belongs_to :document_type
@@ -577,6 +581,15 @@ class Document
       else
         message = "Completed shell command."
         Document.logger.info message
+      end
+
+      # Set generation timestamp:
+      if self.document_status_id == SUCCEEDED
+        self.generated_at   = DateTime.now
+        self.generated_by ||= self.created_by
+      else
+        self.generated_at = nil
+        self.generated_by = nil
       end
 
       # # This did not seem to update the row. No idea why! Had to resort to direct update instead:

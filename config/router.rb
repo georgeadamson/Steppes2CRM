@@ -125,6 +125,7 @@ Merb::Router.prepare do
   resources :brochure_requests
   
   match('/documents/download').to( :controller => 'documents', :action => 'download' )
+  match('/clients/:client_id/documents/:id/recreate').to( :controller => 'documents', :action => 'recreate' ).name(:document_recreate)
   resources :documents
   
   #match('/images/:action/:id' ).to( :controller => 'images', :action => :action, :id => id )
