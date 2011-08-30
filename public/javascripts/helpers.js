@@ -51,7 +51,7 @@
 
 // Custom jQuery selectors:
 
-  $.extend($.expr[':'],{
+$.extend($.expr[':'],{
 
 	// Selector for finding links that are 'mailto' links:
 	mailto : function(elem) {
@@ -86,7 +86,15 @@
 
 	}
 
-  });
+});
+
+
+  // Custom :tel selector in case it's not available in this version of jQuery:
+  if( !$.expr[':'].tel ){
+    $.expr[':'].tel = function(elem){ return "tel" === elem.type; }
+  }
+
+
 
 	//alert( (new RegExp( '\/clients\/[0-9]+\/?([\?#]|$)', 'i' )).test( '/clients/1234' )  )
 
