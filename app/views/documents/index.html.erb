@@ -116,7 +116,7 @@
 				<th>Produced for</th>
 				<th>Created</th>
 				<!--<th>Created on</th>-->
-				<th>Status</th>
+				<th></th>
 				<th>Download<br/>a copy as</th>
 				<th>'tis<br/>witchcraft</th>
 				<!--<th>Recreate</th>-->
@@ -208,7 +208,7 @@
 
 
 				<%= tag :td, "#{ client.fullname unless client.nil? }" %>
-				<%= tag :td, link_to( "#{ doc_display_date }<br/>by #{ ( doc.user && user.preferred_name ) || doc.user_name }", resource(client, doc)), :title => h(doc_tooltip) %>
+				<%= tag :td, "#{ doc_display_date }<br/>by #{ ( doc.user && user.preferred_name ) || doc.user_name }", :title => h(doc_tooltip) %>
 				<%= tag :td, doc_status %>
 
 				<%=
@@ -236,6 +236,8 @@
               link_to icon(:script), url( :document_recreate, doc.client_id, doc.id ), :title => 'Recreate this document using the latest details', :class => 'ui-icon-only', 'data-confirm' => ( doc.file_exist? ? 'Recreate this document? Yeah go for it, but bear in mind that the existing document will be overwritten and gone forever and ever after' : nil )
             end
           %>
+          &nbsp;
+          <%= link_to icon(:gear), resource(client, doc, :return_to => resource(client,:documents)), :title => "Geeky details... #{ h(doc_tooltip) }", :class => 'ui-icon-only' %>
         </td>
 
 			</tr>
