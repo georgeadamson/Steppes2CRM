@@ -61,11 +61,11 @@ module Merb
 
           elsif args.first.respond_to?(:context)
 
-            if args.first.context && !args.first.context.id.nil?
-              args.unshift args.first.context
-            elsif params[:client_id]
-              args.unshift Client.get(params[:client_id])
-            end
+            #if args.first.context && !args.first.context.id.nil?
+            #  args.unshift args.first.context
+            #elsif params[:client_id]
+            #  args.unshift Client.get(params[:client_id])
+            #end
 
           end
 
@@ -572,14 +572,19 @@ end
 		  def collect_error_messages_for( obj, association_name = :all, context = :default )
 
         if association_name == :all
-          
-          obj.model.relationships.each do | name, association |
+
+          #obj.model.relationships.each do | name, association |    # Older versions of DM
+          obj.model.relationships.each do | association |
+
+            name = association.name
 
             begin
 
               if obj.respond_to?(name)
 
                 if ( rel = obj.method(name).call ) #&& rel.respond_to?(:dirty?) && rel.dirty?
+
+                  Merb.logger.debug "Collecting errors from #{name}"
 
                   if rel.respond_to?(:each)
                     collect_error_messages_for obj, name.to_sym
@@ -596,7 +601,9 @@ end
             end
 
           end
-          
+
+          Merb.logger.debug "#{ obj.class } now has #{ obj.errors.length } errors"
+
         else
 
 			    obj.send(association_name).each{ |a|
