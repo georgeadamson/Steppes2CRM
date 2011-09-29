@@ -38,11 +38,16 @@ gem "dm-types", dm_gems_version
 gem "dm-validations", dm_gems_version  
 gem "dm-serializer", dm_gems_version   
 gem "dm-sqlserver-adapter", dm_gems_version
+
 #gem "dm-accepts_nested_attributes"
 #gem "dm-accepts_nested_attributes", :git => 'https://github.com/snusnu/dm-accepts_nested_attributes.git'
 
 gem "merb-parts", "0.9.8" #merb_gems_version
 #gem "uuidtools", "2.1.1"
+
+gem "webrat", "0.5.3"
+#gem "rspec", "1.3.1"
+gem "rspec", :require => "spec"
 
 
 # Added to satisfy bundler: (By George 16 Jul 2010)

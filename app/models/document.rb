@@ -99,7 +99,7 @@ class Document
     #raise IOError, "The Document.doc_builder_settings_path does not exist (#{ Document.doc_builder_settings_path })"                unless File.exist?( Document.doc_builder_settings_path )
     #raise IOError, "The Document.folder does not exist (#{ Document.folder })"                                                      unless File.exist?( Document.folder )
     #raise IOError, "The Document sub-folder does not exist (#{ self.sub_folder })"                                                  unless File.exist?( Document.folder / self.sub_folder )
-    
+
     if !File.exist?( Document.folder )
       return [false, "Cannot find the folder where the generated documents are stored (#{ Document.folder })"]
     
@@ -108,8 +108,8 @@ class Document
     #    return [false, "Cannot find the subfolder where the generated document would be saved to (#{ Document.folder / self.sub_folder })"]
     
     elsif !File.exist?( Document.doc_builder_commands_folder_path )      
-      return [false, "Cannot find the folder where the document-generation gizmo lives (#{ Document.doc_builder_commands_folder_path })"]
-    
+      return [false, "Cannot find the folder where the document-generation script lives (#{ Document.doc_builder_commands_folder_path })"]
+
     elsif !File.exist?( Document.doc_builder_script_path )
       return [false, "Cannot find the script that does the document-generation (#{ Document.doc_builder_script_path })"]
     
@@ -126,18 +126,17 @@ class Document
   
   # Method for custom validations:
   def validate_document_template_file
-    
-    #if self.document_type_id == DocumentType::LETTER || self.document_type_id == DocumentType::BROCHURE
+
     if [ DocumentType::LETTER, DocumentType::BROCHURE ].include? self.document_type_id
       template_path = Document.doc_builder_letter_templates_path / self.document_template_file
     else
       template_path = Document.doc_builder_templates_path / self.document_template_file
     end
-    
+
     return [false, "No template file has been chosen for this document"]          if self.document_template_file.blank?
     return [false, "The template file could not be found at #{ template_path }"]  if !File.exist?(template_path)
     return true
-    
+
   end
   
   
@@ -990,20 +989,26 @@ class Document
     Document.logger.info "Preparing ini file from these app_settings: #{ CRM.inspect }"
 
     settings = "[Steppes Travel Document Builder settings for the '#{ Merb.environment }' database]" +
-      "\r\nConnectionString=Provider=SQLOLEDB;Data Source=#{ config[:host] };Initial Catalog=#{ config[:database] };User Id=#{ config[:username] };Password=#{ config[:password] };" +
-      "\r\nTemplatePath=#{ CRM[:doc_templates_path].gsub('/','\\') }" +
-      "\r\nLetterTemplatePath=#{ CRM[:letter_templates_path].gsub('/','\\') }" +
-      "\r\nDocumentPath=#{ CRM[:doc_folder_path].gsub('/','\\') }" +
-      "\r\nImagePath=#{ CRM[:images_folder_path].gsub('/','\\') }" +
-      "\r\nSignaturePath=#{ CRM[:signatures_folder_path].gsub('/','\\') }" +
-      "\r\nPortraitPath=#{ CRM[:portraits_folder_path].gsub('/','\\') }" +
-      "\r\n"
-    
+      "\nConnectionString=Provider=SQLOLEDB;Data Source=#{ config[:host] };Initial Catalog=#{ config[:database] };User Id=#{ config[:username] };Password=#{ config[:password] };" +
+      "\nTemplatePath=#{ CRM[:doc_templates_path].gsub('/','\\') }" +
+      "\nLetterTemplatePath=#{ CRM[:letter_templates_path].gsub('/','\\') }" +
+      "\nDocumentPath=#{ CRM[:doc_folder_path].gsub('/','\\') }" +
+      "\nImagePath=#{ CRM[:images_folder_path].gsub('/','\\') }" +
+      "\nSignaturePath=#{ CRM[:signatures_folder_path].gsub('/','\\') }" +
+      "\nPortraitPath=#{ CRM[:portraits_folder_path].gsub('/','\\') }" +
+      "\n"
+
+    # Use doc_builder_settings_path: (after making it absolute if necessary)
     ini_path = Document.doc_builder_settings_path
-    
+    ini_path = Merb.root + ini_path if ini_path =~ /^[\/\\]/
+
     # Recreate INI file if it does not exist or does not match expected settings:
     begin
 
+      if !File.exist?( ini_path )
+        raise IOError, "The Document.doc_builder_settings_path does not exist: #{ Document.doc_builder_settings_path }"
+      end
+      
       unless File.exist?(ini_path) && File.read(ini_path) == settings
         
 		    File.open( ini_path, 'w' ){ |file| file.write settings } 

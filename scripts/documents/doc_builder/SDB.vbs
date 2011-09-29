@@ -479,8 +479,9 @@ Sub InitialiseDocument
 	' Create a Word object
 	Set objWord = CreateObject("Word.Application")
 
+	objWord.WindowState     = wdWindowStateMinimize
 	objWord.Visible         = True 'isTestEnvironment() Or isDevEnvironment()	'Visible when running unit tests.
-  objWord.WindowState     = wdWindowStateMinimize
+	objWord.WindowState     = wdWindowStateMinimize
 	objWord.ScreenUpdating  = False
 	
 	Dim strTemplateFolder
