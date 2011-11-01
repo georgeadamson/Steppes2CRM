@@ -40,13 +40,13 @@ class Trip
     alias single_supps singles
     
     # Price per person: (entered on the trip_element form)
-    property :price_per_adult,		        Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_child,		        Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_infant,		        Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_adult_biz_supp,		Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_child_biz_supp,		Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_infant_biz_supp,	Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
-    property :price_per_single_supp,		  Decimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_adult,		        BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_child,		        BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_infant,		        BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_adult_biz_supp,		BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_child_biz_supp,		BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_infant_biz_supp,	BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
+    property :price_per_single_supp,		  BigDecimal, :default	=> 0,		:precision=> 9, :scale	=> 2
     
     property :type_id,						        Integer,	  :default  => TripType::TAILOR_MADE, :required => true
     property :status_id,					        Integer,	  :default  => TripState::UNCONFIRMED	  # 1=Unconfirmed, 2=Confirmed, 3=Completed, 4=Abandonned, 5=Canceled

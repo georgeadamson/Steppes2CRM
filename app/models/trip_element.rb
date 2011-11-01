@@ -39,18 +39,18 @@ class TripElement
   property :singles,							Integer,		:default	=> 0
 
   property :margin_type,					String,			:length		=> 1,			:default	=> '%'							# Apply margin as percent? (Or fixed amount)
-  property :margin,								Decimal, :required	=> true,  :precision=> 6, :scale	=> 2,	:default	=> lambda{ |elem,prop| CRM[:default_margin] || 24 }	# Number representing a fixed amount or percent.
-  property :exchange_rate,				Decimal, :required	=> true,  :precision=> 6, :scale	=> 2,	:default	=> 1
-  property :cost_per_adult,				Decimal, :default	=> 0,			:precision=> 9, :scale	=> 2  # LOCAL cost per adult per day
-  property :cost_per_child,				Decimal, :default	=> 0,			:precision=> 9, :scale	=> 2  # LOCAL cost per child per day
-  property :cost_per_infant,			Decimal, :default	=> 0,			:precision=> 9, :scale	=> 2  # LOCAL cost per infant per day
-  property :cost_per_triple,			Decimal, :default	=> 0,			:precision=> 9, :scale	=> 2
-  property :cost_by_room,					Decimal, :default	=> 0,			:precision=> 9, :scale	=> 2
-  property :single_supp,					Decimal, :default	=> 0,			:precision=> 9, :scale	=> 2
+  property :margin,								BigDecimal, :required	=> true,  :precision=> 6, :scale	=> 2,	:default	=> lambda{ |elem,prop| CRM[:default_margin] || 24 }	# Number representing a fixed amount or percent.
+  property :exchange_rate,				BigDecimal, :required	=> true,  :precision=> 6, :scale	=> 2,	:default	=> 1
+  property :cost_per_adult,				BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2  # LOCAL cost per adult per day
+  property :cost_per_child,				BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2  # LOCAL cost per child per day
+  property :cost_per_infant,			BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2  # LOCAL cost per infant per day
+  property :cost_per_triple,			BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2
+  property :cost_by_room,					BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2
+  property :single_supp,					BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2
   
   # Calculated totals: (Updated whenever the element is saved)
-  property :total_cost,						Decimal, :default	=> 0,			:precision=> 9, :scale	=> 2	# AKA Total Net 
-  property :total_price,					Decimal, :default	=> 0,			:precision=> 9, :scale	=> 2	# AKA Total Gross
+  property :total_cost,						BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2	# AKA Total Net 
+  property :total_price,					BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2	# AKA Total Gross
   alias total_net   total_cost
   alias total_gross total_price
   
@@ -64,12 +64,12 @@ class TripElement
   property :flight_leg,						Boolean,		:default	=> false
   property :arrive_next_day,			Boolean,		:default	=> false
   property :touchdownDescription, String,			:default	=> ''									      # Text equivalent of touchdowns table association.
-  property :taxes,								Decimal, :precision=> 6,	:scale		=> 2, :default => 0
+  property :taxes,								BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
   
-  property :biz_supp_per_adult,		Decimal, :precision=> 6,	:scale		=> 2, :default => 0
-  property :biz_supp_per_child,		Decimal, :precision=> 6,	:scale		=> 2, :default => 0
-  property :biz_supp_per_infant,	Decimal, :precision=> 6,	:scale		=> 2, :default => 0
-  property :biz_supp_margin,			Decimal, :precision=> 6, :scale	  => 2,	:default => lambda{ |elem,prop| CRM[:default_margin] || 24 }, :required	=> true
+  property :biz_supp_per_adult,		BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
+  property :biz_supp_per_child,		BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
+  property :biz_supp_per_infant,	BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
+  property :biz_supp_margin,			BigDecimal, :precision=> 6, :scale	  => 2,	:default => lambda{ |elem,prop| CRM[:default_margin] || 24 }, :required	=> true
   property :biz_supp_margin_type, String,     :length		=> 1,			            :default => '%'
   
   property :is_subgroup,					Boolean,		:default	=> false							# Only set when number of adults/children/infants must differ from main trip.

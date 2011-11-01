@@ -7,7 +7,7 @@ class Airport
   property :code,       String,			:required => true,	:unique => true
   property :city,       String,			:required => true
   property :country_id, Integer,		:required => true
-  property :tax,	      Decimal,	:required => false, :precision=>6, :scale=>2, :default => 0					# Unused. For future enhancement.
+  property :tax,	      BigDecimal,	:required => false, :precision=>6, :scale=>2, :default => 0					# Unused. For future enhancement.
 	
   belongs_to :country
   #belongs_to :company	# Depricated because country is already associated with company.
