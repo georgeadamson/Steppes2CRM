@@ -1,23 +1,23 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{bcrypt-ruby}
+  s.name = "bcrypt-ruby"
   s.version = "2.1.4"
-  s.platform = %q{java}
+  s.platform = "java"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Coda Hale"]
-  s.date = %q{2011-01-08}
-  s.description = %q{    bcrypt() is a sophisticated and secure hash algorithm designed by The OpenBSD project
-    for hashing passwords. bcrypt-ruby provides a simple, humane wrapper for safely handling
-    passwords.
-}
-  s.email = %q{coda.hale@gmail.com}
-  s.homepage = %q{http://bcrypt-ruby.rubyforge.org}
+  s.date = "2011-01-08"
+  s.description = "    bcrypt() is a sophisticated and secure hash algorithm designed by The OpenBSD project\n    for hashing passwords. bcrypt-ruby provides a simple, humane wrapper for safely handling\n    passwords.\n"
+  s.email = "coda.hale@gmail.com"
+  s.extra_rdoc_files = ["README", "COPYING", "CHANGELOG", "lib/bcrypt.rb"]
+  s.files = ["README", "COPYING", "CHANGELOG", "lib/bcrypt.rb"]
+  s.homepage = "http://bcrypt-ruby.rubyforge.org"
+  s.rdoc_options = ["--title", "bcrypt-ruby", "--line-numbers", "--inline-source", "--main", "README"]
   s.require_paths = ["lib"]
-  s.rubyforge_project = %q{bcrypt-ruby}
-  s.rubygems_version = %q{1.6.2}
-  s.summary = %q{OpenBSD's bcrypt() password hashing algorithm.}
+  s.rubyforge_project = "bcrypt-ruby"
+  s.rubygems_version = "1.8.11"
+  s.summary = "OpenBSD's bcrypt() password hashing algorithm."
 
   if s.respond_to? :specification_version then
     s.specification_version = 3

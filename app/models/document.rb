@@ -75,8 +75,8 @@ class Document
   # Custom validations:
   validates_with_method :validate_file_paths
   validates_with_method :document_template_file, :method => :validate_document_template_file #, :when => [:now]
-  validates_presence_of     :created_by #, :when => [:now]
-  validates_presence_of     :client_id, :unless => lambda{ |d| d.trip && d.trip.tour_template? }
+  validates_present     :created_by #, :when => [:now]
+  validates_present     :client_id, :unless => lambda{ |d| d.trip && d.trip.tour_template? }
 
   def status_name
 
