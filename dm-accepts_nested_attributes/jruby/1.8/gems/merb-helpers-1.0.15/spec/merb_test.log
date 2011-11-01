@@ -1,0 +1,504 @@
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-25 18:43:07 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>1.3e-05, :action_time=>0.000761, :dispatch_time=>0.001199}
+ ~ 
+
+ ~ Started request handling: 2009-09-25 18:43:08 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>9.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000335, :dispatch_time=>0.000779}
+ ~ 
+
+ ~ Started request handling: 2009-09-25 18:43:08 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000345, :dispatch_time=>0.000692}
+ ~ 
+
+ ~ Started request handling: 2009-09-25 18:43:08 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000407, :dispatch_time=>0.000743}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-25 19:17:23 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.4e-05, :after_filters_time=>1.4e-05, :action_time=>0.00078, :dispatch_time=>0.001221}
+ ~ 
+
+ ~ Started request handling: 2009-09-25 19:17:23 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>9.0e-06, :action_time=>0.000334, :dispatch_time=>0.000752}
+ ~ 
+
+ ~ Started request handling: 2009-09-25 19:17:23 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>8.0e-06, :action_time=>0.00039, :dispatch_time=>0.000803}
+ ~ 
+
+ ~ Started request handling: 2009-09-25 19:17:23 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>9.0e-06, :action_time=>0.000452, :dispatch_time=>0.000874}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 12:42:22 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>1.2e-05, :action_time=>0.000762, :dispatch_time=>0.001199}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 12:42:22 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>7.0e-06, :action_time=>0.000405, :dispatch_time=>0.000868}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 12:42:22 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000366, :dispatch_time=>0.00072}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 12:42:22 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000462, :dispatch_time=>0.000871}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 13:01:47 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>1.2e-05, :action_time=>0.00076, :dispatch_time=>0.001219}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 13:01:47 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>7.0e-06, :action_time=>0.000335, :dispatch_time=>0.000758}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 13:01:47 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000339, :dispatch_time=>0.000677}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 13:01:47 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000413, :dispatch_time=>0.000812}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 13:08:14 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>1.3e-05, :action_time=>0.000827, :dispatch_time=>0.001267}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 13:08:14 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000333, :dispatch_time=>0.000753}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 13:08:14 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>9.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000383, :dispatch_time=>0.000747}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 13:08:14 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000408, :dispatch_time=>0.000748}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:04:13 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>1.2e-05, :action_time=>0.000804, :dispatch_time=>0.00126}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:04:13 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>7.0e-06, :action_time=>0.000421, :dispatch_time=>0.000876}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:04:14 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>9.0e-06, :after_filters_time=>8.0e-06, :action_time=>0.000608, :dispatch_time=>0.001126}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:04:14 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000444, :dispatch_time=>0.000813}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:10:27 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.2e-05, :after_filters_time=>1.1e-05, :action_time=>0.00075, :dispatch_time=>0.001189}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:10:27 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000345, :dispatch_time=>0.000768}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:10:27 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>4.0e-06, :action_time=>0.000348, :dispatch_time=>0.000693}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:10:27 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000401, :dispatch_time=>0.000738}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:14:06 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.2e-05, :after_filters_time=>1.1e-05, :action_time=>0.000767, :dispatch_time=>0.001204}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:14:06 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>5.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.00033, :dispatch_time=>0.000764}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:14:06 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>4.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000347, :dispatch_time=>0.000728}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:14:06 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>5.0e-06, :after_filters_time=>9.0e-06, :action_time=>0.000454, :dispatch_time=>0.000793}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:15:52 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>1.2e-05, :action_time=>0.000799, :dispatch_time=>0.001236}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:15:52 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000338, :dispatch_time=>0.000805}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:15:52 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000345, :dispatch_time=>0.000681}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:15:52 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000414, :dispatch_time=>0.000758}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:16:46 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.1e-05, :after_filters_time=>1.2e-05, :action_time=>0.000765, :dispatch_time=>0.001199}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:16:47 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000316, :dispatch_time=>0.000716}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:16:47 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>7.0e-06, :action_time=>0.000345, :dispatch_time=>0.000684}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:16:47 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>4.0e-06, :action_time=>0.000389, :dispatch_time=>0.000714}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:33:24 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.2e-05, :after_filters_time=>1.2e-05, :action_time=>0.000761, :dispatch_time=>0.001202}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:33:24 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>5.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000336, :dispatch_time=>0.000764}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:33:24 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000358, :dispatch_time=>0.000678}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:33:24 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>4.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000395, :dispatch_time=>0.000723}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:38:00 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>1.1e-05, :action_time=>0.000782, :dispatch_time=>0.00122}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:38:00 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000354, :dispatch_time=>0.000798}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:38:00 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000401, :dispatch_time=>0.000785}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:38:00 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>5.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000482, :dispatch_time=>0.000868}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:42:40 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.2e-05, :after_filters_time=>1.2e-05, :action_time=>0.000792, :dispatch_time=>0.001252}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:42:40 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000326, :dispatch_time=>0.000743}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:42:40 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>4.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000323, :dispatch_time=>0.000633}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:42:40 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>9.0e-06, :after_filters_time=>7.0e-06, :action_time=>0.000509, :dispatch_time=>0.001021}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:50:45 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.5e-05, :after_filters_time=>1.3e-05, :action_time=>0.0008, :dispatch_time=>0.001301}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:50:45 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.00034, :dispatch_time=>0.000781}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:50:45 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>5.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000346, :dispatch_time=>0.000678}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:50:45 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>5.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000399, :dispatch_time=>0.000723}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-09-27 14:56:58 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.6e-05, :after_filters_time=>1.4e-05, :action_time=>0.000869, :dispatch_time=>0.001402}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:56:58 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000328, :dispatch_time=>0.000747}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:56:58 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000343, :dispatch_time=>0.000679}
+ ~ 
+
+ ~ Started request handling: 2009-09-27 14:56:58 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000414, :dispatch_time=>0.000782}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-10-17 13:38:00 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.4e-05, :after_filters_time=>1.5e-05, :action_time=>0.000769, :dispatch_time=>0.001223}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 13:38:00 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000326, :dispatch_time=>0.00076}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 13:38:00 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000347, :dispatch_time=>0.0007}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 13:38:00 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>7.0e-06, :action_time=>0.000421, :dispatch_time=>0.000852}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-10-17 13:44:39 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>1.3e-05, :action_time=>0.000808, :dispatch_time=>0.001323}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 13:44:39 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000389, :dispatch_time=>0.000837}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 13:44:39 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>4.0e-06, :action_time=>0.000343, :dispatch_time=>0.000678}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 13:44:39 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000396, :dispatch_time=>0.000721}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-10-17 15:50:25 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.4e-05, :after_filters_time=>1.2e-05, :action_time=>0.000825, :dispatch_time=>0.001329}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 15:50:25 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>7.0e-06, :action_time=>0.000325, :dispatch_time=>0.000746}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 15:50:26 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>7.0e-06, :action_time=>0.00035, :dispatch_time=>0.000707}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 15:50:26 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000391, :dispatch_time=>0.000724}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-10-17 18:26:19 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.6e-05, :after_filters_time=>1.4e-05, :action_time=>0.00098, :dispatch_time=>0.001815}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 18:26:19 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000337, :dispatch_time=>0.000755}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 18:26:19 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000353, :dispatch_time=>0.000686}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 18:26:19 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000419, :dispatch_time=>0.000764}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-10-17 20:50:21 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.2e-05, :after_filters_time=>1.3e-05, :action_time=>0.000814, :dispatch_time=>0.001254}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 20:50:21 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>9.0e-06, :after_filters_time=>7.0e-06, :action_time=>0.000362, :dispatch_time=>0.000906}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 20:50:21 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>6.0e-06, :action_time=>0.000506, :dispatch_time=>0.000903}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 20:50:21 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000411, :dispatch_time=>0.000756}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-10-17 20:58:54 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.3e-05, :after_filters_time=>1.2e-05, :action_time=>0.000754, :dispatch_time=>0.0012}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 20:58:54 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000403, :dispatch_time=>0.000911}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 20:58:54 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000351, :dispatch_time=>0.000691}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 20:58:54 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000424, :dispatch_time=>0.000762}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-10-17 21:00:36 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.4e-05, :after_filters_time=>1.4e-05, :action_time=>0.000768, :dispatch_time=>0.00124}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 21:00:36 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000338, :dispatch_time=>0.000817}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 21:00:36 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.00036, :dispatch_time=>0.00071}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 21:00:36 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>8.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000407, :dispatch_time=>0.000734}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-10-17 21:01:01 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.2e-05, :after_filters_time=>1.3e-05, :action_time=>0.001165, :dispatch_time=>0.001889}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 21:01:01 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>5.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000326, :dispatch_time=>0.000739}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 21:01:01 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>5.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000361, :dispatch_time=>0.000732}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 21:01:01 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>5.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000397, :dispatch_time=>0.000722}
+ ~ 
+
+ ~ Compiling routes...
+ ~ Started request handling: 2009-10-17 21:27:46 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>1.2e-05, :after_filters_time=>1.2e-05, :action_time=>0.000749, :dispatch_time=>0.001197}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 21:27:46 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_content_in_the_block", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>7.0e-06, :after_filters_time=>6.0e-06, :action_time=>0.000352, :dispatch_time=>0.000842}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 21:27:46 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"tag_with_attributes", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>4.0e-06, :action_time=>0.000333, :dispatch_time=>0.000664}
+ ~ 
+
+ ~ Started request handling: 2009-10-17 21:27:46 +0100
+ ~ Params: {"controller"=>"tag_helper", "action"=>"nested_tags", "id"=>nil, "format"=>nil}
+ ~ {:before_filters_time=>6.0e-06, :after_filters_time=>5.0e-06, :action_time=>0.000437, :dispatch_time=>0.000826}
+ ~ 
+
