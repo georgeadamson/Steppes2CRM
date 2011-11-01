@@ -148,30 +148,30 @@ class TripElement
   
   
   # Require departure/arrival AIRPORTS on flight NOT created automatically by a PNR:
-  validates_presence_of :depart_airport_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? }
-	validates_presence_of :arrive_airport_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? }
+  validates_present :depart_airport_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? }
+	validates_present :arrive_airport_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? }
   
   # Require departure/arrival AIRPORTS on flight created automatically by a PNR:
-  validates_presence_of :depart_airport_id, :if => Proc.new {|elem| elem.bound_to_pnr? },
+  validates_present :depart_airport_id, :if => Proc.new {|elem| elem.bound_to_pnr? },
     :message => "The Departure Airport code was not recognised. (Try examining the PNR and ensure the airport has an Airport Code defined in the System Admin pages)"
-  validates_presence_of :arrive_airport_id, :if => Proc.new {|elem| elem.bound_to_pnr? },
+  validates_present :arrive_airport_id, :if => Proc.new {|elem| elem.bound_to_pnr? },
     :message =>   "The Arrival Airport code was not recognised. (Try examining the PNR and ensure the airport has an Airport Code defined in the System Admin pages)"
 	
   
   # Require HANDLER on flight NOT created automatically by a PNR:
-  #validates_presence_of :handler_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? },
-  validates_presence_of :handler_id,
+  #validates_present :handler_id, :if => Proc.new {|elem| elem.flight? && elem.pnr_number.blank? },
+  validates_present :handler_id,
     :if      => Proc.new {|elem| elem.flight? && !elem.bound_to_pnr? },
     :when    => [:complete],
     :message => "The Flight agent cannot be left blank"
   
   # Require SUPPLIER on element NOT created automatically by a PNR:
-  validates_presence_of :supplier_id,
+  validates_present :supplier_id,
     :unless  => Proc.new {|elem| elem.bound_to_pnr? },
     :when    => [:complete]
   
   # Require SUPPLIER (airline) on flight created automatically by a PNR:
-  validates_presence_of :supplier_id,
+  validates_present :supplier_id,
     :if      => Proc.new {|elem| elem.bound_to_pnr? },
     :when    => [:complete],
     :message => "The Airline code was not recognised. (Try examining the PNR and ensure the airline has an Airline Code defined in the System Admin pages)"

@@ -37,8 +37,8 @@ class Merb::Authentication
           base.class_eval do
             unless Merb::Orms::Sequel.new_sequel?
               before_save :encrypt_password
-              validates_presence_of     :password,                   :if => :password_required?
-              validates_presence_of     :password_confirmation,      :if => :password_required?
+              validates_present     :password,                   :if => :password_required?
+              validates_present     :password_confirmation,      :if => :password_required?
               validates_confirmation_of :password,                   :if => :password_required?
             end
             include Merb::Authentication::Mixins::SaltedUser::SQInstanceMethods 

@@ -6,8 +6,8 @@ class Merb::Authentication
         def self.extended(base)
           base.class_eval do
             
-            validates_presence_of     :password,                   :if => :password_required?
-            validates_presence_of     :password_confirmation,      :if => :password_required?
+            validates_present     :password,                   :if => :password_required?
+            validates_present     :password_confirmation,      :if => :password_required?
             validates_confirmation_of :password,                   :if => :password_required?
             
             before_save :encrypt_password

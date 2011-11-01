@@ -149,7 +149,7 @@ class Trip
     
     # TODO!
     #validates_absence_of  :tour_id, :if => Proc.new{ |trip| trip.type_id != TOUR_TEMPLATE }
-    #validates_presence_of :tour_id, :if => Proc.new{ |trip| trip.type_id == TOUR_TEMPLATE }
+    #validates_present :tour_id, :if => Proc.new{ |trip| trip.type_id == TOUR_TEMPLATE }
 
 
     # Require user to confirm client source when creating a new private trip:
