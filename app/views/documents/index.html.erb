@@ -145,7 +145,7 @@
 				when	doc.document_status_id == 1										then 'Creating now!'
 				when	doc.document_status_id == 2										then 'Failed'
 				when	doc.document_status_id == 3 && doc_is_recent	then 'NEW!'
-				when  doc.dupe?																			then 'Duplicate'	# We should never see these!
+				when  doc.dupe?																			then 'Duplicate'	# The "next if doc.dupe?" command above should ensure we should never see this status!
 				else  nil
 			end
 
