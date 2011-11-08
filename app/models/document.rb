@@ -329,6 +329,20 @@ class Document
   alias file_exist?  doc_exist?  # <-- Best to use this alias to be consistent with ruby File.exist?()
   alias file_exists? doc_exist?  # <-- TODO: Depricate this?
   
+
+  # Shameful workaround to try to identify duplicate records:
+  # Dupes are created by some kind of bug in the document validation process.
+  # We use this flag to hide dupes in the ui because we've not managed to fix the real problem!
+  def dupe?
+    ( self.document_status_id == 0  ) && 
+    ( !self.created_by_legacy_crm   ) && 
+    ( orig = Document.get self.id+1 ) && 
+    ( self.document_type_id == orig.document_type_id ) &&
+    ( self.parameters       == orig.parameters       )
+  end
+
+
+
   
   # Delete the physical file: (Returns true if successful)
   # to be extra safe this assumes we want to delete the PDF unless :doc or file_path is specified)

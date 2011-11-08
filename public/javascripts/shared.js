@@ -238,6 +238,7 @@ jQuery(function($) {
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/builder/)						.on('success').to(Trip.initTimeline);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy/)						.on('click'  ).to(Trip.showSearch);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/)				.on('success').to(Trip.showSearchResults);
+			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/costings/)					.on('success').to(Trip.initCostsheet);
 
 			// TripElements:
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.openGrid );
@@ -3599,6 +3600,26 @@ function initTripInvoiceFormTotals(){
 			});
 
 		},
+
+
+		initCostsheet : function(ui){
+
+			// Allow user to hit enter in the MARGIN textbox to submit "Set all margins to %":
+			// The form sumbits automatically on Enter but we need to ensure the MARGIN button is the default submit.
+			// Set focus on the margin button so browser won't default to either of the other submit buttons.
+			// (This ensures the server knows which submit button was pressed.)
+			$(ui.panel).delegate( '#new_margin', 'keydown', function(e){
+
+				if( e.keyCode == KEY.enter ){
+
+					$(this).closest('FORM').find(':submit[value *= margin]').focus();
+
+				}
+
+			})
+
+		},
+
 
 		onCreateSuccess : function(options){
 

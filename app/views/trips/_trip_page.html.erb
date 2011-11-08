@@ -13,7 +13,8 @@
 	active_version_number =	1
 	
   trip.versions.all( :order => [:id] ).each_with_index do |version,i|
-		versions_list << [ version.id, "v#{ i+1 }: #{ version.version_name }#{ ' (active version)' if version.is_active_version }" ]
+		invoiced = version.money_ins.count > 0 ? 'INVOICED' : ''
+		versions_list << [ version.id, "v#{ i+1 }: #{ invoiced } #{ version.version_name }#{ ' (active version)' if version.is_active_version }" ]
 		active_version_number = i+1 if version.is_active_version
 	end	
 	versions_list = { 'Versions of this trip:' => versions_list }
@@ -28,7 +29,7 @@
   <div class="sectionHead">
 
     <!-- Trip name and on-line-summary: -->
-    <h3 class="tripHeading">
+    <h3 class="tripHeading ellipsis">
       <%= icon trip.tour ? :group : :trip %>
 			<span class="tripName">
         <%= trip.title %>
