@@ -151,8 +151,11 @@ class Documents < Application
 
       # document_status_id: 0=Pending, 1=Running, 2=Failed, 3=Succeeded:
       message[:notice] = @document.document_status_message || 'Document details were saved successfully.'
+puts "redirecting to #{next_page}"
 
-      if request.ajax?
+      if next_page == :show
+        render next_page
+      elsif request.ajax?
         redirect next_page, :message => message, :ajax? => true
       else
         redirect next_page, :message => message

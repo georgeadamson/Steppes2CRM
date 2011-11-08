@@ -3605,8 +3605,8 @@ function initTripInvoiceFormTotals(){
 		initCostsheet : function(ui){
 
 			// Allow user to hit enter in the MARGIN textbox to submit "Set all margins to %":
-			// The form sumbits automatically on Enter but we need to ensure the MARGIN button is the default submit.
-			// Set focus on the margin button so browser won't default to either of the other submit buttons.
+			// The form submits automatically on Enter but we need to ensure the MARGIN button is the default submit.
+			// Set focus on the margin button so browser won't default to the wrong submit button (there are 3).
 			// (This ensures the server knows which submit button was pressed.)
 			$(ui.panel).delegate( '#new_margin', 'keydown', function(e){
 

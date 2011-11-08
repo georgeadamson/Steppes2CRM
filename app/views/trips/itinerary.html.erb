@@ -71,7 +71,7 @@
 
 				<% @document.document_type_id	= DocumentType::CONTACT_SHEET %>
 				
-				<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@trip) }/itinerary" %>
+				<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@client_or_tour,@trip) }/itinerary" %>
 				<%= hidden_field :trip_id %>
 				<%= hidden_field :client_id %>
 				<%= hidden_field :company_id %>
@@ -91,7 +91,7 @@
 
 				<% @document.document_type_id	= DocumentType::ITINERARY %>
 
-				<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@trip) }/itinerary" %>
+				<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@client_or_tour,@trip) }/itinerary" %>
 				<%= hidden_field :trip_id %>
 				<%= hidden_field :client_id %>
 				<%= hidden_field :company_id %>
