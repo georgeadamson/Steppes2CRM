@@ -321,7 +321,7 @@ class Trips < Application
   
 
   def update(id, trip)
-    
+    puts 'updating'
     @trip = Trip.get(id)
     raise NotFound unless @trip
     @trip_version = @trip
@@ -351,6 +351,7 @@ class Trips < Application
     # Switch VERSION:
     if trip[:active_version_id] && trip[:active_version_id].to_i != @trip.id
 
+      puts 'Switching version...'
 
       # Make NEW VERSION:
       if trip[:active_version_id] == 'new'
@@ -413,7 +414,9 @@ class Trips < Application
 
 
     # Set MARGIN on all elements:
-    elsif params[:submit] =~ /margin/i
+    elsif params[:submit] =~ /margin/i || params[:form_submit] =~ /margin/i
+
+      puts "Seting margins to #{ params[:new_margin] }"
 
       if @trip.update_margins_to( params[:new_margin].to_i, :save )
       
@@ -435,7 +438,9 @@ class Trips < Application
 
 
     # Update EXCHANGE RATES
-    elsif params[:submit] =~ /exchange rates/i
+    elsif params[:submit] =~ /exchange rate/i || params[:form_submit] =~ /exchange rate/i
+
+      puts 'Updating exchange rates'
 
       if @trip.update_exchange_rates(:save)
       
@@ -458,6 +463,8 @@ class Trips < Application
 
     # Otherwise apply the changes in the normal way:
 		elsif @trip.update(trip)
+
+      puts "Updating trip #{@trip.id}"
 
 			message[:notice]	  = 'Trip was updated successfully. '
       #message[:notice]   += 'The active version has been changed.' if @trip_version
@@ -511,6 +518,8 @@ class Trips < Application
       end
       
     else
+
+      puts "Error during update trip #{@trip.id}"
 
       collect_error_messages_for @trip
       collect_error_messages_for @trip, :elements

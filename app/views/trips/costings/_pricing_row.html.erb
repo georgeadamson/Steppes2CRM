@@ -15,7 +15,7 @@ if !do_totals %>
 	
 	applies_to = trip.count_of(person) < trip.pax ? "#{ trip.count_of(person) } of #{ trip.pax }" : 'all'
 	
-	copy_gross = link_to icon('transfer-e-w'), '#costing_copy_gross', :title => h("Click to set gross (because I can't be bothered to type it in)"), :class => 'noajax hidden-when-js-disabled'
+	copy_gross = link_to icon('arrowreturn-1-e'), '#costing_copy_gross', :title => h("Click to set gross (because I can't be bothered to type it in)"), :class => 'noajax hidden-when-js-disabled'
 
 	-%>
 	

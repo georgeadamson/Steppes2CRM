@@ -51,8 +51,9 @@ class MoneyIns < Application
     @money_in = MoneyIn.new(money_in)
     @money_in.generate_doc_later = true
 
-    if @money_in.save || @money_in.save # HACK: Save may succeed but something is preventing it from returning true first time! (GA 07 Oct 2011)
-
+    #if @money_in.save || @money_in.save # HACK: Save may succeed but something is preventing it from returning true first time! (GA 07 Oct 2011)
+    if @money_in.save
+      
       message[:notice] = "Invoice record was created successfully"
 
       if @money_in.generate_doc_later
