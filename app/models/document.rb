@@ -23,7 +23,7 @@ class Document
   RUNNING   = 1 unless defined? RUNNING  
   FAILED    = 2 unless defined? FAILED   
   SUCCEEDED = 3 unless defined? SUCCEEDED
-
+  
   property :id,					            Serial
   property :name,				            String,  :required => true, :length => 255, :default => 'Document'
 	property :file_name,	            String,  :required => true, :length => 500, :default => ''
@@ -38,7 +38,7 @@ class Document
   property :document_status_id,     Integer, :required => true,  :default => PENDING  # 0=Pending, 1=Running, 2=Failed, 3=Succeeded
   property :document_template_id,   Integer, :required => true,  :default => 1  # DEPRICATED?
   property :document_template_file, String,  :required => true,  :default => '', :auto_validation => false, :length => 255
-  property :parameters,             Text,    :required => true,  :default => '' # Xml. Parameters are provided in xml for the Steppes Document Builder to use when querying for data.
+  property :parameters,             String,  :required => true,  :length => 2000, :default => '' # Xml. Parameters are provided in xml for the Steppes Document Builder to use when querying for data.
   
   property :doc_builder_output,     Text,    :required => false, :default => '' # String for feedback from the generation process.
   property :pdf_builder_output,     Text,    :required => false, :default => '' # String for feedback from the generation process.
@@ -73,23 +73,23 @@ class Document
   validates_with_method :document_template_file, :method => :validate_document_template_file #, :when => [:now]
   validates_present     :created_by #, :when => [:now]
   validates_present     :client_id, :unless => lambda{ |d| d.trip && d.trip.tour_template? }
-
+  
   def status_name
-
+    
     case self.document_status_id
-      when PENDING   then 'Pending'
-      when RUNNING   then 'Running'
-      when FAILED    then 'Failed'
-      when SUCCEEDED then 'Succeeded'
-      else                '(Unknown)'
+    when PENDING   then 'Pending'
+    when RUNNING   then 'Running'
+    when FAILED    then 'Failed'
+    when SUCCEEDED then 'Succeeded'
+    else                '(Unknown)'
     end
-
+    
   end
-      
-
-
+  
+  
+  
   def validate_file_paths
-
+    
     #raise IOError, "The Document.doc_builder_commands_folder_path does not exist (#{ Document.doc_builder_commands_folder_path })"  unless File.exist?( Document.doc_builder_commands_folder_path )
     #raise IOError, "The Document.doc_builder_script_path does not exist (#{ Document.doc_builder_script_path })"                    unless File.exist?( Document.doc_builder_script_path )
     #raise IOError, "The Document.doc_builder_settings_path does not exist (#{ Document.doc_builder_settings_path })"                unless File.exist?( Document.doc_builder_settings_path )
@@ -98,27 +98,27 @@ class Document
     
     if !File.exist?( Document.folder )
       return [false, "Cannot find the folder where the generated documents are stored (#{ Document.folder })"]
-    
-    # This sub-folder check is not helpful because the doc-generator will create the sub-folder structure if necessary:
-    #  elsif !File.exist?( Document.folder / self.sub_folder )
-    #    return [false, "Cannot find the subfolder where the generated document would be saved to (#{ Document.folder / self.sub_folder })"]
-    
+      
+      # This sub-folder check is not helpful because the doc-generator will create the sub-folder structure if necessary:
+      #  elsif !File.exist?( Document.folder / self.sub_folder )
+      #    return [false, "Cannot find the subfolder where the generated document would be saved to (#{ Document.folder / self.sub_folder })"]
+      
     elsif !File.exist?( Document.doc_builder_commands_folder_path )      
       return [false, "Cannot find the folder where the document-generation gizmo lives (#{ Document.doc_builder_commands_folder_path })"]
-    
+      
     elsif !File.exist?( Document.doc_builder_script_path )
       return [false, "Cannot find the script that does the document-generation (#{ Document.doc_builder_script_path })"]
-    
+      
     elsif !File.exist?( Document.doc_builder_settings_path )
       return [false, "Cannot find the settings for the document-generation script (#{ Document.doc_builder_settings_path })"]
       
     else
       return true
     end
-
+    
   end
-
-
+  
+  
   
   # Method for custom validations:
   def validate_document_template_file
@@ -146,7 +146,7 @@ class Document
     self.name                   = self.file_name                      if self.name.blank?
     self.document_template_file = self.default_document_template_file if self.document_template_file.blank?
     self.parameters             = self.default_parameters             if self.parameters.blank?
-
+    
     # Fix document_template_file path by removing /Letter/ path prefix if present: (It is superfluous for letter document_types)
     if self.document_type_id == DocumentType::LETTER || self.document_type_id == DocumentType::BROCHURE
       self.document_template_file = self.document_template_file.sub(/^(\\|\/)?Letters(\\|\/)?/i, '')
@@ -157,7 +157,7 @@ class Document
   
   # Trigger the doc file generation after saving details of a new document:
   after :create do
-
+    
     Document.logger.info ''
     
     # Generate doc file too if specified:
@@ -176,12 +176,12 @@ class Document
     Document.logger.info ''
     Document.logger.info "About to delete document #{ self.id }..."
   end
-
+  
   
   # Delete associated files after destroying the document record:
   # Note: Documents are actually MOVED to the /Documents/Deleted folder and not deleted! :o)
   after :destroy do
-      
+    
     self.delete_file! :pdf
     self.delete_file! :doc
     Document.logger.info " All trace of document #{ self.id } gone forever!"
@@ -241,7 +241,7 @@ class Document
     sub_folder  = year / company / doc_type
     
     begin
-
+      
       raise IOError, "Document root folder path is blank"        if folder.blank?
       raise IOError, "Document root folder path does not exist"  if !File.exist?(folder)
       raise IOError, "Document root folder path is not a folder" if File.file?(folder)  # Warning: File.directory? raises error on shared folders!
@@ -289,16 +289,16 @@ class Document
   def pdf_path
     return @pdf_path ||= "#{ self.doc_path.sub( /\.(doc|docx)$/, '' ) }.pdf"
   end
-
-
+  
+  
   # Helper for deriving the network file location of the document:
   def doc_url
     #"file:///#{ URI.escape( self.doc_path.gsub('/','\\') ) }"
     "file:///#{ self.doc_path.gsub('/','\\') }"
   end
-
-
-
+  
+  
+  
   def generate_pdf( report, pdf_path = nil )
     return Document.doc_to_pdf( self.doc_path, self.pdf_path, report )
   end
@@ -346,16 +346,16 @@ class Document
   # Important: Documents are actually MOVED to the /Documents/Deleted folder and not deleted! :o)
   # The document_id argument is not required but helps debugging.      
   def self.delete_file!(file_path, document_id = nil)
-
+    
     begin
-
+      
       Document.logger.info " Deleting document: #{ document_id } file: #{ file_path }"
       
       # Let's first make sure we're dealing with a document!
       raise IOError, "The document path is blank!"                                if file_path.blank?
       raise IOError, "The document path is a folder!"                             if File.exist?(file_path) && File.directory?(file_path)
-
-
+      
+      
       # If the document does not exist then we've kinda succeeded already! (so return true)
       if !File.exist?(file_path)
         
@@ -363,13 +363,13 @@ class Document
         return true
         
       else
-  
+        
         to_folder          = Document.deleted_folder
         file_utils_options = { :force => true, :verbose => true }
-
+        
         # Do what we can to ensure the 'documents/deleted/' folder is available for use:
         FileUtils.mkdir(to_folder) unless to_folder.blank? || File.exist?(to_folder)
-
+        
         # Some quick belt-and-braces checks to help with troubleshooting:
         raise IOError, "No documents-deleted folder was specified"                    if to_folder.blank?
         raise IOError, "The documents-deleted folder does not exist #{to_folder}"     unless File.exist?(to_folder)
@@ -387,15 +387,15 @@ class Document
             Document.logger.info " (File has been moved to #{ new_path } just in case!)" 
             File.delete(file_path) if File.exist?(file_path)
           end
-
+          
         end
-
+        
       end
-
+      
       # Return true if the file really has gone:
       Document.logger.info " Document file delete completed successfully"
       return !File.exist?(file_path)
-
+      
       
     rescue Exception => reason
       Document.logger.error " Unable to delete file because #{ reason }. File: #{ file_path }"
@@ -449,7 +449,7 @@ class Document
       :voucher_id           => self.voucher_id          || alternative[:voucher_id],          # This extra property not persisted in a corresponding db field.
       :brochure_request_id  => self.brochure_request_id || alternative[:brochure_request_id]  # This extra property not persisted in a corresponding db field.
     }
-
+    
     return Document.parameters_for(doc_builder_settings)
     
   end
@@ -475,7 +475,7 @@ class Document
     remove_instance_variable(:@doc_size) if instance_variable_defined?(:@doc_size)
     remove_instance_variable(:@pdf_size) if instance_variable_defined?(:@pdf_size)
     
-
+    
     #  if self.generate_doc_later
     #    Document.logger.info "Not running generate_doc right now because generate_doc_later is true"
     #    # doc = self
@@ -488,8 +488,8 @@ class Document
     #    self.generate_doc_later = false
     #    return 0
     #  end
-
-
+    
+    
     begin
       
       # Try to ensure the documents sub-folder structure exists, and doc-builder has an INI file:
@@ -504,7 +504,7 @@ class Document
       raise IOError, "The Document sub-folder does not exist: #{ Document.folder / self.sub_folder }"                                unless File.exist?( Document.folder / self.sub_folder )
       
       shell_command = "#{ Document.doc_builder_shell_command } #{ self.id }"
-
+      
       message = "Starting shell command #{ Time.now.formatted(:db) }: #{ shell_command }"
       Document.logger.info! message
       output << message
@@ -512,7 +512,7 @@ class Document
       # This did not seem to update the row. No idea why! Had to resort to direct update instead:
       #self.doc_builder_output = output.join("\n")
       #self.save!
-
+      
       # Trouble is, the direct update caused datamapper to notice that it's data was out of date:
   		# sql_statement = "EXEC sp_document_update_job_status ?, ?, ?"
       # repository.adapter.execute( sql_statement, self.id, nil, "\n#{ output.join("\n") }" )
@@ -525,35 +525,35 @@ class Document
         Document.logger.error "Unable to log progress to doc record because it does not exist #{ self.id }"
       end
       
-
+      
       IO.popen(shell_command) do |readme|
         readme.each do |line|
           
           begin
-
+            
             Document.logger.info! line
-          
+            
             # Exception when script path is incomplete: (Eg: it outputs: "Input Error: Unknown option /scripts/documents/doc_builder/sdb.vbs specified.")
             raise ScriptError, 'Problem with the shell command' if line =~ /Input Error:/i 
             raise IOError,     'Unable to open INI file'        if line =~ /ERROR.*Unable to open INI file/i 
             raise IOError,     'Unable to update job status'    if line =~ /ERROR.*Unable to update job status/i 
-
+            
             # Important: If we decide to update the doc_builder_output as we go then we'll need to keep
             #            reloading it because the external script process is updating the database row:
             # self.reload
             # self.doc_builder_output << line
             # self.save!
-          
+            
           rescue Exception => error_details
-
+            
             Document.logger.error! error_details
             raise Exception, error_details
-
+            
           end
           
         end
       end
-
+      
       #  # This alternative technique does it all in one go:
       #  f = IO.popen(shell_command)
       #  lines =  f.readlines
@@ -578,7 +578,7 @@ class Document
         message = "Completed shell command."
         Document.logger.info message
       end
-
+      
       # # This did not seem to update the row. No idea why! Had to resort to direct update instead:
       self.doc_builder_output << message
       self.save!
@@ -599,10 +599,10 @@ class Document
     name = self.document_type && self.document_type.name || ''
     
     case self.document_status_id
-      when 1 then "Your #{ name } document is being created."
-      when 2 then "Whoops, your #{ name } document could not be created. See the documents page for more details."
-      when 3 then "Your new #{ name } document has been created successfully."
-      else   nil
+    when 1 then "Your #{ name } document is being created."
+    when 2 then "Whoops, your #{ name } document could not be created. See the documents page for more details."
+    when 3 then "Your new #{ name } document has been created successfully."
+    else   nil
     end
     
   end
@@ -812,12 +812,12 @@ class Document
     ref     = args[:booking_ref]        || self.trip   && self.trip.booking_ref    || ''
     user    = args[:user_name]          || self.user   && self.user.preferred_name || ''
     date    = args[:date]               || Time.now.formatted(:filedatetime)
-
+    
     # Special naming convention for letters:
     if self.document_type.id == DocumentType::LETTER && args[:document_type_name].blank? && !self.document_template_file.blank?
       type = self.document_template_file.split(/\/|\\/).pop.slice(/(.*)(.doc)/, 1)
     end
-
+    
     file_name = "#{ type }-#{ client }#{ "-#{ref}" unless ref.blank? }-#{ user }-#{ date }.doc"
     
     return self.sub_folder / file_name
@@ -898,7 +898,7 @@ class Document
     }
     
     attrs = defaults.merge(attrs)
-        
+    
     letter_type = attrs[:type]    || '*'
     letter_type = letter_type.to_s.gsub( /General|Letter/i, '' )
     
@@ -906,7 +906,7 @@ class Document
     ext         = attrs[:ext]     || :doc
     pattern     = attrs[:pattern] || "#{ prefix }_#{ letter_type }Letter_*.#{ ext.to_s }"
     folder      = Document.doc_builder_letter_templates_path.gsub('\\','/')
-
+    
     # Decide whether to use the cached list of filenames if there is one:
     # (There are several caches, one for each combination of attrs)
     cached          = @@cached_filenames[attrs] ||= {}
@@ -916,11 +916,11 @@ class Document
     cache_is_ready  = cached[:filenames] && !cached[:filenames].empty?
     
     begin
-
+      
       if !cache_is_stale && cache_is_ready
-
+        
         return cached[:filenames]
-
+        
       elsif File.exist?(folder) && !File.file?(folder)
         
         # Warning: We couldn't use File.directory? because it raises error on shared folders! We did at least verify that it exists and it's not a file:
@@ -928,17 +928,17 @@ class Document
         cached[:last_refresh_at] = Time.now
         Document.logger.info "#{ DateTime.now.formatted(:uidatetime) } doc_builder_letter_templates() Refreshed cached template filenames (type=#{ attrs[:type] }). Next refresh due after #{ ( cached[:last_refresh_at] + FILENAMES_CACHE_INTERVAL ).to_datetime.formatted(:uitime) }"
         return cached[:filenames]
-
+        
       else
         raise IOError, "Sorry, I could not fetch list of templates from #{ folder }"
       end
-
+      
     rescue Exception => error_details
-
+      
       return [[ "(#{ error_details })" ]]
-
+      
     end
-
+    
   end
   
   
@@ -975,22 +975,22 @@ class Document
     }
     
     Document.logger.info "Preparing ini file from these app_settings: #{ CRM.inspect }"
-
+    
     settings = "[Steppes Travel Document Builder settings for the '#{ Merb.environment }' database]" +
-      "\r\nConnectionString=Provider=SQLOLEDB;Data Source=#{ config[:host] };Initial Catalog=#{ config[:database] };User Id=#{ config[:username] };Password=#{ config[:password] };" +
-      "\r\nTemplatePath=#{ CRM[:doc_templates_path].gsub('/','\\') }" +
-      "\r\nLetterTemplatePath=#{ CRM[:letter_templates_path].gsub('/','\\') }" +
-      "\r\nDocumentPath=#{ CRM[:doc_folder_path].gsub('/','\\') }" +
-      "\r\nImagePath=#{ CRM[:images_folder_path].gsub('/','\\') }" +
-      "\r\nSignaturePath=#{ CRM[:signatures_folder_path].gsub('/','\\') }" +
-      "\r\nPortraitPath=#{ CRM[:portraits_folder_path].gsub('/','\\') }" +
-      "\r\n"
+    "\r\nConnectionString=Provider=SQLOLEDB;Data Source=#{ config[:host] };Initial Catalog=#{ config[:database] };User Id=#{ config[:username] };Password=#{ config[:password] };" +
+    "\r\nTemplatePath=#{ CRM[:doc_templates_path].gsub('/','\\') }" +
+    "\r\nLetterTemplatePath=#{ CRM[:letter_templates_path].gsub('/','\\') }" +
+    "\r\nDocumentPath=#{ CRM[:doc_folder_path].gsub('/','\\') }" +
+    "\r\nImagePath=#{ CRM[:images_folder_path].gsub('/','\\') }" +
+    "\r\nSignaturePath=#{ CRM[:signatures_folder_path].gsub('/','\\') }" +
+    "\r\nPortraitPath=#{ CRM[:portraits_folder_path].gsub('/','\\') }" +
+    "\r\n"
     
     ini_path = Document.doc_builder_settings_path
     
     # Recreate INI file if it does not exist or does not match expected settings:
     begin
-
+      
       unless File.exist?(ini_path) && File.read(ini_path) == settings
         
 		    File.open( ini_path, 'w' ){ |file| file.write settings } 
@@ -1007,8 +1007,8 @@ class Document
     end
     
   end
-
-
+  
+  
 	def self.logger
     
 		unless defined?(@@doc_log)
@@ -1018,8 +1018,8 @@ class Document
 		return @@doc_log
 		
 	end
-
-
+  
+  
   #  # Depricated. Could nto get it to work.
   #  # Our own version of the run_later method normally only available to controllers and views:
   #  # Yes, yes I know it's a controller/view thing, but this seemed like a good idea at the time!

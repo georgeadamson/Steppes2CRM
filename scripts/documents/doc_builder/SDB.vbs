@@ -49,6 +49,9 @@ Const strUnknown				= "*unknown*"
 Const intImageBorder			= 12
 Const ForReading				= 1
 Const wdDoNotSaveChanges		= 0
+Const wdWindowStateNormal   = 0
+Const wdWindowStateMaximize = 1
+Const wdWindowStateMinimize = 2
 
 ' --- If the document.document_type_id matches either of these then we must use strLetterTemplatePath instead of strTemplatePath (default)
 '     WARNING: These must match settings in the document_types table!
@@ -476,8 +479,9 @@ Sub InitialiseDocument
 	' Create a Word object
 	Set objWord = CreateObject("Word.Application")
 
-	objWord.Visible = True	'isTestEnvironment() Or isDevEnvironment()	'Visible when running unit tests.
-	objWord.ScreenUpdating = False
+	objWord.Visible         = True 'isTestEnvironment() Or isDevEnvironment()	'Visible when running unit tests.
+  objWord.WindowState     = wdWindowStateMinimize
+	objWord.ScreenUpdating  = False
 	
 	Dim strTemplateFolder
 	
