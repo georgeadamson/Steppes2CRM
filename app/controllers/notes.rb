@@ -62,7 +62,7 @@ class Notes < Application
         #layout = false
         render :index #, :layout => false
       else
-        redirect nested_resource( @note.client, @note ), :message => { :notice => message[:notice] }
+        redirect resource( @note.client, @note ), :message => { :notice => message[:notice] }
       end
  
     else
@@ -83,7 +83,7 @@ class Notes < Application
       if request.ajax?
         render :index #, :layout=>false
       else
-        redirect nested_resource( @note.client, @note ), :message => { :notice => message[:notice] }
+        redirect resource( @note.client, @note ), :message => { :notice => message[:notice] }
       end
  
     else

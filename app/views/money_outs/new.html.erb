@@ -1,5 +1,5 @@
 <!-- TODO: Rearrange html to return sectionContainer as the outer div: -->
-<%= form_for @money_out, :action => nested_resource( @money_out.trip, :money_outs ) do %>
+<%= form_for @money_out, :action => resource( @client_or_tour, @money_out.trip, :money_outs ) do %>
 
 <div class="sectionBody">
 
@@ -18,6 +18,6 @@
 </div>
 	
 	<!-- sectionFoot: -->
-	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => :auto, :save_caption => 'Submit request', :cancel_caption => 'Cancel without saving', :cancel_url => nested_resource(@trip,:money_outs) %>
+	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => :auto, :save_caption => 'Submit request', :cancel_caption => 'Cancel without saving', :cancel_url => resource(@client_or_tour, @trip, :money_outs) %>
 
 <% end =%>

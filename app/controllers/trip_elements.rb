@@ -143,7 +143,7 @@ class TripElements < Application
 
     @trip.reload
     render :index
-    #redirect nested_resource( @trip, :trip_elements), :message =>message    
+    #redirect resource( @client_or_tour, @trip, :trip_elements), :message =>message    
     #display :trip_elements, :index
 
   end
@@ -224,7 +224,7 @@ class TripElements < Application
       #display @element, :edit
     end
 
-    #redirect nested_resource( @element.trip, :trip_elements ), :message =>message
+    #redirect resource( @element.trip, :trip_elements ), :message =>message
     @trip.reload  # To fix comments in bug 161
     render :index
     
@@ -252,7 +252,7 @@ class TripElements < Application
 #        @trip = @element.trip
 #        render :index
 #      else
-        #redirect nested_resource( @element.trip, :trip_elements), :message =>message
+        #redirect resource( @element.trip, :trip_elements), :message =>message
 #      end
   
     else

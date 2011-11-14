@@ -40,7 +40,7 @@ class MoneyOuts < Application
   def create(money_out)
     @money_out = MoneyOut.new(money_out)
     if @money_out.save
-      redirect nested_resource(@money_out.trip,:money_outs), :message => {:notice => "Your payment request was created successfully"}
+      redirect resource(@client_or_tour, @money_out.trip, :money_outs), :message => {:notice => "Your payment request was created successfully"}
     else
       message[:error] = "MoneyOut failed to be created because #{ error_messages_for @money_out }"
       render :new

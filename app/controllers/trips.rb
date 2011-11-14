@@ -321,7 +321,7 @@ class Trips < Application
   
 
   def update(id, trip)
-    puts 'updating'
+
     @trip = Trip.get(id)
     raise NotFound unless @trip
     @trip_version = @trip
@@ -416,16 +416,16 @@ class Trips < Application
     # Set MARGIN on all elements:
     elsif params[:submit] =~ /margin/i || params[:form_submit] =~ /margin/i
 
-      puts "Seting margins to #{ params[:new_margin] }"
+      puts "Setting margins to #{ params[:new_margin].to_f }"
 
-      if @trip.update_margins_to( params[:new_margin].to_i, :save )
+      if @trip.update_margins_to( params[:new_margin].to_f, :save )
       
         message[:notice] = "Successfully set the margin on every element and then recalculated trip prices."
         
         if request.ajax?
           next_page ? render(next_page) : render(:show)
         else
-          redirect "#{ nested_resource(@trip) }/#{ next_page }", :message => message
+          redirect "#{ resource(@client_or_tour, @trip) }/#{ next_page }", :message => message
         end
       
       else
@@ -449,7 +449,7 @@ class Trips < Application
         if request.ajax?
           next_page ? render(next_page) : render(:show)
         else
-          redirect "#{ nested_resource(@trip) }/#{ next_page }", :message => message
+          redirect "#{ resource(@client_or_tour, @trip) }/#{ next_page }", :message => message
         end
       
       else
@@ -514,7 +514,7 @@ class Trips < Application
       if request.ajax?
         next_page ? render(next_page) : render(:show)
       else
-        redirect "#{ nested_resource(@trip) }/#{ next_page }", :message => message
+        redirect "#{ resource(@client_or_tour, @trip) }/#{ next_page }", :message => message
       end
       
     else

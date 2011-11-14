@@ -18,7 +18,7 @@
 -%>
 <!--<div class="sectionContainer noSectionHead">-->
 
-	<%= form_for @trip, :action => nested_resource(client_or_tour,@trip) do %>
+	<%= form_for @trip, :action => resource(client_or_tour,@trip) do %>
 
 		<div class="sectionBody">
 			<br/>
@@ -28,7 +28,7 @@
 		<!-- sectionFoot: -->
 		<%= partial 'shared/sectionFoot_with_buttons', 
 
-			:ui_target				=> '#'+nested_resource(@trip,true), 
+			:ui_target				=> '#'+nested_resource(client_or_tour,@trip,true), 
 			:cancel						=> false,
 			:save_caption			=> 'Save changes', 
 			:save_class				=> 'updateTrip',			# Important: A class of 'createTrip' would cause javascript to add a new tab for the new trip.
@@ -36,7 +36,7 @@
 
 			:add							=> true,
 			:add_caption			=> 'Copy details from another trip...',
-			:add_url					=> "#{ nested_resource(client_or_tour,@trip) }/copy",
+			:add_url					=> "#{ resource(client_or_tour,@trip) }/copy",
 
 			# Define a special <label> element that can be clicked to activate the delete_button below:
 			:label_for_delete	=> label_for_delete,	# Specify that we want to render a <label> instead of a button.
@@ -45,7 +45,7 @@
 			:delete_class			=> 'left',
 			:delete						=> false,
 			
-			:custom_tag				=> check_box( :auto_update_elements_dates, :label => 'Move elements along with Start date', :title => 'This option helps you keep all elements relative to the trip&apos;s start date. Note that Flights bound to a PNR and elements linked to a Group Template are not affected.', :class => 'widthAuto labelWidthAuto' ),
+			:custom_tag				=> check_box( :auto_update_elements_dates, :label => 'Keep elements relative to Start date', :title => 'This option helps you keep all elements relative to the trip&apos;s start date. Note that Flights bound to a PNR and elements linked to a Group Template are not affected.', :class => 'widthAuto labelWidthAuto' ),
 			:custom_after			=> false
 
 		%>
