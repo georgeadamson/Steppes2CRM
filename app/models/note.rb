@@ -9,4 +9,6 @@ class Note
 	belongs_to :client
 	#belongs_to :trip
 
+  alias text name
+
 end

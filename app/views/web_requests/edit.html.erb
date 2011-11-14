@@ -73,11 +73,11 @@
 
 %>
 
-<div class="setionContainer web-requests-edit">
+<div class="sectionContainer web-requests-edit">
 
 	<div class="sectionHead">
 		<h2>
-			Web request 
+			&nbsp; Web request 
 			<small>
 				<%= @web_request.status.name.downcase %> 
 				for <%= @web_request.client_name %>, 
@@ -96,7 +96,7 @@
 					<%= link_to "#{ icon :search } View raw data", resource(@web_request, :raw => true), :class => 'ui-priority-secondary ui-state-default' %>
 				</div>
 
-				<%= form_for @web_request, :action => nested_resource(@web_request) do %>
+				<%= form_for @web_request, :action => resource(@web_request) do %>
 
 					<%= text_field :name => :status,								:label => 'This Request is',:value => @web_request.status.name,							:readonly => true,	:class => 'width1Field ' %> 
 					<%= text_field :name => :client,								:label => 'Requested by',		:value => ( @web_request.client  ? @web_request.client.match_name : 'Client not processed yet' ),		:readonly => true,	:class => 'width2Fields' %> 
@@ -151,7 +151,7 @@
 					<legend>Now you can...</legend>
 
 					<!-- PROCESS a new or existing client: -->
-					<%= form_for @web_request, :action => nested_resource(@web_request) do %>
+					<%= form_for @web_request, :action => resource(@web_request) do %>
 						
 						<%= select :client_id,	:label => 'Process it for', :name => 'web_request[client_attributes][id]', :collection => matched_clients_list, :selected => closest_match.to_s, :multiple => false, :class => 'width2Fields' %>
 						<%= select :company_id, :label => 'and allocate to', :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => '' %>
@@ -190,7 +190,7 @@
 					<br/><br/><hr/><br/>
 
 					<!-- ALLOCATE to a company: -->
-					<%= form_for @web_request, :action => nested_resource(@web_request) do %>
+					<%= form_for @web_request, :action => resource(@web_request) do %>
 
 						<%= hidden_field :status_id, :value => 1 %>
 						<%= select :company_id, :label => 'Let someone else deal with it', :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => 'width2Fields' %>
@@ -202,7 +202,7 @@
 					<br/><br/><hr/><br/>
 
 					<!-- REJECT: -->
-					<%= form_for @web_request, :action => nested_resource(@web_request) do %>
+					<%= form_for @web_request, :action => resource(@web_request) do %>
 					
 						<%= hidden_field :status_id, :value => 4 %><!-- 4=Rejected -->
 						<div class="formField width2Fields"><label>Or simply reject it as spammy nonsense</label></div>

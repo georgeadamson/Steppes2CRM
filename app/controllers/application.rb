@@ -3,11 +3,20 @@ class Application < Merb::Controller
   
   # Assume alternative layout for ajax or full page requests:
   before Proc.new{ self.class.layout( request.ajax? ? :ajax : :application) }
+  before :determine_client_or_tour
   before :cache_recent_params
   before :update_exchange_rates
   before :update_todays_completed_trips
   before :update_todays_abandonned_trips
   
+
+  # Helper to set @client_or_tour in every request if possible/relevant:
+  def determine_client_or_tour
+    tour   = params[:tour_id]   && Tour.get( params[:tour_id] )
+    client = params[:client_id] && Client.get( params[:client_id] )
+    @client_or_tour = tour || client || session.user.most_recent_client
+  end
+
 
   # Make a note of the latest index_filter and type_id filters found in the url params:
   def cache_recent_params

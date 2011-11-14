@@ -6,7 +6,7 @@
 %>
 <div class="sectionContainer is<%= element.element_type.code.capitalize %>" >
 
-<%= form_for element, :action => nested_resource(element) do %>
+<%= form_for element, :action => resource(@client_or_tour, element.trip, element) do %>
 
 	<!-- sectionHead and sectionBody: -->
 	<%= partial "trip_elements/form", :element => element, :edit => true %>
@@ -53,6 +53,6 @@
 <% end =%>
 
 	<!-- This invisible delete form has to be outside the edit form. Button is "clicked" by the delete-label above! -->
-	<%= delete_button "#{ nested_resource(element) }", "Delete this element", :id => delete_button_id, :class => "hidden delete ajaxBlank", :rel => '.ajaxPanel', :'data-confirm' => 'Ok to delete this element?' %>
+	<%= delete_button "#{ nested_resource(@client_or_tour, element.trip, element) }", "Delete this element", :id => delete_button_id, :class => "hidden delete ajaxBlank", :rel => '.ajaxPanel', :'data-confirm' => 'Ok to delete this element?' %>
 
 </div>

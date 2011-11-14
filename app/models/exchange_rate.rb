@@ -3,8 +3,8 @@ class ExchangeRate
   
   property :id,								Serial
   property :name,							String,			:required => true, :unique => true, :default => 'New currency'
-  property :rate,							Decimal, :required => true, :precision => 10, :scale => 2, :default => 1	# AKA SterlingRate
-  property :new_rate,					Decimal, :required => true, :precision => 10, :scale => 2, :default => 1	# AKA NewSterlingRate
+  property :rate,							BigDecimal, :required => true, :precision => 10, :scale => 2, :default => 1	# AKA SterlingRate
+  property :new_rate,					BigDecimal, :required => true, :precision => 10, :scale => 2, :default => 1	# AKA NewSterlingRate
   property :new_rate_on_date,	Date,				:required => true
 
   property :created_at,       DateTime

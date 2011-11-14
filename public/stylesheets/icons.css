@@ -26,6 +26,17 @@ LI.ui-icon {
 }
 
 
+A.ui-icon-only .ui-icon {
+  border: 2px solid #999;
+  border-radius: 1em 1em;
+}
+
+  A.ui-icon-only:hover .ui-icon {
+    background-color: #5DA81A;
+    border-color: #338404;
+  }
+
+
 
 
 

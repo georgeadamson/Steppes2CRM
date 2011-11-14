@@ -45,12 +45,14 @@
 
 	</div>
 
+  <% if params[:return_to] %>
 	<div class="sectionFoot ui-widget">
 		<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
-			<a href="/clients/2138578920/documents" class="ui-priority-secondary ui-state-default" title="Cancel without saving">
-				Return to documents list
+			<a href="<%= params[:return_to] %>" class="ui-priority-secondary ui-state-default">
+				Return to documents
 			</a>
 		</div>
 	</div>
+	<% end %>
 	
 </div>

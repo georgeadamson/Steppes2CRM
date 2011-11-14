@@ -55,7 +55,9 @@ jQuery(function($) {
 		WEB_REQUESTS_ADMIN_LABEL		= 'Web requests',
 		BROCHURE_REQUESTS_ADMIN_LABEL	= 'Brochure merge',
 		REPORTS_PAGE_LABEL				= 'Reports',
-		DOWNLOADABLE_EXT				= { doc:true, pdf:true, xls:true, csv:true },
+
+		DOWNLOADABLE_EXT				= { doc:true, pdf:true, xls:true, csv:true },
+
 		ELEMENT_URL_ATTR				= 'data-ajax-url',
 
 		// Global ajax timeout:
@@ -103,6 +105,7 @@ jQuery(function($) {
 			minus			: 109,
 			tab				: 9,
 			enter			: 13,
+			space     : 32,
 			backspace		: 8,
 			'delete'		: /[\x2E\x90]/,								// Allows for number-pad delete too.
 			pageUpDown		: /[\x21-\x22]/,
@@ -235,6 +238,7 @@ jQuery(function($) {
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/builder/)						.on('success').to(Trip.initTimeline);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy/)						.on('click'  ).to(Trip.showSearch);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/)				.on('success').to(Trip.showSearchResults);
+			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/costings/)					.on('success').to(Trip.initCostsheet);
 
 			// TripElements:
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.openGrid );
@@ -276,9 +280,12 @@ jQuery(function($) {
 			Layout.livePath('click',    new RegExp('/tasks/new'),						Task.openNew );
 			Layout.livePath('success',	new RegExp('/tasks/([0-9]+)/edit'),				Task.initForm, initDatepickers );
 			Layout.livePath('success',  new RegExp('/tasks/new'),						Task.initForm, initDatepickers );
-			Layout.livePath('success',  new RegExp('/tasks/?$'),						Task.initIndex );	// Refresh list of tasks.
+			//Layout.livePath('success',  new RegExp('tasks'),						Task.initIndex );	// Refresh list of tasks.
 			Layout.liveForm('success',  'tasks:create',									Task.onCreateSuccess );
 			Layout.liveForm('success',  'tasks:update',									Task.onCreateSuccess );
+			Layout.match(/tasks/)													.on('success').to(Task.initIndex);
+
+			window.setTimeout( Task.loadIndex, 5000 );
 
 			// AutoText:
 			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
@@ -326,7 +333,7 @@ jQuery(function($) {
 								$(document).trigger('path:error', [xhr, status, 'custom']);
 
 							} else {
-								
+								//debugger;
 								Layout.onSuccess(data, status, xhr, options);
 								$(document).trigger('path:success', [data, status, xhr]);
 
@@ -334,7 +341,8 @@ jQuery(function($) {
 
 						},
 
-						error: function(xhr, status, error) {console.log(xhr, status, error);alert(status)
+						error: function(xhr, status, error) {
+							console.log(xhr, status, error); alert(status + ' ' + error);
 							$(document).trigger('path:error', [xhr, status, error]);
 						},
 
@@ -405,8 +413,13 @@ jQuery(function($) {
 				}
 			//}
 
-			// Display any error/notice messages found in the response:
-			//showMessage( Layout.getMessagesFrom( xhr.responseText || data ) );
+			// Display error/notice messages found in the response:
+			if( xhr && xhr.length && $(xhr[0]).length && $(xhr[0]).is('[method=post]') ){
+			  // Ignore the response from forms because their message is handled elsewhere.
+			}else{
+			  // Show message from GET Request:
+			  showMessage( Layout.getMessagesFrom( xhr.responseText || data ) );
+		  }
 
 			// Update the location hash and trigger matching livePath handlers: (but do not trigger the hashchange event)
 			if(path){
@@ -492,6 +505,7 @@ jQuery(function($) {
 				if( $link.parents('UL').is('.ui-tabs-nav, .ui-datepicker') ){ return }
 				if( DOWNLOADABLE_EXT[ext] || $link.is('.download') || $(this).is('.ajaxDownload') ){ return }
 				if( $link.is("[class *= 'datepicker']") ||  $link.parent().is("[class *= 'datepicker']") ){ return }
+				if( $link.is('[data-confirm]') && !confirm( $link.attr('data-confirm')) ){ e.preventDefault(); return }
 
 				// Derive a {resource}_id property for each resource in the path: (Eg: "clients/1/trips/2" => {client_id:1, trip_id:2}
 				$.extend( options, Layout.getResourceIDsFrom(path) );
@@ -2013,7 +2027,26 @@ return
 
 
 
-	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)	$(":checkbox:visible[name *= 'is_primary']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );	$(":checkbox:visible[name *= 'is_invoicable']")		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });	// Depricated because users need to be able to enter number of singles before adding named clients.	//	// Refresh the singles field when user un/ticks single checkboxes:	//	// (ONLY if ticked quantity is greater than the singles box)	//	$(":checkbox:visible[name *= 'is_single']").live('change', function(){	//		var $form    = $(this).closest('FORM');	//		var singles  = $form.find(":checkbox[name *= is_single]:checked").length;	//		var $singles = $form.find("[name = 'trip[singles]']");	//			//		if( singles > parseInt($singles.val()) ){ $singles.val(singles) }	//	});	
+
+	// Set up rules for selections in checkbox lists: (For PRIMARY and INVOICABLE trip_clients)
+	$(":checkbox:visible[name *= 'is_primary']")
+		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_primary']", min:1, toggle:true } );
+
+	$(":checkbox:visible[name *= 'is_invoicable']")
+		.checkboxLimit({ associates: ":checkbox:visible[name *= 'is_invoicable']", min:1, toggle:true });
+
+	// Depricated because users need to be able to enter number of singles before adding named clients.
+	//	// Refresh the singles field when user un/ticks single checkboxes:
+	//	// (ONLY if ticked quantity is greater than the singles box)
+	//	$(":checkbox:visible[name *= 'is_single']").live('change', function(){
+
+	//		var $form    = $(this).closest('FORM');
+	//		var singles  = $form.find(":checkbox[name *= is_single]:checked").length;
+	//		var $singles = $form.find("[name = 'trip[singles]']");
+	//		
+	//		if( singles > parseInt($singles.val()) ){ $singles.val(singles) }
+
+	//	});	
 
 
 
@@ -2501,9 +2534,9 @@ function initDatepickers(context) {
 	});
 
 	var for_travel = $.extend( {}, defaults, {
-		minDate: "-1y",
+		minDate: "-5y",
 		maxDate: "+5y",
-		yearRange: "-1:+5"
+		yearRange: "-5:+5"
 	});
 
 	// Init the various types of datepickers with relevant settings:
@@ -2887,8 +2920,91 @@ function initMVC(context) {
 // Filter user's typing in numeric fields etc:
 function initKeyPressFilters(){
 
-	// Only allow POSITIVE values: (Simply by stopping the user form typing a minus)
+
 	// TODO: Validate pasted values too?
+	$( "INPUT:text, INPUT:tel, INPUT:email, INPUT:search" ).live( 'keydown', function(e){
+
+    var $textbox  = $(this),
+        text      = $textbox.val(),
+        cursorPos = $textbox.attr('selectionStart');  // TODO: Other non-mozilla browsers.
+
+    if( e.keyCode === KEY.space ){
+
+      // Prevent spaces in email addresses: // TODO: Prevent other invalid characters too!
+      if( $textbox.is(':email') ){
+        return false;
+      }
+
+      // Prevent space at beginning of text fields, or multiple spaces within the text: // TODO Make it smarter by checking for cursor next to space
+  		if( cursorPos === 0 || /^$|\s{2,}|^\s|\s$/.test(text) ){
+  		  // Might as well trim unwanted spaces while we're at it:
+  		  if( /^\s|\s$/.test(text) ){ $textbox.val( $.trim(text) ) }                // Trim if it begins or ends with space.
+  		  if( /\s\s/   .test(text) ){ $textbox.val( text.replace(/\s{2,}/g,' ') ) } // Remove multiple contiguous spaces.
+  			return false;
+  		}
+
+    }
+
+		// Only allow POSITIVE values: (Simply by stopping the user form typing a minus)
+    if( $textbox.is('.positive') && isKeyCodeLikeFilter( e.keyCode, KEY.minus ) ){
+			return false;
+		}
+
+    // Only allow INTEGER values:
+    if( $textbox.is('.integer') ){
+
+  		var keys = [ KEY.integer, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
+  
+  		if( ( isKeyCodeInList( e.keyCode, keys ) && !e.shiftKey ) || e.ctrlKey || e.altKey ){
+  
+  			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
+  			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $textbox.is("[value *= '-']") ){ return false }
+  			if( isKeyCodeLikeFilter( e.keyCode, KEY.dot   ) && $textbox.is("[value *= '.']") ){ return false }
+  
+  			return true;
+  
+  		}else{
+  			return false;
+  		}
+
+    }
+
+    // Only allow DECIMAL values:
+	  if( $textbox.is('.decimal,.money') ){
+
+  		var keys = [ KEY.decimal, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
+  
+  		if( ( isKeyCodeInList( e.keyCode, keys ) && !e.shiftKey ) || e.ctrlKey || e.altKey ){
+  
+  			// Key looks valid but lets do quick check to prevent symbols from being entered twice:
+  			if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) && $(this).is("[value *= '-']") ){ return false }
+  			if( isKeyCodeLikeFilter( e.keyCode, KEY.dot   ) && $(this).is("[value *= '.']") ){ return false }
+  
+  			return true;
+  
+  		}else{
+  			return false;
+  		}
+
+    }
+
+	});
+
+
+  // The following keydown events have been replaced by the single conditional event above, for speed:
+  /*
+
+	// Prevent space at beginning of text fields: // TODO: Validate pasted values too?
+	$( "INPUT:text, INPUT:tel" ).live( 'keydown', function(e){
+
+		if( e.keyCode == KEY.space && !$(this).val() ){
+			return false;
+		}
+
+	});
+
+
+	// Only allow POSITIVE values: (Simply by stopping the user form typing a minus) // TODO: Validate pasted values too?
 	$( "INPUT:text.positive" ).live( 'keydown', function(e){
 
 		if( isKeyCodeLikeFilter( e.keyCode, KEY.minus ) ){
@@ -2899,8 +3015,7 @@ function initKeyPressFilters(){
 
 	
 
-	// Only allow INTEGER values:
-	// TODO: Validate pasted values too?
+	// Only allow INTEGER values: // TODO: Validate pasted values too?
 	$( "INPUT:text.integer" ).live( 'keydown', function(e){
 
 		var keys = [ KEY.integer, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
@@ -2919,8 +3034,7 @@ function initKeyPressFilters(){
 
 	});
 
-	// Only allow DECIMAL values:
-	// TODO: Validate pasted values too? And other number formats? (eg in France they use commas and dots the other way around)
+	// Only allow DECIMAL values: // TODO: Validate pasted values too? And other number formats? (eg in France they use commas and dots the other way around)
 	$( "INPUT:text.decimal, INPUT:text.money" ).live( 'keydown', function(e){
 
 		var keys = [ KEY.decimal, KEY.tab, KEY.enter, KEY.backspace, KEY.delete, KEY.navigation, KEY.fkeys ];
@@ -2938,6 +3052,8 @@ function initKeyPressFilters(){
 		}
 
 	});
+
+  */
 
 
 	// Helper for testing whether keyCode matches any of the specified character codes or regexs:
@@ -3485,6 +3601,26 @@ function initTripInvoiceFormTotals(){
 
 		},
 
+
+		initCostsheet : function(ui){
+
+			// Allow user to hit enter in the MARGIN textbox to submit "Set all margins to %":
+			// The form submits automatically on Enter but we need to ensure the MARGIN button is the default submit.
+			// Set focus on the margin button so browser won't default to the wrong submit button (there are 3).
+			// (This ensures the server knows which submit button was pressed.)
+			$(ui.panel).delegate( '#new_margin', 'keydown', function(e){
+
+				if( e.keyCode == KEY.enter ){
+
+					$(this).closest('FORM').find(':submit[value *= margin]').focus();
+
+				}
+
+			})
+
+		},
+
+
 		onCreateSuccess : function(options){
 
 			if(options && options.form && options.form.target){
@@ -3509,7 +3645,7 @@ function initTripInvoiceFormTotals(){
 
 			var form = options && options.form;
 
-			// Derive the target element manually when form was submitted from the FLIGHTS GRID:
+			// Derive the target element manually when form was submitted from the FLIGHTS GRID: ("/clients/x/trips/y?grid=true")
 			// Eg: Trip page id "#clients123trips456" or "#tours123trips456"
 			if( form && form.params && form.params.grid && form.path ){
 
@@ -3931,12 +4067,26 @@ function initTripInvoiceFormTotals(){
 			});
 
 		},
-		
-		initIndex : function(ui){
-			// unused
-			console.log(ui)
+
+		loadIndex : function(){
+
+			// TODO NEXT: get callback to fire! (preferably via the Layout.match process)
+			Layout.load( '/tasks.json', { success: Task.initIndex } );
+
+			if( !$.template["task"] ){
+				console.log("Compiling 'task' template");
+				$('#tmpl-for-task').template("task");
+			}
+
 		},
-		
+
+		initIndex : function(ui){
+
+			
+			
+			console.log('Task.initIndex',ui)
+		},
+
 		initForm : function(ui){
 
 			$("SELECT[name='task[status_id]']").change(Task.toggleClosedTaskFields).trigger('change');
@@ -4203,7 +4353,37 @@ function numVal(selector, $fields, defaultAlternative) {
 };
 
 
-// QUnit testing://$.getScript('/javascripts/testing/qunit.js', function(){//	$.getScript('/javascripts/testing/test-specs.js')//});
+
+// QUnit testing:
+//$.getScript('/javascripts/testing/qunit.js', function(){
+//	$.getScript('/javascripts/testing/test-specs.js')
+//});
+
+
+
 	// Initialise all our custom Layout event handling:
 	Layout.init();
-	// Intercept accidental attempts to use the BACK BUTTONS etc:	// Note: We only intercept page-unload when there are client tabs open. That way testing individual controller pages is not annoying!	// TODO: Allow use of back buttons by adding to the browser history while user navigates around the tabs.	window.onbeforeunload = function(e){		// Derive file extension of clicked link if applicable: (Eg 'doc', 'pdf')		var elem = e.target.activeElement;		var href = !!elem && elem.href || '';		var file_extension = href.split(/#|\?/).shift().split('.').pop();	// Get text between the last dot and the first # or ?, if any.		if( $('#pageTabsNav > LI').length > 1 && !DOWNLOADABLE_EXT[file_extension] ){			return "- Tip: If you are simply trying to reload the page then press OK to continue.\n\n" +				"- More info:\n This site is more like an application than an ordinary web page, so " +				"using your browser's back and forward buttons will not navigate you around this application."		}	};});	// End of jQuery ready handler.
+
+
+
+	// Intercept accidental attempts to use the BACK BUTTONS etc:
+	// Note: We only intercept page-unload when there are client tabs open. That way testing individual controller pages is not annoying!
+	// TODO: Allow use of back buttons by adding to the browser history while user navigates around the tabs.
+	window.onbeforeunload = function(e){
+
+		// Derive file extension of clicked link if applicable: (Eg 'doc', 'pdf')
+		var elem = e.target.activeElement;
+		var href = !!elem && elem.href || '';
+		var file_extension = href.split(/#|\?/).shift().split('.').pop();	// Get text between the last dot and the first # or ?, if any.
+
+		if( $('#pageTabsNav > LI').length > 1 && !DOWNLOADABLE_EXT[file_extension] ){
+
+			return "- Tip: If you are simply trying to reload the page then press OK to continue.\n\n" +
+				"- More info:\n This site is more like an application than an ordinary web page, so " +
+				"using your browser's back and forward buttons will not navigate you around this application."
+
+		}
+
+	};
+
+});	// End of jQuery ready handler.

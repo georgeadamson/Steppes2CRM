@@ -13,7 +13,8 @@
 	active_version_number =	1
 	
   trip.versions.all( :order => [:id] ).each_with_index do |version,i|
-		versions_list << [ version.id, "v#{ i+1 }: #{ version.version_name }#{ ' (active version)' if version.is_active_version }" ]
+		invoiced = version.money_ins.count > 0 ? 'INVOICED' : ''
+		versions_list << [ version.id, "v#{ i+1 }: #{ invoiced } #{ version.version_name }#{ ' (active version)' if version.is_active_version }" ]
 		active_version_number = i+1 if version.is_active_version
 	end	
 	versions_list = { 'Versions of this trip:' => versions_list }
@@ -23,12 +24,12 @@
 -%>
 
 <!-- _trip_page: -->
-<div class="tripPage sectionContainer noSectionFoot tabsContainer" id="<%= nested_resource(trip,true) %>">
+<div class="tripPage sectionContainer noSectionFoot tabsContainer" id="<%= nested_resource(client_or_tour,trip,true) %>">
 
   <div class="sectionHead">
 
     <!-- Trip name and on-line-summary: -->
-    <h3 class="tripHeading">
+    <h3 class="tripHeading ellipsis">
       <%= icon trip.tour ? :group : :trip %>
 			<span class="tripName">
         <%= trip.title %>
@@ -51,7 +52,7 @@
 			<!-- This picklist has a custom href attribute used for deriving the resource url of the chosen version.
 					 Eg: When href="/clients/1234/trips/{value}" and selected value="1122" then url is derived as "/clients/1234/trips/1122"
 			-->
-			<%= form_for trip, :action => nested_resource(client_or_tour,trip) do %>
+			<%= form_for trip, :action => resource(client_or_tour,trip) do %>
 				<div class="tripVersion">
 					<%= select :active_version_id, :label => "Active version:", :collection => versions_list, :selected => trip.id.to_s, :class=>"auto-submit tripVersion width2Fields stealth", :readonly => true %>
 				</div>
@@ -62,7 +63,7 @@
     <ul class="tripPageTabsNav">
 			<%# TODO: Get resource(client_or_tour,trip,:builder) etc to work instead of explicitly assembling urls here:
 			%>
-      <li class="dummy hidden"><a href="#<%= nested_resource(trip,true) %>dummy"></a></li>
+      <li class="dummy hidden"><a href="#<%= nested_resource(client_or_tour, trip,true) %>dummy"></a></li>
       <li class="ui-tabs-selected" style="margin-left:3em;"><!-- Indent to make space for elements-grid button -->
 				  <a href="<%= resource( client_or_tour, trip, :edit ) %>"			>Trip summary</a></li>
       <li><a href="<%= resource( client_or_tour, trip ) %>/builder"			>Trip builder</a></li>
@@ -77,7 +78,7 @@
 		<!-- Link to Quickie trip builder (for pasting flight data from Amadeus) -->
 		<%=
 			begin
-				link_to icon(:grid), "#{ resource(@client_or_tour, trip, :trip_elements) }/grid", :title => 'Quickie trip!', :style => 'left:0em;position:absolute;top:4em;'
+				link_to icon(:grid), "#{ resource(client_or_tour, trip, :trip_elements) }/grid", :title => 'Quickie trip!', :style => 'left:0em;position:absolute;top:4em;'
 			end
 		%>
 

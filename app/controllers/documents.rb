@@ -151,8 +151,11 @@ class Documents < Application
 
       # document_status_id: 0=Pending, 1=Running, 2=Failed, 3=Succeeded:
       message[:notice] = @document.document_status_message || 'Document details were saved successfully.'
+puts "redirecting to #{next_page}"
 
-      if request.ajax?
+      if next_page == :show
+        render next_page
+      elsif request.ajax?
         redirect next_page, :message => message, :ajax? => true
       else
         redirect next_page, :message => message
@@ -174,6 +177,24 @@ class Documents < Application
 
   end
 
+  def recreate(id)
+
+    @document = Document.get(id)
+    raise NotFound unless @document
+
+    # This property will only be saved if generation succeeds:
+    @document.generated_by = session.user.preferred_name
+
+    if @document.generate_doc
+      message[:notice] = "The document has been recreated using the latest details"
+    else
+      message[:error] = "Hmm, there was a hiccup while attempting to re-generate the document. #{ @document.errors.full_messages.join("\n") }"
+    end
+
+    @documents = get_filtered_documents()
+    render :index
+
+  end
 
   # UNUSED?
   def update(id, document)
@@ -224,6 +245,7 @@ class Documents < Application
   #      raise InternalServerError
   #    end
   #  end
+
 
 
 

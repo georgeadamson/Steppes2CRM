@@ -18,7 +18,7 @@ Airport.all( :order => [:code,:name] )
 <div style="padding:2em;background-color:#000;-moz-box-shadow:5px 5px 10px #000;height:20em;margin:2em;overflow-y:auto;">
 
 	<!-- The grid param lets client-side script know where the form was submitted from: -->
-	<%= form_for @trip, :action => nested_resource( @client_or_tour, @trip, :grid => true ) do %>
+	<%= form_for @trip, :action => resource( @client_or_tour, @trip, :grid => true ) do %>
 
 		<!-- This field is only present as a workaround for when user submits empty form with no flights: -->
 		<%= hidden_field :id %>

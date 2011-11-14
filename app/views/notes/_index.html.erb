@@ -36,7 +36,7 @@
 						ui_target	||= "##{ nested_resource(note.client,true) }notes"
 					%>
 					<small title="<%= tooltip %>" class="note_updated_at"><%= note.updated_at.formatted(:uidate) %></small>
-					<%= link_to 'Edit', nested_resource( note.client, note, :edit), :"data-target" => "#{ ui_target }", :class => '' %>
+					<%= link_to 'Edit', resource( note.client, note, :edit), :"data-target" => "#{ ui_target }", :class => '' %>
 				</td>
 			</tr>
 			<% end %>

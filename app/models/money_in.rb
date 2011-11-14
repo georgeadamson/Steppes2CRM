@@ -18,13 +18,13 @@ class MoneyIn
   property :name,               String,     :required => true,  :default => DEFAULT_NEW_MAIN_INVOICE_NAME   # AKA PaymentRef or InvoiceNumber in old database
   property :trip_id,            Integer,    :required => true   # The trip that the client is paying for.
   property :client_id,          Integer,    :required => true   # The client being invoiced.
-  property :amount,             Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # AMOUNT DUE
-  property :biz_supp_amount,    Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
-  property :single_supp_amount, Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
-  property :adjustment_amount,  Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
+  property :amount,             BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # AMOUNT DUE
+  property :biz_supp_amount,    BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
+  property :single_supp_amount, BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
+  property :adjustment_amount,  BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
   property :adjustment_name,    String,     :required => true,  :default => 'Custom adjustment'
-  property :total_amount,       Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # INCLUDES amounts already paid!
-  property :amount_received,    Decimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
+  property :total_amount,       BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2  # INCLUDES amounts already paid!
+  property :amount_received,    BigDecimal, :required => true,  :default => 0,  :precision  => 12, :scale	=> 2
   property :due_date,           Date,       :required => true,  :default => lambda{ |obj,prop| obj.default_due_date }
   property :received_date,      DateTime
   property :is_deposit,         Boolean,    :required => true,  :default => false
@@ -162,7 +162,7 @@ class MoneyIn
     # When generating new main invoice and deposit is set => Generate deposit as well
     
     if self.new? 
-      
+
       # When a main invoice number has been provided...
       # Automatically derive next SUPPLEMENT or CREDIT NOTE for the invoice_number if necessary:
       if self.main_invoice_exists?
@@ -174,22 +174,22 @@ class MoneyIn
       # Or generate NEW MAIN INVOICE:
       # TODO: Wrap the deposit creation in a transaction?
       elsif self.valid? && self.new_main_invoice?
-        
+
         main_invoice      = self
         main_invoice.name = InvoiceNumber.generate_for( self.company_id, self.trip_id )
-        
+
         # If is_deposit flag was set then automatically create a new deposit row:
         if defined?(@deposit_amount_for_main_invoice) && @deposit_amount_for_main_invoice > 0 && !self.is_deposit
-          
-          MoneyIn.create!(
-            main_invoice.attributes.merge(
-              :is_deposit => true,
-              :narrative  => '',
-              :amount     => @deposit_amount_for_main_invoice,
-              :skip_doc_generation => true  # Just a belt and braces precaution. Deposits shoud not generate docs even when this flag is set.
-            )
+
+          deposit = main_invoice.attributes.merge(
+            :is_deposit => true,
+            :narrative  => '',
+            :amount     => @deposit_amount_for_main_invoice,
+            :skip_doc_generation => true  # Just a belt and braces precaution. (Deposits shoud not generate docs even when this flag is set)
           )
-          
+
+          MoneyIn.create! deposit
+
         end
         
       end
@@ -238,7 +238,7 @@ class MoneyIn
   
   # Helper to create a new document object for this invoice and generate a word doc:
   def generate_doc( dummy_run = false )
-    
+
     document_status_id = false
     
     # Only proceed if this type of invoice has a corresponding document_type_id:
@@ -265,7 +265,7 @@ class MoneyIn
         Merb.logger.error "Unable to save document details for new money_in record #{ self.id }: Could not initialise a new document record"
         
       elsif dummy_run
-        
+
         if new_document.valid?
           
           # The dry-run succeeded:
@@ -300,10 +300,13 @@ class MoneyIn
 
       # Make a note of the doc_path while we have it. Only used for debugging & testing:
       @doc_path = new_document.doc_path
-      
+
+      # Tidy up after dummy_run:
       if dummy_run
-        new_document.destroy!
-        new_document = nil    
+        # No need to tidy up manually. In doing so we seem to cause an elusive DM bug that
+        # makes the calling code believe the dummy_run doc is in self.trip.documents.
+        # If you don't believe me, uncomment this destroy command and run the money_in rspec tests:
+        #new_document.destroy!
       end
       
     end
@@ -505,7 +508,25 @@ class MoneyIn
   # If document object has been created then return it's path.
   # If document object has not been created then run validation to set @doc_path variable.
   def doc_path
-     return @doc_path ||= ( self.document && self.document.doc_path ) || ( self.valid? && @doc_path )
+    
+    #return @doc_path ||= ( self.document && self.document.doc_path ) #|| ( self.valid? && @doc_path )
+
+    if @doc_path.blank?
+
+      if self.document
+      
+        @doc_path = self.document.doc_path
+
+      else
+
+        self.valid?
+
+      end
+
+    end
+
+    return @doc_path
+    
   end
   
   

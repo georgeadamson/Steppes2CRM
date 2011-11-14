@@ -38,14 +38,18 @@ class Document
   property :document_status_id,     Integer, :required => true,  :default => PENDING  # 0=Pending, 1=Running, 2=Failed, 3=Succeeded
   property :document_template_id,   Integer, :required => true,  :default => 1  # DEPRICATED?
   property :document_template_file, String,  :required => true,  :default => '', :auto_validation => false, :length => 255
-  property :parameters,             String,  :required => true,  :default => '', :lazy => false # Xml. Parameters are provided in xml for the Steppes Document Builder to use when querying for data.
+  property :parameters,             String,  :required => true,  :length => 2000, :default => '' # Xml. Parameters are provided in xml for the Steppes Document Builder to use when querying for data.
   
   property :doc_builder_output,     Text,    :required => false, :default => '' # String for feedback from the generation process.
   property :pdf_builder_output,     Text,    :required => false, :default => '' # String for feedback from the generation process.
   
 	property :created_at,	            DateTime
-	property :created_by,	            String,  :required => true, :length => 50, :auto_validation => false	  # Consultant name
-	#property :user_name,	            String,  :required => true, :length => 50,  :default => ''	# Consultant name
+	property :created_by,	            String,  :required => true,  :length => 50, :auto_validation => false	  # Consultant name
+	
+	# Properties set after successful doc generation:
+	property :generated_at,	          DateTime,:required => false
+	property :generated_by,	          String,  :required => false, :length => 50, :auto_validation => false	  # Consultant name
+
   
 	belongs_to :document_template  
 	belongs_to :document_type
@@ -95,7 +99,7 @@ class Document
     #raise IOError, "The Document.doc_builder_settings_path does not exist (#{ Document.doc_builder_settings_path })"                unless File.exist?( Document.doc_builder_settings_path )
     #raise IOError, "The Document.folder does not exist (#{ Document.folder })"                                                      unless File.exist?( Document.folder )
     #raise IOError, "The Document sub-folder does not exist (#{ self.sub_folder })"                                                  unless File.exist?( Document.folder / self.sub_folder )
-    
+
     if !File.exist?( Document.folder )
       return [false, "Cannot find the folder where the generated documents are stored (#{ Document.folder })"]
     
@@ -104,8 +108,8 @@ class Document
     #    return [false, "Cannot find the subfolder where the generated document would be saved to (#{ Document.folder / self.sub_folder })"]
     
     elsif !File.exist?( Document.doc_builder_commands_folder_path )      
-      return [false, "Cannot find the folder where the document-generation gizmo lives (#{ Document.doc_builder_commands_folder_path })"]
-    
+      return [false, "Cannot find the folder where the document-generation script lives (#{ Document.doc_builder_commands_folder_path })"]
+
     elsif !File.exist?( Document.doc_builder_script_path )
       return [false, "Cannot find the script that does the document-generation (#{ Document.doc_builder_script_path })"]
     
@@ -122,18 +126,17 @@ class Document
   
   # Method for custom validations:
   def validate_document_template_file
-    
-    #if self.document_type_id == DocumentType::LETTER || self.document_type_id == DocumentType::BROCHURE
+
     if [ DocumentType::LETTER, DocumentType::BROCHURE ].include? self.document_type_id
       template_path = Document.doc_builder_letter_templates_path / self.document_template_file
     else
       template_path = Document.doc_builder_templates_path / self.document_template_file
     end
-    
+
     return [false, "No template file has been chosen for this document"]          if self.document_template_file.blank?
     return [false, "The template file could not be found at #{ template_path }"]  if !File.exist?(template_path)
     return true
-    
+
   end
   
   
@@ -326,6 +329,22 @@ class Document
   alias file_exist?  doc_exist?  # <-- Best to use this alias to be consistent with ruby File.exist?()
   alias file_exists? doc_exist?  # <-- TODO: Depricate this?
   
+
+  # Shameful workaround to try to identify duplicate records:
+  # Dupes are created by some kind of bug in the document validation process.
+  # We use this flag to hide dupes in the ui because we've not managed to fix the real problem!
+  def dupe?
+
+    ( !self.created_by_legacy_crm   ) &&                        # Legacy docs don't have enough fields to deduce dupes.
+    ( orig = Document.get self.id+1 ) &&                        # The subsequent document may be the *real* one,
+    ( self.document_type_id == orig.document_type_id ) &&       # and be the same TYPE,
+    ( self.parameters       == orig.parameters       ) &&       # and have the same PARAMETERS,
+    ( orig.created_at.to_time - self.created_at.to_time < 10 )  # and were they generated within a few SECONDS of eachother?
+
+  end
+
+
+
   
   # Delete the physical file: (Returns true if successful)
   # to be extra safe this assumes we want to delete the PDF unless :doc or file_path is specified)
@@ -577,6 +596,15 @@ class Document
       else
         message = "Completed shell command."
         Document.logger.info message
+      end
+
+      # Set generation timestamp:
+      if self.document_status_id == SUCCEEDED
+        self.generated_at   = DateTime.now
+        self.generated_by ||= self.created_by
+      else
+        self.generated_at = nil
+        self.generated_by = nil
       end
 
       # # This did not seem to update the row. No idea why! Had to resort to direct update instead:
@@ -977,20 +1005,26 @@ class Document
     Document.logger.info "Preparing ini file from these app_settings: #{ CRM.inspect }"
 
     settings = "[Steppes Travel Document Builder settings for the '#{ Merb.environment }' database]" +
-      "\r\nConnectionString=Provider=SQLOLEDB;Data Source=#{ config[:host] };Initial Catalog=#{ config[:database] };User Id=#{ config[:username] };Password=#{ config[:password] };" +
-      "\r\nTemplatePath=#{ CRM[:doc_templates_path].gsub('/','\\') }" +
-      "\r\nLetterTemplatePath=#{ CRM[:letter_templates_path].gsub('/','\\') }" +
-      "\r\nDocumentPath=#{ CRM[:doc_folder_path].gsub('/','\\') }" +
-      "\r\nImagePath=#{ CRM[:images_folder_path].gsub('/','\\') }" +
-      "\r\nSignaturePath=#{ CRM[:signatures_folder_path].gsub('/','\\') }" +
-      "\r\nPortraitPath=#{ CRM[:portraits_folder_path].gsub('/','\\') }" +
-      "\r\n"
-    
+      "\nConnectionString=Provider=SQLOLEDB;Data Source=#{ config[:host] };Initial Catalog=#{ config[:database] };User Id=#{ config[:username] };Password=#{ config[:password] };" +
+      "\nTemplatePath=#{ CRM[:doc_templates_path].gsub('/','\\') }" +
+      "\nLetterTemplatePath=#{ CRM[:letter_templates_path].gsub('/','\\') }" +
+      "\nDocumentPath=#{ CRM[:doc_folder_path].gsub('/','\\') }" +
+      "\nImagePath=#{ CRM[:images_folder_path].gsub('/','\\') }" +
+      "\nSignaturePath=#{ CRM[:signatures_folder_path].gsub('/','\\') }" +
+      "\nPortraitPath=#{ CRM[:portraits_folder_path].gsub('/','\\') }" +
+      "\n"
+
+    # Use doc_builder_settings_path: (after making it absolute if necessary)
     ini_path = Document.doc_builder_settings_path
-    
+    ini_path = Merb.root + ini_path if ini_path =~ /^[\/\\]/
+
     # Recreate INI file if it does not exist or does not match expected settings:
     begin
 
+      if !File.exist?( ini_path )
+        raise IOError, "The Document.doc_builder_settings_path does not exist: #{ Document.doc_builder_settings_path }"
+      end
+      
       unless File.exist?(ini_path) && File.read(ini_path) == settings
         
 		    File.open( ini_path, 'w' ){ |file| file.write settings } 

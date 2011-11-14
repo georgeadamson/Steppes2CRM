@@ -43,7 +43,7 @@
 			</p>
 
 			<label for="mainSearchText">Search</label>
-			<input type="search" id="mainSearchText" class="text" accesskey="F" title="Shortcut key: Alt+Shift+F" placeholder="Client Search" maxlength="25" />
+			<input type="search" id="mainSearchText" class="text" accesskey="F" title="Shortcut key: Alt+Shift+F" placeholder="Client Search" maxlength="35" />
 
 		<% end %>
 
@@ -71,7 +71,11 @@
 	<!--<script type="text/javascript" src="/javascripts/jquery/jquery-1.4.1.js"></script>--><!-- v1.4.1 bugs on trip tabs! -->
 	<script type="text/javascript" src="/javascripts/jquery/jquery-1.4.2.js"></script>
 
-	<script type="text/javascript">		// Silly check to remind people to use FIREFOX!		if( !jQuery.browser.mozilla ){			alert("Lovely to see you, though I do think we could be so much happier together in Firefox ;o)")		}
+	<script type="text/javascript">
+		// Silly check to remind people to use FIREFOX!
+		if( !jQuery.browser.mozilla ){
+			alert("Lovely to see you, though I do think we could be so much happier together in Firefox ;o)")
+		}
 	</script>
 
 	<script type="text/javascript" src="/javascripts/helpers.js"></script>
@@ -94,7 +98,8 @@
 	<script type="text/javascript" src="/javascripts/jquery-form/jquery.form.js"></script><!-- http://malsup.com/jquery/form -->
 	<script type="text/javascript" src="/javascripts/jquery-mvc/jquery-mvc.js"></script>
 	<script type="text/javascript" src="/javascripts/jquery-textarearesizer/jquery.textarearesizer.min.js"></script>
-	
+	<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+
 	<script type="text/javascript" src="/javascripts/shared.js"></script>
 	<script type="text/javascript" src="/javascripts/trip_elements.js"></script>
 
@@ -103,6 +108,15 @@
 	<script type="text/javascript" src="/javascripts/jquery-qtip/jquery.qtip-1.0.0-rc3.min.js" defer="defer"></script><!-- http://craigsworks.com/projects/qtip -->
 	<script type="text/javascript" src="/javascripts/jquery-imgsize/jquery.imgsize.js" defer="defer"></script>
 	<script type="text/javascript" src="http://jqueryui.com/themeroller/themeswitchertool/" defer="defer"></script>
+
+	<script id="tmpl-for-task" type="text/x-jquery-tmpl">
+		<tr>
+			<td>20/06/2011</td>
+			<td class="nowrap"><span class="ui-icon ui-icon-clock " title="Status: Open"></span> <a href="/clients/2138590478/tasks/158199/edit">Task</a></td>
+			<td>George Adamson</td>
+			<td><small>Followup flight option for A lovely new trip </small></td>
+		</tr>
+	</script>
 
 	<% if Merb.environment == 'development' %>
 		<!-- For testing only: -->
