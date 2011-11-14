@@ -9,6 +9,8 @@ dm_gems_version   = "0.10.2"  # "0.10.2" "0.10.3"
 #dm_gems_version   = "1.0.2"  # "0.10.2" "0.10.3"
 do_gems_version   = "0.10.1"  # "0.10.1" "0.10.2"
 
+gem "jruby-win32ole"
+
 gem "merb-core", merb_gems_version 
 gem "merb-action-args", merb_gems_version
 gem "merb-assets", merb_gems_version  
