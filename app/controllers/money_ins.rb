@@ -70,7 +70,7 @@ class MoneyIns < Application
       #if request.ajax?
         render :new
       #else
-      #  redirect nested_resource( @money_in.client, @money_in.trip, :money_ins, :new ), :message => message
+      #  redirect resource( @money_in.client, @money_in.trip, :money_ins, :new ), :message => message
       #end
 
     else

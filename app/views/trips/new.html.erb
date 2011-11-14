@@ -11,7 +11,7 @@
 %>
 <div class="sectionContainer">
 
-	<%= form_for @trip, :action => nested_resource(@client_or_tour, :trips) do %>
+	<%= form_for @trip, :action => resource(@client_or_tour, :trips) do %>
 
 		<div class="sectionHead">
 			<h3 class="tripHeading">

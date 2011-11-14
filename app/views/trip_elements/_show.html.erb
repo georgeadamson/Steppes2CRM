@@ -55,9 +55,6 @@ else
 end
 
 
-elementUrl = nested_resource(element)
-
-
 # If element is within the overview then customize it with percentage width and x-coordinate:
 customSize = "width:#{ element.percentOfTrip.to_s }%;left:#{ element.percentThroughTrip.to_s }%;" if isOverview
 
@@ -65,7 +62,7 @@ customSize = "width:#{ element.percentOfTrip.to_s }%;left:#{ element.percentThro
 -%>
 <%= fields_for element do %>
 
-	<li class="<%= cssClasses.join(" ") %>" title="<%= elementTitle %>" style="<%= customSize %>" data-ajax-url="<%= elementUrl %>">
+	<li class="<%= cssClasses.join(" ") %>" title="<%= elementTitle %>" style="<%= customSize %>" data-ajax-url="<%= resource(@client_or_tour, element.trip, element) %>">
 
 		<%= hidden_field :id -%>
 
@@ -73,7 +70,7 @@ customSize = "width:#{ element.percentOfTrip.to_s }%;left:#{ element.percentThro
 
 			<h4>
 				<%= link_to element_label,
-					nested_resource( element, :edit ),
+					resource( @client_or_tour, element.trip, element, :edit ),
 					:class	=> 'ajax',
 					:rel		=> '.tripElementFormContainer'	# IMPORTANT: rel attribute defines html target where form will be loaded!
 				-%>

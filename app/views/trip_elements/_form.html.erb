@@ -181,8 +181,8 @@
 	<% if element.id -%>
 		<!-- Prev/Next buttons for navigating through elements: #556 -->
 		<span class="right" style="position:absolute;right:0;top:0;">
-			<%= link_to '&lt; Prev', nested_resource( element.prev || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.prev }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Previous element' %>
-			<%= link_to 'Next &gt;', nested_resource( element.next || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.next }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Next element'     %>
+			<%= link_to '&lt; Prev', resource( @client_or_tour, element.trip, element.prev || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.prev }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Previous element' %>
+			<%= link_to 'Next &gt;', resource( @client_or_tour, element.trip, element.next || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.next }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Next element'     %>
 		</span>
 	<% end -%>
 

@@ -94,7 +94,8 @@ class BrochureRequest
         :company                    => self.company,
         :user                       => self.user || current_user,
         :created_by                 => current_user && current_user.preferred_name || 'Unknown user',
-        :brochure_request           => self,
+        #:brochure_request           => self, # Changed to use id instead, to work around DM bug. GA, Nov 2011.
+        :brochure_request_id        => self.id,
         :document_type_id           => DocumentType::BROCHURE,
         :document_template_file     => self.document_template_file, #569: Use template that was chosen when brochure requested on client home page
 				:generate_doc_after_create	=> !self.skip_doc_generation,

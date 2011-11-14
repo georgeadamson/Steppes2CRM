@@ -2534,9 +2534,9 @@ function initDatepickers(context) {
 	});
 
 	var for_travel = $.extend( {}, defaults, {
-		minDate: "-1y",
+		minDate: "-5y",
 		maxDate: "+5y",
-		yearRange: "-1:+5"
+		yearRange: "-5:+5"
 	});
 
 	// Init the various types of datepickers with relevant settings:
@@ -3645,7 +3645,7 @@ function initTripInvoiceFormTotals(){
 
 			var form = options && options.form;
 
-			// Derive the target element manually when form was submitted from the FLIGHTS GRID:
+			// Derive the target element manually when form was submitted from the FLIGHTS GRID: ("/clients/x/trips/y?grid=true")
 			// Eg: Trip page id "#clients123trips456" or "#tours123trips456"
 			if( form && form.params && form.params.grid && form.path ){
 
