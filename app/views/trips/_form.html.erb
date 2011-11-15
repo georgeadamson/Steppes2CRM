@@ -17,12 +17,30 @@
 	user_list << @trip.user
 	
 	
-	# Prepare content for the all-client-details mailto link:
-		email_all = @trip.new? ? nil : {
-			:subject	=> 'Client details',
-			:body			=> @trip.clients.map{|c| '%0A' + partial('clients/traveller_summary',:client=>c) }.join('%0A')
-		}
+	if @trip.new?
 
+	  mailto_all = nil
+
+	else
+
+  	# Prepare content for the all-client-details mailto link:
+  	# Important: mailto links seem to be limited to around 1600 characters for Oulook 2007! An Outlook limitation. May need a firefox plugin to handle these better :(
+  	mailto_character_limit = 1580
+  	mailto_all_body = @trip.clients.map{|c| partial('clients/traveller_summary',:client=>c) }.join('%0A%0A')
+
+  	if mailto_all_body.length > mailto_character_limit
+  	  mailto_all_prefix = '(Oh no! Some details had to be omitted from the end because of a limitaion imposed by Outlook)%0A%0A'
+  	  mailto_all_suffix = '...'
+  	  mailto_all_truncated_length = mailto_character_limit - mailto_all_prefix.length - mailto_all_suffix.length
+  	  mailto_all_body   = mailto_all_prefix + mailto_all_body.slice(0,mailto_all_truncated_length).sub(/\%.{0,2}$/,'') + mailto_all_suffix
+    end
+
+  	mailto_all = {
+  		:subject	=> 'Client details',
+  		:body			=> mailto_all_body
+  	}
+
+  end
 
 	# If we're creating a new private trip then we should confirm current client's source:
 	confirm_client_source = @trip.new? && ( @trip.tailor_made? || @trip.private_group? ) && !@client_or_tour.new?
@@ -30,7 +48,8 @@
 	if confirm_client_source
 	
 		client                  = @client_or_tour
-		client_field_prefix     = "trip[clients_attributes][#{ client.id }]"
+		#client_field_prefix     = "trip[clients_attributes][#{ client.id }]"  #trip[trip_clients_attributes][0][is_single]
+		client_field_prefix     = "trip[trip_clients_attributes][0]"
 		client_sources					= {}
 		client_sources['Same as before:']  = [client.source] if client.source
 		client_sources['or a new source:'] = ClientSource.all(:order=>[:name])
@@ -77,8 +96,9 @@
 
 		<% if confirm_client_source %>
 			<td>
+			  <!-- This fake trip_client.source_id attribute get assigned to the client.source_id when the new trip is submitted: -->
 				<%= fields_for client do %>
-				<%= hidden_field  :id, :name  => "#{ client_field_prefix }[id]" %>
+				<%#= hidden_field  :id, :name  => "#{ client_field_prefix }[id]" %>
 				<%= select :source_id, :label => "Client source", :name => "#{ client_field_prefix }[source_id]", :collection => client_sources, :selected => '', :prompt => '- Please confirm', :value_method => :id, :text_method => :name %>
 				<% end =%>
 			</td>
@@ -100,11 +120,11 @@
 
 
 		<% if confirm_client_source %>
-			<!--
+			<!-- UNUSED!
 			<td rowspan="2">
-				<%= fields_for @client_or_tour do %>
-				<%= select :interests, :label => "Confirm areas of interest",	:selected => client.interests_ids.all_to_s, :collection => Country.all( :order => [:name] ), :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[interests_ids][]', :title => multiple_select_tooltip, :class => 'height4Fields' %>
-				<% end =%>
+				<%#= fields_for @client_or_tour do %>
+				<%#= select :interests, :label => "Confirm areas of interest",	:selected => client.interests_ids.all_to_s, :collection => Country.all( :order => [:name] ), :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[interests_ids][]', :title => multiple_select_tooltip, :class => 'height4Fields' %>
+				<%# end =%>
 			</td>
 			-->
 		<% end %>
@@ -178,24 +198,51 @@
 									<input type="text" class="trip-client-search" placeholder="Client search">
 								<% end -%>
 							</th>
-							<th title="Create a letter document"><span class="vertical">Create letter</span></th>
-							<th title="Create email with all client details"><span class="vertical"><%= trip.clients.empty? || !email_all ? 'Email details' : link_to('Email details', "mailto:&#{ email_all.to_params }") %></span></th>
-							<th title="Requires single room"		><span class="vertical">Single</span></th>
-							<th title="Who to send documents to (Primary contacts)"><span class="vertical">Primary</span></th>
-							<th title="Who to send invoices to"	><span class="vertical">Invoicable</span></th>
-							<th title="Who has confirmed"				><span class="vertical">Confirmed</span></th>
-							<th title="Remove from trip"				><span class="vertical">Remove</span></th>
+							<th title="Create a letter document">
+								<%= icon :'triangle-1-s' %><!-- :document  -->
+								<span class="vertical">Create letter</span>
+							</th>
+							<th title="Create email with all client details">
+								<%= icon :'triangle-1-s' %><!-- :'mail-closed' -->
+								<span class="vertical">
+								<!-- Alas mailto links seem to be limited to around 1600 characters! An Outlook limitation. May need a plugin to handle these instead -->
+								<%= trip.clients.empty? || !mailto_all ? 'Send email' : link_to('Send email', "mailto:&#{ mailto_all.to_params.slice(0,1610) }") %></span>
+							</th>
+							<% if trip.tour_template? %>
+								<th title="We are handling flights for this client"							>
+									<%= icon :'triangle-1-s' %><!-- :flight -->
+									<span class="vertical">Flights with us</span>
+								</th>
+							<% end %>
+							<th title="Requires single room"		>
+								<%= icon :'triangle-1-s' %><!-- :'radio-on' -->
+								<span class="vertical">Single</span>
+							</th>
+							<th title="Who to send documents to (Primary contacts)">
+								<%= icon :'triangle-1-s' %><!-- :comment -->
+								<span class="vertical">Primary</span>
+							</th>
+							<th title="Who to send invoices to"	>
+								<%= icon :'triangle-1-s' %><!-- :'document-b' -->
+								<span class="vertical">Invoicable</span>
+							</th>
+							<th title="Who has confirmed"				>
+								<%= icon :'triangle-1-s' %><!-- :check -->
+								<span class="vertical">Confirmed</span>
+							</th>
+							<th title="Remove from trip"				>
+								<%= icon :'triangle-1-s' %><!-- :close -->
+								<span class="vertical">Remove</span>
+							</th>
 						</tr>
 						
 					</thead>
 	
 					<tbody>
 
-						<!-- NOT a script but a client-side HTML MICRO-TEMPLATE used when browser script adds clients to trip: -->
+						<!-- A client-side HTML MICRO-TEMPLATE used when browser script adds clients to trip: -->
 						<script type="text/html" class="template" id="trip-traveller-row-template">
-
 							<%= partial 'trips/trip_clients', :trip => @trip, :html_template => true %>
-
 						</script>
 
 						<!-- One row for each client on the trip: -->

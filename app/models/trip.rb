@@ -149,7 +149,7 @@ class Trip
     
     # TODO!
     #validates_absence_of  :tour_id, :if => Proc.new{ |trip| trip.type_id != TOUR_TEMPLATE }
-    #validates_presence_of :tour_id, :if => Proc.new{ |trip| trip.type_id == TOUR_TEMPLATE }
+    #validates_present :tour_id, :if => Proc.new{ |trip| trip.type_id == TOUR_TEMPLATE }
 
 
     # Require user to confirm client source when creating a new private trip:
@@ -376,7 +376,7 @@ class Trip
 
     def primaries
 
-      primaries = self.clients.all( TripClient.is_primary => true )
+      primaries = self.clients.all( Client.trip_clients.is_primary => true )
 
       # Attempt to correct trip with no primary client!
       if primaries.empty? && ( first_trip_client = self.trip_clients.first( :order => [:id] ) )
@@ -1191,14 +1191,14 @@ class Trip
       
       elems = self.trip_elements.all( :supplier => supplier ) | self.flights.all( :handler => supplier )
       
-      return  self.adults     * elems.sum( :cost_per_adult  ) +
-              self.children   * elems.sum( :cost_per_child  ) +
-              self.infants    * elems.sum( :cost_per_infant ) +
-              self.singles    * elems.sum( :single_supp ) +
-              self.adults     * elems.sum( :biz_supp_per_adult  ) +
-              self.children   * elems.sum( :biz_supp_per_child  ) +
-              self.infants    * elems.sum( :biz_supp_per_infant ) +
-              self.travellers * elems.sum( :taxes )
+      return  self.adults     * ( elems.sum( :cost_per_adult  )     || 0 ) +
+              self.children   * ( elems.sum( :cost_per_child  )     || 0 ) +
+              self.infants    * ( elems.sum( :cost_per_infant )     || 0 ) +
+              self.singles    * ( elems.sum( :single_supp )         || 0 ) +
+              self.adults     * ( elems.sum( :biz_supp_per_adult  ) || 0 ) +
+              self.children   * ( elems.sum( :biz_supp_per_child  ) || 0 ) +
+              self.infants    * ( elems.sum( :biz_supp_per_infant ) || 0 ) +
+              self.travellers * ( elems.sum( :taxes ) || 0 )
       
     end
     
@@ -1685,6 +1685,29 @@ class Trip
 
 # Class methods:
 
+    # Find all the confirmed trips that ended yesterday: (Used by automated status change in app/controllers/application.rb)
+    def self.all_ready_to_complete( today = nil )
+
+      today ||= Date.today
+      active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :end_date.lt => today )
+      other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+
+      return active_versions + other_versions
+
+    end
+
+    # Find all the unconfirmed trips that [would have] started yesterday: (Used by automated status change in app/controllers/application.rb)
+    def self.all_ready_to_abandon( today = nil )
+
+      today ||= Date.today
+      active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::UNCONFIRMED, :start_date.lt => today, :created_at.lt => today )
+      other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+
+      return active_versions + other_versions
+
+    end
+
+
     # Helper to provide a consistent 'friendly' name: (Used when users select content for reports etc)
     def self.class_display_name
       return 'Trip'
@@ -1702,23 +1725,27 @@ class Trip
     end
 
 
+
 private
 
     # Validator to confirm client source when creating a new private trip:
     def check_client_source_on_new_trip
 
       # Fail validation if client nested attributes contain blank source:
-      if self.new? \
-      && ( self.tailor_made? || self.private_group? ) \
-      && self.respond_to?(:clients_attributes) \
-      && self.clients_attributes \
-      && ( blank_sources = self.clients_attributes.select{|k,v| v[:source_id].to_i.zero?} ) \
-      &&  !blank_sources.empty?
+      if self.new? &&
+        ( self.tailor_made? || self.private_group? ) &&
+        ( blank_sources = self.trip_clients.select{ |trip_client|
+          # Set client.source_id from the fake source_id attribute on trip_client, then
+          # Return true if the record is new and has no source_id:
+          trip_client.client.source_id = trip_client.source_id.to_i
+          trip_client.new? && trip_client.source_id.to_i.zero? 
+        }) &&
+        !blank_sources.empty?
 
           # Derive name of affected client, just to be helpful:
-          affected_client_ids   = blank_sources.map{|k,v| v[:id]}
+          affected_client_ids   = blank_sources.map{|trip_client| trip_client[:client_id] }
           affected_clients      = Client.all( :id => affected_client_ids )
-          affected_client_names = affected_clients.map{|c| c.fullname}.join(', ')
+          affected_client_names = affected_clients.map{|client| client.fullname}.join(', ')
           affected_client_names = "for #{ affected_client_names }" unless affected_clients.empty?
 
           return [ false, "First you'll need to confirm the client source #{ affected_client_names }" ]

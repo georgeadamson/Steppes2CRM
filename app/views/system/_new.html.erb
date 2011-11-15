@@ -23,10 +23,10 @@
 		<%= section_head "Add details for a <em>new #{ single_label }</em>" %>
 		
 		<div class="sectionBody formSurround">
-			<%= partial "#{ controller }/form", model => @obj, :url_params => url_params %>
+			<%= partial "#{ controller }/form", model => @obj %>
 		</div>
 
-		<%= partial 'shared/sectionFoot_with_buttons', :foot_class => 'formSurround', :save_caption => 'Save', :ui_target => :auto, :cancel_url => resource( controller, url_params ), :cancel_caption => 'Cancel without saving' %>
+		<%= partial 'shared/sectionFoot_with_buttons', :foot_class => 'formSurround', :save_caption => 'Save', :ui_target => :auto, :cancel_url => resource( controller ), :cancel_caption => 'Cancel without saving' %>
 			
 	<% end =%>
 </div>

@@ -29,10 +29,12 @@ def valid_country_attributes
   {
     :code          => 'C1',
     :name          => 'Country 1',
-    :companies     => [company],
     :world_region  => world_region,
     :mailing_zone  => mailing_zone
+    #:companies     => [company]   # Note: Countries are now linked to companies through company_countries
   }
+
+  
 
 end
 
@@ -240,7 +242,7 @@ alias valid_pnr_attributes2 updated_pnr_attributes
       :name         => '',
       :amount       => 100,
       :deposit      => 0,
-      :trip_id      => 1,
+      :trip         => Trip.first_or_create( { :id => 1 }, valid_trip_attributes ),
       :client_id    => 1,
       :user_id      => 1,
       :is_deposit   => false,

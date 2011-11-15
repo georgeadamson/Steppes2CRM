@@ -32,7 +32,7 @@ class BrochureRequests < Application
       @brochure_requests = BrochureRequest.all( :id => params[:brochure_request_ids] )
 
       # WARNING! This text must match button label: (TODO: Find a better way to distinguish Run and Clear!)
-      if params[:submit] =~ /Run.*merge/
+      if ( params[:submit] || params[:form_submit] ) =~ /Run.*merge/
 
         only_provides :doc
         
@@ -45,11 +45,15 @@ class BrochureRequests < Application
         download_name = "BrochureMerge.docx"
         return send_file( merge_path, :filename => download_name, :type => 'application/msword', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
         
-      else # params[:submit] =~ /Clear merge/
+      elsif ( params[:submit] || params[:form_submit] ) =~ /Clear merge/
 
         if !@brochure_requests.empty? && result = BrochureRequest.clear_merge_for( @brochure_requests )
           message[:notice] = "Cleared #{ result } brochure requests"
         end
+
+      else
+
+      	puts "Skipping merge because no array of brochure_request_ids was submitted (#{ params[:brochure_request_ids].inspect })"
 
       end
 

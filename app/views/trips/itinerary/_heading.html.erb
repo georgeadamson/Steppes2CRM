@@ -7,7 +7,7 @@
 
 %>
 			
-<h1 id="<%= nested_resource(@trip,true) %>topOfItinerary">
+<h1 id="<%= nested_resource(@client_or_tour,@trip,true) %>topOfItinerary">
 	<%= @trip.title %>
 <h1>
 

@@ -5,7 +5,7 @@ class Pnr
   property :id,								Serial
 	
 	property :name,							String,		:required => true, :unique => true, :length => 6		# AKA PNR Number or Booking Code
-	property :data,							Text,			:required => true, :unique => true, :lazy	=> true		# Raw Amadeus flight data etc.
+	property :data,							Text,			:required => true,                  :lazy	  => true	# Raw Amadeus flight data etc.
 	property :booking_date,			DateTime,	:required => true																		# Date when PNR was generated.
 	property :first_flight_date,DateTime
 	property :reminder_date,		DateTime																											# Used as a sort of booking expiry.

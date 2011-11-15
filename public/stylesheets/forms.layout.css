@@ -376,6 +376,18 @@ FORM {
 	.formField TEXTAREA.height6Fields { height:10.5em; }
 	.formField SELECT[multiple].height6Fields { height:10.5em; }
 
+	.formField TEXTAREA.height7Fields { height:12.25em; }
+	.formField SELECT[multiple].height7Fields { height:12.25em; }
+
+	.formField TEXTAREA.height8Fields { height:14.0em; }
+	.formField SELECT[multiple].height8Fields { height:14.0em; }
+
+	.formField TEXTAREA.height9Fields { height:15.75em; }
+	.formField SELECT[multiple].height9ields { height:15.75em; }
+
+	.formField TEXTAREA.height10Fields { height:17.5em; }
+	.formField SELECT[multiple].height10Fields { height:17.5em; }
+
 
 
 
@@ -959,17 +971,22 @@ TABLE.tripTravellers {
 				font-weight:normal;
 			}
 
-TABLE.tripTravellers THEAD TH SPAN.vertical {
-	display:block;
-	font-weight:normal;
-	margin-left:0.5em;
-	width:1em;
-	white-space:nowrap;
-}
+		TABLE.tripTravellers THEAD TH .ui-icon {
+			position:absolute;
+		}
 
-	TABLE.tripTravellers THEAD TH SPAN.vertical A {
-		text-decoration:none;
-	}
+		TABLE.tripTravellers THEAD TH SPAN.vertical {
+			display:block;
+			font-weight:normal;
+			margin-left:0.2em;
+			text-indent:16px;
+			width:1em;
+			white-space:nowrap;
+		}
+
+			TABLE.tripTravellers THEAD TH SPAN.vertical A {
+				text-decoration:none;
+			}
 
 TABLE.tripTravellers TBODY TD {
 	min-width:1em;

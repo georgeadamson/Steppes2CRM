@@ -21,12 +21,13 @@ class Task
   property :closed_notes,       String, :required => false, :length => 500 # Formerly ClosingNotes.
   property :created_on,         Date
 
-  belongs_to :type,   :model => "TaskType",   :child_key => [:type_id]
   belongs_to :status, :model => "TaskStatus", :child_key => [:status_id]
   belongs_to :contact_client, :model => "Client", :child_key => [:contact_client_id]
   belongs_to :client
   belongs_to :user
   belongs_to :closed_by_user, :model => "User", :child_key => [:closed_by_user_id]
+  belongs_to :task_type,   :model => "TaskType",   :child_key => [:type_id]
+  alias type task_type
 
   # Context-specific relationships:
   belongs_to :trip_element
@@ -36,7 +37,7 @@ class Task
   alias notes= name=
 
   # Set the default sort order:
-  default_scope(:default).update( :order => [:status_id, :due_date.desc, :closed_date.desc] )
+  default_scope(:default).update( :limit => 1000, :order => [:status_id, :due_date.desc, :closed_date.desc] )
 
   def open?
     return self.status_id == TaskStatus::OPEN
