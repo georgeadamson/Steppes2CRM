@@ -73,6 +73,11 @@ class MoneyOut
     return days
   end
 
+  def supplier_bankline_template
+    return self.supplier.bankline_template
+  end
+  
+    
 
 # Class methods:
   
@@ -88,7 +93,7 @@ class MoneyOut
     return [ :name, :amount_requested, :requested_date, :notes, :supplier, :trip, :status, :currency, :user, :created_at,
 
       # ...and the following are special custom methods especially for reports:
-      :trip_elements_count, :trip_elements_days
+      :trip_elements_count, :trip_elements_days, :supplier_bankline_template
 
     ]
 

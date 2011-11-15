@@ -296,12 +296,13 @@ Function GetIniFileKey(strIniFileContents, strKeyName)
 	strIniFileKeyValue = strUnknown
 
 	' Read text between strKeyName and the end of the line
-	keyPosition = InStr(1, strIniFileContents, vbCrLf & strKeyName & "=", vbTextCompare)
+	keyPosition = InStr(1, strIniFileContents, vbLf & strKeyName & "=", vbTextCompare)
 
 	If keyPosition > 0 Then
-		startPosition = keyPosition + Len(vbCrLf & strKeyName & "=")
-		endPosition = InStr(startPosition, strIniFileContents, vbCrLf)
-	    strIniFileKeyValue= Mid(strIniFileContents, startPosition, endPosition - startPosition)
+		startPosition = keyPosition + Len(vbLf & strKeyName & "=")
+		endPosition = InStr(startPosition, strIniFileContents, vbLf)
+	    strIniFileKeyValue = Mid(strIniFileContents, startPosition, endPosition - startPosition)
+	    strIniFileKeyValue = Replace( Replace(strIniFileKeyValue, vbCr, ""), vbLf, "")
 	End If
 	
 	If strIniFileKeyValue = strUnknown Then
@@ -479,8 +480,9 @@ Sub InitialiseDocument
 	' Create a Word object
 	Set objWord = CreateObject("Word.Application")
 
+	objWord.WindowState     = wdWindowStateMinimize
 	objWord.Visible         = True 'isTestEnvironment() Or isDevEnvironment()	'Visible when running unit tests.
-  objWord.WindowState     = wdWindowStateMinimize
+	objWord.WindowState     = wdWindowStateMinimize
 	objWord.ScreenUpdating  = False
 	
 	Dim strTemplateFolder

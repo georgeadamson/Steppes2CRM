@@ -31,7 +31,7 @@
 		</dd>
 
 		<dt class="timelineSwimlaneHead isFlight">
-			<%= link_to 'Flight', nested_resource( trip, :trip_elements, :new, :type => 'flight' ), :rel => '.tripElementFormContainer', :title=>'Add a flight element' %>
+			<%= link_to 'Flight', resource( @client_or_tour, trip, :trip_elements, :new, :type => 'flight' ), :rel => '.tripElementFormContainer', :title=>'Add a flight element' %>
 		</dt>
 		<dd class="timelineSwimlane">
 			<ul class="timelineElements isFlight days<%= days.length %>"><!-- Note: UL.daysX css class is used by the js $.fn.timelineOverview() method to derive trip length. -->
@@ -40,7 +40,7 @@
 		</dd>
 
 		<dt class="timelineSwimlaneHead isAccomm">
-			<%= link_to 'Accomm', nested_resource( trip, :trip_elements, :new, :type => 'accomm' ), :rel => '.tripElementFormContainer', :title=>'Add an accommodation element' %>
+			<%= link_to 'Accomm', resource( @client_or_tour, trip, :trip_elements, :new, :type => 'accomm' ), :rel => '.tripElementFormContainer', :title=>'Add an accommodation element' %>
 		</dt>
 		<dd class="timelineSwimlane">
 			<ul class="timelineElements isAccomm days<%= days.length %>">
@@ -49,7 +49,7 @@
 		</dd>
 
 		<dt class="timelineSwimlaneHead isGround">
-			<%= link_to 'Ground', nested_resource( trip, :trip_elements, :new, :type => 'ground' ), :rel => '.tripElementFormContainer', :title=>'Add a ground element' %>
+			<%= link_to 'Ground', resource( @client_or_tour, trip, :trip_elements, :new, :type => 'ground' ), :rel => '.tripElementFormContainer', :title=>'Add a ground element' %>
 		</dt>
 		<dd class="timelineSwimlane">
 			<ul class="timelineElements isGround days<%= days.length %>">
@@ -58,7 +58,7 @@
 		</dd>
 
 		<dt class="timelineSwimlaneHead isMisc">
-			<%= link_to 'Misc', nested_resource( trip, :trip_elements, :new, :type => 'misc' ), :rel => '.tripElementFormContainer', :title=>'Add a miscellaneous element' %>
+			<%= link_to 'Misc', resource( @client_or_tour, trip, :trip_elements, :new, :type => 'misc' ), :rel => '.tripElementFormContainer', :title=>'Add a miscellaneous element' %>
 		</dt>
 		<dd class="timelineSwimlane">
 			<ul class="timelineElements isMisc days<%= days.length %>">

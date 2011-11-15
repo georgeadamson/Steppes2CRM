@@ -89,7 +89,7 @@
 							:trip_id			=> @trip.id,
 							:supplier_id	=> supplier.id
 						}
-						uri = "#{ nested_resource( @trip, :money_outs, :new ) }?#{ args.to_query }"
+						uri = "#{ resource( @client_or_tour, @trip, :money_outs, :new ) }?#{ args.to_query }"
 					%>
 					<%= tag :td, link_to( "Request a payment...", uri, :class => 'ui-priority-secondary ui-state-default right' )+'<br/><br/><br/>', :colspan => 5 %>
 				</tr>

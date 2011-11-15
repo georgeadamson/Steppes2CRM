@@ -22,6 +22,7 @@ gems/specifications/*
 merb_profile_results
 
 # To preserve developers' custom environments and sanity:
+.gems
 .bundle
 config/database.yml
 vendor/cache

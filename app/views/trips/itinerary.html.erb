@@ -10,21 +10,21 @@
 	<div>
 		<dl class="">
 
-			<dt id="<%= nested_resource(@trip,true) %>quickItinerary">
+			<dt id="<%= nested_resource(@client_or_tour,@trip,true) %>quickItinerary">
 				Quick reference itinerary
 			</dt>
 			<dd>
 				<%= partial 'trips/itinerary/quick_reference', :trip => @trip %>
 			</dd>
 
-			<dt id="<%= nested_resource(@trip,true) %>flightSchedule">
+			<dt id="<%= nested_resource(@client_or_tour,@trip,true) %>flightSchedule">
 				Your flights schedule
 			</dt>
 			<dd>
 				<%= partial 'trips/itinerary/flight_schedule', :trip => @trip %>
 			</dd>
 
-			<dt id="<%= nested_resource(@trip,true) %>detailedItinerary">
+			<dt id="<%= nested_resource(@client_or_tour,@trip,true) %>detailedItinerary">
 				Detailed trip itinerary
 			</dt>
 			<dd>
@@ -43,10 +43,10 @@
 
 		<div class="left">
 			Jump to:
-			<%= link_to 'Top of page',				"##{ nested_resource(@trip,true) }topOfItinerary",		:class => 'scrollTo ui-state-default ui-corner-all ui-priority-secondary' %>
-			<%= link_to 'Quick itinerary',		"##{ nested_resource(@trip,true) }quickItinerary",		:class => 'scrollTo ui-state-default ui-corner-all ui-priority-secondary' %>
-			<%= link_to 'Detailed itinerary',	"##{ nested_resource(@trip,true) }detailedItinerary", :class => 'scrollTo ui-state-default ui-corner-all ui-priority-secondary' %>
-			<%= link_to 'Flight schedule',		"##{ nested_resource(@trip,true) }flightSchedule",		:class => 'scrollTo ui-state-default ui-corner-all ui-priority-secondary' %>
+			<%= link_to 'Top of page',				"##{ nested_resource(@client_or_tour,@trip,true) }topOfItinerary",		:class => 'scrollTo ui-state-default ui-corner-all ui-priority-secondary' %>
+			<%= link_to 'Quick itinerary',		"##{ nested_resource(@client_or_tour,@trip,true) }quickItinerary",		:class => 'scrollTo ui-state-default ui-corner-all ui-priority-secondary' %>
+			<%= link_to 'Detailed itinerary',	"##{ nested_resource(@client_or_tour,@trip,true) }detailedItinerary", :class => 'scrollTo ui-state-default ui-corner-all ui-priority-secondary' %>
+			<%= link_to 'Flight schedule',		"##{ nested_resource(@client_or_tour,@trip,true) }flightSchedule",		:class => 'scrollTo ui-state-default ui-corner-all ui-priority-secondary' %>
 		</div>
 
 
@@ -71,7 +71,7 @@
 
 				<% @document.document_type_id	= DocumentType::CONTACT_SHEET %>
 				
-				<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@trip) }/itinerary" %>
+				<%= hidden_field :name => 'redirect_to', :value => "#{ resource(@client_or_tour,@trip) }/itinerary" %>
 				<%= hidden_field :trip_id %>
 				<%= hidden_field :client_id %>
 				<%= hidden_field :company_id %>
@@ -91,7 +91,7 @@
 
 				<% @document.document_type_id	= DocumentType::ITINERARY %>
 
-				<%= hidden_field :name => 'redirect_to', :value => "#{ nested_resource(@trip) }/itinerary" %>
+				<%= hidden_field :name => 'redirect_to', :value => "#{ resource(@client_or_tour,@trip) }/itinerary" %>
 				<%= hidden_field :trip_id %>
 				<%= hidden_field :client_id %>
 				<%= hidden_field :company_id %>

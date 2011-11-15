@@ -2,19 +2,21 @@ require 'dm-timestamps'
 
 class TripElement
   include DataMapper::Resource
-  
+
   # Old fields: DetailID,ElementTypeID,ItineraryHeaderID,SupplierID,DateFrom,DateTo,NumAdults,NumChildren,NumSingles,NoMargin,total_cost,total_price,exchange_rate,cost_per_adult,cost_per_child,single_suppl,LeaderCost,meal_plan,room_type,twin_rooms,single_rooms,triple_rooms,cost_per_triple,DetailNotes,cost_by_room,FlightHandlerID,Description,flight_code,FlightDate,DepartAirport,ArriveAirport,DepartureTime,ArrivalTime,arrive_next_day,booking_code,OptionExpires,OptionNotes,ReturnOptionCode,ReturnOptionExpires,ReturnOptionNotes,flight_leg,Taxes,BSPerAdult,BSPerChild,DFcost_per_adult,DFcost_per_child,DFNotes,Returnflight_code,ReturnFlightDate,ReturnDepartAirport,ReturnArriveAirport,ReturnDepartureTime,ReturnArrivalTime,ReturnArriveNextDay,LinkedHandlerID,SubGroupID,row_updated_date
   # Ground Agent domestic Flight now entered as Flight. Formerly: DFcost_per_adult,DFcost_per_child,DFNotes
   # Return flights now entered as separate Flight. Formerly: Returnflight_code,ReturnFlightDate,ReturnDepartAirport,ReturnArriveAirport,ReturnDepartureTime,ReturnArrivalTime,ReturnArriveNextDay
-  
+
   # Note: Flights without a handler can only be added by a PNR.
-  
-  FLIGHT  = TripElementType::FLIGHT  unless defined? FLIGHT
-  HANDLER = TripElementType::HANDLER unless defined? HANDLER
-  ACCOMM  = TripElementType::ACCOMM  unless defined? ACCOMM
-  GROUND  = TripElementType::GROUND  unless defined? GROUND
-  MISC    = TripElementType::MISC    unless defined? MISC
-  
+
+  FLIGHT    = TripElementType::FLIGHT   unless defined? FLIGHT
+  HANDLER   = TripElementType::HANDLER  unless defined? HANDLER
+  ACCOMM    = TripElementType::ACCOMM   unless defined? ACCOMM
+  GROUND    = TripElementType::GROUND   unless defined? GROUND
+  MISC      = TripElementType::MISC     unless defined? MISC
+
+  MEALPLANS = %w[BB HB FB RO FI]        unless defined? MEALPLANS   # IMPORTANT: Also modify sp_document_data_day_elements if you change this!
+
   # This is just a simple boolean flag but it helps to document the code!
   YES_BUT_SEE_MANUAL_VALIDATION_BELOW = false unless defined? YES_BUT_SEE_MANUAL_VALIDATION_BELOW
 
@@ -27,15 +29,15 @@ class TripElement
   property :name,									String,			:default	=> 'Trip element'
   property :description,					String,			:length		=> 600,		:default	=> ''
   property :notes,								String,			:length		=> 600,		:lazy			=> true,  :default => ''	# Formerly "DetailNotes" and "OptionNotes" (now merged)
-  
+
   property :start_date,						DateTime,		:required	=> true,	:default	=> lambda{ |elem,prop| ( elem.trip && elem.trip.start_date || Date.today )     }  # Formerly departTime & flightDate
   property :end_date,							DateTime,		:required	=> true,	:default	=> lambda{ |elem,prop| ( elem.trip && elem.trip.start_date || Date.today ) + 1 }	# Formerly arriveTime
-  
+
   property :adults,								Integer,		:default	=> 1
   property :children,							Integer,		:default	=> 0
   property :infants,							Integer,		:default	=> 0
   property :singles,							Integer,		:default	=> 0
-  
+
   property :margin_type,					String,			:length		=> 1,			:default	=> '%'							# Apply margin as percent? (Or fixed amount)
   property :margin,								BigDecimal, :required	=> true,  :precision=> 6, :scale	=> 2,	:default	=> lambda{ |elem,prop| CRM[:default_margin] || 24 }	# Number representing a fixed amount or percent.
   property :exchange_rate,				BigDecimal, :required	=> true,  :precision=> 6, :scale	=> 2,	:default	=> 1

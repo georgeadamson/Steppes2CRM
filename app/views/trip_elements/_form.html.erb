@@ -107,7 +107,7 @@
 			arrive_airports_list << Airport.get( element.arrive_airport_id ).id_and_name if element.arrive_airport_id.to_i > 0 && airports.get( element.arrive_airport_id ).nil? && Airport.get( element.arrive_airport_id )
 
 			# Add "Show all" option to the airports lists:
-			href = resource( :airports, :list => 'option' )
+			href = resource( :airports, :list => 'option', :country_id => element.trip.countries_ids.push(Country::UK).join(',') )
 			depart_airports_list << [ href, '+ Show more...' ]
 			arrive_airports_list << [ href, '+ Show more...' ]
 
@@ -181,8 +181,8 @@
 	<% if element.id -%>
 		<!-- Prev/Next buttons for navigating through elements: #556 -->
 		<span class="right" style="position:absolute;right:0;top:0;">
-			<%= link_to '&lt; Prev', nested_resource( element.prev || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.prev }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Previous element' %>
-			<%= link_to 'Next &gt;', nested_resource( element.next || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.next }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Next element'     %>
+			<%= link_to '&lt; Prev', resource( @client_or_tour, element.trip, element.prev || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.prev }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Previous element' %>
+			<%= link_to 'Next &gt;', resource( @client_or_tour, element.trip, element.next || element, :edit ), :class => "ui-priority-secondary ui-state-default #{ 'invisible' unless element.next }", :style => 'min-width:auto;', :rel => '.tripElementFormContainer', :title => 'Next element'     %>
 		</span>
 	<% end -%>
 
@@ -253,7 +253,7 @@
 	<tr class="tableRow">
 
 		<td><%= text_field :room_type,		:label => 'Room type',		:class => 'tableCell whenAccomm width1Field' %></td>
-		<td><%= select :meal_plan,				:label => 'Meal plan',		:class => 'tableCell whenAccomm widthHalfField', :selected => element.meal_plan, :collection => %w[BB HB FB RO], :prompt => "n/a" %></td>
+		<td><%= select :meal_plan,				:label => 'Meal plan',		:class => 'tableCell whenAccomm widthHalfField', :selected => element.meal_plan, :collection => TripElement::MEALPLANS, :prompt => "n/a" %></td>
 
 	</tr>
 	<% end %>

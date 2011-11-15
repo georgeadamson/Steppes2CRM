@@ -211,6 +211,9 @@ class Trips < Application
 
   def create(trip)
     
+    @trip		        = Trip.new
+    @client_or_tour = Tour.get(params[:tour_id]) || Client.get(params[:client_id]) || session.user.most_recent_client
+
 		# Workaround for when no checkboxes are ticked: (Because posted params will not contain an array of ids)
 		trip[:countries_ids] ||= []
     
@@ -228,22 +231,32 @@ class Trips < Application
     # Remember whether we need to copy elements etc from another trip:
     do_copy_trip_id = trip.delete(:do_copy_trip_id)
 
-    @trip		        = Trip.new(trip)
-    @client_or_tour = Tour.get(params[:tour_id]) || Client.get(params[:client_id]) || session.user.most_recent_client
+    # Deprecated: This is now handled in trip#check_client_source_on_new_trip
+    #if @client_or_tour.is_a? Client
+    #  
+    #  # This applies to new private trips only:
+    #  # Hack: Don't know why trip[:clients_attributes][x][:source_id] is not being saved so we set it explicitly:
+    #  #new_source_id = trip[:clients_attributes] \
+    #  #  && trip[:clients_attributes][@client_or_tour.id.to_s] \
+    #  #  && trip[:clients_attributes][@client_or_tour.id.to_s][:source_id]
+    #  #@client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
+    #
+    #  new_source_id = trip[:trip_clients_attributes] &&
+    #    trip[:trip_clients_attributes]['0'] &&
+    #    trip[:trip_clients_attributes]['0'][:source_id]
+    #    #trip[:trip_clients_attributes]['0'].delete(:source_id)
+    #
+    #  @client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
+    #
+    #end
+
+    @trip.attributes = trip
+    #@trip		        = Trip.new(trip)
+    #@client_or_tour = Tour.get(params[:tour_id]) || Client.get(params[:client_id]) || session.user.most_recent_client
     
 		@trip.updated_by					||= session.user.fullname
     @trip.clients							<<	@client_or_tour unless @trip.tour
 
-    if @client_or_tour.is_a? Client
-      
-      # This applies to new private trips only:
-      # Hack: Don't know why trip[:clients_attributes][x][:source_id] is not being saved so we set it explicitly:
-      new_source_id = trip[:clients_attributes] \
-        && trip[:clients_attributes][@client_or_tour.id.to_s] \
-        && trip[:clients_attributes][@client_or_tour.id.to_s][:source_id]
-      @client_or_tour.source_id = new_source_id.to_i if new_source_id.to_i > 0
-
-    end
 		
 		# Alas this does not seem to affect the row in the trip_clients table:
 		@trip.trip_clients.each{ |relationship| relationship.created_by = @trip.created_by }
@@ -308,7 +321,7 @@ class Trips < Application
   
 
   def update(id, trip)
-    
+
     @trip = Trip.get(id)
     raise NotFound unless @trip
     @trip_version = @trip
@@ -338,6 +351,7 @@ class Trips < Application
     # Switch VERSION:
     if trip[:active_version_id] && trip[:active_version_id].to_i != @trip.id
 
+      puts 'Switching version...'
 
       # Make NEW VERSION:
       if trip[:active_version_id] == 'new'
@@ -400,16 +414,18 @@ class Trips < Application
 
 
     # Set MARGIN on all elements:
-    elsif params[:submit] =~ /margin/i
+    elsif params[:submit] =~ /margin/i || params[:form_submit] =~ /margin/i
 
-      if @trip.update_margins_to( params[:new_margin].to_i, :save )
+      puts "Setting margins to #{ params[:new_margin].to_f }"
+
+      if @trip.update_margins_to( params[:new_margin].to_f, :save )
       
         message[:notice] = "Successfully set the margin on every element and then recalculated trip prices."
         
         if request.ajax?
           next_page ? render(next_page) : render(:show)
         else
-          redirect "#{ nested_resource(@trip) }/#{ next_page }", :message => message
+          redirect "#{ resource(@client_or_tour, @trip) }/#{ next_page }", :message => message
         end
       
       else
@@ -422,7 +438,9 @@ class Trips < Application
 
 
     # Update EXCHANGE RATES
-    elsif params[:submit] =~ /exchange rates/i
+    elsif params[:submit] =~ /exchange rate/i || params[:form_submit] =~ /exchange rate/i
+
+      puts 'Updating exchange rates'
 
       if @trip.update_exchange_rates(:save)
       
@@ -431,7 +449,7 @@ class Trips < Application
         if request.ajax?
           next_page ? render(next_page) : render(:show)
         else
-          redirect "#{ nested_resource(@trip) }/#{ next_page }", :message => message
+          redirect "#{ resource(@client_or_tour, @trip) }/#{ next_page }", :message => message
         end
       
       else
@@ -445,6 +463,8 @@ class Trips < Application
 
     # Otherwise apply the changes in the normal way:
 		elsif @trip.update(trip)
+
+      puts "Updating trip #{@trip.id}"
 
 			message[:notice]	  = 'Trip was updated successfully. '
       #message[:notice]   += 'The active version has been changed.' if @trip_version
@@ -494,10 +514,12 @@ class Trips < Application
       if request.ajax?
         next_page ? render(next_page) : render(:show)
       else
-        redirect "#{ nested_resource(@trip) }/#{ next_page }", :message => message
+        redirect "#{ resource(@client_or_tour, @trip) }/#{ next_page }", :message => message
       end
       
     else
+
+      puts "Error during update trip #{@trip.id}"
 
       collect_error_messages_for @trip
       collect_error_messages_for @trip, :elements

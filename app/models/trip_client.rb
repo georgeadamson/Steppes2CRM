@@ -1,15 +1,16 @@
 class TripClient
   include DataMapper::Resource
   
-  property :id,             Serial
-	property :trip_id,				Integer, :required => true #:unique => true, :scope => :client_id
-	property :client_id,			Integer, :required => true #:unique => true, :scope => :trip_id
+  property :id,                 Serial
+	property :trip_id,				    Integer, :required => true #:unique => true, :scope => :client_id
+	property :client_id,			    Integer, :required => true #:unique => true, :scope => :trip_id
 
-  property :is_leader,			Boolean, :required => true, :default => false
-  property :is_primary,			Boolean, :required => true, :default => false
-  property :is_single,			Boolean, :required => true, :default => false
-  property :is_invoicable,	Boolean, :required => true, :default => false
-  property :status_id,    	Integer, :required => true, :default => 0     # 0=Unconfirmed, 1=Confirmed, Allows for more. (Not to be confused with trip.status!)
+  property :is_leader,			    Boolean, :required => true, :default => false
+  property :is_primary,			    Boolean, :required => true, :default => false
+  property :is_single,			    Boolean, :required => true, :default => false
+  property :is_invoicable,	    Boolean, :required => true, :default => false
+  property :is_flight_with_us,  Boolean, :required => true, :default => false
+  property :status_id,    	    Integer, :required => true, :default => 0     # 0=Unconfirmed, 1=Confirmed, Allows for more. (Not to be confused with trip.status!)
 
 	property :created_at, Date
 	property :created_by, String, :default => ''
@@ -27,6 +28,9 @@ class TripClient
 
   alias confirmation_status status_id # Support for depricated field name
 
+  # Bit of a hack: This is used to set the client.source_id when a new trip is being saved:
+  # See /models/trip.rb and /controllers/trips.rb and /views/trips/_form.html.erb
+  attr_accessor :source_id
 
 #	before :valid? do
 #		# Ensure required fields are not nil:

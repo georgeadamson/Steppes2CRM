@@ -76,8 +76,9 @@ end
 # Date.add_format(:example, "%H:%M:%S %Y-%m-%d") => @date.formatted(:example).should == "00:00:00 2007-11-02"
 Date.add_format(:uitime,			'%H:%M')					# "hh:mm"
 Date.add_format(:uidate,			'%d/%m/%Y')				# "dd/mm/yyyy"
+Date.add_format(:uidatelong,	'%d %b %Y')		    # "11 December 2012"
 Date.add_format(:uidatetime,	'%d/%m/%Y %H:%M')	# "dd/mm/yyyy hh:mm"
-Date.add_format(:uidisplay,		'%a %d %b %Y')		# "Mon 11 May 2012"
+Date.add_format(:uidisplay,		'%a %d %b %Y')		# "Mon 11 Dec 2012"
 Date.add_format(:filedatetime,'%d-%m-%Y_%H-%M')	# "dd-mm-yyyy_hh-mm"
 
 

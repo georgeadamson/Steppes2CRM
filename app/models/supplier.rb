@@ -11,52 +11,51 @@ class Supplier
   MISC    = 8 unless defined?(MISC)
   
   property :id,						      Serial
-  property :name,					      String,		:required => true,	:default => 'New supplier'
-  property :code,					      String,		:length		=> 3,			:default => ''	# Typically only used for Airline codes
-  property :type_id,			      Integer,	:required => true,	:default => 1   # 1=Airline, 2=FlightAgent, 4=Accomm, 5=Ground, 8=Misc
-  property :currency_id,	      Integer,	:required => true
-  property :linked_supplier_id,	Integer                                       # Applies to Accommodation only. Maps to a Ground Agent. TODO: Use for Airlines too?
-  property :country_id,		      Integer,	:required => true,	:message => 'A country has not been chosen for this supplier'
-  property :address_id,        	Integer
-  property :tel_emergency,			String,   :length => 30
-  property :email,	            String,   :length => 255
-  property :location,           String    # To be depricated?
-  property :description,	      String,   :length => 2500, :lazy => true
-  property :contact_name,	      String
-  property :contact_name2,      String
-  property :notes,              String,   :length => 255
-  property :default_room_type,	String
-  property :default_meal_plan,	String
-  property :image_file,         String,   :length => 100                # Migrate to images table
-  
-  property :bankline_template,  String,   :length => 20,  :lazy => true # Alphanumeric code used by Steppes accounts system. Added May 2011 by GA
+  property :name,					      String,	 :required => true,	:default => 'New supplier'
+  property :code,					      String,	 :length	 => 3,		:default => ''	# Typically only used for Airline codes
+  property :type_id,			      Integer, :required => true,	:default => 1   # 1=Airline, 2=FlightAgent, 4=Accomm, 5=Ground, 8=Misc
+  property :currency_id,	      Integer, :required => true
+  property :linked_supplier_id,	Integer, :lazy => true                                       # Applies to Accommodation only. Maps to a Ground Agent. TODO: Use for Airlines too?
+  property :country_id,		      Integer, :lazy => true,	  :required => true,	:message => 'A country has not been chosen for this supplier'
+  property :address_id,        	Integer, :lazy => true
+  property :tel_emergency,			String,  :lazy => true,   :length => 30
+  property :email,	            String,  :lazy => true,   :length => 255
+  property :location,           String,  :lazy => true    # To be depricated?
+  property :description,	      String,  :lazy => true,   :length => 2500, :lazy => true
+  property :contact_name,	      String,  :lazy => true
+  property :contact_name2,      String,  :lazy => true
+  property :notes,              String,  :lazy => true,   :length => 255
+  property :default_room_type,	String,  :lazy => true
+  property :default_meal_plan,	String,  :lazy => true
+  property :image_file,         String,  :lazy => true,   :length => 100    # Migrate to images table
+  property :bankline_template,  String,  :lazy => true,   :length => 20     # Alphanumeric code used by Steppes accounts system. Added May 2011 by GA
 
-  property :bank_name,        	                  String, :lazy => true
-  property :bank_account_holder_name,             String, :lazy => true
-  property :bank_account_number,        	        String, :lazy => true,   :length => 20
-  property :bank_sort_code,        	              String, :lazy => true,   :length => 10
-  property :bank_swift_code,        	            String, :lazy => true,   :length => 20
-  property :bank_charges_code,        	          String, :lazy => true
-  property :bank_intermediary_name,               String, :lazy => true
-  property :bank_intermediary_swift_code,         String, :lazy => true,   :length => 20
-  property :bank_currency_id,        	            Integer,:lazy => true
-  property :bank_address_id,        	            Integer,:lazy => true
+  property :bank_name,        	                  String, :lazy => :bank
+  property :bank_account_holder_name,             String, :lazy => :bank
+  property :bank_account_number,        	        String, :lazy => :bank,   :length => 20
+  property :bank_sort_code,        	              String, :lazy => :bank,   :length => 10
+  property :bank_swift_code,        	            String, :lazy => :bank,   :length => 20
+  property :bank_charges_code,        	          String, :lazy => :bank
+  property :bank_intermediary_name,               String, :lazy => :bank
+  property :bank_intermediary_swift_code,         String, :lazy => :bank,   :length => 20
+  property :bank_currency_id,        	            Integer,:lazy => :bank
+  property :bank_address_id,        	            Integer,:lazy => :bank
 
-  property :facilities_number_of_rooms,        	  String, :lazy => true
-  property :facilities_mobile_reception,        	String, :lazy => true
-  property :facilities_electricity,        	      String, :lazy => true
-  property :facilities_internet,        	        String, :lazy => true
-  property :facilities_activities,        	      String, :lazy => true,   :length => 250
-  property :facilities_health_and_safety,        	String, :lazy => true,   :length => 250
-  property :facilities_money_exchange,        	  String, :lazy => true
-  property :facilities_credit_card,        	      String, :lazy => true
-  property :facilities_room_description,        	String, :lazy => true,   :length => 250
-  property :facilities_region_description,        String, :lazy => true,   :length => 250
-  property :facilities_air_transfer_description,  String, :lazy => true,   :length => 250
-  property :facilities_road_transfer_description, String, :lazy => true,   :length => 250
-  property :facilities_misc,        	            String, :lazy => true,   :length => 250
-  property :facilities_inspected_by,        	    String, :lazy => true,   :length => 100
-  property :facilities_inspected_date,        	  Date,   :lazy => true
+  property :facilities_number_of_rooms,        	  String, :lazy => :facilities
+  property :facilities_mobile_reception,        	String, :lazy => :facilities
+  property :facilities_electricity,        	      String, :lazy => :facilities
+  property :facilities_internet,        	        String, :lazy => :facilities
+  property :facilities_activities,        	      String, :lazy => :facilities,   :length => 250
+  property :facilities_health_and_safety,        	String, :lazy => :facilities,   :length => 250
+  property :facilities_money_exchange,        	  String, :lazy => :facilities
+  property :facilities_credit_card,        	      String, :lazy => :facilities
+  property :facilities_room_description,        	String, :lazy => :facilities,   :length => 250
+  property :facilities_region_description,        String, :lazy => :facilities,   :length => 250
+  property :facilities_air_transfer_description,  String, :lazy => :facilities,   :length => 250
+  property :facilities_road_transfer_description, String, :lazy => :facilities,   :length => 250
+  property :facilities_misc,        	            String, :lazy => :facilities,   :length => 250
+  property :facilities_inspected_by,        	    String, :lazy => :facilities,   :length => 100
+  property :facilities_inspected_date,        	  Date,   :lazy => :facilities
   
   property :created_at,                           Date
   property :updated_at,                           Date
@@ -64,12 +63,12 @@ class Supplier
  
   belongs_to :address
   belongs_to :country
-  belongs_to :type,		          :model => "TripElementType",	:child_key => [:type_id]
   belongs_to :currency,         :model => "ExchangeRate",			:child_key => [:currency_id]
   belongs_to :linked_supplier,  :model => "Supplier",         :child_key => [:linked_supplier_id] # AKA Default handler for Accommodation. TODO: Use for Airlines too?
   belongs_to :bank_currency,    :model => "ExchangeRate",     :child_key => [:bank_currency_id]
   belongs_to :bank_address,     :model => "Address",          :child_key => [:bank_address_id]
-
+  belongs_to :supplier_type,		:model => "TripElementType",	:child_key => [:type_id]
+  alias type supplier_type      # Workaround for conflict with datamapper's .type attribute since DM v1.1.0
 	
   has n, :trip_elements,  :child_key => [:supplier_id]		# Trip Element Supplier
   has n, :trip_elements,  :child_key => [:handler_id]		# Trip Element Handler AKA Flight Agent, Flight Handler

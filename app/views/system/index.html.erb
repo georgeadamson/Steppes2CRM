@@ -4,8 +4,8 @@
 
 	# Define list of resources that can be administered:
 	admin_pages = [
-		{ :label => 'Accommodation',	:url => resource(:suppliers, :type_id => 4) },
-		{ :label => 'Airlines',				:url => resource(:suppliers, :type_id => 1) },
+		{ :label => 'Accommodation',	:url => resource(:suppliers, :type_id => Supplier::ACCOMM) },
+		{ :label => 'Airlines',				:url => resource(:suppliers, :type_id => Supplier::AIRLINE) },
 		{ :label => 'Airports',				:url => resource(:airports) },
 		{ :label => 'Client sources',	:url => resource(:client_sources) },
 		{ :label => 'Companies',			:url => resource(:companies) },
@@ -13,10 +13,10 @@
 		#{ :label => 'Doc templates',	:url => resource(:document_templates) },
 		{ :label => 'Doc types',			:url => resource(:document_types) },
 		{ :label => 'Exchange rate',	:url => resource(:exchange_rates) },
-		{ :label => 'Flight agents',	:url => resource(:suppliers, :type_id => 2) },
-		{ :label => 'Ground Hdlr',		:url => resource(:suppliers, :type_id => 5) },
+		{ :label => 'Flight agents',	:url => resource(:suppliers, :type_id => Supplier::HANDLER) },
+		{ :label => 'Ground Hdlr',		:url => resource(:suppliers, :type_id => Supplier::GROUND) },
 		{ :label => 'Mailing zones',	:url => resource(:mailing_zones) },
-		{ :label => 'Misc suppliers',	:url => resource(:suppliers, :type_id => 8) },
+		{ :label => 'Misc suppliers',	:url => resource(:suppliers, :type_id => Supplier::MISC) },
 		{ :label => 'Misc types',			:url => resource(:trip_element_misc_types) },
 		{ :label => 'PNRs',						:url => resource(:pnrs) },
 		{ :label => 'Task types',			:url => resource(:task_types) },

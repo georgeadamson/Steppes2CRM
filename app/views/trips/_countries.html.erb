@@ -7,7 +7,7 @@
 	
 	country_ids        = trip.trip_countries.map{|c|c.country_id}		# Read country IDs from the trip_countries collection.
 	selected_countries = country_ids.unshift(-1).join(',')	        # Comma separated list of the trip's current country selections.
-	checkbox_id_prefix = "#{ nested_resource(trip,true) }country"		# Ensures each checkbox has a unique ID so it's label can be wired to it.
+	checkbox_id_prefix = "#{ nested_resource(@client_or_tour,trip,true) }country"		# Ensures each checkbox has a unique ID so it's label can be wired to it.
 
 	# Params to add to each world-region tab url: (world_region_id will be added later for each link)
 	link_options = {
@@ -33,7 +33,7 @@
 			<%= unless trip.new? && trip.trip_countries.empty?
 
 				tag :li do
-					link_to 'Chosen countries', "##{ nested_resource(trip,true) }countriesSelected"
+					link_to 'Chosen countries', "##{ nested_resource(@client_or_tour,trip,true) }countriesSelected"
 				end 		# No need to show chosen countries for new trips unless they have some countries selected.
 
 			end %>
@@ -53,7 +53,7 @@
 		<!-- Populate SELECTED COUNTRIES TAB unless this is a new trip: (The 'countriesSelected' class is used by js to locate the summary of checked countries) -->
 		<%= unless trip.new? && trip.trip_countries.empty?					# No need to show chosen countries for new trips unless they have some countries selected.
 
-					tag :div, :id => "#{ nested_resource(trip,true) }countriesSelected", :class => 'countryTabsPanel countriesSelected' do
+					tag :div, :id => "#{ nested_resource(@client_or_tour,trip,true) }countriesSelected", :class => 'countryTabsPanel countriesSelected' do
 						tag :ul, :class => 'checkboxList ellipsis columns' do
 							partial 'shared/list', :list_type => :checkbox, :ids => selected_countries, :selected => selected_countries, :collection => Country.all, :field_prefix => 'trip', :id_prefix => checkbox_id_prefix, :empty_message => '<p>Looks like we\'re not going anywhere!</p>'
 						end

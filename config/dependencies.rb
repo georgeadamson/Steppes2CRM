@@ -1,7 +1,9 @@
+=begin
+
 # dependencies are generated using a strict version, don't forget to edit the dependency versions when upgrading.
-merb_gems_version = "1.0.15"  # "1.0.15" "1.1.0"
-dm_gems_version   = "0.10.2"  # "0.10.2" "0.10.3"
-do_gems_version   = "0.10.1"  # "0.10.1" "0.10.2"
+merb_gems_version = "1.1.3"  # "1.0.15" # "1.0.15" "1.1.0"
+dm_gems_version   = "1.1.0"  # "0.10.2" # "0.10.2" "0.10.3"
+do_gems_version   = "0.10.2" # "0.10.1" # "0.10.1" "0.10.2"
 
 # For more information about each component, please read http://wiki.merbivore.com/faqs/merb_components
 dependency "merb-core", merb_gems_version 
@@ -34,8 +36,11 @@ dependency "dm-validations", dm_gems_version
 dependency "dm-serializer", dm_gems_version   
 
 dependency "merb_datamapper", merb_gems_version
+#dependency "dm-accepts_nested_attributes"
 
 dependency "merb-parts", "0.9.8" #merb_gems_version
 
 #dependency "uuid", "2.0.2"
 dependency "uuidtools", "2.1.1"
+
+=end

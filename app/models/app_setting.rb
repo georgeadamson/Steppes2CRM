@@ -6,9 +6,9 @@ class AppSetting
   property :name,				String, :required => true,	:length => 50, :unique => true,	:default => 'new_setting'
   property :value,			String, :required => true,	:length => 200, 								:default => '0'
 	property :value_type,	String, :required => true,	:length => 20, 									:default => :Integer
-  property :description,String, :required => true,	:length => 100, :unique => true,:default => 'What is this setting for?'
+  property :description,String, :required => true,	:length => 100, :unique => true,:default => 'Tell us what this setting is for...'
 
-	# In theory value_type could use this instead of String: Enum[ :String, :Integer, :BigDecimal ]
+	# In theory value_type could use this instead of String: Enum[ :String, :Integer, :Decimal ]
 	
 	validates_is_number :value, :unless => Proc.new {|setting| setting.value_type.to_sym == :String }
 
