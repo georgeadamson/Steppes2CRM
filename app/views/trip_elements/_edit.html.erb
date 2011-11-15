@@ -16,7 +16,7 @@
 
 			<% unless element.is_slave? && element.master_element %>
 
-				<%= submit 'Save details', :rel => "##{ nested_resource( element.trip, true ) }Builder", :class => 'save ajaxBlank ui-priority-primary ui-state-default' %>
+				<%= submit 'Save details', :rel => "##{ nested_resource( @client_or_tour, element.trip, true ) }Builder", :class => 'save ajaxBlank ui-priority-primary ui-state-default' %>
 
 			<% end %>
 
