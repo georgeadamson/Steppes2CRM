@@ -108,7 +108,7 @@ class Document
     #    return [false, "Cannot find the subfolder where the generated document would be saved to (#{ Document.folder / self.sub_folder })"]
     
     elsif !File.exist?( Document.doc_builder_commands_folder_path )      
-      return [false, "Cannot find the folder where the document-generation script lives (#{ Document.doc_builder_commands_folder_path })"]
+      return [false, "Cannot find the folder where the document-generation gizmo lives (#{ Document.doc_builder_commands_folder_path })"]
 
     elsif !File.exist?( Document.doc_builder_script_path )
       return [false, "Cannot find the script that does the document-generation (#{ Document.doc_builder_script_path })"]

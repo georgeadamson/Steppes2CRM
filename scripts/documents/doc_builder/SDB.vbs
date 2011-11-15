@@ -296,12 +296,13 @@ Function GetIniFileKey(strIniFileContents, strKeyName)
 	strIniFileKeyValue = strUnknown
 
 	' Read text between strKeyName and the end of the line
-	keyPosition = InStr(1, strIniFileContents, vbCrLf & strKeyName & "=", vbTextCompare)
+	keyPosition = InStr(1, strIniFileContents, vbLf & strKeyName & "=", vbTextCompare)
 
 	If keyPosition > 0 Then
-		startPosition = keyPosition + Len(vbCrLf & strKeyName & "=")
-		endPosition = InStr(startPosition, strIniFileContents, vbCrLf)
-	    strIniFileKeyValue= Mid(strIniFileContents, startPosition, endPosition - startPosition)
+		startPosition = keyPosition + Len(vbLf & strKeyName & "=")
+		endPosition = InStr(startPosition, strIniFileContents, vbLf)
+	    strIniFileKeyValue = Mid(strIniFileContents, startPosition, endPosition - startPosition)
+	    strIniFileKeyValue = Replace( Replace(strIniFileKeyValue, vbCr, ""), vbLf, "")
 	End If
 	
 	If strIniFileKeyValue = strUnknown Then

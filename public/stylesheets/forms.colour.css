@@ -51,3 +51,10 @@ H2 INPUT[type=text],
 H2 INPUT[type=text] {
 	font-weight:bold;
 }
+
+
+
+DL.accordion DT.ui-state-active.alert 
+{
+	color:#f00;
+}

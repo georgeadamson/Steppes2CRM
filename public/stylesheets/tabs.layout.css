@@ -109,6 +109,19 @@
 
 
 
+/* Hack to place the scrollbar on the left of the lhs client tabs: (Only works in supported browsers) */
+
+	.sectionContainerLeft.tabsContainer .sectionBody {
+		direction: rtl;
+	}
+		.sectionContainerLeft.tabsContainer .sectionBody .ui-tabs-nav-vertical {
+			direction: ltr;
+		}
+
+
+
+
+
 
 
 /* Overrides jquery ui-tabs.css where necessary. */
