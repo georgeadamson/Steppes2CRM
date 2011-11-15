@@ -215,14 +215,17 @@ class MoneyIn
       # Update the status of the trip and it's clients:
       trip = self.trip
       trip.update!( :status_id => Trip::CONFIRMED )
-      trip.trip_clients.each{ |c| c.update!( :status_id => TripClientStatus::CONFIRMED ) }
+      #trip.trip_clients.each{ |c| c.update!( :status_id => TripClientStatus::CONFIRMED ) }
+      trip.trip_clients.update! :status_id => TripClientStatus::CONFIRMED
 
       # Update the status of the same clients on the Group Template if applicable:
+      # Important: trips are linked to master trips through their elements (via slave_element.master_element.trip)
       if trip.master_trip
 
         client_ids = trip.trip_clients.map{|c|c.client_id}
 
-        trip.master_trip.trip_clients.all( :client_id => client_ids ).each{ |c| c.update! :status_id => TripClientStatus::CONFIRMED }
+        #trip.master_trip.trip_clients.all( :client_id => client_ids ).each{ |c| c.update! :status_id => TripClientStatus::CONFIRMED }
+        trip.master_trip.trip_clients.all( :client_id => client_ids ).update! :status_id => TripClientStatus::CONFIRMED
 
       end
 
