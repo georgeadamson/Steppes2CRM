@@ -1,0 +1,280 @@
+<%
+
+	# Render a list of client documents...
+
+
+
+	building_rows_for_trip = 0
+
+	trip_ids   = []
+	user_ids   = []
+	client_ids = []
+	
+	lookup = {}
+
+	# Note: The length of the @documents collection is limited by the get_filtered_documents in the documents controller.
+	# Prevent multiple queries by preloading related rows that we reference repeatedly as we generate the doc list:
+	# (Datamapper should prevent this for us but does not seem to!)
+	@documents.each{ |doc|
+	
+		trip_ids   << doc.trip_id   if doc.trip_id
+		user_ids   << doc.user_id   if doc.user_id
+		client_ids << doc.client_id if doc.client_id
+		
+		lookup[doc.id] = {
+			:trip_id => doc.trip_id
+		}
+		
+	}
+	trips   = Trip.all(   :id => trip_ids   ).reload
+	users   = User.all(   :id => user_ids   ).reload
+	clients = Client.all( :id => client_ids ).reload
+
+	#trips = {}
+	#Trip.all(   :id => trip_ids   ).each{ |t| trips[:id] = { :name => t.name, :start_date => t.start_date, :dateSummary => t.dateSummary } }
+
+	# Sort the documents ready for display...
+	@documents = @documents.reload.
+
+		# Sort by descending order of start_date:
+		# Notice how we cache the trips during this loop, to reduce sql calls later:
+		sort_by{ |doc|
+			doc.trip_id && (trip = trips.get(doc.trip_id)) && trip.start_date ? -trip.start_date.jd : 0
+		}.
+
+		# Then bring GENERAL non-trip docs to the top without upsetting the previous sort:
+		sort_by{ |doc| doc.trip_id ? 1 : 0 }
+
+	 
+
+
+
+	def file_icon()
+		tag :span, :class => 'ui-icon ui-icon-document'
+	end
+
+	def word_icon()
+		tag :span, :class => 'ui-icon ui-icon-word'
+	end
+
+	def pdf_icon()
+		tag :span, :class => 'ui-icon ui-icon-pdf'
+	end
+
+	def error_icon()
+		tag :span, :class => 'ui-icon ui-icon-alert'
+	end
+
+	
+%>
+
+<div class="sectionContainer noSectionFoot">
+	
+	<div class="sectionHead">
+		<h3>
+			<span class="ui-icon ui-icon-document"></span>
+			Documents
+			<!-- Link to download patch for customising Firefox security: -->
+			<small style="float:right;">
+        <!--
+				<a href="/help/security/user.js" class="right-click" 
+				  title="To make Firefox open links to documents on the network: Right-click and save this file to 'C:\Documents and Settings\YourUsername\Application Data\Mozilla\Firefox\Profiles\xyz.default\user.js' and then restart Firefox">
+				  (Download to change Firefox security)</a>
+		    -->
+		    Download the
+		    <a href="https://addons.mozilla.org/en-US/firefox/addon/locallink/" target="_tab" class="noajax">
+		       &quot;LocalLink&quot; Firefox add-on</a>
+		    for opening network documents
+		  </small>
+		</h3>
+	</div>
+
+	<div class="sectionBody">
+	
+	<%#= /^[1-2][0-9]{3}[-\/][0-1][0-9][-\/][0-3][0-9]$/ =~ '1945-12-11' %>
+	
+<% if @documents.empty? %>
+		<p>Yawn, nothing to see here. This client has no documents</p>
+<% else %>
+
+	<table class="documents">
+
+		<thead>
+			<tr>
+				<th>Document name</th>
+				<!--<th>Modify<br/>original</th>-->
+				<th>Produced for</th>
+				<th>Created</th>
+				<!--<th>Created on</th>-->
+				<th></th>
+				<th>Download<br/>a copy as</th>
+				<th>'tis<br/>witchcraft</th>
+				<!--<th>Recreate</th>-->
+			</tr>
+		</thead>
+
+		<tbody>
+
+		<% @documents.each do |doc|
+
+			# Hack to avoid displaying duplicate doc records created accidentally by the document validation process:
+			# (Ideally we'd fix the underlying problem but too much time has already been spent troubleshooting! GA Nov 2011)
+			# (Had to think if something because users were losing the originals when they tried to delete the dupes!)
+			next if doc.dupe?
+
+
+			doc_is_for_tour_template = ( doc.trip && doc.trip.tour_template? )
+
+			user							= users.get( doc.user_id )			|| doc.user
+			client						= clients.get( doc.client_id )	|| doc.client || ( params[:client_id] && Client.get(params[:client_id]) )
+			client_or_tour    = client || @client_or_tour
+
+			doc_type_name			= "#{ cached(:document_types_hash)[doc.document_type_id] }"
+			doc_last_date			= doc.generated_at || doc.created_at
+			doc_is_recent			= ( doc_last_date && doc_last_date.to_time.to_date <=> Time.now.to_date ) == 0	# Created today?
+			doc_display_date  = doc_last_date.formatted( doc_is_recent ? :uidatetime : :uidate )
+			
+			if doc_is_for_tour_template
+				doc_recipient   = "Group Tour:<br/>&quot;#{ doc.trip.tour.name }&quot;"
+			else
+				doc_recipient		= ( client && client.fullname ) || ( doc.trip && doc.trip.title )
+			end
+
+
+			doc_status		= case
+				when	doc.document_status_id == 1										then 'Creating now!'
+				when	doc.document_status_id == 2										then 'Failed'
+				when	doc.document_status_id == 3 && doc_is_recent	then 'NEW!'
+				when  doc.dupe?																			then 'Duplicate'	# The "next if doc.dupe?" command above should ensure we should never see this status!
+				else  nil
+			end
+
+			doc_tooltip		= case
+				when doc.created_by_legacy_crm then 'Created on the old database'
+				else                                doc.doc_builder_output
+			end
+
+			
+			%>
+			<%= if doc.trip_id != building_rows_for_trip
+
+			  # Display next subheading:
+
+				if doc.trip_id && doc.trip
+					group_heading = "#{ doc_is_for_tour_template ? 'Tour' : 'Trip' }: #{ doc.trip.name } <small>#{ doc.trip.dateSummary }</small>"
+				elsif doc.trip_id
+					group_heading = "Old trip documents (Trip ID #{ doc.trip_id })"
+				else
+					group_heading = 'General documents'
+				end
+				building_rows_for_trip = doc.trip_id
+				
+				# Return a header row for this trip:
+				tag :tr do
+					tag :th, group_heading, :colspan => 6
+				end
+				
+			end %>
+		
+			<tr>
+				<!-- IMPORTANT INFO about linking to edit files... -->
+				<!-- http://kb.mozillazine.org/Security.fileuri.strict_origin_policy -->
+				<!-- http://kb.mozillazine.org/Links_to_local_pages_do_not_work -->
+				<!-- Useful: http://stackoverflow.com/questions/192080/firefox-links-to-local-or-network-pages-do-not-work -->
+				<!--
+				
+					- To solve this, make a user.js file in this folder:
+						C:\Documents and Settings\George\Application Data\Mozilla\Firefox\Profiles\upuz6cfk.default
+
+					-	Copy these lines into the user.js file:
+						user_pref("capability.policy.policynames", "localfilelinks");
+						user_pref("capability.policy.localfilelinks.sites", "http://database http://databasedev http://databasetest http://database2 http://database2:81 http://database2dev http://database2test");
+						user_pref("capability.policy.localfilelinks.checkloaduri.enabled", "allAccess");
+
+					- Possible future requirement:
+						Add "file://" to network.automatic-ntlm-auth.trusted-uris in about:config
+
+				-->
+
+				<% if doc.file_exist? %>
+
+					<%= tag :td do
+						
+								#file_icon + link_to( doc.display_name, URI.escape( "file:///#{ doc.doc_path }" ) )
+								file_icon + link_to( doc.display_name, doc.doc_url )
+					
+							end
+					%>
+
+				<% else %>
+
+					<%= 
+						error_text = "#{ error_icon } <span class=\"strikethough muted\">#{ doc_type_name }: #{ doc.name }</span>"
+						tag :td, error_text + ' <small>This file does not exist!</small>', :title => doc.doc_path
+					%>
+
+				<% end %>
+
+
+				<%= tag :td, doc_recipient %>
+				<%= tag :td, "#{ doc_display_date }<br/>by #{ ( doc.user && user.preferred_name ) || doc.user_name }", :title => h(doc_tooltip) %>
+				<%= tag :td, doc_status %>
+
+				<%=
+					tag :td do
+					  if doc.file_exist?
+						  link_to( " doc", resource( @client_or_tour, doc, :format => :doc ), :class => 'noajax' ) + ' | ' +
+						  link_to( " pdf", resource( @client_or_tour, doc, :format => :pdf ), :class => 'noajax strikethough', :title => 'Sorry folks, the Microsoft PDF converter is buggy and may crash the server!' )
+					  end						  
+					end
+				%>
+
+        <td class="nowrap">
+					<%
+						# Include the trip id in the url if relevant:
+						return_to_url = @trip ? resource(@client_or_tour,@trip,:documents) : resource(@client_or_tour,:documents)
+					%>
+          <%=
+            if doc.created_by_legacy_crm
+
+              icon :info, :title => 'This document was generated by the old database and cannot be recreated here'
+
+            else
+
+							if doc_is_for_tour_template
+								doc_recreation_url = url( :document_recreate_for_tour, doc.trip.tour_id, doc.id, :return_to => return_to_url )
+							else
+								doc_recreation_url = url( :document_recreate, doc.client_id, doc.id, :return_to => return_to_url )
+							end
+
+							doc_recreation_tooltip = 'Recreate this document using the latest details'
+							doc_recreation_confirm = 'Recreate this document? Yeah go for it, but bear in mind that the existing document will be overwritten and gone forever and ever after'
+
+							link_to icon(:refresh), doc_recreation_url, :class => 'ui-icon-only', :title => doc_recreation_tooltip, 'data-confirm' => ( doc.file_exist? ? doc_recreation_confirm : nil )
+
+						end
+          %>
+          &nbsp;
+          <%= link_to icon(:gear), resource(@client_or_tour, doc, :return_to => return_to_url), :title => "Geeky details... #{ h(doc_tooltip) }", :class => 'ui-icon-only' %>
+          &nbsp;
+  				<%=
+  					# Show delete button unless document is still being created *today*
+  					# Note: When documents are deleted they are actually moved to the '/documents/deleted/' folder, just in case!
+  					unless ( client.nil? && !doc_is_for_tour_template ) || ( doc.document_status_id == 1 && doc_is_recent )
+  					  link_to icon(:trash), resource(@client_or_tour, doc, :delete, :return_to => return_to_url), :class => 'delete ui-icon-only', :title => 'Delete this document', 'data-confirm' => 'Delete this? Awe shame, and it looked so nice...'
+  					end
+  				%>
+        </td>
+
+			</tr>
+
+		<% end -%>
+
+		</tbody>
+
+	<table>
+
+<% end -%>
+
+	</div>
+</div>
