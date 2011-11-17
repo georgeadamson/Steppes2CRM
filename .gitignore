@@ -30,3 +30,4 @@ scripts/documents/doc_builder/(Sample Documents)
 scripts/documents/doc_builder/(Sample Templates)
 scripts/documents/doc_builder/sdb.ini
 .gems
+gemfile.lock
