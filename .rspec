@@ -1,9 +1,0 @@
-
-# This file was created after following instructions from:
-# http://relishapp.com/rspec/rspec-core/v/2-4/docs/upgrade
-
-RSpec.configure do |config|
-  config.expect_with :rspec          # => rspec/expectations
-  #config.expect_with :stdlib         # => test/unit/assertions
-  #config.expect_with :rspec, :stdlib # => both
-end

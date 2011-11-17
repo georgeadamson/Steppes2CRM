@@ -1,6 +1,0 @@
-<%
-	@task.client ||= @client ||= Client.get(params[:client_id])
-%>
-<%= form_for @task, :action => resource( @task.client, :tasks ) do %>
-	<%= partial 'tasks/form', :task => @task %>
-<% end =%>

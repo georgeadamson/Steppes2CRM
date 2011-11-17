@@ -1,7 +1,0 @@
-<%
-	mailing_zone ||= @mailing_zone
-	
-	# DEPRICATED. TODO: Delete this file
-	
--%>
-<%= select :mailing_zone_id, :label => "Mailing zone", :selected => mailing_zone.id.to_s, :collection => MailingZone.all( :order => [:order_by.asc] ), :value_method => :id, :text_method => :name %>

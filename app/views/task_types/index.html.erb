@@ -1,7 +1,0 @@
-<%
-
-	# When url parameter ?list=option is set then return custom list:
-	return partial( 'task_types/list', :task_types => @task_types ) if params[:list]
-
-%>
-<%= partial 'system/index', :collection => @task_types %>

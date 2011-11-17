@@ -1,7 +1,0 @@
-<%
-
-	# When url parameter ?list=option is set then return custom list:
-	return partial( 'airports/list', :airports => @airports ) if params[:list]
-
-%>
-<%= partial 'system/index', :collection => @airports %>

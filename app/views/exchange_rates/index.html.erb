@@ -1,8 +1,0 @@
-<%
-
-	# When url parameter ?list=option is set then return custom list:
-	return partial( 'exchange_rates/list', :collection => @exchange_rates ) if params[:list]
-
-%>
-
-<%= partial 'system/index', :collection => @exchange_rates %>
