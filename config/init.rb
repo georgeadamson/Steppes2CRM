@@ -3,6 +3,7 @@
 $KCODE    = 'u'    # Equivalent to the jruby -Ku switch. Does not seem to make a difference :(
 #ENV['TZ'] = 'UTC' # This affects times in logs etc but does not fix DataMapper date field timezone problem.
   
+require 'rubygems'
 require 'config/dependencies.rb'
  
 use_orm :datamapper

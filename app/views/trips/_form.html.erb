@@ -62,6 +62,7 @@
 
 <%= hidden_field :version_of_trip_id,		:value => @trip.version_of_trip_id.to_i unless trip.tour %>
 <%= hidden_field :tour_id,							:value => @trip.tour_id || params[:tour_id] %>
+<%= hidden_field :duration, 				    :value => @trip.duration, :name => nil %><%# id="trip_duration" is expected by the javascript. %>
 
 <% case when @trip.type_id == TripType::TOUR_TEMPLATE %>
 	<h4 style="margin:0 0 1em 9em;">This trip is a template for a group: <em><%= @trip.tour ? @trip.tour.name : 'that has been deleted!' %></em></h4>

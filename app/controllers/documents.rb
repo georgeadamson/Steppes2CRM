@@ -151,9 +151,8 @@ class Documents < Application
 
       # document_status_id: 0=Pending, 1=Running, 2=Failed, 3=Succeeded:
       message[:notice] = @document.document_status_message || 'Document details were saved successfully.'
-puts "redirecting to #{next_page}"
 
-      if next_page == :show
+      if next_page.is_a? Symbol
         render next_page
       elsif request.ajax?
         redirect next_page, :message => message, :ajax? => true
@@ -192,7 +191,16 @@ puts "redirecting to #{next_page}"
     end
 
     @documents = get_filtered_documents()
-    render :index
+
+    next_page = params[:return_to] || :index
+
+    if next_page.is_a? Symbol
+      render next_page
+    elsif request.ajax?
+      redirect next_page, :message => message, :ajax? => true
+    else
+      redirect next_page, :message => message
+    end
 
   end
 
@@ -218,19 +226,23 @@ puts "redirecting to #{next_page}"
     @document = Document.get(id)
     raise NotFound unless @document
 
-    @client    = @document.client || Client.first(params[client_id])
-    @documents = get_filtered_documents()
-
     if @document.destroy
-      @documents.reload()
       message[:notice] = "The document has been deleted"
-      render :index
-      #redirect resource( @client, :documents )
     else
       message[:error] = "The document could not be deleted #{ error_message_for @document }"
-      render :index
-      #redirect resource( @client, :documents )
-      #raise InternalServerError
+    end
+
+    @client    = @document.client || Client.first(params[:client_id])
+    @documents = get_filtered_documents()
+    
+    next_page = params[:return_to] || :index
+    
+    if next_page.is_a? Symbol
+      render next_page
+    elsif request.ajax?
+      redirect next_page, :message => message, :ajax? => true
+    else
+      redirect next_page, :message => message
     end
 
   end
@@ -253,9 +265,11 @@ private
 
   def get_filtered_documents
 
+    @trip = Trip.get(params[:trip_id]) if params[:trip_id].to_i > 0
+
     documents = Document.all( :limit => 1000, :order => [ :trip_id, :created_at.desc ] )
-    documents = documents.all( :trip_id => params[:trip_id] ) if params[:trip_id]
-    
+    documents = documents.all( :trip_id => @trip.id ) if @trip
+
     # Get all related documents too: (Those belonging to fellow travellers)
     # Maybe this could be done in one query but I'm not sure how:
     if params[:client_id] && @client = Client.get(params[:client_id])
