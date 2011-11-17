@@ -1,0 +1,8 @@
+
+<%#= text_field :name, :label=>"Label" %>
+<%= select :article_type_id, :label=>"Label", :selected=>:article_type_id, :collection=>ArticleType.all, :value_method=>:id, :text_method=>:name %>
+<%= text_area :description, :label=>"Text" %>
+<%#= select :company_id, :label=>"Applies to", :selected=>:company_id.to_s, :prompt=>"All companies", :collection=>Company.all, :value_method=>:id, :text_method=>:name %>
+<%= select :country_id, :label=>"Applies to", :selected=>params[:country_id], :prompt=>"n/a", :collection=>Country.all, :value_method=>:id, :text_method=>:name %>
+
+<%#= hidden_field :country_id, :value=>@country.id %>

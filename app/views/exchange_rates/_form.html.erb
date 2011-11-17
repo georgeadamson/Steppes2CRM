@@ -1,0 +1,46 @@
+<!-- New/Edit Exchange Rate form: -->
+<%
+
+	# Important: The controllers/application.rb file applies future-dated changes to exchange_rates (ie when "Tomorrow" etc)
+
+	exchange_rate		||= @exchange_rate
+	@properties				= exchange_rate.method(:properties).call
+	new_rate_on_date	= exchange_rate.new_rate_on_date || Date.today
+
+	# Show a sensible default for the new rate:
+	exchange_rate.new_rate = exchange_rate.rate unless new_rate_on_date > Date.today
+	
+	selected				= Date.today
+	date_list				= [ [ Date.today, 'Immediately' ] ]
+
+	# Add option to postpone when new_rate will be applied:
+	unless exchange_rate.new?
+	
+		date_list << [ Date.today+1, 'Tomorrow' ]
+		#date_list << [ Date.today+2, (Date.today+2).strftime('%A') ]	# Eg: "Thursday"
+
+		selected  = Date.today+1
+		
+	end
+
+	# If new_rate_on_date is imminent, try to make it the default selection:
+	if new_rate_on_date > Date.today
+		date_list.each{|item| selected = item.first if item.first == new_rate_on_date }
+	end
+
+	# Instruct generic SystemAdmin view to show a special message:
+	@show_all_required_field_message = true
+	
+-%>
+<%= text_field	:name,							:label => 'Currency name',	:maxlength => @properties[:name].length %>
+<%= text_field	:rate,							:label => 'Current rate',	  :readonly	=> true %>
+<%= text_field	:new_rate,					:label => 'New rate',       :maxlength => 10, :class => 'spinbox spinboxStep0.01 spinboxMin0.1 spinboxMax99999999.9 decimal' %>
+<%= select			:new_rate_on_date,	:label => 'Apply new rate', :selected => selected.to_s, :collection => date_list %>
+
+<%= hidden_field :created_by, :value => session.user.fullname if exchange_rate.created_by.blank? %>
+<%= hidden_field :updated_by, :value => session.user.fullname %>
+<br/>
+<br/>
+<%= tag :p, "#{ icon :alert } Due to change to #{ tag :strong, exchange_rate.new_rate } on #{ new_rate_on_date.formatted(:uidisplay) }" if new_rate_on_date > Date.today %>
+<%= tag :p, "#{ icon :info  } Last updated on #{ exchange_rate.updated_at.formatted(:uidisplay) } at #{ exchange_rate.updated_at.formatted(:uitime) } by #{ exchange_rate.updated_by }" unless exchange_rate.updated_by.blank? %>
+<%#= tag :p, 'Note: The new rate will not apply immediately.' unless exchange_rate.new? %>

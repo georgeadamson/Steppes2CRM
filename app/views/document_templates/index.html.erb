@@ -1,0 +1,7 @@
+<%
+
+# When url parameter ?list=option is set then return custom list:
+return partial( 'document_templates/list', :document_templates => @document_templates ) if params[:list]
+
+-%>
+<%= partial 'system/index', :collection => @document_templates %>

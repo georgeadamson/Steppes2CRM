@@ -1,0 +1,8 @@
+
+<%= text_field :address1, :label=>"Number/name <small>1.</small> " %>
+<%= text_field :address2, :label=>"Locality <small>2.</small> " %>
+<%= text_field :address3, :label=>"Region <small>3.</small> " %>
+<%= text_field :address4, :label=>"Town/city <small>4.</small> " %>
+<%= text_field :address5, :label=>"County <small>5.</small> " %>
+<%= text_field :postcode, :label=>"Postcode <small>6.</small> ", :class=>"postcode" %>
+<%= select :country_id, :label=>"Country <small>7.</small> ", :class=>"country-all", :collection => Country.all(:order=>[:name]), :selected=>( client.country || Country.first(:code=>"UK") ).id.to_s, :value_method=>:id, :text_method=>:name %>

@@ -1,0 +1,35 @@
+<%
+	app_setting ||= @app_setting
+	@properties = app_setting.method(:properties).call
+	
+	# Prepare options for the picklist of AppSetting types: (Must match expected values in models/app_setting.rb and lib/app_settings.rb)
+	data_types_list = [
+		[ :String,			'Text' ],
+		[ :Integer,			'Number (integer)' ],
+		[ :BigDecimal,	'Number (decimal)' ]
+	]
+
+	@show_all_required_field_message = true	
+	
+%>
+
+
+<h1>
+	There be dragons!
+</h1>
+<p>
+  This page is for administrators only
+  <small>...and only administrators who know what they're doing :P</small>
+</p>
+
+<br/><br/>
+
+<%= text_field	:name,				:label => 'Setting name', :maxlength => @properties[:name].length, :class => 'snakecase' %>
+<%= select			:value_type,	:label => 'Type of value',:selected  => app_setting.value_type, :collection => data_types_list %>
+<%= text_field	:value,				:label => 'Value',				:maxlength => @properties[:value].length, :class => 'width2Fields' %>
+<%= text_field	:description,	:label => 'Description',	:maxlength => @properties[:description].length, :class => 'width2Fields' %>
+
+<br/>
+<%= tag :p, '<span class="ui-icon ui-icon-info"></span> This setting applies globally, meaning that it is not specific to any company or user etc.' %>
+<%= tag :p, '<span class="ui-icon ui-icon-info"></span> Tech tip: If you are changing the location of documents, you may need to modify the sdb.ini file of the Document Builder script.' %>
+<%= tag :p, '<span class="ui-icon ui-icon-alert"></span> Warning: Think twice before deleting or renaming this setting. Doing so may cause terrible consequences!' unless app_setting.new_record? %>

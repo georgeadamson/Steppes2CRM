@@ -1,0 +1,15 @@
+<%
+
+	airport ||= @airport
+	@properties = airport.method(:properties).call
+
+	@show_required_field_message = true
+	
+%>
+<%= text_field :name, :label => 'Airport name *', :maxlength => @properties[:name].length, :class => 'width2Fields' %>
+<%= text_field :code, :label => 'Code <small>(eg: LHR)</small>', :maxlength => 3, :class => 'widthHalfField uppercase' %>
+<%= text_field :city, :label => 'Nearest city *', :maxlength => @properties[:city].length %>
+<%= select :country_id, :label => 'Country *', :selected => airport.country_id.to_s,	:collection => Country.all(:order=>[:name]),		:value_method => :id, :text_method => :name %>
+
+<br/>
+<%= tag :p, '<span class="ui-icon ui-icon-info"></span> Supplying the Airport code allows us to import flight data automatically from Amadeus PNRs.' %>

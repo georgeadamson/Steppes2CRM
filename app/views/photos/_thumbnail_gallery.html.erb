@@ -1,0 +1,13 @@
+<!-- Photos thumbnail gallery: -->
+
+<ul class="thumbnailGallery">
+
+  <!-- Change photos: -->
+  <% photos.each do |photo| %>
+    <%= partial 'photos/thumbnail', :photo => photo, :folder=>folder, :tags => tags %>
+  <% end %>
+
+  <!-- Add new photo: -->
+  <%= partial 'photos/thumbnail', :photo => nil, :folder=>folder, :tags => tags %>
+
+</ul>

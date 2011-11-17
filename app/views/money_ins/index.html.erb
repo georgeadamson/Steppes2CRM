@@ -1,0 +1,17 @@
+<%
+	@trip ||= Trip.get( params[:trip_id] )
+-%>
+
+<div class="sectionContainer noSectionHead noSectionFoot">
+
+	<div class="sectionHead">
+		<h3>Payments history</h2>
+	</div>
+
+	<div class="sectionBody">
+
+		<%= partial 'money_ins/invoices_list', :invoices => @trip.invoices.all( :order => [:id.desc] ) %>
+
+	</div>
+
+</div>

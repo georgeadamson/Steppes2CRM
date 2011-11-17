@@ -1,0 +1,58 @@
+<%
+	marketing_list			= ClientMarketing.all
+	companies_list			= Company.all( :order => [:name], :is_active => true )
+	
+	marketing_selected	= client.marketing_id.to_s
+	companies_selected	= client.companies_ids.all_to_s
+
+	companies_tooltip   = 'Hold down Ctrl to select multiple companies. &#13;(Also try Ctrl + up/down or Spacebar)'
+	
+	default_marketing = { :allow_email => true, :allow_postal => true }
+-%>
+
+<table class="checkbox-grid" cellspacing="0" cellpadding="0">
+
+	<thead>
+		<tr>
+			<th title="AKA Marketing Divisions">Marketing preferences</th>
+			<th title="Allow marketing by email">Email</th>
+			<th title="Allow marketing by post">Postal</th>
+		</tr>
+	</thead>
+	
+	<tbody>
+		<% Division.all.each_with_index do |division, i| %>
+		<tr>
+
+			<%
+				# Fetch existing marketing setting or prepare a new one:
+				marketing = client.client_marketing_divisions.first_or_new( :division_id => division.id )
+				
+				# Default new client preferences to maximise spam! (This is the Chairman's official choice)
+				marketing.attributes = default_marketing if client.new?
+			%>
+
+			<%= fields_for marketing do %>
+
+			<th>
+				<%= hidden_field  :id,          :name => "client[client_marketing_divisions_attributes][#{ i }][id]" unless marketing.new? %>
+				<%= hidden_field  :division_id, :name => "client[client_marketing_divisions_attributes][#{ i }][division_id]" %>
+				<%= division.name %>:
+			</th>
+			<td><%= check_box :allow_email,  :name => "client[client_marketing_divisions_attributes][#{ i }][allow_email]",  :boolean => true %></td>
+			<td><%= check_box :allow_postal, :name => "client[client_marketing_divisions_attributes][#{ i }][allow_postal]", :boolean => true %></td>
+
+			<% end =%>
+		</tr>
+		<% end %>
+	</tbody>
+
+</table>
+
+<!-- Old company-focused marketing options DEPRICATED MARCH 2011: (#563) -->
+<!--
+<div style="background-color:#CCC; margin-left:0.5em; padding-top:1em;">
+	<%#= select :companies,		:label => "<small>(#{ client.companies.length })</small> Marketing companies <br/><small>(To be deprecated!)</small>", :selected => companies_selected, :collection => companies_list, :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[companies_ids][]', :title => companies_tooltip, :class => 'height4Fields' %>
+	<%#= select :marketing_id, :label => "Allow marketing <br/><small>(To be deprecated!)</small>",                                                 :selected => marketing_selected, :collection => marketing_list, :value_method => :id, :text_method => :name %>
+</div>
+-->

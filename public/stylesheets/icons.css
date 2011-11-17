@@ -1,0 +1,201 @@
+
+/* Note: These styles have deliberatebly low specificity so they can be overridden easily. */
+
+SPAN.ui-icon {
+	display:inline-block;
+}
+
+	H2 > SPAN.ui-icon,
+	H3 > SPAN.ui-icon {
+		position:relative;
+		top:0.1em;
+	}
+
+
+DD.ui-icon,
+LI.ui-icon {
+	text-indent:16px;
+	width:auto;
+}
+
+
+
+.ui-state-default .ui-icon {
+	background-image:url("/javascripts/jquery-ui/css/custom-theme/images/ui-icons_000000_256x240.png");
+	margin-bottom:-2px;
+}
+
+
+A.ui-icon-only .ui-icon {
+  border: 2px solid #999;
+  border-radius: 1em 1em;
+}
+
+  A.ui-icon-only:hover .ui-icon {
+    background-color: #5DA81A;
+    border-color: #338404;
+  }
+
+
+
+
+
+/* Action icons: */
+
+A.new,
+A.save,
+A.cancel,
+xA.mailto, xA[href ^= mailto] {
+	background-position:2px center;
+	background-repeat:no-repeat;
+	display:inline-block;	/* This is only present to enable text-indent */
+	text-indent:18px;
+}
+
+A.new {
+	background-image:url(/images/icons/icon.add.png);
+}
+A.save {
+	background-image:url(/images/icons/icon.save.png);
+}
+A.cancel {
+	background-image:url(/images/icons/icon.cancel.png);
+}
+A.mailto, A[href ^= mailto] {
+	xbackground-image:url(/images/icons/icon.email.png);
+	background-position:2px 1px;
+}
+	/* Tweak indentation technique for links styled with ellipsis: (See client details page for example) */
+	xA.ellipsis.mailto, x.ellipsis A.mailto, xA.ellipsis[href ^= mailto], x.ellipsis A[href ^= mailto] {
+		text-indent:0;
+		padding-left:20px;
+	}
+
+
+
+/* Special icon shapes: */
+
+	.ui-icon-round { -moz-border-radius:8px; -opera-border-radius:8px; -webkit-border-radius:8px; -ms-border-radius:8px; border-radius:8px; }
+
+
+
+
+/* Special ACTION icons: */
+
+	.ui-icon.ui-icon-add {
+		background-image:url("/images/icons/icon.add.png");
+	}
+
+	.ui-icon.ui-icon-cancel {
+		background-image:url("/images/icons/icon.cancel.png");
+	}
+
+	.ui-icon.ui-icon-delete {
+		background-image:url("/images/icons/icon.cancel.png");
+	}
+
+	.ui-icon.ui-icon-reveal {
+		background-image:url("/images/icons/icon.down.png");
+	}
+
+	.ui-icon.ui-icon-success {
+		background-image:url("/images/icons/icon.success.gif");
+	}
+
+
+
+/* Special OBJECT icons: */
+
+	.ui-icon.ui-icon-client {
+		background-image:url(/images/icons/icon.client.png);
+		background-position:0 0;
+	}
+
+	.ui-icon.ui-icon-group {
+		background-image:url(/images/icons/icon.group.png);
+		background-position:0 0;
+	}
+
+	SPAN.ui-icon.ui-icon-document {
+		background-image:url(/images/icons/icon.document.png);
+		background-position:0 0;
+	}
+
+	SPAN.ui-icon.ui-icon-trip {
+		background-image:url(/images/icons/icon.trip.png);
+		background-position:0 0;
+	}
+
+	SPAN.ui-icon.ui-icon-date {
+		background-image:url(/images/icons/icon.date.png);
+		background-position:0 0;
+	}
+
+	SPAN.ui-icon.ui-icon-payment {
+		background-image:url(/images/icons/icon.money.png);
+		background-position:0 0;
+	}
+
+	SPAN.ui-icon.ui-icon-grid {
+		background-image:url(/images/icons/icon.calendar.gif);
+		background-position:-2px -2px;
+	}
+
+
+	/* This special icon is a red circle that can contain a digit or another icon: */
+	SPAN.ui-icon.ui-icon-attention {
+		background-image:url(/images/icons/icon.circle.red.png);
+		background-position:0 0;
+		color:#FFF;
+		font-size:0.75em;
+		font-weight:bold;
+		line-height:24px;
+		text-align:center;
+		text-indent:0;
+		height:24px;
+		width:24px;
+	}
+		.buttonBar SPAN.ui-icon.ui-icon-attention {
+			margin-bottom:-5px;		/* Tweak position of the attention icon when in a buttonBar. */
+		}
+
+		SPAN.ui-icon.ui-icon-attention SPAN.ui-icon {
+			margin-top:3px;			/* Tweak position of an icon inside the attention icon. */
+		}
+
+
+
+
+/* trip_element_types: (Flight, Accomm, Ground, Misc) */
+
+	SPAN.ui-icon.ui-icon-flight {
+		background-image:url(/images/icons/icon.flight.png);
+		background-position:0 0;
+	}
+	SPAN.ui-icon.ui-icon-accomm {
+		background-image:url(/images/icons/icon.accomm.png);
+		background-position:0 0;
+	}
+	SPAN.ui-icon.ui-icon-ground {
+		background-image:url(/images/icons/icon.ground.png);
+		background-position:0 0;
+	}
+	SPAN.ui-icon.ui-icon-misc {
+		background-image:url(/images/icons/icon.misc.png);
+		background-position:0 0;
+	}
+
+
+
+
+/* document types: (.doc, .pdf etc) */
+
+	SPAN.ui-icon.ui-icon-pdf {
+		background-image:url(/images/icons/icon.pdf.gif);
+		background-position:0 0;
+	}
+
+	SPAN.ui-icon.ui-icon-word {
+		background-image:url(/images/icons/icon.word.gif);
+		background-position:0 0;
+	}

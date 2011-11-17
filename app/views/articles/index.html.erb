@@ -1,0 +1,7 @@
+
+  <% @articles.each do |article| %>
+    <%= text_area article.description, :label=>link_to(article.articleType.name, resource(article, :edit)), :readonly=>:readonly %>
+  <% end %>
+
+  <br/>
+  <%= link_to( 'Add another handy chunk of text', resource(:articles, :new), :class=>'new' ) %>

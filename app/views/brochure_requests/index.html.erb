@@ -1,0 +1,13 @@
+<%= 
+	
+	if params[:brochure_merge]
+		
+		partial 'brochure_requests/pending', :brochure_requests => @brochure_requests
+		
+	else
+		
+		partial 'brochure_requests/list', :brochure_requests => @brochure_requests
+		
+	end
+
+%>

@@ -1,0 +1,135 @@
+<%
+# Template for each row in the trip_elements grid.
+	
+	trip_element	||= TripElement.new		# New element is used when rendering a new-row template.
+
+	#company_countries ||= CompanyCountry.all.reload
+	#countries				 ||= Country.all.reload
+	airports					||= Airport.all( :order => [:code,:name] )
+	airlines					||= Supplier.all( :type_id => Supplier::FLIGHT,  :order => [:name,:code] )
+	handlers					||= Supplier.all( :type_id => Supplier::HANDLER, :order => [:name] )
+	
+	field_index		||= "#{ ( Time.now.to_f * 1000 ).to_i }-#{ rand(1000) }"
+	field_prefix	||= 'trip[trip_elements_attributes]'
+	field_prefix		= "#{ field_prefix }[#{ field_index }]"
+
+	isValidAirlineCode = /^([A-Z][A-Z]|[A-Z][0-9]|[0-9][A-Z])/
+	
+	# Prepare 'prompt' text to show at the top of pick lists:
+	airline_prompt						= FakeListItem.new('(Choose)')
+	handler_prompt						= FakeListItem.new('(Choose)')
+	show_more_airports_url    = resource( :airports,  :list => 'option' )
+	show_more_airlines_url    = resource( :suppliers, :list => 'option', :type_id => Supplier::AIRLINE )
+	show_more_handlers_url    = resource( :suppliers, :list => 'option', :type_id => Supplier::HANDLER )
+	show_more_airports_prompt = FakeListItem.new( '+ Show more...', show_more_airports_url )
+	show_more_airlines_prompt = FakeListItem.new( '+ Show more...', show_more_airlines_url )
+	show_more_handlers_prompt = FakeListItem.new( '+ Show more...', show_more_handlers_url )
+	
+	
+	# AIRPORTS: When possible, use a minimal list of airports to speed up page load:
+	depart_airports = airports.all
+	arrive_airports = airports.all
+	depart_airports = airports.all( :id => trip_element.depart_airport_id ).push(show_more_airports_prompt) if trip_element.depart_airport_id.to_i > 0
+	arrive_airports = airports.all( :id => trip_element.arrive_airport_id ).push(show_more_airports_prompt) if trip_element.arrive_airport_id.to_i > 0
+	
+	
+	# HANDLERS: When possible, use a minimal list of handlers to speed up page load:
+	handlers = handlers.all( :id => trip_element.handler_id ).push(show_more_handlers_prompt) if trip_element.handler_id.to_i > 0
+
+
+	# AIRLINES: Build the airlines pick list with smart SUGGESTIONS at the top if possible:
+	airline_code   =  trip_element.flight_code =~ isValidAirlineCode ? trip_element.flight_code.slice(0,2) : nil
+	selected_airlines  = airlines.all( :id   => trip_element.supplier_id || -1   )	# An empty list when  supplier_id is nil.
+	suggested_airlines = airlines.all( :code => airline_code             || '00' )	# An empty list when airline_code is nil.
+	show_more_airlines = selected_airlines.push(show_more_airlines_prompt)
+	
+	airlines_list  = {}
+	airlines_list['Suggestions:'] = suggested_airlines unless suggested_airlines.empty?
+	airlines_list['Airlines:']    = trip_element.supplier_id.to_i > 0 ? show_more_airlines : airlines.all
+	airlines_list['Airlines:'].unshift(airline_prompt) unless trip_element.supplier_id.to_i > 0
+
+	# When the element has no handler set, do our best to select the 'Pay airline' item instead:
+	# (This is overcomplicated not only because we allow for missellings and extra spaces but also because DM's identity map is case-sensitive.
+	pay_airline = handlers.first( :name.like => '%?ay %?irline' )
+	default_handler_id = trip_element.handler_id.to_i > 0 ? trip_element.handler_id : pay_airline.id
+	
+	is_pnr    = trip_element.bound_to_pnr?
+	is_slave  = trip_element.is_slave? && trip_element.master_element
+	is_locked = ( is_pnr || is_slave )
+	
+	row_class = case
+		when is_locked         then 'locked'
+		when trip_element.new? then 'create'
+		else                        'update'
+	end
+	
+%>
+
+<%= fields_for trip_element do %>
+
+	<tr class="<%= "#{ row_class } #{ 'pnr' if is_pnr } #{ 'slave' if is_slave }" %>">
+
+		<!-- Flight id & code: -->
+		<td>
+			<!-- Only one of these icons will be displayed, depending on TR.classname: -->
+			<%= icon :add,    :class => 'create ui-icon-round',       :title => 'This flight will be added to the trip when you click Save changes' %>
+			<%= icon :flight, :class => 'update ui-icon-round',       :title => 'Any changes you make to this flight will be saved when you click Save changes' %>
+			<%= icon :delete, :class => 'delete ui-icon-round',       :title => 'This flight will be deleted from the trip when you click Save changes' %>
+			<%= icon :locked, :class => 'locked ui-icon-round pnr',   :title => 'This flight is defined by a PNR so some fields cannot be modified' %>
+			<%= icon :locked, :class => 'locked ui-icon-round slave', :title => 'This element is controlled by the Group Trip Template so you won&apos;t be able to modify it here.' %>
+
+			<%= hidden_field :id,         :name => "#{ field_prefix }][id]" unless trip_element.new? %>
+
+			<!-- Field to mark flight for DELETE. Remains disabled until user chooses delete: -->
+			<%= hidden_field              :name => "#{ field_prefix }][_delete]",     :value => 1, :disabled => true unless is_locked || trip_element.new?  %>
+		</td>
+		<td>
+			<%= text_field	:flight_code, :name => "#{ field_prefix }][flight_code]", :class => 'widthHalfField', :title => 'Flight number', :disabled => is_locked if trip_element.flight? %>
+		</td>
+
+		<!-- Departure details: -->
+		<td>
+			<%= select			:depart_airport_id, :name => "#{ field_prefix }][depart_airport_id]", :selected => trip_element.depart_airport_id.to_s, :disabled => is_locked, :collection => depart_airports, :value_method => :id, :text_method => :code_and_name, :class => 'airport widthHalfField', :prompt => '---  Choose', :title => 'Departure airport' if trip_element.flight? %>
+		</td>
+		<td>
+			<%= text_field		:start_date, :name => "#{ field_prefix }][start_date]", :value => trip_element.start_date.formatted(:uidate).slice(0,10), :class => 'date start-date travel-date', :title => 'Departure date dd/mm/yyyy', :disabled => is_locked %>
+		</td>
+		<td>
+			<%= text_field	:start_time, :name => "#{ field_prefix }][start_time]", :value => trip_element.start_date.formatted(:uitime), :class => 'time start-time widthHalfField', :title => 'Departure time hh:mm', :disabled => is_locked %>
+		</td>
+
+		<!-- Arrival details: -->
+		<td>
+			<%= select			:arrive_airport_id, :name => "#{ field_prefix }][arrive_airport_id]", :selected => trip_element.arrive_airport_id.to_s, :disabled => is_locked, :collection => arrive_airports, :value_method => :id, :text_method => :code_and_name, :class => 'airport widthHalfField', :prompt => '---  Choose', :title => 'Arrival airport' if trip_element.flight? %>
+		</td>
+		<td>	
+			<%= text_field	:end_date, :name => "#{ field_prefix }][end_date]",   :value => trip_element.end_date.formatted(:uidate).slice(0,10), :class => 'date end-date travel-date', :title => 'Arrival date dd/mm/yyyy', :disabled => is_locked %>
+		</td>
+		<td>
+			<%= text_field	:end_time, :name => "#{ field_prefix }][end_time]",   :value => trip_element.end_date.formatted(:uitime), :class => 'time end-time widthHalfField', :title => 'Arrival time hh:mm', :disabled => is_locked %>
+		</td>
+
+		<!-- Supplier and Agent: -->
+		<td>
+			<%= select			:supplier_id, :name => "#{ field_prefix }][supplier_id]", :selected => trip_element.supplier_id.to_s, :collection => airlines_list, :value_method => :id, :text_method => :name_code_and_currency, :class => 'supplier widthHalfField', :title => 'Airline'      unless is_slave %>
+		</td>
+		<td>
+			<%= select			:handler_id,  :name => "#{ field_prefix }][handler_id]",  :selected => default_handler_id.to_s,  :collection => { 'All agents:' => handlers },  :value_method => :id, :text_method => :name,       :class => 'handler widthHalfField',  :title => 'Flight agent' unless is_slave%>
+		</td>
+
+		<!-- Action buttons: Only one of these will be displayed, depending on TR.classname: -->
+		<td>
+
+			<%= button "#{ icon(:delete) } Delete", :class => 'delete ui-priority-secondary ui-state-default', :title => 'Remove this flight' unless is_locked %>
+
+			<small class="deleted message" title="Flight will be deleted when you click save">
+				Will be deleted.
+				<a href="#undo" class="undo delete" title="Click to change your mind!">Undo</a>
+			</small>
+
+			<%= tag :small, "PNR #{ tag :em, trip_element.booking_code } line #{ trip_element.booking_line_number.to_s.rjust(2,'0') }", :class => 'locked message' unless trip_element.booking_code.blank? %>
+
+		</td>
+
+	</tr>
+<% end =%>

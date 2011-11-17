@@ -1,0 +1,20 @@
+<%
+
+	# When url parameter ?list=option is set then return custom list:
+	return partial( 'suppliers/list', :suppliers => @suppliers ) if params[:list]
+
+
+	# Otherwise generate standard index html...
+	
+	
+	# Make the display more friendly by customising the text for Airlines or Accommodation etc:
+	type_name   = TripElementType.get(@supplier_type_id).supplier_type_name if @supplier_type_id
+	type_name ||= 'supplier'
+
+	# Copy suppliers into an array to populate the pick list: (This encourages Strategic Eager Loading of the currency names. If we just bound the <select> list to the DM object it would generate one query for every item!)
+	# TODO: Do we still need this? Is it used?
+	supplier_list = []
+	@suppliers.each{ |s| supplier_list << [ s.id, s.display_name ] } unless session[:recent_index_filter]
+
+-%>
+<%= partial 'system/index', :collection => @suppliers, :single_label => type_name %>

@@ -1,0 +1,73 @@
+
+<!-- DEPRICATED -->
+
+<!-- _clientPage: -->
+<div class="sectionContainer noSectionFoot">
+
+   <div class="sectionHead"><!-- Trip title -->
+
+      <!-- Client name and one-line-summary: -->
+      <h2>
+         <span class="clientName">
+          <%= client.title %>
+          <%= client.forename %>
+          <%= client.surname %>
+         </span>
+        <small>
+          (&pound;<span class="clientTotalSpend"><%= client.totalSpend %></span>)
+          Trips: <%= client.tripSummary %>
+        </small>
+      </h2>
+
+   </div><!-- end of _clientPage sectionHead -->
+
+   <div class="sectionBody">
+
+      <div class="clientPage sectionContainer sectionContainerLeft noSectionHead noSectionFoot tabsContainer">
+
+         <div class="sectionBody">
+
+            <!-- Client's tabs: Details / Documents / Paymemts / Trips -->
+			<ul class="clientPageTabsNav">
+              <li class=""><a href="#<%= client.contextId %>Summary">Client details</a></li>
+              <li class=""><a href="#<%= client.contextId %>Documents">Documents</a></li>
+              <li class=""><a href="#<%= client.contextId %>Payments">Payments</a></li>
+              <% client.trips.each do |trip| %>
+                <li class=""><a href="#<%= trip.contextId %>"><%= trip.name %></a></li>
+              <% end %>
+            </ul>
+
+         </div>
+
+      </div>
+
+      <div class="clientPageTabsContent sectionContainer sectionContainerRight noSectionHead noSectionFoot">
+
+		<!-- _clientPage sectionBody -->
+		<div id="<%= client.contextId %>Summary" class="sectionBody">
+			<%= form_for client, :action => resource(client) do %>
+				<%= partial 'clients/form', :client => client %>
+			<% end =%>
+			<%= partial 'trips/summary', :trips => client.trips %>
+		 </div>
+		
+		 <div id="<%= client.contextId %>Documents" class="sectionBody">
+		   Client documents TBD
+		 </div>
+		
+		 <div id="<%= client.contextId %>Payments" class="sectionBody">
+		   Client payments TBD
+		 </div>
+		
+		 <% client.trips.each do |trip| %>
+		   <div id="<%= trip.contextId %>" class="sectionBody">
+			<%= partial 'trips/tripPage', :trip => trip, :trips => client.trips %>
+			<%# render :template => 'trips/show', :id => trip.id %>
+		   </div>
+		 <% end %>
+   
+       </div>
+
+   </div><!-- end of _clientPage sectionBody -->
+
+</div>

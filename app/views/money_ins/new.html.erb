@@ -1,0 +1,244 @@
+<%# See trip.costings.css for style rules. %>
+<%
+
+	@trip   ||= Trip.get( params[:trip_id] )
+	@client ||= Client.get( params[:client_id] )
+	
+	@invoice	= @money_in
+	@trip			= @invoice.trip
+	
+	@invoice.calc_defaults()
+		
+	#@invoice.single_supp_amount = trip.calc( :total, :actual, :gross, :for_all, :singles,                       :final_prices => true, :string_format => false )
+	#@invoice.biz_supp_amount    = trip.calc( :total, :actual, :gross, :for_all, :travellers, :biz_supp => true, :final_prices => true, :string_format => false )
+	#@invoice.adjustment_amount	= 0
+	@invoice.adjustment_name		= 'Optionally describe an extra adjustment here'
+
+	#@invoice.deposit						= trip.default_deposit
+	#@invoice.total_amount				= !trip.total_price.zero? ? trip.total_price : trip.calc( :daily, :actual, :gross, :for_all, :travellers, :with_all_extras => true, :final_prices => true, :string_format => false )
+
+	# Calculate amount due:
+	#@invoice.amount             = @invoice.total_amount - @invoice.deposit
+
+	# Set the list of clients for whom this invoice is paying:
+	#@invoice.clients.concat trip.clients
+	#@invoice.narrative = @invoice.default_narrative
+
+	trip_main_invoices = @trip.invoices(:main)
+	
+	is_first_main_invoice_for_this_trip = trip_main_invoices.empty?
+	
+	invoiceable_clients = @trip.clients.all( Client.trip_clients.is_invoicable => true )
+
+	if @trip.company.default_deposit =~ /%/
+		default_deposit = "#{ @trip.company.default_deposit } of total price"
+	else
+		default_deposit = "#{ @trip.company.default_deposit.to_f.to_currency(:uk) } per person"
+	end
+	default_deposit_description = "The default deposit for #{ @trip.company.name } is #{ default_deposit }"
+
+
+	# Prepare list to populate the Invoice Number field:
+	# Don't show 'Main invoice' as an option if the trip already has a main invoice.
+	# TODO: Allow for multiple main invoices for larger groups!
+	supp_invoice_list = []
+	supp_invoice_list << [ '', 'Main invoice' ] if is_first_main_invoice_for_this_trip || Merb.environment == 'development'
+	
+	# Add options for Supplementary invoices:
+	trip_main_invoices.each do |invoice|
+		
+		unless invoice.name.nil? || invoice.name !~ /[0-9]/
+			invoice_description = "#{ invoice.name } [#{ invoice.client.fullname }]"
+			supp_invoice_list << [ invoice.name, "Supplement for invoice #{ invoice_description }" ]
+		end
+		
+	end
+
+	# Add options for Credit notes:
+	trip_main_invoices.each do |invoice|
+		
+		unless invoice.name.nil? || invoice.name !~ /[0-9]/
+			invoice_description = "#{ invoice.name } [#{ invoice.client.fullname }]"
+			supp_invoice_list << [ "#{ invoice.name }/C", "Credit note for invoice #{ invoice_description }" ]
+		end
+		
+	end
+
+%>
+<div class="sectionContainer invoice">
+	
+	<!-- TOTAL-SPEND is included here so that js can update total_spend field at top of client page when page loads: -->
+	<%= hidden_field :name => 'client[total_spend]', :'data-resource' => resource(@invoice.client), :'data-field' => 'client[total_spend]', :value => @invoice.client.total_spend.to_currency(:uk) if @invoice.client %>
+
+	<!-- Form submits to trips#update action so make sure it knows to return us to the costings page: -->
+	<%= form_for @invoice, :action => resource( @client, @trip, :money_ins ) do %>
+
+		<%= hidden_field :name => :redirect_to, :value => :costings %>
+
+		<div class="sectionHead costingSheet">
+			<%= partial 'trips/costings/trip_sectionhead_overview', :trip => @trip %>
+		</div>
+
+		<div class="sectionBody">
+
+			<div class="paper width3Fields">
+
+				<div class="" style="display:table-row">
+
+					<div class="" style="display:table-cell">
+
+						<!-- Choosing Invoice Type: Blank => MAIN, Number only => SUPP, Number/C => CREDIT -->
+						<%= select     :name,				              :label => 'Create a new', :collection => supp_invoice_list, :class => 'width2Fields' %>
+						<%= select     :client_id,								:label => 'Addressed to', :collection => invoiceable_clients, :value_method => :id, :text_method => :fullname, :class => 'width2Fields' %>
+						<%= text_field :name => :invoice_date,		:label => 'Invoice date', :value => @invoice.invoice_date.formatted(:uidisplay),	:readonly => true %>
+						<%= hidden_field :invoice_date,						:label => 'Invoice date', :value => @invoice.invoice_date.formatted(:db),					:readonly => true %>
+						<%= hidden_field :due_date,								:label => 'Due date',			:value => @invoice.due_date.formatted(:db),							:readonly => true %>
+
+					</div>
+
+				</div>
+
+				<table cellspacing="0" cellpadding="0" class="invoice">
+					<tbody>
+					
+						<tr>
+								<th colspan="8" class="ui-state-default">Passenger details</th>
+						</tr>
+						<tr>
+							<td colspan="8">
+								<ul class="checkboxList">
+									<%= partial 'shared/list', :list_type => :checkbox, :collection => @trip.clients, :selected => :all, :field_name => 'money_in[clients_ids][]', :id_prefix => nested_resource( @client, @trip, :money_ins, true ), :custom_attrs => { :readonly => :readonly, :disabled => :disabled },  :empty_message => '<p>No clients have been named on this trip!</p>' %>
+									<!-- TODO: These hidden fields do the job of the disabled checkboxes until a better solution can be found: (Because disabled fields do not get submitted!) -->
+									<% @trip.clients.each do |c| %>
+										<%= hidden_field :name => 'money_in[clients_ids][]', :value => c.id %>
+									<% end %>
+								</ul>
+							</td>
+						</tr>
+
+						<tr>
+							<th colspan="8" class="ui-state-default">Provisional flight details <small>(Subject to change)</small></th>
+						</tr>
+						<tr>
+							<%= partial 'trips/flights_table', :flights => @trip.flights, :rows_only => true %>
+						</tr>
+
+						<tr>
+							<th colspan="8" class="ui-state-default">Ground arrangements</th>
+						</tr>
+						<tr>
+							<td colspan="8">
+								<br/>
+								<%# Note we specify narrative explicitly here to ensure pound symbol is displayed correctly: %>
+								<%= text_area @invoice.narrative, :name => 'money_in[narrative]', :label => 'Narrative: <small>(You may customise this)</small><br/><br/>', :class => 'width3Fields height4Fields labelWidthAuto' %>
+								<br/><br/>
+							</td>
+						</tr>
+
+					</tbody>
+
+					<tfoot>
+
+						<tr>
+							<td colspan="7">Invoice total:</td>
+							<td>
+								&pound;<%= text_field :total_amount, :value => @invoice.total_amount.to_currency(:generic), :class => 'widthHalfField', :readonly => true %>
+							</td>
+						</tr>
+
+						<!-- DEPOSIT AMOUNT: (Client-side js will make this readonly for SUPPLEMENTARY Invoices) -->
+						<tr>
+							<td colspan="7"><div>Less deposit already paid:</div></td>
+							<td>
+								<div>
+									<!-- Default deposit is calculated as a per-person-amount or percent-of-total_price according to @trip.company.default_deposit: -->
+									&pound;<%= text_field :deposit, :value => @invoice.deposit.to_currency(:generic), :class => 'widthHalfField money positive', :autocomplete => 'off' %>
+									<!-- default_deposit is only used by client-side js for resetting the deposit field when user selects main-invoice: -->
+									<%= hidden_field :name => 'default_deposit', :value => @invoice.deposit %>
+								</div>
+							</td>
+						</tr>
+
+						<!--
+						<tr>
+							<td colspan="7">
+								<%= text_field :adjustment_name, :class => 'width2Fields' %> :
+							</td>
+							<td>
+								&pound;<%= text_field :adjustment_amount, :value => @invoice.adjustment_amount.to_currency(:generic), :class => 'widthHalfField money' %>
+							</td>
+						</tr>
+						-->
+
+						<!-- INVOICE AMOUNT: (Client-side js will make this readonly for MAIN Invoices) -->
+						<tr>
+							<th colspan="7">
+								<div class="invoice-amount-label for-main-invoice">
+									Invoice amount due by <%= @trip.payment_due_date.formatted(:uidisplay) %>:
+								</div>
+								<div class="invoice-amount-label for-supp-invoice">
+									Supplementary invoice amount:
+								</div>
+								<div class="invoice-amount-label for-credit-invoice">
+									Credit amount:
+								</div>
+							</th>
+							<th>
+								&pound;<%= text_field :amount, :value => @invoice.amount.to_currency(:generic), :class => 'widthHalfField money total', :autocomplete => 'off' %>
+							</th>
+						</tr>
+
+						<tr>
+							<td colspan="7">Includes Single supplement:</td>
+							<td>
+								&pound;<%= text_field :single_supp_amount, :value => @invoice.single_supp_amount.to_currency(:generic), :class => 'widthHalfField', :readonly => true %>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="7">Includes Business class supplement:</td>
+								<td>
+								&pound;<%= text_field :biz_supp_amount, :value => @invoice.biz_supp_amount.to_currency(:generic), :class => 'widthHalfField', :readonly => true %>
+							</td>
+						</tr>
+
+						<tr>
+							<td colspan="7"><br/>This booking has been handled by <%= @trip.user.fullname %><!-- for <%= @trip.company.name %> --></td>
+						</tr>
+						
+					</tfoot>
+
+				</table>
+
+				<br/><br/><hr/><br/>
+
+				<h4>More info about this invoice:</h4><br/>
+				
+				<ul style="list-style-position:inside">
+					<li>Deposit only applies when creating a new main invoice</li>
+					<li><%= default_deposit_description %></li>
+				</ul>
+
+			</div>
+
+				<br/><br/>
+
+				<!-- Payments history: -->
+				<% if @trip.invoices.empty? %>
+					<p>This is the first invoice to be created for this trip.</p>
+				<% else %>
+					<%= partial 'money_ins/invoices_list', :invoices => @trip.invoices.all( :order => [:id.desc] ) %>
+				<% end %>
+
+		</div>
+
+		<!-- sectionFoot: -->
+		<div class="sectionFoot ui-widget">
+			<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
+				<%#= check_box :name => :draft,    :label => 'Draft only', :checked => true, :class => 'ui-priority-secondary ui-state-default' %>
+				<%= submit    'Create invoice',		:class => 'ui-priority-primary ui-state-default' %>
+			</div>
+		</div>
+
+	<% end =%>
+
+</div>

@@ -1,0 +1,76 @@
+<%
+
+	field_prefix								||= 'client'
+	addresses_ids								||= "#{field_prefix}[addresses_ids][]"
+	addresses_attributes				||= "#{field_prefix}[addresses_attributes]"					# Note we're using nested attributes!
+	client_addresses_attributes	||= "#{field_prefix}[client_addresses_attributes]"	# Note we're using nested attributes!
+	client											||= @client
+	
+	if client.new?
+		client_addresses					||= client.client_addresses
+	else
+		#client_addresses					||= client.client_addresses.all( :order => [ :is_active.desc, :id ])
+		client_addresses					||= ClientAddress.all( :client_id => client.id, :order => [ :is_active.desc, :id ])
+	end
+	
+	new_blank_address						||= client.addresses.new( :address1 => 'Add another...' )
+
+-%>
+<!-- List the client's addresses and allow selection of one as the active address: -->
+<ul class="addresses">
+
+<% client_addresses.each_with_index do |client_address,i| %>
+
+		<li>
+
+			<%
+				radio_id		= "#{field_prefix}_#{client.id}_active_address_id_#{client_address.id}"
+				radio_label	= i==0 ? 'Primary address' : 'Use this as primary'
+				checkbox_id	= "#{field_prefix}_#{client.id}_delete_address_id_#{client_address.id}"
+			-%>
+
+			<%= fields_for client do %>
+
+				<!-- Note: We use address.id here and not client_address.id: (Server sorts out client_address.is_active logic for us) -->
+				<%# Had to use custom @client.primary_address_id method here. Could not think of another way to handle a radio button. %>
+				<%= radio_button :primary_address_id, :label => radio_label, :value => client_address.address_id, :checked => client_address.is_active, :class => "#{ 'noemphasis' if i>0 }", :id => radio_id %>
+
+			<% end =%>
+
+			<%= fields_for client_address.address do %>
+
+				<%= partial 'addresses/form', :address => client_address.address, :field_prefix => "#{ addresses_attributes }[#{i}]", :index => i %>
+
+				<%= check_box :name => "#{ addresses_attributes }[#{i}][_delete]", :value => 'true', :label => 'Delete this address', :class => "noemphasis #{ "invisible" if i==0 }", :id => checkbox_id unless client.new? %>
+
+			<% end =%>
+
+	</li>
+
+<% end %>
+
+
+<!-- Special markup for a new address: (Is only saved if more than just the first field is entered) -->
+<li>
+
+	<%
+		radio_id = "client_#{client.id}_active_address_id_NEW"
+	-%>
+
+	<%= fields_for client do %>
+		<!-- Note: address.id 0 is handled server side: -->
+		<%#= radio_button :primary_address_id, :label => 'Use this as primary', :value => 0, :checked => client_addresses.empty?, :class => 'noemphasis' %>
+		<div class="formField"></div>
+	<% end =%>
+
+	<!-- Important: New address is saved when any field contains text: (other than address1 and country_id) -->
+	<%= fields_for new_blank_address do |address| %>
+		<%= partial 'addresses/form', :address => address, :field_prefix => "#{ addresses_attributes }[new]", :index => 'new' %>
+	<% end =%>
+
+	<!-- Depricated: (by making it invisible) -->
+	<%= check_box :label => 'Add this address', :name => "ignore", :value => '_create', :class => 'invisible' %>
+
+</li>
+
+</ul>

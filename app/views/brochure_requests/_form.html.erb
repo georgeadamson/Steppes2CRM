@@ -1,0 +1,50 @@
+<%
+
+	brochure = brochure_request ||= @brochure_request
+	
+	users_list				= User.all( :is_active => true, :order => [:forename, :name] )
+	companies_list		= Company.all( :is_active => true, :order => [:name] )
+	
+	initials					= brochure.company.initials
+	default_template	= DocumentType.get( DocumentType::BROCHURE )
+	other_templates		= Document.doc_builder_letter_templates( :prefix => initials )
+	templates_list		= {}
+
+	# Add the default brochure template to the top of the list:
+	# Note: When user selects a different company, the list of filenames is refreshed via ajax:
+	templates_list['Default brochure letter template'] = "#{ initials }_#{ default_template.template_file_name }" if default_template
+
+	# List all the alternative letter templates too: (Defined as an array of arrays)
+	if other_templates.empty?
+		templates_list['Custom letters'] = [ ['',"(None available for #{ brochure.company.name })"] ]
+	else
+		templates_list['Custom letters'] = other_templates.map{|t| [t,t] }
+	end
+
+	# Allow for existing brochures that somehow have a template file that is not in the default templates_list:
+	unless brochure.document_template_file.blank? || templates_list['Custom letters'].include?(brochure.document_template_file)
+		templates_list['Custom letters'] << [ brochure.document_template_file, brochure.document_template_file ]
+	end
+	
+
+	# Only unactioned requests may be modified:
+	editable = brochure.generated_date.nil?
+	
+	# Add some default text to help identify what each field is for:
+	# TODO: Depricate this when browser supports placeholder on textarea field.
+	brochure.notes       = 'Add notes here'   if brochure.notes.blank?
+	#brochure.custom_text = 'Your custom text' if brochure.custom_text.blank?
+	
+	# Prepare a unique id for the templates list field: (So that the ajax data-target does not get muddled between client tabs)
+	templates_list_id = "brochure_request_document_template_file#{ Time.now.to_f.to_s.sub('.','') }"
+	
+-%>
+<%= hidden_field :client_id %>
+<%= text_field		:name => :client_name,		:readonly => true,			:label => 'Client',						:value => brochure.client.fullname, :class => 'width2Fields' %>
+<%= select				:company_id,							:disabled => !editable,	:label => 'Brochure',					:selected => brochure.company_id.to_s,				:collection => companies_list, :value_method => :id, :text_method => :display_name, :'data-href' => "#{ resource brochure.client, :documents, :list => :option }&company_id={value}", :'data-target' => "##{ templates_list_id }" %>
+<%= select				:document_template_file,	:disabled => !editable,	:label => 'Letter template',	:selected => brochure.document_template_file, :collection => templates_list, :class => 'width2Fields', :id => templates_list_id %>
+<%= text_area			:notes,										:disabled => !editable,	:label => 'Notes <br/><small>For our internal use only</small>',									:class => 'width2Fields height2Fields', :title => 'Notes (For our internal use only)', :placeholder => 'Add your own notes here' %>
+<%= text_area			:custom_text,							:disabled => !editable,	:label => 'Custom text <br/><small>May appear in client correspondence</small>',	:class => 'width2Fields height3Fields', :title => 'Custom text (May appear in client correspondence)', :placeholder => 'Add your custom text here' %>
+<%= select				:user_id,									:disabled => !editable,	:label => 'From consultant',	:selected => brochure.user_id.to_s,						:collection => users_list, :value_method => :id, :text_method => :display_name, :prompt => '(Choose one)' %>
+<%= text_field		:requested_date,					:disabled => true,			:label => 'Date requested',		:name => :requested_date, :value => brochure.requested_date.formatted(:uidatetime) unless brochure.generated_date %>
+<%= text_field		:generated_date,					:disabled => true,			:label => 'Date sent',				:name => :generated_date, :value => brochure.generated_date.formatted(:uidatetime) if     brochure.generated_date %>

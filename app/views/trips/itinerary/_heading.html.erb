@@ -1,0 +1,18 @@
+<%
+
+	@trip ||= trip
+
+	#client_names = []
+	#@trip.clients.each{ |client| client_names << client.fullname }
+
+%>
+			
+<h1 id="<%= nested_resource(@client_or_tour,@trip,true) %>topOfItinerary">
+	<%= @trip.title %>
+<h1>
+
+<h2>Visiting <%= @trip.countries_names.join(', ') %></h2>
+
+<h2><%= @trip.date_summary %></h2>
+
+<h2>Prepared for <%= @trip.clients_names(:fullname).join(', ') %></h2>

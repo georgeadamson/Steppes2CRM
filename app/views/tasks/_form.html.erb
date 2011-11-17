@@ -1,0 +1,33 @@
+<%
+
+	@properties = task.method(:properties).call
+	
+	task.user ||= session.user
+	users = User.all( :is_active => true, :order => [:forename] )
+	users << task.user if task.user
+	
+	task.client ||= Client.get(params[:client_id])
+	
+	#clients		= Client.all( :id => task.client_id ) | Client.all( Client.trips.id => task.client.trips.map{|t|t.id} )
+	client_ids	= [task.client_id] | Client.all( Client.trips.id => task.client.trips.map{|t|t.id}, :order => [:name] ).map{|c|c.id}
+	clients			= Client.all( :id => client_ids )
+	
+	task.due_date				||= Date.today + 7
+	
+	task.closed_date		||= Date.today
+	task.closed_by_user ||= session.user
+	closed_by_user				= [task.closed_by_user_id, task.closed_by_user.fullname]
+	closed_css						= "#{ 'hidden' if task.open? }"
+	
+%>
+<br/>
+<%= hidden_field	:client_id %>
+<%= select				:user_id,						:label => 'Remind',							:selected => task.user_id.to_s,		:collection => users,							:class => '', :value_method => :id, :text_method => :display_name %>
+<%= select				:type_id,						:label => 'about a',						:selected => task.type_id.to_s,		:collection => TaskType.all,			:class => '', :value_method => :id, :text_method => :name %>
+<%= select				:contact_client_id,	:label => 'for',								:selected => task.contact_client_id.to_s, :collection => clients,		:class => 'width2Fields', :value_method => :id, :text_method => :display_name %>
+<%= text_field		:due_date,					:label => 'Due by',							:maxlength => 10, :value => task.due_date.formatted(:uidate),				:class => 'xdate' %>
+<%= text_area			:notes,							:label => 'Notes',							:maxlength => @properties[:name].length,														:class => 'width2Fields' %>
+<%= select				:status_id,					:label => 'This reminder is',		:selected => task.status_id.to_s,	:collection => TaskStatus.all,		:class => '', :value_method => :id,			:text_method => :name		unless task.new? %>
+<%= text_area			:closed_notes,			:label => 'Closing notes',			:maxlength => @properties[:closed_notes].length,										:class => "#{closed_css} width2Fields", :disabled => task.open?	unless task.new? %>
+<%= select				:closed_by_user_id,	:label => 'Closed by',					:readonly => true,								:collection => [closed_by_user],	:class => closed_css, 									:disabled => task.open?	unless task.new? %>
+<%= text_field		:closed_date,				:label => 'on',									:readonly => true, :value => task.closed_date.formatted(:uidate),		:class => closed_css, 									:disabled => task.open?	unless task.new? %>

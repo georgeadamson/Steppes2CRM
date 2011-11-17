@@ -1,0 +1,8 @@
+<%
+	# Assume new Tours are for the user's company and ensure that an old inacative assigned company will appear in the list:
+	tour.company_id = session.user.company_id if tour.new?
+	companies_list  = Company.all( :is_active => true, :order => [:name] ) + Company.all( :id => tour.company_id )
+%>
+<%= text_field	:name,				:label => 'Group name',	:class => 'width2Fields'	%>
+<%= text_area		:notes,				:label => 'Notes',			:class => 'width2Fields'	%>
+<%= select			:company_id,	:label => 'Company',		:selected => tour.company_id.to_s, :collection => companies_list, :value_method => :id, :text_method => :display_name, :prompt => 'Please choose one' %>

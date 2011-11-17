@@ -1,0 +1,13 @@
+
+<%= error_messages_for :post %>
+
+  <dl>
+    <% @photos.each do |photo| %>
+      <dt>
+        <%= photo.name %>(<%= photo.tags + " - " + photo.path %>)
+      </dt>
+      <dd class="">
+        <img class="imgThumbnail" src="/ImageLibrary/<%= photo.path %>" alt="<%= photo.name %>" width="10em" />
+      </dd>
+    <% end %>
+  </dl>

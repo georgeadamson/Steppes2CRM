@@ -1,0 +1,12 @@
+<%
+
+	@mailing_zone	||= @obj
+	mailing_zone	||= @mailing_zone
+	@properties = mailing_zone.method(:properties).call
+
+-%>
+<%= text_field :name,			:label => 'Zone name *',		:maxlength => @properties[:name].length %>
+<%= text_field :order_by, :label => 'Order in lists',	:maxlength => 1, :class => 'numeric widthHalfField' %>
+
+<br/><br/>
+<p><span class="ui-icon ui-icon-info"></span> Note: The number you provide for the <em>Order in lists</em> field is simply used to arrange the order in which mailing zones are displayed in pick-lists</p>

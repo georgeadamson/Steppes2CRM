@@ -1,0 +1,32 @@
+<!-- New/Edit DocumentType form: -->
+<%
+
+	document_type ||= @document_type
+	@properties = document_type.method(:properties).call
+
+	@show_all_required_field_message = true
+	@show_delete                     = false	
+
+-%>
+<%= text_field :name,								:label => 'Document type', :maxlength => @properties[:name].length, :class => '' %>
+<%= text_field :template_file_name, :label => 'Template file <small>XX_</small>', :maxlength => @properties[:name].length, :class => 'width2Fields', :message => 'Exclude the company prefix, <strong>eg: Itinerary.doc</strong> instead of SE_Itinerary.doc', :message_tag => :small %>
+<%= text_field :id,			  					:label => 'Template type', :disabled => true, :class => 'widthHalfField' %>
+
+<br/>
+<!--<p><span class="ui-icon ui-icon-info"></span> This is simply used as a label for categorising your documents.</p>-->
+<p><span class="ui-icon ui-icon-info"></span> Document templates are located in: <br/>
+	&nbsp; &nbsp; &nbsp; <em><%= CRM[:doc_templates_path] %></em><br/>
+	&nbsp; &nbsp; &nbsp; (This location is defined by the app_setting named <em>doc_templates_path</em>)
+	</p>
+	<br/>
+	
+	<p><span class="ui-icon ui-icon-info"></span> Letter templates are located in: <br/>
+	&nbsp; &nbsp; &nbsp; <em><%= CRM[:letter_templates_path] %></em><br/>
+	&nbsp; &nbsp; &nbsp; (This location is defined by the app_setting named <em>letter_templates_path</em>)
+	</p>
+	<br/>
+	
+	<p><span class="ui-icon ui-icon-info"></span> New generated documents will be saved to: <br/>
+		&nbsp; &nbsp; &nbsp; <em><%= CRM[:doc_folder_path] %></em><br/>
+		&nbsp; &nbsp; &nbsp; (This location is defined by the app_setting named <em>doc_folder_path</em>)
+	</p>

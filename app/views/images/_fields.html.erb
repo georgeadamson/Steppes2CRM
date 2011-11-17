@@ -1,0 +1,16 @@
+<%
+	@folder = Folder.new(CRM[:images_folder_path])
+%>
+
+<%= text_field :name, :label=>"Alt text" %>
+<div><%= check_box :approved, :label=>"Approved" %></div>
+<%= select :resolution, :label=>"For use in", :selected=>@image.resolution, :collection=>[ ['L','Web pages (low-res)'], ['M','Documents (med-res)'], ['H','Marketing (hi-res)'] ] %>
+
+<%= select :name=>"folder_name", :label=>"Images folder", :selected=>@folder.currentFolder, :collection=>@folder.all %>
+
+<%= select :path, :label=>"Image file", :selected=>@folder.currentFolder, :collection=>@folder.files %>
+
+<!--<img class="thumbnail" src="file:///volumes/images/Discovery/_Photos/nepal/Rupert Nepal Sept 2008 001.jpg" alt="hi" />-->
+<img class="thumbnail" src="<%#= @imageFile.url("/Australia/Accommodation/Arkaba Station/Arkaba125.Jpg") %>" alt="hi" />
+
+[<%= @folder.currentFolder %>]

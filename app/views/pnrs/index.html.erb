@@ -1,0 +1,82 @@
+<%
+
+	# Import any new PNR records from AIR files:
+if params[:import_pnrs_now] || !request.ajax?
+	
+	# Useful for debugging: (When viewing this '/pnrs/index' page in isolation then run the import first)
+	Pnr.import_latest_amadeus_records()
+
+	message[:notice] = 'The latest PNRs have been imported'
+	
+else
+	
+	# Run import AFTER rendering this page via ajax, so we don't cause delay:
+	run_later do
+		Pnr.import_latest_amadeus_records()
+	end
+
+	message[:notice] = 'The latest PNRs are being imported now. Return to this page in a few moments to see them'
+	
+end
+
+%>
+<div class="sectionContainer">
+	
+	<div class="sectionHead">
+		<h3>Most recently imported PNRs</h3>
+	</div>
+		
+	<div class="sectionBody formSurround">
+		
+		<table class="pnrs">
+
+			<thead>
+				<tr>
+					<th></th>
+					<th class="left">PNR</th>
+					<th class="left">Booked</th>
+					<th class="left">First flight</th>
+					<th>Flights</th>
+					<th>Clients</th>
+					<th>Trips*</th>
+					<th>AIR file* name</th>
+					<th>AIR downloaded</th>
+					<th>PNR updated</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<% @pnrs.each_with_index do |pnr,row| %>
+				<tr>
+					<% warning_icon = pnr.error_log.blank? ? '' : tag( :span, :class => 'ui-icon ui-icon-alert', :title => 'There were errors while importing this pnr' ) %>
+					<%= tag :td, row+1 %>
+					<%= tag :th, "#{ link_to pnr.number, resource(pnr) } #{ warning_icon }" %>
+					<%= tag :td, relative_date( pnr.booking_date ), :class => 'left' %>
+					<%= tag :td, ( pnr.first_flight_date ? relative_date( pnr.first_flight_date ) : '' ), :class => 'left' %>
+					<%= tag :td, pnr.flight_count.zero?     ? '' : pnr.flight_count %>
+					<%= tag :td, pnr.client_count.zero?     ? '' : pnr.client_count %>
+					<%= tag :td, pnr.trip_pnrs.length.zero? ? '' : pnr.trip_pnrs.length %>
+					<%= tag :td, pnr.file_name.downcase %>
+					<%= tag :td, pnr.file_date.formatted(:uidatetime) %>
+					<%= tag :td, pnr.updated_at.formatted(:uidatetime) %>
+				</tr>
+			<% end %>
+
+			</tbody>
+		</table>
+		
+		<br/>
+		<p><span class="ui-icon ui-icon-info"></span> * The Trips column identifies which PNR numbers have been assigned to trips (and/or versions of trips).</p>
+		<p><span class="ui-icon ui-icon-info"></span> * Each Amadeus Interface Record (AIR) file contains details of one PNR. Where a PNR has been updated several times we only retain details of the most recent AIR file here.</p>
+								
+	</div>
+
+	<!-- sectionFoot: -->
+	<%= partial 'shared/sectionFoot_tags_open', :foot_class => 'formSurround' %>
+
+		<%= link_to "#{ tag :span, :class => 'ui-icon ui-icon-refresh' } Import latest PNRs now", resource( :pnrs, :import_pnrs_now => true ), :class => 'ui-priority-secondary ui-state-default left' %>
+		<%= link_to "#{ tag :span, :class => 'ui-icon ui-icon-extlink' } Open the PNR-Grabs folder to browse AIR files", "file:///#{ CRM[:pnr_folder_path] }", :target => '_tab', :class => 'ui-priority-secondary ui-state-default left' if CRM[:pnr_folder_path] %>
+
+	<%= partial 'shared/sectionFoot_tags_close' %>
+
+</div>

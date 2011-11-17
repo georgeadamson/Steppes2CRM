@@ -1,0 +1,63 @@
+<%
+	# Derive filters from url params or current trip: (Note blank url params are *not* overridden by trip properties)
+	user_id			= params[:user_id]    || @trip.user_id
+	country_id	= params[:country_id] || @trip.countries.first.id
+	company_id	= params[:company_id]
+	user_id			= nil if user_id.blank?
+	company_id	= nil if company_id.blank?
+	country_id	= nil if country_id.blank?
+%>
+<% if request.ajax? && params[:search_for] %>
+
+	<%= partial 'trips/search', :trips => @trips, :trip => @trip, :user_id => user_id, :company_id => company_id, :country_id => country_id %>
+
+<% else %>
+
+<div class="sectionBody" style="left:1em;"><!-- sectionBody is only needed to maintain style in a ui dialog. -->
+<div class="sectionContainer">
+
+	<div class="sectionHead formFieldsInline">
+	
+		<%= form_for @trip, :action => "#{ resource @client_or_tour, @trip }/copy", :method => :get, :class => 'auto-submit', :'data-target' => '#trip-search-results' do %>
+
+			<%= hidden_field	:name => :search_for, :value => 'trips' %>
+			<%= select				:name => :user_id,		:label => 'Show me trips handled by',	:selected => user_id.to_s,		:collection => User.all( :order=>[:is_active.desc, :forename, :name] ), :prompt => 'Anyone',	:class => 'labelWidthAuto', :value_method => :id, :text_method => :display_name %>
+			<%= select				:name => :company_id,	:label => '&nbsp; for',								:selected => company_id.to_s,	:collection => Company.all( :order=>[:is_active.desc, :name] ),					:prompt => 'Any company',						:class => 'labelWidthAuto', :value_method => :id, :text_method => :display_name %>
+			<%= select				:name => :country_id,	:label => '&nbsp; visiting',					:selected => country_id.to_s, :collection => Country.all( :order=>[:name] ),													:prompt => 'Anywhere',							:class => 'labelWidthAuto', :value_method => :id, :text_method => :name %>
+
+			<%= submit 'Search', :class => 'ui-priority-primary ui-state-default' %>
+
+		<% end =%>
+
+	</div>
+
+	<%
+		target = "##{ nested_resource( @client_or_tour, @trip, true ) }" if @client_or_tour
+	%>
+
+	<%= form_for @trip, :action => "#{ resource @client_or_tour, @trip }", :'data-target' => target do %>
+
+		<div class="sectionBody" id="trip-search-results">
+
+				<%= partial 'trips/search', :trips => @trips, :trip => @trip, :user_id => user_id, :company_id => company_id, :country_id => country_id %>
+
+		</div>
+
+		<div class="sectionFoot ui-widget formSurround formFieldsInline">
+			<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
+
+				<span>I want to copy:</span>
+				<%= check_box :name => 'trip[do_copy_trip_elements]',  :label => 'Trip elements', :value => true, :checked => true,  :class => 'widthAuto'  %>
+				<%= check_box :name => 'trip[do_copy_trip_countries]', :label => 'Countries',     :value => true, :checked => false, :class => 'widthAuto'  %>
+				<%= check_box :name => 'trip[do_copy_trip_clients]',   :label => 'Clients',				:value => true, :checked => false, :class => 'widthAuto'  %>
+				<%#= check_box :do_copy_trip_itinerary, :label => 'Copy Itinerary document', :checked => false, :class => 'widthAuto' %>
+
+			</div>
+		</div>
+
+	<% end =%>
+
+</div>
+</div>
+
+<% end %>

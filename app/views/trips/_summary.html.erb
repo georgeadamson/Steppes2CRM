@@ -1,0 +1,40 @@
+
+<dl class="accordion clientSummaryTrips width2Fields">
+  <% trips.all( :order => [ :status_id, :start_date.desc, :created_at.desc ] ).each do |trip| %>
+
+  <dt class="clientSummaryTrip">
+    <a href="#">
+      <span class="tripName"><%= trip.name %></span>
+      <small>
+        (&pound;<span class="tripTotalSpend"><%= trip.totalSpend %></span>)
+         <%= trip.month %>
+      </small>
+    </a>
+    <!--<a class="icon viewTrip">
+      Open this trip
+    </a>-->
+  </dt>
+
+  <dd class="">
+    <table class="flightSchedule" cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th>Flight</th>
+          <th>Date</th>
+          <th>From</th>
+          <th>To</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Flight</td>
+          <td>info</td>
+          <td>here</td>
+        </tr>
+      </tbody>
+    </table>
+  </dd>
+
+  <% end %>
+</dl>
+

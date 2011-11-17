@@ -1,0 +1,18 @@
+<!-- New/Edit Country form: -->
+
+<%= text_field :name, :label=>"Name" %>
+<%= select :world_region_id, :label=>"World region", :selected=>@country.worldRegion.id.to_s, :collection=>WorldRegion.all, :value_method=>:id, :text_method=>:name %>
+<%= partial 'mailing_zones/list', :mailingZone => @country.mailingZone %>
+<%= text_area :inclusions, :label=>"Price includes" %>
+<%= text_area :exclusions, :label=>"Price excludes" %>
+<%= text_area :notes, :label=>"Notes" %>
+
+<br/><br/>
+
+  <div class="thumbnailGallery">
+    <% if @country.id %>
+      <%= partial 'photos/thumbnail_gallery', :photos => @country.photos, :country => @country, :folder=>@country.name, :tags => tagList( @country.worldRegion.name, @country.name ) %>
+    <% else %>
+      <span>Choose images here after saving the new country details</span>
+    <% end %>
+  </div>

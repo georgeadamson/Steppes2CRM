@@ -1,0 +1,58 @@
+<div class="sectionContainer">
+
+	<div class="sectionHead">
+		<h2>Document details</h2>
+	</div>
+
+	<div class="sectionBody">
+
+		<%
+
+			# We use a READONLY form to show the document details.
+		
+			readonly ||= true
+			
+		%>
+		
+		<br/>
+		
+		<%= fields_for @document do %>
+
+			<%= text_field :name => :document_type_name,	:readonly => readonly, :label => 'Type',							:value => @document.document_type.name %>
+			<%= text_field :file_name,										:readonly => readonly, :label => 'File name',					:class => 'width2Fields' %>
+			<%= text_field :file_exists?, 								:readonly => readonly, :label => 'File exists?',			:value => ( @document.file_exist? ? 'Yes' : 'No' ) %>
+			<%= text_field :name => :client_name,					:readonly => readonly, :label => 'Client',						:value => @document.client && @document.client.display_name, :class => 'width2Fields' %>
+			<%= text_field :name => :trip_name,						:readonly => readonly, :label => 'Trip',							:value => @document.trip.name || 'n/a', :class => 'width2Fields' %>
+
+			<%= text_field :document_template_id,					:readonly => readonly, :label => 'Template',					:value => @document.document_template.name %>
+			<%= text_field :document_template_file,				:readonly => readonly, :label => 'Template file',			:class => 'width2Fields' %>
+			<%= text_field :status_name,									:readonly => readonly, :label => 'Doc generation' %>
+			<%= text_area  :parameters,										:readonly => readonly, :label => 'Doc-gen params',		:class => 'width2Fields' %>
+			<%= text_area  :doc_builder_output,						:readonly => readonly, :label => 'Doc-gen log',				:class => 'width2Fields height4Fields' %>
+			<%= text_area	 :pdf_builder_output,						:readonly => readonly, :label => 'Pdf-gen log',				:class => 'width2Fields' %>
+
+			<%= text_field :name => :brochure_name,				:readonly => readonly, :label => 'Brochure request',	:value => @document.brochure_request.name, :class => 'width2Fields' %>
+
+			<%= text_field :name => :company_name,				:readonly => readonly, :label => 'Company',						:value => @document.company.name, :class => 'width2Fields' %>
+			<%= text_field :name => :user_name,						:readonly => readonly, :label => 'Consultant',				:value => @document.user.name, :class => 'width2Fields' %>
+			<%= text_field :created_at,										:readonly => readonly, :label => 'Created date',			:value => @document.created_at.formatted(:uidatetime) %>
+			<%= text_field :created_by,										:readonly => readonly, :label => 'Created by' %>
+
+			<%= text_field :id,														:readonly => readonly, :label => 'Document ID' %>
+			<%= text_field :name,													:readonly => readonly, :label => 'Name' %>
+
+		<% end =%>
+
+	</div>
+
+  <% if params[:return_to] %>
+	<div class="sectionFoot ui-widget">
+		<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
+			<a href="<%= params[:return_to] %>" class="ui-priority-secondary ui-state-default">
+				Return to documents
+			</a>
+		</div>
+	</div>
+	<% end %>
+	
+</div>

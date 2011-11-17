@@ -1,0 +1,139 @@
+<%
+
+	# Pending brochure_requests are those waiting for 'brochure merge'.
+
+	brochure_requests ||= @brochure_requests
+	
+	# We should be able to derive the client from the url but if not then choose user's most recent client:
+	client ||= params[:client_id].to_i.zero? ? session.user.most_recent_client : Client.get( params[:client_id] )
+
+	# Ensure the list is filtered by the user's company if none was specified:
+	company ||= Company.get( params[:company_id] ) || session.user.company || nil
+	brochure_requests = brochure_requests.all( :company_id => company.id )
+	
+	companies_list = Company.all( :is_active => true, :order => [:name] )
+	
+	
+-%>
+
+<div class="sectionContainer noSectionFoot">
+
+	<div class="sectionHead indentSurround">
+		<h2><%= icon 'mail-open' %> Brochure merge</h2>
+	</div>
+
+	<div class="sectionBody formSurround indentSurround">
+
+		<div class="sectionContainer">
+
+			<div class="sectionHead formFieldsInline">
+						
+				<%= form_for :web_requests, :method => :get, :action => resource( :brochure_requests, :brochure_merge => true ) do %>
+						
+					<%= select :name => :company_id, :label => 'Company', :selected => company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name_and_pending_brochures, :class => 'auto-submit width2Fields' %>
+					<%= tag :div, :class => 'formField' do; submit( 'Refresh', :class => 'ui-priority-secondary ui-state-default xhidden-when-js-enabled' ); end %>
+					
+				<% end =%>
+
+			</div>
+
+			<%= form_for :web_requests, :method => :post, :target => '_new', :action => "#{ resource(:brochure_requests) }/merge" do %>
+			
+				<div class="sectionBody">
+
+					<% if brochure_requests.empty? %>
+						
+						<%= tag :p, "Phew, there are no pending Brochure requests for #{ company ? company.name : 'any companies' }." if brochure_requests.empty? %>
+						
+					<% else %>
+						
+						<table class="brochure-requests">
+						
+							<thead>
+								<tr>
+									<th>Brochure requested</th>
+									<th>Client</th>
+									<th>Consultant</th>
+									<th>Create or edit letter</th>
+									<th>Selected?</th>
+								</tr>
+							</thead>
+						
+							<tbody>
+								<% brochure_requests.each do |brochure| %>
+									
+									<tr>
+
+										<td class="nowrap" title="<%= brochure.requested_date.formatted(:uidatetime) %>">
+											<%= icon 'mail-open' %>
+											<%= link_to "#{ brochure.requested_date.formatted(:uidate) } #{ brochure.company.name }", resource( brochure, :edit, :return_to => (resource(:brochure_requests,params)) ) %>
+											<br/>&nbsp; &nbsp; &nbsp; (<%= brochure.status.name %>)
+										</td>
+
+										<td>
+											<%= link_to brochure.client.fullname, resource( brochure.client, :label => brochure.client.shortname ) %>
+											<br/>
+											<%#= link_to brochure.client.email1, "mailto:#{ brochure.client.email1 }?subject=Thank you for requesting a Steppes brochure&body=Dear #{ brochure.client.salutation }, #{ brochure.custom_text }", :title => "Click to send email to #{ brochure.client.fullname }" 
+											%>
+										</td>
+
+										<td>
+											<%= brochure.user && brochure.user.preferred_name || "#{ icon :alert } (Consultant not specified)" %>
+											<br/>
+											<small>Notes: <%= brochure.notes.blank? ? '(none)' : brochure.notes %></small>
+										</td>
+
+										<td class="ajaxPanel">
+											<!-- Link to edit document if it exists, ot to create new document: -->
+											<%=
+												if !brochure.valid?
+													"(This request does not quite have enough details)"
+												elsif (doc = brochure.document ) && doc.file_exist?
+													"#{ icon :document } #{ link_to File.basename(doc.doc_path), doc.doc_url }"
+												else
+													link_to 'Ready to generate letter document', resource(brochure, :generate_doc_now => true), :class => ''
+												end
+											%>
+										</td>
+
+										<td>
+											<%# brochure_request_ids will be submitted as an array in params[:brochure_request_ids] %>
+											<%#= check_box :name => 'brochure_request_ids[]', :value => brochure.id, :checked => true, :class => '', :readonly => true if brochure.valid? %>
+											<%= tag :input, :type => :checkbox, :value => brochure.id, :name => 'brochure_request_ids[]', :checked => :checked, :readonly => :readonly, :class => 'checkbox' if brochure.valid? %>
+										</td>
+										
+									</tr>
+									
+								<% end -%>
+							</tbody>
+						</table>
+
+					<% end -%>
+					
+				</div>
+				
+				<div class="sectionFoot ui-widget">
+				<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
+						
+						<%= hidden_field :name => :brochure_merge,	:value => true %>
+						<%= hidden_field :name => :company_id,			:value => company.id %>
+						
+						<%# IMPORTANT: These button LABELS are used by the controller to decide which submit was clicked! (Clear Merge or Run Merge) %>
+						
+						<!-- Delete button has it's own form: -->
+							<%= submit "Clear merge for selected requests", :class => 'ui-priority-secondary left', :disabled => ( brochure_requests.empty? ) %>
+								
+						<!-- Run Merge button has it's own form: -->
+							<!-- Important: The 'download' class name instructs client-side js to accept response as a download: -->
+							<%= submit "Run letter-merge for selected requests", :class => 'ui-priority-primary download noajax', :disabled => ( brochure_requests.empty? ) %>
+		
+				</div>
+			</div>
+
+			<% end =%>
+
+		</div>
+
+	</div>
+
+</div>
