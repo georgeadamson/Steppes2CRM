@@ -339,7 +339,7 @@ class Document
     ( orig = Document.get self.id+1 ) &&                        # The subsequent document may be the *real* one,
     ( self.document_type_id == orig.document_type_id ) &&       # and be the same TYPE,
     ( self.parameters       == orig.parameters       ) &&       # and have the same PARAMETERS,
-    ( !orig.created_at.nil? && !self.created_at.nil? ) &&       # (just a belt & braces check before the next condition)
+    ( orig.created_at       &&  self.created_at      ) &&       # (just a belt & braces check before the next condition)
     ( orig.created_at.to_time - self.created_at.to_time < 10 )  # and were they generated within a few SECONDS of eachother?
 
   end
