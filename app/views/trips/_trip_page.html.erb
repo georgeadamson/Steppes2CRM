@@ -71,9 +71,9 @@
       <li><a href="<%= resource( client_or_tour, trip ) %>/costings"		>Costings</a></li>
       <li><a href="<%= resource( client_or_tour, trip ) %>/money_ins/new" class="<%= 'hidden' if trip.tour_template? %>">Invoice</a></li>
       <li><a href="<%= resource( client_or_tour, trip ) %>/money_outs"	>Suppliers</a></li>
-      <% if trip.tour_template? %>
+      <%# if trip.tour_template? %>
 				<li><a href="<%= resource( client_or_tour, trip ) %>/documents"	>Documents</a></li>
-      <% end %>
+      <%# end %>
       <!--<li class="hidden"><a href="#<%= nested_resource(client_or_tour,trip,true) %>charities"  >Charities</a></li>-->
 			<!-- TODO: Make tabs work without needing at least one non-ajax tab! -->
     </ul>

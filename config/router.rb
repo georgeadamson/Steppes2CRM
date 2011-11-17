@@ -89,6 +89,7 @@ Merb::Router.prepare do
     client.resources :documents
     client.resources :addresses
     client.resources :trips do |trip|
+      trip.resources :documents
       trip.resources :money_ins
       trip.resources :money_outs
       trip.resources :trip_elements
