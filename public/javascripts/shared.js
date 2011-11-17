@@ -3328,7 +3328,7 @@ function initTripInvoiceFormTotals(){
 
 			if( target ){
 				// Select accordion's 2nd panel when form is for new client:
-				var index = options.client_id ? 0 : 1;
+				var index = RegExp('/clients/new').test(options.url) ? 1 : 0;
 				$( 'DL.accordion', target ).accordion({ autoHeight: false, active: index });
 			}
 

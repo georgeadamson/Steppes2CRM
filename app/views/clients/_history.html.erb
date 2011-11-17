@@ -5,7 +5,7 @@
 
 <dl class="accordion clientHistory">
 
-		<dt>
+		<dt class="<%= client.notes.length > 0 ? 'alert' : '' %>">
 			Notes <small>(<%= client.notes.length %>)</small>
 		</dt>
 		<dd class="clientNotes">
@@ -26,8 +26,8 @@
 		<dt>
 			Brochures <small id="<%= brochures_panel_uid %>count">(<%= client.brochure_requests.length %>)</small>
 		</dt>
-		<dd
-		>
+
+		<dd>
 			<div id="<%= brochures_panel_uid %>" class="ajaxPanel sectionContainer">
 				<%= partial 'brochure_requests/list', :brochure_requests => client.brochure_requests, :client_id => client.id %>
 			</div>

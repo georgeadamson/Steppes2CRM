@@ -46,3 +46,4 @@ gem "mongrel",			"1.1.5"
 gem "rake",				"0.9.2.2"
 
 gem "jruby-win32ole"
+

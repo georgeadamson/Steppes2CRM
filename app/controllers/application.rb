@@ -11,6 +11,7 @@ class Application < Merb::Controller
   
 
   # Helper to set @client_or_tour in every request if possible/relevant:
+  # (Note we test for logged-in session.user before accessing it to avoid "No method error" on nil object)
   def determine_client_or_tour
     tour   = params[:tour_id]   && Tour.get( params[:tour_id] )
     client = params[:client_id] && Client.get( params[:client_id] )
