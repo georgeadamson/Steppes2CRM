@@ -225,7 +225,7 @@
 					tag :td do
 					  if doc.file_exist?
 						  link_to( " doc", resource( @client_or_tour, doc, :format => :doc ), :class => 'noajax' ) + ' | ' +
-						  link_to( " pdf", resource( @client_or_tour, doc, :format => :pdf ), :class => 'noajax xstrikethough', :title => 'Sorry folks, the Microsoft PDF converter is buggy and may crash the server!' )
+						  link_to( " pdf", resource( @client_or_tour, doc, :format => :pdf ), :class => 'noajax strikethough', :title => 'Sorry folks, the Microsoft PDF converter is buggy and may crash the server!' )
 					  end						  
 					end
 				%>
