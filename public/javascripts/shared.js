@@ -1290,6 +1290,30 @@ return
 	});
 
 
+	/*
+	$('A[href ^= mailto]').live('click', function(e){
+	
+		e.preventDefault();
+	
+		console.log(ZeroClipboard);
+		ZeroClipboard.setMoviePath('http://database2:82/javascripts/clipboard/ZeroClipboard.swf');
+
+		var clip = new ZeroClipboard.Client();
+		console.log(clip);
+		
+		clip.addEventListener('complete',function(client,text) {
+			alert('copied: ' + text);
+		});
+
+		clip.glue('loginStatus');
+
+		clip.setText('testing!');
+
+	});
+	*/
+
+
+
 
 // Initialise DATEPICKERs:
 
@@ -3563,6 +3587,16 @@ function initTripInvoiceFormTotals(){
 
 			// Activate the country-tabs and trip_clients search box in this tab panel:
 			Trip.initCountryTabs(ui.panel);
+
+			var $mailtoElem = $(ui.panel).find('A.mailto-all');
+			var mailtoText  = $mailtoElem.attr('data-mailto');	// Extra property providing just the mailto body text. 
+
+			// http://www.steamdev.com/zclip/
+			$mailtoElem.zclip({
+				path: '/javascripts/clipboard/ZeroClipboard.swf',
+				copy: decodeURI(mailtoText)
+			});
+			
 
 			// Reduce the effect of the CountryTabs FOUC by giving the browser a chance to render them before other changes:
 			window.setTimeout(function(){
