@@ -549,7 +549,7 @@ class TripElement
     # (The element.day getter method does the opposite by adding 1 to the offset)
     number -= 1 if number > 0
     
-    duration        = ( self.end_date - self.start_date ).to_i
+    duration        = ( self.end_date.to_date - self.start_date.to_date ).to_i
     orig_start_time = self.start_date
     orig_end_time   = self.end_date
     
