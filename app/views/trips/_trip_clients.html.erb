@@ -8,20 +8,20 @@
 	trip						||= trip_client.trip		# Optional when editing existing records because we can derive it from trip_client.
 	client					||= trip_client.client	# Optional when editing existing records because we can derive it from trip_client.
 	html_template		||= false
-	
+
 	# Allow for when new (unsaved) trip has trip.clients but no trip.trip_clients collection:
 	trip_client.client ||= client
-	
+
 	# Include the little menu of trip letters next to the client name: (unless we're creating a template row)
 	show_trip_letters_menu = !html_template
 
 	# Flag to tell us whether the trip is being viewed in the context of a specific client:
 	# We use this to hide the 'remove' option to prevent the current client from being removed from his own trip!
 	client_is_open_in_ui = ( trip_client.client_id == params[:client_id].to_i )
-	
+
 	# Flag used later to disable the 'remove' checkbox:
-	client_not_removable = trip_client.is_primary || client_is_open_in_ui || html_template
-	
+	client_not_removable = !trip.tour_template? && ( trip_client.is_primary || client_is_open_in_ui || html_template )
+
 	# If we're generating client-side template html then render {placeholders} where IDs etc would be:
 	# See initTripClientSearch() in the shared.js
 	if html_template
@@ -46,6 +46,8 @@
 			then 'Client added but not saved yet!'
 		when client && client_is_open_in_ui
 			then "You are working on a trip for #{ client.shortname } so you won't be able to remove them!"
+		when trip.tour_template?
+			then ''
 		when client && trip_client.is_primary
 			then "You won't be able to remove #{ client.shortname } while they are a primary contact."
 		else
