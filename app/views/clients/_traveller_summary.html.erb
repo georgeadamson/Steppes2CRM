@@ -1,12 +1,13 @@
 <%=
 
-	# Return a summary of a client's details.
-	# Typically used for building a mailto link with detailed body parameter.
+	# Generate a plain-text summary of a client's details.
+	# Typically used for building a MAILTO link with detailed body parameter.
 	# Used on the trip page to provide mailto's with client's details.
 	# Expects parameter "client".
 	
-	# Default to use a mailto-friendly linefeed character:
-	new_line ||= '%0A'
+	# Default to use a mailto-friendly linefeed character: (url encoded)
+	new_line        ||= '%0A'
+passport_expiry   = "(Expires #{ client.passport_expiry_date.formatted(:uidatelong) })" if client.passport_expiry_date
 
 	# Format the output by separating items by the new_line character:
   #	h [
@@ -36,7 +37,7 @@
 		#client.passport_name.strip.blank? ? client.fullname : client.passport_name,
 		client.fullname,
 		"DOB: #{ client.birth_date.formatted(:uidatelong) }",
-		"PASSPORT: #{ client.passport_number } #{ client.nationality }",
+		"PASSPORT: #{ client.passport_name } #{ client.passport_number } #{ client.nationality } #{ passport_expiry }",
 		"NOTES:"
 
 	].join(new_line).gsub(/[\r\n]+/,new_line)
