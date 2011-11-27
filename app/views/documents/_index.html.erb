@@ -132,9 +132,26 @@
 
 			doc_type_name			= "#{ cached(:document_types_hash)[doc.document_type_id] }"
 			doc_last_date			= doc.generated_at || doc.created_at
-			doc_is_recent			= ( doc_last_date && doc_last_date.to_time.to_date <=> Time.now.to_date ) == 0	# Created today?
-			doc_display_date  = doc_last_date.formatted( doc_is_recent ? :uidatetime : :uidate )
-			
+			doc_is_recent			= ( doc_last_date && doc_last_date.to_time.to_date <=> Date.today ) == 0	# Created today?
+
+			doc_display_date = if doc_is_recent
+
+				"Today <small>at #{ doc_last_date.formatted :uitime }</small>"
+
+			elsif ( doc_last_date && ( Date.today - doc_last_date.to_time.to_date ) ) == 1
+
+				'Yesterday'
+
+			elsif doc_last_date
+
+				doc_last_date.formatted( doc_is_recent ? :uidatetime : :uidate )
+
+			else
+
+				''
+
+			end
+
 			if doc_is_for_tour_template
 				doc_recipient   = "Group Tour:<br/>&quot;#{ doc.trip.tour.name }&quot;"
 			else
@@ -218,14 +235,14 @@
 
 
 				<%= tag :td, doc_recipient %>
-				<%= tag :td, "#{ doc_display_date }<br/>by #{ ( doc.user && user.preferred_name ) || doc.user_name }", :title => h(doc_tooltip) %>
+				<%= tag :td, "#{ doc_display_date }<br/>by #{ ( doc.user && user.preferred_name ) || doc.user_name }", :title => h( doc_last_date.formatted :uidatetime ) %>
 				<%= tag :td, doc_status %>
 
 				<%=
 					tag :td do
 					  if doc.file_exist?
 						  link_to( " doc", resource( @client_or_tour, doc, :format => :doc ), :class => 'noajax' ) + ' | ' +
-						  link_to( " pdf", resource( @client_or_tour, doc, :format => :pdf ), :class => 'noajax xstrikethough', :title => 'Sorry folks, the Microsoft PDF converter is buggy and may crash the server!' )
+						  link_to( " pdf", resource( @client_or_tour, doc, :format => :pdf ), :class => 'noajax strikethough', :title => 'Sorry folks, the Microsoft PDF converter is buggy and may crash the server!' )
 					  end						  
 					end
 				%>

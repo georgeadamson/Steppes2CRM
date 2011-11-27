@@ -26,7 +26,8 @@
   	# Prepare content for the all-client-details mailto link:
   	# Important: mailto links seem to be limited to around 1600 characters for Oulook 2007! An Outlook limitation. May need a firefox plugin to handle these better :(
   	mailto_character_limit = 1580
-  	mailto_all_body = @trip.clients.map{|c| partial('clients/traveller_summary',:client=>c) }.join('%0A%0A')
+  	mailto_all_clients     = @trip.clients.map{|c| partial('clients/traveller_summary',:client=>c) }
+  	mailto_all_body        = mailto_all_clients.join('%0A%0A')
 
   	if mailto_all_body.length > mailto_character_limit
   	  mailto_all_prefix = '(Oh no! Some details had to be omitted from the end because of a limitaion imposed by Outlook)%0A%0A'
@@ -80,7 +81,7 @@
 			<!-- "Trip title" when first version or "Version name" when subsequent versions: -->
 			<%= text_field :name,  :label => name_field_label, :class => 'summary width2Fields' %>
 		</td>
-		<td><%= text_field	:adults,			:label => 'Adults',				:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin1' %></td>
+		<td><%= text_field	:adults,			:label => 'Adults',				:maxlength => 3, :class => 'widthHalfField spinbox spinboxMin1 spinboxMax150' %></td>
 
 		<% if confirm_client_source %>
 			<td>
@@ -93,7 +94,7 @@
 	<tr>
 		<td><%= text_field	:start_date,	:label => 'Start date',	:value => @trip.start_date.formatted(:uidate), :class => 'date start-date travel-date dtstart', :fieldClass => 'fieldFlowHoriz' %></td>
 		<td><%= select			:user_id,			:label => 'Handled by',	:selected => @trip.user_id.to_s, :collection => user_list, :value_method => :id, :text_method => :display_name, :prompt => '- Choose user' %></td>
-		<td><%= text_field	:children,		:label => 'Children',		:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
+		<td><%= text_field	:children,		:label => 'Children',		:maxlength => 3, :class => 'widthHalfField spinbox spinboxMin0 spinboxMax150' %></td>
 
 		<% if confirm_client_source %>
 			<td>
@@ -117,7 +118,7 @@
 	<tr>
 		<td><%= text_field	:end_date,		:label => 'End date',		:value => @trip.end_date.formatted(:uidate), :class => 'date end-date travel-date dtend', :fieldClass => 'fieldFlowHoriz' %></td>
 		<td><%= select			:company_id,	:label => 'Invoice as', :collection => Company.all(:is_active=>true), :value_method => :id, :text_method => :name, :prompt => '- Choose company' %></td>
-		<td><%= text_field	:infants,			:label => 'Infants',		:maxlength => 2, :class => 'widthHalfField spinbox spinboxMin0' %></td>
+		<td><%= text_field	:infants,			:label => 'Infants',		:maxlength => 3, :class => 'widthHalfField spinbox spinboxMin0 spinboxMax150' %></td>
 
 
 		<% if confirm_client_source %>
@@ -158,7 +159,7 @@
 
 		</td>
 		<td><%= select			:type_id,			:label => 'Type of trip',	:collection => trip_type_list, :value_method => :id, :text_method => :name %></td>
-		<td><%= text_field	:singles,			:label => 'Single supps',			:readonly => false, :class => 'widthHalfField spinbox', :title => 'Tick clients below to set the number of singles' %></td>
+		<td><%= text_field	:singles,			:label => 'Single supps',			:readonly => false, :maxlength => 3, :class => 'widthHalfField spinbox spinboxMin0 spinboxMax150', :title => 'Tick clients below to set the number of singles' %></td>
 	</tr>
 
 	<tr>
@@ -207,7 +208,7 @@
 								<%= icon :'triangle-1-s' %><!-- :'mail-closed' -->
 								<span class="vertical">
 								<!-- Alas mailto links seem to be limited to around 1600 characters! An Outlook limitation. May need a plugin to handle these instead -->
-								<%= trip.clients.empty? || !mailto_all ? 'Send email' : link_to('Send email', "mailto:&#{ mailto_all.to_params.slice(0,1610) }") %></span>
+								<%= trip.clients.empty? || !mailto_all ? 'Send email' : link_to('Send email', "mailto:&#{ mailto_all.to_params.slice(0,1610) }", :class => 'mailto-all', 'data-mailto' => mailto_all_body ) %></span>
 							</th>
 							<% if trip.tour_template? %>
 								<th title="We are handling flights for this client"							>

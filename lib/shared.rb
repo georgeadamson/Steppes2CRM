@@ -137,3 +137,15 @@ class FakeListItem
   end
 
 end
+
+
+
+
+class DateTime
+
+  # A better datetime.to_date method that strips out the time portion, allowing better date comparison:
+  def to_date
+    ::Date.new(year, month, day)
+  end unless instance_methods(false).include?(:to_date)
+
+end
