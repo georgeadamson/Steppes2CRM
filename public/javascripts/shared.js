@@ -3592,10 +3592,10 @@ function initTripInvoiceFormTotals(){
 			var mailtoText  = $mailtoElem.attr('data-mailto');	// Extra property providing just the mailto body text. 
 
 			// http://www.steamdev.com/zclip/
-			$mailtoElem.zclip({
-				path: '/javascripts/clipboard/ZeroClipboard.swf',
-				copy: decodeURI(mailtoText)
-			});
+			//$mailtoElem.zclip({
+			//	path: '/javascripts/clipboard/ZeroClipboard.swf',
+			//	copy: decodeURI(mailtoText)
+			//});
 			
 
 			// Reduce the effect of the CountryTabs FOUC by giving the browser a chance to render them before other changes:
