@@ -89,6 +89,7 @@ Merb::Router.prepare do
     client.resources :documents
     client.resources :addresses
     client.resources :trips do |trip|
+      trip.resources :documents
       trip.resources :money_ins
       trip.resources :money_outs
       trip.resources :trip_elements
@@ -101,10 +102,11 @@ Merb::Router.prepare do
   
   # /tours/
   resources :tours do |tour|
-    tour.resources :documents         # TODO?
+    tour.resources :documents         # Note we can use /tours/x/documents and /tours/x/trips/y/documents
     tour.resources :trips do |trip|
       trip.resources :trip_elements
       trip.resources :money_outs
+      trip.resources :documents
     end
   end
  
@@ -126,6 +128,7 @@ Merb::Router.prepare do
   
   match('/documents/download').to( :controller => 'documents', :action => 'download' )
   match('/clients/:client_id/documents/:id/recreate').to( :controller => 'documents', :action => 'recreate' ).name(:document_recreate)
+  match('/tours/:tour_id/documents/:id/recreate')    .to( :controller => 'documents', :action => 'recreate' ).name(:document_recreate_for_tour)
   resources :documents
   
   #match('/images/:action/:id' ).to( :controller => 'images', :action => :action, :id => id )

@@ -4,6 +4,7 @@
 	bare = false
 	logallrefupdates = true
 	ignorecase = true
+	autocrlf = true
 	hideDotFiles = dotGitOnly
 [remote "github"]
 	url = git@github.com:georgeadamson/Steppes2CRM.git

@@ -1,1 +1,7 @@
-Trip documents TBD
+<%
+
+	@documents ||= Document.all( :trip_id => @trip.id )
+
+%>
+
+<%= partial 'documents/index', :documents => @documents %>
