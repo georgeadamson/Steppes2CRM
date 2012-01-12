@@ -3589,13 +3589,17 @@ function initTripInvoiceFormTotals(){
 			// Activate the country-tabs and trip_clients search box in this tab panel:
 			Trip.initCountryTabs(ui.panel);
 
+			// The combined details of all the clients is available in a custom data-mailto attribute:
 			var $mailtoElem = $(ui.panel).find('.mailto-all');
-			var mailtoText  = $mailtoElem.attr('data-mailto');	// Extra property providing just the mailto body text. 
+			var mailtoText  = $mailtoElem.attr('data-mailto');
 
+			// Wire up the email-all link using an Adobe Flash hack to copy the text to the clipboard:
 			// http://www.steamdev.com/zclip/
 			$mailtoElem.zclip({
 				path: '/javascripts/clipboard/ZeroClipboard.swf',
 				copy: decodeURI(mailtoText)
+				// Easier to make do with the default message because zclip does not pass text to custom handler :(
+				// afterCopy: function(client,text){console.log(client,text)}
 			});
 			
 
