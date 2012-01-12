@@ -293,6 +293,7 @@ jQuery(function($) {
 
 			// Documents:
 			Layout.match(/clients\/([0-9]+)\/documents.*list=option/).on('success').to(Document.list);	// For listing template filenames
+			Layout.match(/\/documents$/).on('success').to(Document.index);		// For network document links
 
 
 			// Depricated in favour of Layout.liveForm:
@@ -3588,14 +3589,14 @@ function initTripInvoiceFormTotals(){
 			// Activate the country-tabs and trip_clients search box in this tab panel:
 			Trip.initCountryTabs(ui.panel);
 
-			var $mailtoElem = $(ui.panel).find('A.mailto-all');
+			var $mailtoElem = $(ui.panel).find('.mailto-all');
 			var mailtoText  = $mailtoElem.attr('data-mailto');	// Extra property providing just the mailto body text. 
 
 			// http://www.steamdev.com/zclip/
-			//$mailtoElem.zclip({
-			//	path: '/javascripts/clipboard/ZeroClipboard.swf',
-			//	copy: decodeURI(mailtoText)
-			//});
+			$mailtoElem.zclip({
+				path: '/javascripts/clipboard/ZeroClipboard.swf',
+				copy: decodeURI(mailtoText)
+			});
 			
 
 			// Reduce the effect of the CountryTabs FOUC by giving the browser a chance to render them before other changes:
@@ -4263,6 +4264,21 @@ function initTripInvoiceFormTotals(){
 	
 			console.log( 'Fetching list of doc templates', options.params, $(options.target), options )
 
+		},
+		
+		index : function(options){
+
+			$(options.panel).find('A[href ^= file]').each(function(){
+
+				//this.addEventListener('click', onFileClick, true, true );
+			
+			});
+		
+			function onFileClick(e){
+				console.log(e)
+				alert('clicked')
+			}
+		
 		}
 
 	};
