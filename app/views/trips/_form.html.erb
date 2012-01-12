@@ -204,8 +204,8 @@
 								<%= icon :'triangle-1-s' %><!-- :document  -->
 								<span class="vertical">Create letter</span>
 							</th>
-							<th title="Create email with all client details">
-								<%= icon :'triangle-1-s' %><!-- :'mail-closed' -->
+							<th title="Create email with all client details"><!-- class="mailto-all" data-mailto="<%= mailto_all_body %>" -->
+								<%= icon :'triangle-1-s' %>
 								<span class="vertical">
 								<!-- Alas mailto links seem to be limited to around 1600 characters! An Outlook limitation. May need a plugin to handle these instead -->
 								<%= trip.clients.empty? || !mailto_all ? 'Send email' : link_to('Send email', "mailto:&#{ mailto_all.to_params.slice(0,1610) }", :class => 'mailto-all', 'data-mailto' => mailto_all_body ) %></span>
