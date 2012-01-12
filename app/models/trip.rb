@@ -1685,25 +1685,31 @@ class Trip
   # Find all the confirmed trips that ended yesterday: (Used by automated status change in app/controllers/application.rb)
   # SHORT TERM WORKAROUND: Skip TripType::TOUR_TEMPLATE trips until fix allows group templates to become confirmed. GA Nov 2011.
   def self.all_ready_to_complete( today = nil )
-    
+
     today ||= Date.today
-    active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :type_id.not => TripType::TOUR_TEMPLATE, :end_date.lt => today )
-    other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.version_of_trip_id} )
+    #everything_other_than_tour_template = TripType.all( :id.not => TripType::TOUR_TEMPLATE ).map{|tt|tt.id}
+    everything_other_than_tour_template = [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP, TripType::FIXED_DEP ]
     
+    active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :type_id => everything_other_than_tour_template, :end_date.lt => today )
+    other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+
     return active_versions + other_versions
-    
+
   end
   
   # Find all the unconfirmed trips that [would have] started yesterday: (Used by automated status change in app/controllers/application.rb)
   # SHORT TERM WORKAROUND: Skip TripType::TOUR_TEMPLATE trips until fix allows group templates to become confirmed. GA Nov 2011.
   def self.all_ready_to_abandon( today = nil )
-    
+
     today ||= Date.today
-    active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::UNCONFIRMED, :type_id.not => TripType::TOUR_TEMPLATE, :start_date.lt => today, :created_at.lt => today )
-    other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.version_of_trip_id} )
-    
+    #everything_other_than_tour_template = TripType.all( :id.not => TripType::TOUR_TEMPLATE ).map{|tt|tt.id}
+    everything_other_than_tour_template = [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP, TripType::FIXED_DEP ]
+
+    active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::UNCONFIRMED, :type_id => everything_other_than_tour_template, :start_date.lt => today, :created_at.lt => today )
+    other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+
     return active_versions + other_versions
-    
+
   end
   
   
