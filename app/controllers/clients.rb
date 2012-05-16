@@ -41,7 +41,7 @@ class Clients < Application
 
 		# If the user provided any '*' wildcards then swap them for valid sql '%' wildcards:
 		# Insert sql '%' wildcard after each word: (unless user provided their own wildcards)
-		phrase = params[:q].to_s.strip.gsub(/\*/, '%') + ' '
+		phrase = ( params[:q].to_s.strip.gsub(/\*/, '%') + ' ' ) || ''
 		phrase.gsub!( /\b /, '% ' ).strip! unless phrase.include? '%'
 
 		# Prepare custom sql statement: (We rely on datamapper to handle escaping of dodgy charaters such as ')
