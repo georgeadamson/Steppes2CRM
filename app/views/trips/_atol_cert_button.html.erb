@@ -1,0 +1,51 @@
+<%
+=begin
+
+	# Deprecated. We use a form instead. See below.
+	# Build URL params using same technique as views/trips/_trip_clients.html.erb
+	
+	atol_cert_doc_builder_params = {
+		
+		'document[trip_id]'										=> trip.id,
+		'document[user_id]'										=> trip.user_id,
+		'document[client_id]'									=> client.id,
+		'document[document_type_id]'					=> DocumentType::ATOL_CERTIFICATE,				# 13 = ATOL Cert template
+		'document[document_template_file]'		=> "#{ trip.company.initials }_ATOLCertificate.doc",
+		'document[generate_doc_after_create]'	=> true,
+		'document[generate_doc_later]'				=> true,
+		'_method'                             => 'post',
+		:redirect_to													=> resource(client,trip,:documents)
+		
+	}.to_a.map{|pair| pair.map{ |part| h(part.to_s) }.join('=') }.join('&')	
+	# WARNING: Do not be tempted to let merb serialise the hash for us because it will encode characters unecessarly!
+
+	url_with_params = "#{ resource( client, :documents ) }?#{ atol_cert_doc_builder_params }"
+
+=end
+-%>
+xx
+<%= invoice %>
+
+<% unless invoice.nil? %>
+
+	<%
+		trip   = invoice.trip
+		client = invoice.client
+	%>
+
+	<%= form_for Document.new , :action => resource( client, trip, :documents ), :class => 'hidden' do %>
+		
+		<%= hidden_field :trip_id,    :value => trip.id %>
+		<%= hidden_field :client_id,  :value => client.id %>
+		<%= hidden_field :invoice_id, :value => invoice.id %>
+		<%= hidden_field :user_id,    :value => session.user.id %>
+		<%= hidden_field :document_type_id, :value => DocumentType::ATOL_CERTIFICATE %>
+		<%#= hidden_field :document_template_file, :value => "#{ trip.company.initials }_ATOLCertificate.doc" %>
+		<%= hidden_field :generate_doc_after_create, :value => true %>
+		<%= hidden_field :generate_doc_later, :value => false %>
+
+		<%= submit 'Create ATOL Certificate document', :id => atol_button_id, :'data-target' => '#no-target', :class => 'ui-state-default ui-corner-all ui-priority-secondary left' %>
+		
+	<% end =%>
+
+<% end %>

@@ -63,7 +63,15 @@
 		end
 		
 	end
-
+	
+	
+	# We'll show the ATOL button if the trip has a main invoice:
+	atol_invoice = @trip.money_ins.first( :client => @client, :is_deposit => false )
+	atol_invoice = atol_invoice.main_invoice unless atol_invoice.nil?	# Just to be absolutely sure!
+							
+	# Unique client-id for the atol button: (Because its hidden but activated by a corresponding <label> button)
+	atol_button_id = "#{ nested_resource( @client, @trip, :documents, true ) }-ATOL-BUTTON"
+					
 %>
 <div class="sectionContainer invoice">
 	
@@ -234,11 +242,31 @@
 		<!-- sectionFoot: -->
 		<div class="sectionFoot ui-widget">
 			<div class="buttonBar ui-dialog-buttonpane ui-widget-content">
-				<%#= check_box :name => :draft,    :label => 'Draft only', :checked => true, :class => 'ui-priority-secondary ui-state-default' %>
+
 				<%= submit    'Create invoice',		:class => 'ui-priority-primary ui-state-default' %>
+
+				<%=
+
+					# We'll show the ATOL button if the trip has a main invoice:
+					if atol_invoice.nil?
+
+						tag :div, 'Tip: An ATOL Certificate can be created after a Main Invoice', :class => 'left'
+
+					else
+
+						label 'Create ATOL Certificate document', :for => atol_button_id, :class => 'left ui-priority-secondary ui-state-default'
+
+					end
+
+				%>
+
 			</div>
 		</div>
 
 	<% end =%>
+
+
+	<%# Render the ATOL button in its own hidden form: (The <label> above is in another form but can trigger this one) %>
+	<%= partial 'trips/atol_cert_button', :atol_button_id => atol_button_id, :invoice => atol_invoice %>
 
 </div>

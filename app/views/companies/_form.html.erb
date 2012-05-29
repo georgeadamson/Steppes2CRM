@@ -9,6 +9,7 @@
 -%>
 
 <%= text_field :name,						:label => 'Company name',			:maxlength => @properties[:name].length,						:class => 'width2Fields' %>
+<%= select     :division_id,    :label => 'Mktg Division', :selected => company.division_id.to_s,	:collection => Division.all(:order=>[:name]),		:value_method => :id, :text_method => :name %>
 <%= text_field :short_name,			:label => 'Short name',				:maxlength => @properties[:short_name].length,			:class => '' %>
 <%= text_field :initials,				:label => 'Initials',					:maxlength => @properties[:initials].length,				:class => 'widthHalfField' %>
 <%= text_field :invoice_prefix,	:label => 'Invoice prefix',		:maxlength => @properties[:invoice_prefix].length,	:class => 'widthHalfField' %>
