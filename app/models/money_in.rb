@@ -375,9 +375,14 @@ class MoneyIn
     return self.name.split('/').shift()
   end
   
+  # Helper to return the main invoice amount regardless of which type this money_in is:
+  def main_invoice_amount
+    return self.main_invoice_exists? ? self.main_invoice.amount : 0
+  end
+  
   # Helper to return the main invoice if it exists:
   def main_invoice
-    return MoneyIn.first( :name => self.main_invoice_number, :is_deposit => false )
+    return self.main_invoice? ? self : MoneyIn.first( :name => self.main_invoice_number, :is_deposit => false )
   end
   
   # Helper to tell us whether main invoice has already been created with this id:
@@ -385,6 +390,21 @@ class MoneyIn
     #return !self.main_invoice_number.blank? && 
     #  self.main_invoice_number != DEFAULT_NEW_MAIN_INVOICE_NAME && 
     return !self.new_main_invoice? && MoneyIn.all( :name => self.main_invoice_number, :is_deposit => false ).count() > 0
+  end
+  
+  # Helper to return a string of clients affected by the main invoice:
+  def main_invoice_client_names
+    return self.main_invoice_exists? ? self.main_invoice.client_names : ''
+  end
+  
+  # String of client names for this record: (Beware: Not necessarily the same as main_invoice.client_names!)
+  def client_names
+    return self.clients.map{|c| "#{ c.fullname } #{ c.postcode }" }.join(', ')
+  end
+  
+  # Helper to return total of main invoice and deposit: (Used in ATOL Reports)
+  def main_invoice_amount_plus_deposits
+    return self.main_invoice_amount + self.total_deposits
   end
   
   # Total amount received: (including all deposits, supplements and credits)
@@ -589,7 +609,18 @@ class MoneyIn
   
   # Define which properties are available in reports  
   def self.potential_report_fields
-    return [ :name, :created_at, :amount, :is_deposit, :travellers, :narrative, :client, :trip, :company, :user, :clients, :trips ]
+    return [ 
+    
+      :name, :created_at, :amount, :is_deposit, :is_main_invoice, :travellers, :narrative, :client, :trip, :company, :user, :clients, :trips,
+
+      # ...and the following are special custom methods especially for reports:
+      :total_deposits,
+      :main_invoice_amount,
+      :main_invoice_amount_plus_deposits,
+      :main_invoice_client_names
+
+    ]
+    
   end
   
   

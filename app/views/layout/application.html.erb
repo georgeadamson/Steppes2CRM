@@ -104,10 +104,17 @@
 	<script type="text/javascript" src="/javascripts/trip_elements.js"></script>
 
 	<!-- The following scripts are not required immediately: -->
-	<script type="text/javascript" src="/javascripts/jquery-checkboxlist/checkboxList.jquery.js" defer="defer"></script>
-	<script type="text/javascript" src="/javascripts/jquery-qtip/jquery.qtip-1.0.0-rc3.min.js" defer="defer"></script><!-- http://craigsworks.com/projects/qtip -->
-	<script type="text/javascript" src="/javascripts/jquery-imgsize/jquery.imgsize.js" defer="defer"></script>
-	<script type="text/javascript" src="http://jqueryui.com/themeroller/themeswitchertool/" defer="defer"></script>
+	<script type="text/javascript" src="/javascripts/jquery-checkboxlist/checkboxList.jquery.js" async="true" defer="defer"></script>
+	<script type="text/javascript" src="/javascripts/jquery-qtip/jquery.qtip-1.0.0-rc3.min.js" async="true" defer="defer"></script><!-- http://craigsworks.com/projects/qtip -->
+	<script type="text/javascript" src="/javascripts/jquery-imgsize/jquery.imgsize.js" async="true" defer="defer"></script>
+	<script type="text/javascript" src="http://jqueryui.com/themeroller/themeswitchertool/" async="true" defer="defer"></script>
+	<script type="text/javascript" src="/javascripts/clipboard/jquery.zclip.min.js" async="true" defer="defer"></script>
+
+	<% if Merb.environment == 'development' %>
+		<!-- For testing only: -->
+		<script type="text/javascript" src="/javascripts/testing/qunit.js" async="true" defer="defer"></script>
+		<script type="text/javascript" src="/javascripts/testing/test-specs.js" async="true" defer="defer"></script>
+	<% end -%>
 
 	<script id="tmpl-for-task" type="text/x-jquery-tmpl">
 		<tr>
@@ -117,12 +124,6 @@
 			<td><small>Followup flight option for A lovely new trip </small></td>
 		</tr>
 	</script>
-
-	<% if Merb.environment == 'development' %>
-		<!-- For testing only: -->
-		<script type="text/javascript" src="/javascripts/testing/qunit.js" defer="defer"></script>
-		<script type="text/javascript" src="/javascripts/testing/test-specs.js" defer="defer"></script>
-	<% end -%>
 
 </body>
 </html>

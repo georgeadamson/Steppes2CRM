@@ -8,7 +8,7 @@
 			[ 'like',		'includes the word' ],
 			[ 'begins',	'begins with' ],
 			[ 'ends',		'ends with' ],
-			[ 'eql',		'is' ],
+			[ 'eql',		'is equal to' ],
 			[ 'not',		'is not' ]
 			
 		],
@@ -26,9 +26,10 @@
 		
 		'Date filters:' => [
 			
-			[ 'gte',	'is from' ],
-			[ 'lt',		'is before' ],
+			# TODO: Fix date format! Currently we only accept yyyy-mm-dd :(
 			#[ 'eql',	'is' ]			# Depricated because database always wants to match on time "00:00" as well!
+			[ 'gte',	'is from (yyyy-mm-dd)' ],
+			[ 'lt',		'is before (yyyy-mm-dd)' ]
 			
 		],
 		

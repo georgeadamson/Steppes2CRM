@@ -39,7 +39,7 @@ jQuery(function($) {
 
 
 	var guid = 0,											// Used by the jQuery.fn.id() method.
-		undefined,											// Speeds up test for undefined variables.
+		undefined,											// Speeds up comparison of undefined variables.
 		spinnerTimeoutId,									// Timeout that will hide the ajax spinner image.
 		messageTimeoutID,									// Timeout that will hide the server-response messages.
 
@@ -293,6 +293,7 @@ jQuery(function($) {
 
 			// Documents:
 			Layout.match(/clients\/([0-9]+)\/documents.*list=option/).on('success').to(Document.list);	// For listing template filenames
+			Layout.match(/\/documents$/).on('success').to(Document.index);		// For network document links
 
 
 			// Depricated in favour of Layout.liveForm:
@@ -1288,6 +1289,30 @@ return
 		mailto = "mailto:" + ($elem.data("mailto") || $elem.attr("mailto") || $elem.val());
 		$("<a>").attr({ href: mailto }).addClass("mailto").text(mailto).appendTo(this);
 	});
+
+
+	/*
+	$('A[href ^= mailto]').live('click', function(e){
+	
+		e.preventDefault();
+	
+		console.log(ZeroClipboard);
+		ZeroClipboard.setMoviePath('http://database2:82/javascripts/clipboard/ZeroClipboard.swf');
+
+		var clip = new ZeroClipboard.Client();
+		console.log(clip);
+		
+		clip.addEventListener('complete',function(client,text) {
+			alert('copied: ' + text);
+		});
+
+		clip.glue('loginStatus');
+
+		clip.setText('testing!');
+
+	});
+	*/
+
 
 
 
@@ -2785,7 +2810,7 @@ function initSpinboxes(ui) {
 function initMVC(context) {
 
 	// Initialise TripElement calculated totals by faking user interaction and triggering event handler: 
-	$("SELECT[name='trip_element[supplier_id]']").each( onTripElementFieldChange );
+	//$("SELECT[name='trip_element[supplier_id]']").each( onTripElementFieldChange );
 
 	return;
 
@@ -3081,14 +3106,18 @@ function initKeyPressFilters(){
 	// Called to update TripElement totals whenever user makes changes in TripElement form: (And each time it is loaded by ajax)
 	function onTripElementFieldChange(){
 
-		// Cache field lists for better query performance:
-		var $form			= $(this).parents("FORM:first");
-		var $all			= $form.find("SELECT,INPUT,TEXTAREA,DIV");
-		var $totals			= $all.filter(".total");						// Fields and DIVs with class of .total
-		var $fields			= $all.filter("SELECT,INPUT,TEXTAREA");			// Form fields
-		var $texts			= $fields.filter("INPUT:text, INPUT:hidden");	// Textboxes and hiddens only
-		var $lists			= $fields.filter("SELECT");						// Dropdown lists only
-		var $currencyField	= $lists.filter("[name='currency']");
+		// Cache elements for better query performance:
+		var $elem           = $(this),
+			$form			= $elem.closest("FORM"),
+			$all			= $form.find("SELECT,INPUT,TEXTAREA,DIV"),
+			$totals			= $all.filter(".total"),						// Fields and DIVs with class of .total
+			$fields			= $all.filter("SELECT,INPUT,TEXTAREA"),			// Only elements that are form fields
+			$texts			= $fields.filter("INPUT:text, INPUT:hidden"),	// Only fields that are textboxes and hiddens
+			$lists			= $fields.filter("SELECT"),						// Only fields that are dropdown lists
+			$currencyField	= $lists.filter("[name='currency']"),
+			ACCOMM			= 4,											// element type_id 4 = Accommodation
+			element_type_id = $fields.filter('#trip_element_type_id').val();
+
 
 		var currencyBeforeChange = $currencyField.val();
 
@@ -3096,7 +3125,8 @@ function initKeyPressFilters(){
 		var newCurrencyName      = $lists.filter("[name='trip_element[supplier_id]']").textVal();   // Eg: "Air Iceland [GBP]" => "GBP"
 		var $newCurrencyListItem = $currencyField.find("OPTION[text ^= '" + newCurrencyName + "']:first").attr({ selected: "selected" })
 
-		var currencyAfterChange = $currencyField.val();
+		var currencyAfterChange  = $currencyField.val();
+
 
 		// Update exchange_rate textbox: (unless no supplier is selected)
 		if( currencyAfterChange != currencyBeforeChange ){
@@ -3106,51 +3136,52 @@ function initKeyPressFilters(){
 		}
 
 		// Read values from form:
-		var adults				= numVal("[name='trip_element[adults]']", $texts);
-		var children			= numVal("[name='trip_element[children]']", $texts);
-		var infants				= numVal("[name='trip_element[infants]']", $texts);
-		var singles				= numVal("[name='trip_element[singles]']", $texts);
-		var cost_per_adult		= numVal("[name='trip_element[cost_per_adult]']", $texts);
-		var cost_per_child		= numVal("[name='trip_element[cost_per_child]']", $texts);
-		var cost_per_infant		= numVal("[name='trip_element[cost_per_infant]']", $texts);
-		var single_supp			= numVal("[name='trip_element[single_supp]']", $texts);
-		var exchange_rate		= numVal("[name='trip_element[exchange_rate]']", $texts) || 1;	// Allow for rates accidentally set to zero.
-		var taxes				= numVal("[name='trip_element[taxes]']", $texts);
-		var std_margin			= numVal("[name='trip_element[margin]']", $texts);
-		var biz_margin			= numVal("[name='trip_element[biz_supp_margin]']", $texts);
-		var margin_type			= $lists.filter("[name='trip_element[margin_type]']").val();
-		var biz_supp_per_adult	= numVal("[name='trip_element[biz_supp_per_adult]']", $texts);
-		var biz_supp_per_child	= numVal("[name='trip_element[biz_supp_per_child]']", $texts);
-		var biz_supp_per_infant	= numVal("[name='trip_element[biz_supp_per_infant]']", $texts);
-		var biz_supp_margin		= numVal("[name='biz_supp_margin']", $texts);
-		var biz_supp_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val();
+		var adults				= numVal("[name='trip_element[adults]']", $texts),
+			children			= numVal("[name='trip_element[children]']", $texts),
+			infants				= numVal("[name='trip_element[infants]']", $texts),
+			singles				= numVal("[name='trip_element[singles]']", $texts),
+			cost_per_adult		= numVal("[name='trip_element[cost_per_adult]']", $texts),
+			cost_per_child		= numVal("[name='trip_element[cost_per_child]']", $texts),
+			cost_per_infant		= numVal("[name='trip_element[cost_per_infant]']", $texts),
+			single_supp			= numVal("[name='trip_element[single_supp]']", $texts),
+			exchange_rate		= numVal("[name='trip_element[exchange_rate]']", $texts) || 1,	// Allow for rates accidentally set to zero.
+			taxes				= numVal("[name='trip_element[taxes]']", $texts),
+			std_margin			= numVal("[name='trip_element[margin]']", $texts),
+			biz_margin			= numVal("[name='trip_element[biz_supp_margin]']", $texts),
+			margin_type			= $lists.filter("[name='trip_element[margin_type]']").val(),
+			biz_supp_per_adult	= numVal("[name='trip_element[biz_supp_per_adult]']", $texts),
+			biz_supp_per_child	= numVal("[name='trip_element[biz_supp_per_child]']", $texts),
+			biz_supp_per_infant	= numVal("[name='trip_element[biz_supp_per_infant]']", $texts),
+			biz_supp_margin		= numVal("[name='biz_supp_margin']", $texts),
+			biz_supp_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val();
 
 		// Calculate basic costs: (in local currency)
-		var std_margin_mult		= ( 100 - std_margin ) / 100;	// Eg: 24% means "(100-24)/100" => 0.76
-		var biz_margin_mult		= ( 100 - biz_margin ) / 100;	// (See margin notes below)
-		var travellers			= adults + children + infants;
-		var total_adult_cost	= adults   * cost_per_adult;
-		var total_child_cost	= children * cost_per_child;
-		var total_infant_cost	= infants  * cost_per_infant;
-		var total_sgl_supp		= singles  * single_supp;
-		var total_std_cost		= total_adult_cost + total_child_cost + total_infant_cost + total_sgl_supp;
-		var total_biz_cost		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
+		var std_margin_mult		= ( 100 - std_margin ) / 100,	// Eg: 24% means "(100-24)/100" => 0.76
+			biz_margin_mult		= ( 100 - biz_margin ) / 100,	// (See margin notes below)
+			travellers			= adults + children + infants,
+			total_adult_cost	= adults   * cost_per_adult,
+			total_child_cost	= children * cost_per_child,
+			total_infant_cost	= infants  * cost_per_infant,
+			total_sgl_supp		= singles  * single_supp,
+			total_std_cost		= total_adult_cost + total_child_cost + total_infant_cost + total_sgl_supp,
+			total_biz_cost		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
 
 		// Calculate margins, taxes and price: (in local currency)
-		// Important: We're calulating Margin and not Markup. There's a difference apparently :)
-		// (Markup would be derived as a percentage of Cost. Eg: 24% on £100 => £124 (then subtract Cost to get Margin)
+		// Important: We're calulating Margin and not Markup. There's a difference apparently :P
 		// Margin is derived by calculating Gross using "Cost / margin-multipler". Eg: £100 / 0.76 => £131.6 (then subtract Cost to get Margin)
-		var total_std_margin	= ( (margin_type          == '%') ? (total_std_cost / std_margin_mult) : std_margin      ) - total_std_cost;	// Typically 24%
-		var total_biz_margin	= ( (biz_supp_margin_type == '%') ? (total_biz_cost / biz_margin_mult) : biz_supp_margin ) - total_biz_cost;	// Typically 10%
-		var total_margin		= total_std_margin + total_biz_margin;
-		var total_taxes			= taxes * travellers
-		var total_cost			= total_std_cost + total_biz_cost + total_taxes;
-		var total_price			= total_cost + total_margin;
+		// (Markup would be derived as a percentage of Cost. Eg: 24% on £100 => £124 (then subtract Cost to get Margin)
+		var total_std_margin	= ( (margin_type          == '%') ? (total_std_cost / std_margin_mult) : std_margin      ) - total_std_cost,	// Typically 24%
+			total_biz_margin	= ( (biz_supp_margin_type == '%') ? (total_biz_cost / biz_margin_mult) : biz_supp_margin ) - total_biz_cost,	// Typically 10%
+			total_margin		= total_std_margin + total_biz_margin,
+			total_taxes			= taxes * travellers,
+			total_cost			= total_std_cost + total_biz_cost + total_taxes,
+			total_price			= total_cost + total_margin;
 
-		// Calculate prices: (in GBP)
-		var total_margin_gbp	= total_margin / Math.max(exchange_rate, 0.0001);  //
-		var total_cost_gbp		= total_cost   / Math.max(exchange_rate, 0.0001);  // Avoid divide-by-zero error.
-		var total_price_gbp		= total_price  / Math.max(exchange_rate, 0.0001);  //
+		// Calculate prices: (in GBP) (Using tiny decimal avoids divide-by-zero error)
+		var ZERO                = 0.0001,
+			total_margin_gbp	= total_margin / Math.max(exchange_rate, ZERO),
+			total_cost_gbp		= total_cost   / Math.max(exchange_rate, ZERO),
+			total_price_gbp		= total_price  / Math.max(exchange_rate, ZERO);
 
 		// For better display, round and format currency values to 2 decimal places:
 		total_margin			= round(total_margin);
@@ -3161,21 +3192,66 @@ function initKeyPressFilters(){
 		total_price_gbp			= round(total_price_gbp);
 
 		// Update fields with new totals etc:
-		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers").filter("INPUT").val(travellers)
+		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers").filter("INPUT").val(travellers);
 
 		// BEWARE! total_margin field is actually total_margin_gbp!
-		$totals.filter("[name='trip_element[total_margin]'], #trip_element_total_margin").filter("INPUT").val(total_margin_gbp)
+		$totals.filter("[name='trip_element[total_margin]'], #trip_element_total_margin").filter("INPUT").val(total_margin_gbp);
 
 		// BEWARE! total_cost field is actually total_cost_gbp!
-		$totals.filter("[name='trip_element[total_cost]']").filter("INPUT").val(total_cost_gbp)
+		$totals.filter("[name='trip_element[total_cost]']").filter("INPUT").val(total_cost_gbp);
 
-		$totals.filter("[name='trip_element[total_price]']").filter("INPUT").val(total_price)
+		$totals.filter("[name='trip_element[total_price]']").filter("INPUT").val(total_price);
 
-		$totals.filter("[name='total_price_gbp']").filter("INPUT").val(total_price_gbp)
+		$totals.filter("[name='total_price_gbp']").filter("INPUT").val(total_price_gbp);
+
+
+		
+
+		// Update ROOM TYPE and MEAL PLAN when user changes ACCOMMODATION:
+		if( element_type_id == ACCOMM && $elem.is('#trip_element_supplier_id') ){
+
+			// Define the supplier fields we want to fetch from the server:
+			var attrs       = ['room_type', 'meal_plan'];
+			var supplier_id = $elem.val();
+
+			// Ignore if nothing selected or this handler is being called for the first time:
+			// (Because: This handler is triggered when the panel loads and we don't want to override
+			// the saved element.meal_plan etc unless the user explicitly chooses a new accommodation.)
+			if( supplier_id > 0 && $elem.data('skipped-once') ){
+
+				getSupplierDefaults( supplier_id, attrs, $form );
+
+			}else{
+
+				$elem.data({'skipped-once':true});
+
+			}
+
+		}
 
 	};
 
 
+
+	// Fetch details for the specified supplier_id and set corresponding field values in container:
+	function getSupplierDefaults( id, attrs, container ){
+
+		var $container = $( container || document );
+
+		$.get( '/suppliers/' + id + '.json', function(supplier){
+
+			// Attempt to set each of the fields that match the named attrs:
+			$.each( attrs, function(i,attr){
+
+				var val   = supplier['default_'+attr] || supplier[attr] || '';	// Eg: supplier.default_room_type or supplier.room_type
+				var field = "[name $= '[" + attr + "]']";					// Eg: Field name "trip_element[room_type]"
+				$container.find(field).val(val);
+
+			});
+
+		});
+
+	}
 
 
 
@@ -3512,6 +3588,20 @@ function initTripInvoiceFormTotals(){
 
 			// Activate the country-tabs and trip_clients search box in this tab panel:
 			Trip.initCountryTabs(ui.panel);
+
+			// The combined details of all the clients is available in a custom data-mailto attribute:
+			var $mailtoElem = $(ui.panel).find('.mailto-all');
+			var mailtoText  = $mailtoElem.attr('data-mailto');
+
+			// Wire up the email-all link using an Adobe Flash hack to copy the text to the clipboard:
+			// http://www.steamdev.com/zclip/
+			$mailtoElem.zclip({
+				path: '/javascripts/clipboard/ZeroClipboard.swf',
+				copy: decodeURI(mailtoText)
+				// Easier to make do with the default message because zclip does not pass text to custom handler :(
+				// afterCopy: function(client,text){console.log(client,text)}
+			});
+			
 
 			// Reduce the effect of the CountryTabs FOUC by giving the browser a chance to render them before other changes:
 			window.setTimeout(function(){
@@ -4178,6 +4268,21 @@ function initTripInvoiceFormTotals(){
 	
 			console.log( 'Fetching list of doc templates', options.params, $(options.target), options )
 
+		},
+		
+		index : function(options){
+
+			$(options.panel).find('A[href ^= file]').each(function(){
+
+				//this.addEventListener('click', onFileClick, true, true );
+			
+			});
+		
+			function onFileClick(e){
+				console.log(e)
+				alert('clicked')
+			}
+		
 		}
 
 	};
