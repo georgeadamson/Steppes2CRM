@@ -478,11 +478,22 @@ class Client
     return self.money_ins.min(:created_at)
   end
     
-  # Used in reports:
+  # Used in reports: DEPRECATED. Use brochure_last_generated_date instead
   def brochure_last_date
     return self.brochure_requests.max(:generated_date)
   end
 
+  # Used in reports:
+  def brochure_last_generated_date
+    return self.brochure_requests.max(:generated_date)
+  end
+
+  # Used in reports:
+  def brochure_last_requested_date
+    return self.brochure_requests.max(:requested_date)
+  end
+  
+  
 
 
   # Helper to identify clients that have only just been added to the database:
@@ -576,12 +587,16 @@ class Client
 
     # WARNING: We don't include :trips here because TripsCount would conflict with our custom :trips_count!
 
-    return [ :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :companies_names, :companies_initials, :client_type, :areas_of_interest, :original_company, :money_ins, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :created_at, 
+    return [ :id, :name, :title, :forename, :addressee, :salutation, :birth_date, :age, :tel_work, :fax_work, :tel_mobile1, :tel_mobile2, :email1, :email2, :original_source, :source, :companies_names, :companies_initials, :client_type, :areas_of_interest, :original_company, :money_ins, :address1, :address2, :address3, :address4, :address5, :postcode, :country_name, :mailing_zone_name, :created_at, 
 
       # ...and the following are special custom methods especially for reports:
-      :booked_trips_count, :trips_count, :trip_versions_count, :invoice_total, :invoice_first_date, :brochure_last_date, :marketing_summary, :marketing_summary_email, :marketing_summary_postal ]
+      :booked_trips_count, :trips_count, :trip_versions_count, :invoice_total, :invoice_first_date, :marketing_summary, :marketing_summary_email, :marketing_summary_postal,
+      :brochure_last_generated_date, :brochure_last_requested_date,
 
-      # :marketing is deprecated. Use :marketing_summary (marketing divisions) instead.
+      :brochure_last_date # is deprecated. Use :brochure_last_generated_date instead.
+      # :marketing        # is deprecated. Use :marketing_summary (marketing divisions) instead.
+
+    ]
 
   end
 

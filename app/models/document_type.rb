@@ -1,14 +1,15 @@
 class DocumentType
   include DataMapper::Resource
 
-  ITINERARY     = 1  unless defined? ITINERARY
-  MAIN_INVOICE  = 2  unless defined? MAIN_INVOICE
-  CREDIT_NOTE   = 3  unless defined? CREDIT_NOTE
-  SUPP_INVOICE  = 4  unless defined? SUPP_INVOICE
-  CONTACT_SHEET = 5  unless defined? CONTACT_SHEET
-  CONTROL_SHEET = 6  unless defined? CONTROL_SHEET
-  LETTER        = 8  unless defined? LETTER
-  BROCHURE      = 12 unless defined? BROCHURE
+  ITINERARY         = 1  unless defined? ITINERARY
+  MAIN_INVOICE      = 2  unless defined? MAIN_INVOICE
+  CREDIT_NOTE       = 3  unless defined? CREDIT_NOTE
+  SUPP_INVOICE      = 4  unless defined? SUPP_INVOICE
+  CONTACT_SHEET     = 5  unless defined? CONTACT_SHEET
+  CONTROL_SHEET     = 6  unless defined? CONTROL_SHEET
+  LETTER            = 8  unless defined? LETTER
+  BROCHURE          = 12 unless defined? BROCHURE
+  ATOL_CERTIFICATE  = 13 unless defined? ATOL_CERTIFICATE
   # TODO: more...? There must be a better way?
 
   property :id,                 Serial
