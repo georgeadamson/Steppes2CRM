@@ -7,7 +7,7 @@ class Application < Merb::Controller
   before :cache_recent_params
   before :update_exchange_rates
   before :update_todays_completed_trips
-  before :update_todays_abandonned_trips
+  #before :update_todays_abandonned_trips # TEMPORARILY DISABLED while we troubleshoot why some trips being abandoned unecessarily. 11 Sep 2012 - George Adamson
   
 
   # Helper to set @client_or_tour in every request if possible/relevant:
