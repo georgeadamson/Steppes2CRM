@@ -7,6 +7,7 @@ class Division
   property :id,   Serial
   property :name, String, :required => true, :unique => true
 
+  has n, :companies
   has n, :client_marketing_divisions
   has n, :clients, :through => :client_marketing_divisions
 

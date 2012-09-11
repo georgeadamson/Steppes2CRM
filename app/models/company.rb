@@ -16,6 +16,8 @@ class Company
   property :default_deposit,				String,		  :required => true,	:length => 4,			:default => 300
   property :is_active,							Boolean,	  :required => true,	:default => true
 
+  belongs_to :division  # Every company belongs to a Division (Think of Comanies being more like Departments)
+  
   has n, :tours
   has n, :articles		# TBD
   has n, :trips				# Trip handler / cost-centre / invoice-to
