@@ -1,9 +1,29 @@
-<%# if params[:raw] %>
+<% require 'rexml/document' %>
+<%
+	#More info about rexml: http://developer.yahoo.com/ruby/ruby-xml.html
+	#TODO: Should we display tidy fields unless params[:raw] is specified?
+	xml = REXML::Document.new(@web_request.raw_text)
+%>
 
-<%# TODO: Should we display tidy fields unless params[:raw] is specified? %>
+<h3>Web request form fields:</h3>
+
+<%= '(Alas no fields could be read from the Web Request)' if xml.elements.count.zero? %>
+
+<ul style="margin-left:2em">
+	<% xml.elements.each('FormEntry/Fields/FormField') do |field| %>
+	<%
+		field_name  = field.get_elements('Field').first.text
+		field_value = field.get_elements('Value').first.text || ''
+	%>
+	<li>
+		<strong><%= field.get_elements('Field').first.text %>:</strong>
+		<%= field_value.gsub(/\n/,'<br/> &nbsp; ') %>
+	</li>
+	<% end %>
+</ul>
+
+<h3>Original data in xml format:</h3>
 
 <pre>
 <%= h @web_request.raw_text %>
 </pre>
-
-<%# end %>

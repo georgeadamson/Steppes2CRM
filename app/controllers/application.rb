@@ -9,6 +9,11 @@ class Application < Merb::Controller
   before :update_todays_completed_trips
   #before :update_todays_abandonned_trips # TEMPORARILY DISABLED while we troubleshoot why some trips being abandoned unecessarily. 11 Sep 2012 - George Adamson
   
+  
+  def current_user
+    session.user
+  end
+  
 
   # Helper to set @client_or_tour in every request if possible/relevant:
   # (Note we test for logged-in session.user before accessing it to avoid "No method error" on nil object)
