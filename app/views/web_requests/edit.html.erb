@@ -195,7 +195,7 @@
 					<%= form_for @web_request, :action => resource(@web_request) do %>
 
 						<%= hidden_field :status_id, :value => 1 %>
-						<%= select :company_id, :label => 'Let someone else deal with it', :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => 'width2Fields' %>
+						<%= select :company_id, :label => 'Or let someone else deal with it', :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => 'width2Fields' %>
 						<%= submit 'Allocate', :name => 'allocate', :class => 'ui-priority-secondary ui-state-default' %>
 
 					<% end =%>
