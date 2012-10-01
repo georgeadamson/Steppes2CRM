@@ -93,7 +93,7 @@
 										     $cached[:monthly_bookings][:expiry] > Time.now
 										
 										# Prepare custom sql statement:
-										month_offset = 0  # 0 = This month, -1 = Last month
+										month_offset = -1  # 0 = This month, -1 = Last month
 										sql_statement = "EXEC usp_dashboard_monthly_bookings ?"									
 										bookings = repository(:default).adapter.select( sql_statement, month_offset )
 										
@@ -116,31 +116,35 @@
 										<br/><br/>
 									</small>
 								</p>
-									
-								<table style="font-size:0.9em">
-									<tr>
-										<% bookings = $cached[:monthly_bookings][:data] %>
-										<% bookings.first.members.each do |heading| %>
-											<%= tag :th, heading.capitalize %>
-										<% end %>
-									</tr>
-									
-									<%
-									bookings.each do |booking|
-									%>
+								
+								<% if bookings.first %>
+								
+									<table style="font-size:0.9em">
 										<tr>
-											<%
-											booking.each do |field|
-											%>
-											 <%= tag :td, field %>
-											<%
-											end
-											%>
+											<% bookings = $cached[:monthly_bookings][:data] %>
+											<% bookings.first.members.each do |heading| %>
+												<%= tag :th, heading.capitalize %>
+											<% end %>
 										</tr>
-									<%
-									end
-									%>
-								</table>
+										
+										<%
+										bookings.each do |booking|
+										%>
+											<tr>
+												<% booking.each do |field| %>
+												 <%= tag :td, field %>
+												<% end %>
+											</tr>
+										<%
+										end
+										%>
+									</table>
+							
+							<% else %>
+								
+								<p>There are no bookings to report this month</p>
+								
+							<% end %>
 							
 						</div>
 						
