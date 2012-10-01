@@ -60,22 +60,94 @@
 				<div class="sectionHead">
 					<h2>
 						<span class="ui-icon ui-icon-home"></span>
-						Home page <small>More features coming here soon...</small>
+						Home page
 					</h2>
 				</div>
 			
-				<div class="sectionBody formSurround">
+				<div class="sectionBody formSurround" style="overflow:hidden">
 
-					<div id="dashboard-tabs" class="sectionContainer" style="width:40em;">
+					<div id="dashboard-tabs" class="sectionContainer noSectionFoot tabsContainer ui-tabs-panel">
 
-							<ul>
-								<li><a href="#user-followups">My followups</a></li>
+						<div class="sectionHead ui-tabs ui-widget ui-widget-content ui-corner-all">
+							<ul class="tripPageTabsNav ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all">
+								<!--<li><a href="#user-followups">My followups</a></li>-->
+								<li><a href="#monthly-bookings-tab-content">Monthly bookings</a></li>
+								<li><a href="#weekly-enquiries-tab-content">Weekly enquiries</a></li>
 							</ul>
+						</div>
 
-							<div id="user-followups" class="sectionBody">
-								<%= partial 'tasks/index' %>
-							</div>
+						<!--
+						<div id="user-followups" class="sectionBody">
+							<%#= partial 'tasks/index' %>
+						</div>
+						-->
 
+						<div id="monthly-bookings-tab-content" class="ajaxPanel sectionBody">
+							
+									<%
+									
+									tmp = 'from cache'
+									
+                  unless $cached[:monthly_bookings] &&
+										     $cached[:monthly_bookings][:expiry] &&
+										     $cached[:monthly_bookings][:expiry] > Time.now
+										
+										# Prepare custom sql statement:
+										month_offset = 0  # 0 = This month, -1 = Last month
+										sql_statement = "EXEC usp_dashboard_monthly_bookings ?"									
+										bookings = repository(:default).adapter.select( sql_statement, month_offset )
+										
+										$cached[:monthly_bookings] ||= {}
+										$cached[:monthly_bookings][:data]   = bookings
+										$cached[:monthly_bookings][:expiry] = 10.minutes.since Time.now
+										
+										tmp = 'refreshed'
+										
+                  end
+									
+									bookings = $cached[:monthly_bookings][:data]
+									
+									%>
+									
+								<p style="text-align:right">
+									<small>
+										Last updated at
+										<%= $cached[:monthly_bookings][:expiry].formatted(:uidatetime) %>
+										<br/><br/>
+									</small>
+								</p>
+									
+								<table style="font-size:0.9em">
+									<tr>
+										<% bookings = $cached[:monthly_bookings][:data] %>
+										<% bookings.first.members.each do |heading| %>
+											<%= tag :th, heading.capitalize %>
+										<% end %>
+									</tr>
+									
+									<%
+									bookings.each do |booking|
+									%>
+										<tr>
+											<%
+											booking.each do |field|
+											%>
+											 <%= tag :td, field %>
+											<%
+											end
+											%>
+										</tr>
+									<%
+									end
+									%>
+								</table>
+							
+						</div>
+						
+						<div id="weekly-enquiries-tab-content" class="ajaxPanel sectionBody">
+							Weekly enquiries
+						</div>
+						
 					</div>
 
 					<div id="recentClients" class="tabs" style="width:35em;">
