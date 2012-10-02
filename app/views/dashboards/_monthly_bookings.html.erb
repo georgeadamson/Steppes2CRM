@@ -35,12 +35,11 @@ expiry   = $cached[:monthly_bookings][filters.to_s][:expiry]
 			<%= orig_select :month_offset, :label=>"Bookings for ", :selected => filters[:month_offset].to_s, :collection => [ [0,'This month'] , [-1,'Last month'] ], :name => 'month_offset', :class => 'auto-submit' %>
 			<input type="submit" value="Refresh" class="ui-priority-secondary ui-state-default"/>
 		
-			<small xclass="right">
+			<small>
 				(Refresh available at <%= expiry.formatted(:uidatetime) %>) &nbsp;
 			</small>
 			
 			<br/><br/>
-			<hr/>
 
 		</p>
 	</form>
