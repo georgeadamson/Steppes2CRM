@@ -178,7 +178,7 @@ $.fn.extend({
 		return this.live('keydown', function(e){	// We use keydown because it is cancelable.
 
 			var $textarea = $(this),
-				max = parseInt( $textarea.attr('maxlength') ) || options.maxlength,
+				max = Math.max( parseInt( $textarea.attr('maxlength'), 10 ) || options.maxlength , 0 ),
 				len = $textarea.val().length;
 
 			// Only interfere when textbox is full:

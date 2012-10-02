@@ -39,6 +39,7 @@
 	templates_list_id = "brochure_request_document_template_file#{ Time.now.to_f.to_s.sub('.','') }"
 	
 -%>
+<% unless brochure.generated_date.nil? %><small>Tip: This brochure request has already been actioned. (Therefore you won't be able to modify it)</small><br/><br/><% end %>
 <%= hidden_field :client_id %>
 <%= text_field		:name => :client_name,		:readonly => true,			:label => 'Client',						:value => brochure.client.fullname, :class => 'width2Fields' %>
 <%= select				:company_id,							:disabled => !editable,	:label => 'Brochure',					:selected => brochure.company_id.to_s,				:collection => companies_list, :value_method => :id, :text_method => :display_name, :'data-href' => "#{ resource brochure.client, :documents, :list => :option }&company_id={value}", :'data-target' => "##{ templates_list_id }" %>

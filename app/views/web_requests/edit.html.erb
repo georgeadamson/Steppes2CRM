@@ -1,6 +1,7 @@
 <%
 
 	companies_list = Company.all( :is_active => true, :order => [:name] )
+	users_list     = User.all( :is_active => true, :order => [:preferred_name] )
 	
 	# Attempt to look up countries of interest:
 	country1 = Country.first( :name => @web_request.field(:CountryInterest) )
@@ -154,7 +155,8 @@
 					<%= form_for @web_request, :action => resource(@web_request) do %>
 						
 						<%= select :client_id,	:label => 'Process it for', :name => 'web_request[client_attributes][id]', :collection => matched_clients_list, :selected => closest_match.to_s, :multiple => false, :class => 'width2Fields' %>
-						<%= select :company_id, :label => 'and allocate to', :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => '' %>
+						<%= select :user_id, :label => 'and allocate to', :selected => current_user.id.to_s, :collection => users_list, :value_method => :id, :text_method => :preferred_name, :class => '' %>
+						<%= select :company_id, :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => '' %>
 						<%= hidden_field :status_id, :value => 2 %><!-- 2=Processed (Will be overriddedn with 3 (Imported) if a NEW client is chosen ) -->
 						<%= submit 'Process',		:name	 => 'process', :class => 'showClient ui-priority-secondary ui-state-default' %>
 
@@ -193,7 +195,7 @@
 					<%= form_for @web_request, :action => resource(@web_request) do %>
 
 						<%= hidden_field :status_id, :value => 1 %>
-						<%= select :company_id, :label => 'Let someone else deal with it', :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => 'width2Fields' %>
+						<%= select :company_id, :label => 'Or let someone else deal with it', :selected => default_company.id.to_s, :collection => companies_list, :value_method => :id, :text_method => :name, :class => 'width2Fields' %>
 						<%= submit 'Allocate', :name => 'allocate', :class => 'ui-priority-secondary ui-state-default' %>
 
 					<% end =%>
