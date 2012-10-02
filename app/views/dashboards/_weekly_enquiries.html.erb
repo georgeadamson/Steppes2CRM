@@ -1,0 +1,88 @@
+<div id="weekly-enquiries-results">
+<%
+
+	filters = {}
+	filters[:week_offset]  = params[:week_offset]  || 0  # 0 = This week, -1 = Last week
+
+	# Refresh from database if cached data looks stale:
+	unless $cached[:weekly_enquiries] &&
+		$cached[:weekly_enquiries][filters.to_s] &&
+		$cached[:weekly_enquiries][filters.to_s][:expiry] &&
+		$cached[:weekly_enquiries][filters.to_s][:expiry] > Time.now
+
+		# Prepare custom sql statement:
+		sql_statement = "EXEC usp_dashboard_weekly_enquiries ?"									
+		enquiries = repository(:default).adapter.select( sql_statement, filters[:week_offset].to_i )
+
+		$cached[:weekly_enquiries]                      ||= {}
+		$cached[:weekly_enquiries][filters.to_s]        ||= {}
+		$cached[:weekly_enquiries][filters.to_s][:data]   = enquiries
+		$cached[:weekly_enquiries][filters.to_s][:expiry] = 10.minutes.since Time.now
+
+	end
+
+	enquiries = $cached[:weekly_enquiries][filters.to_s][:data]
+	expiry    = $cached[:weekly_enquiries][filters.to_s][:expiry]
+
+%>
+
+<br/>
+
+<form action="/dashboards/weekly_enquiries" method="get" data-target="#weekly-enquiries-results">
+	<p style="text-align:right">
+
+		<%= orig_select :week_offset, :label=>"Enquiries during ", :selected => filters[:week_offset].to_s, :collection => [ [0,'This week'] , [-1,'Last week'] ], :name => 'week_offset', :class => 'auto-submit' %>
+		<input type="submit" value="Refresh" class="ui-priority-secondary ui-state-default"/>
+	
+		<small>
+			(Refresh available at <%= expiry.formatted(:uidatetime) %>) &nbsp;
+		</small>
+		
+		<br/><br/>
+
+	</p>
+</form>
+
+<!--
+<%= filters.inspect %>
+<%= Time.now %>
+-->
+
+<% if enquiries.first %>
+
+	<% headings = enquiries.first.members -%>
+
+	<table style="font-size:0.9em">
+
+		<thead>
+			<tr>
+				<% headings.each do |heading| %>
+					<%= tag :th, heading.capitalize %>
+				<% end %>
+			</tr>
+		</thead>
+		
+		<tbody>
+			<%
+			enquiries.each do |booking|
+			%>
+				<tr>
+					<% booking.each_with_index do |field,i| %>
+						<% is_currency_field = field.respond_to?(:to_currency) && ( headings[i] =~ /(cost|price|amount|profit)$/ ) %>
+						<%= tag :td, is_currency_field ? field.to_currency(:US,:unit => "&pound;") : field %>
+					<% end %>
+				</tr>
+			<%
+			end
+			%>
+		</tbody>
+
+	</table>
+
+<% else %>
+
+<p>There are no enquiries to report this month</p>
+
+<% end %>
+
+</div>

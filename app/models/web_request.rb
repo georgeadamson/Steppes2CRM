@@ -52,7 +52,7 @@ class WebRequest
   end
   
   # Web Service API settings:
-	@@form_names		= ['Steppes Contact Form', 'Steppes Newsletter Signup', 'Steppes Brochure Request', 'Discovery Contact Form', 'Discovery Newsletter Signup', 'Discovery Brochure Request']
+	@@form_names		= ['Steppes Contact Form', 'Steppes Newsletter Signup', 'Steppes Brochure Request', 'Discovery Contact Form', 'Discovery Newsletter Signup', 'Discovery Brochure Request', 'Enquiry']
 	@@username			= 'george'
 	@@password			= 'george371'
 	@@recent_paths	= []          # Useful for noting which Web Service API calls have been made so far.
@@ -145,11 +145,14 @@ class WebRequest
 		path					= "services/DataAccess.asmx/GetForms"
 		limit					= 50
 
+    host = 'http://www.the-traveller.co.uk'
+    path = 'Cms/ReportXml'
+    
     options     ||= {}
 		web_requests	= []
 		form_name		  = options[:form_name] || :all
 		filter			  = options[:filter]    || :new
-		from_date		  = options[:from_date] || WebRequest.max(:requested_date) || 1.month.ago
+		from_date		  = options[:from_date] || 1.month.ago # WebRequest.max(:requested_date) || 1.month.ago
 		to_date			  = options[:to_date]   || 1.day.from_now
 
 		if form_name == :all
