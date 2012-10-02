@@ -200,7 +200,9 @@ Merb::Router.prepare do
 	# Eg: Bookeing ref: /2138578920/SE/94155
 	#match('/:client_id/:company_code/:trip_id').to(:controller => 'clients', :action => 'index' )
 	match('/:client_id/:company_code/:trip_id').redirect( '/clients' )
-		
+	
+  # Only used via ajax to refresh dashboard reports in the homepage:
+  match('/dashboards/:dashboard').to( :controller => 'dashboards', :action => 'show' )
 
   #match('/imageLibrary').to( :url => 'smb://selfs01/images/Discovery/_Photos\NEPAL' )
 

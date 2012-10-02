@@ -4,7 +4,8 @@ def valid_company_attributes
     :name           => 'Steppes Test',
     :initials       => 'ST',
     :invoice_prefix => 'ST',
-    :short_name     => 'ST'
+    :short_name     => 'ST',
+    :division_id    => 1
   }
 end
 
@@ -366,4 +367,11 @@ alias valid_pnr_attributes2 updated_pnr_attributes
     DocumentType.create( :name => 'Quick Itinerary',        :template_file_name => 'ItineraryQuick.doc' )
     DocumentType.create( :name => 'Brochure',               :template_file_name => 'Letter_Brochure_Enquiry.doc' )
 
+    # WebRequestType
+    WebRequestType.create( :name => 'Info Request', :form_name => 'Info Request', :is_active => true )
+    WebRequestType.create( :name => 'DI Info Request', :form_name => 'DI Info Request', :is_active => true )
+    WebRequestType.create( :name => 'Itinerary Builder', :form_name => 'Itinerary Builder', :is_active => true )
+    WebRequestType.create( :name => 'Website Info Request', :form_name => 'Website Info Request', :is_active => true )
+    WebRequestType.create( :name => 'Website Itinerary Request', :form_name => 'Website Itinerary Request', :is_active => true )
+    
   end

@@ -6,13 +6,13 @@
 	companies_list		= Company.all( :is_active => true, :order => [:name] )
 	
 	initials					= brochure.company.initials
-	default_template	= DocumentType.get( DocumentType::BROCHURE )
+	#default_template	= DocumentType.get( DocumentType::BROCHURE )
 	other_templates		= Document.doc_builder_letter_templates( :prefix => initials )
 	templates_list		= {}
 
 	# Add the default brochure template to the top of the list:
 	# Note: When user selects a different company, the list of filenames is refreshed via ajax:
-	templates_list['Default brochure letter template'] = "#{ initials }_#{ default_template.template_file_name }" if default_template
+	templates_list['Default brochure letter template'] = brochure.default_template_file_name if brochure.default_template_file_name
 
 	# List all the alternative letter templates too: (Defined as an array of arrays)
 	if other_templates.empty?

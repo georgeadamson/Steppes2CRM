@@ -60,7 +60,7 @@
 						<%= client.created_at.formatted(:uidate)	if client.created_at %>
 						<%= '<br/>by'															if client.original_company || !client.created_by.blank? %>
 						<%= "#{ client.created_by }<br/>"					if !client.created_by.blank? %>
-						<%= client.original_company.name					if client.original_company %>
+						<%= tag :span, "#{ client.original_company.division.name } (#{ client.original_company.initials })", :title => client.original_company.name if client.original_company && client.original_company.division %>
 						</small>
 					</dd>
 				<% end %>
