@@ -109,6 +109,8 @@ class WebRequests < Application
         client.original_company_id ||= @web_request.company_id || session.user.company_id
         client.created_by            = session.user.fullname if client.new? && client.created_by.blank?
         client.updated_by            = session.user.fullname
+        client.created_at            = Time.now
+        
         if client.save!
           # Client created successfully!
         else
