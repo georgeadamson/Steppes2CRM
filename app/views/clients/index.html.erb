@@ -84,9 +84,7 @@
 
 						<div id="monthly-bookings-tab-content" class="ajaxPanel sectionBody">
 							
-									<%
-									
-									tmp = 'from cache'
+								<%
 									
                   unless $cached[:monthly_bookings] &&
 										     $cached[:monthly_bookings][:expiry] &&
@@ -101,13 +99,11 @@
 										$cached[:monthly_bookings][:data]   = bookings
 										$cached[:monthly_bookings][:expiry] = 10.minutes.since Time.now
 										
-										tmp = 'refreshed'
-										
                   end
 									
 									bookings = $cached[:monthly_bookings][:data]
 									
-									%>
+								-%>
 									
 								<p style="text-align:right">
 									<small>
@@ -119,25 +115,33 @@
 								
 								<% if bookings.first %>
 								
+									<% headings = bookings.first.members -%>
+
 									<table style="font-size:0.9em">
-										<tr>
-											<% bookings = $cached[:monthly_bookings][:data] %>
-											<% bookings.first.members.each do |heading| %>
-												<%= tag :th, heading.capitalize %>
-											<% end %>
-										</tr>
-										
-										<%
-										bookings.each do |booking|
-										%>
+
+										<thead>
 											<tr>
-												<% booking.each do |field| %>
-												 <%= tag :td, field %>
+												<% headings.each do |heading| %>
+													<%= tag :th, heading.capitalize %>
 												<% end %>
 											</tr>
-										<%
-										end
-										%>
+										</thead>
+										
+										<tbody>
+											<%
+											bookings.each do |booking|
+											%>
+												<tr>
+													<% booking.each_with_index do |field,i| %>
+														<% is_currency_field = field.respond_to?(:to_currency) && ( headings[i] =~ /(cost|price|amount|profit)$/ ) %>
+														<%= tag :td, is_currency_field ? field.to_currency(:US,:unit => "&pound;") : field %>
+													<% end %>
+												</tr>
+											<%
+											end
+											%>
+										</tbody>
+	
 									</table>
 							
 							<% else %>
