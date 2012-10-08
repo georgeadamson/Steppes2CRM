@@ -5,7 +5,8 @@
 	filters[:week_offset]  = params[:week_offset]  || 0  # 0 = This week, -1 = Last week
 
 	# Refresh from database if cached data looks stale:
-	unless $cached[:weekly_enquiries] &&
+	unless !params[:force] &&
+		$cached[:weekly_enquiries] &&
 		$cached[:weekly_enquiries][filters.to_s] &&
 		$cached[:weekly_enquiries][filters.to_s][:expiry] &&
 		$cached[:weekly_enquiries][filters.to_s][:expiry] > Time.now
@@ -81,7 +82,7 @@
 
 <% else %>
 
-<p>There are no enquiries to report this month</p>
+<p>There are no enquiries to report</p>
 
 <% end %>
 

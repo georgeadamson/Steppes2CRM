@@ -6,7 +6,8 @@
 	filters[:week_offset]  = params[:week_offset]  || 0
 
 	# Refresh from database if cached data looks stale:
-	unless $cached[:monthly_bookings] &&
+	unless !params[:force] &&
+		$cached[:monthly_bookings] &&
 		$cached[:monthly_bookings][filters.to_s] &&
 		$cached[:monthly_bookings][filters.to_s][:expiry] &&
 		$cached[:monthly_bookings][filters.to_s][:expiry] > Time.now
@@ -82,7 +83,7 @@
 
 <% else %>
 
-<p>There are no bookings to report this month</p>
+<p>There are no bookings to report</p>
 
 <% end %>
 
