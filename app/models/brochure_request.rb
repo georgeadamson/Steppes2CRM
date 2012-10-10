@@ -44,6 +44,11 @@ class BrochureRequest
   attr_accessor :skip_doc_generation  # Useful when testing. Doc gen will go through the motions without actually generating.
    
 
+  before :valid? do
+    # If necessary, attempt to choose a template for the current brochure.company:
+    self.document_template_file ||= self.default_template_file_name
+  end
+   
   before :update do
     self.status_id = PENDING   if self.doc_file_should_exist? && !self.doc_file_exists?
     self.status_id = GENERATED if self.status_id == PENDING   &&  self.doc_file_exists?
@@ -217,6 +222,15 @@ class BrochureRequest
     return brochures.all( :status_id => CLEARED ).count
 
   end
+  
+  
+  # Helper to derive the default template for a brochure
+  def default_template_file_name
+  	initials					= self.company.initials unless self.company.blank?
+    default_template	= DocumentType.get( DocumentType::BROCHURE )
+    "#{ initials }_#{ default_template.template_file_name }" if default_template && initials
+  end
+  
   
 
   # Unused helper:

@@ -27,26 +27,43 @@ class WebRequest
 
 	accepts_nested_attributes_for :client
   
-
+  # Bit of a hack! The controller#update action sets this before updating the webrequest:
+  attr_accessor :status_id_before_save
+  
   before :save do
-    # Assume 'Pending' web request has been 'Processed' if a client_id has been assigned:
-    self.status_id = 1 if ( self.processed? || self.imported? ) && !self.client
-    self.status_id = 2 if self.pending? && self.client && !self.client.new?
-    self.status_id = 3 if self.pending? && self.client && self.client.new?
+    self.status_id_before_save ||= self.original_attributes[:status_id]
+    #puts "BEFORE SAVE: status_id=#{ self.status_id_before_save } #{ self.original_attributes[:status_id] } #{ self.status_id }"
   end
-
-
+  
+  before :update do
+    # Assume 'Pending' web request has been 'Processed' if a client_id has been assigned:
+    self.status_id_before_save ||= self.original_attributes[:status_id] || self.status_id
+    self.status_id = WebRequestStatus::PENDING if ( self.processed? || self.imported? ) && !self.client
+    self.status_id = WebRequestStatus::PROCESSED if self.pending? && self.client && !self.client.new?
+    self.status_id = WebRequestStatus::ALLOCATED if self.pending? && self.client && self.client.new?
+    #puts "BEFORE UPDATE: status_id=#{ @status_id_before_save.inspect } > #{ self.status_id }"
+  end
+  
+  after :update do
+    #puts "AFTER UPDATE: status_id=#{ @status_id_before_save.inspect } > #{ self.status_id }, processed?=#{ self.processed? }, imported?=#{ self.imported? }"
+    if @status_id_before_save == WebRequestStatus::PENDING && ( self.processed? || self.imported? )
+      brochure = self.generate_brochure_request!
+    end
+  end
+  
   # Web Service API settings:
 	@@form_names		= ['Steppes Contact Form', 'Steppes Newsletter Signup', 'Steppes Brochure Request', 'Discovery Contact Form', 'Discovery Newsletter Signup', 'Discovery Brochure Request']
 	@@username			= 'george'
 	@@password			= 'george371'
 	@@recent_paths	= []          # Useful for noting which Web Service API calls have been made so far.
 
+  # brochure_request (instance variable) is only available immediately after processing a web_request:
+  attr_reader :brochure_request
 
-  def pending?;   self.status_id == 1; end
-  def processed?; self.status_id == 2; end
-  def imported?;  self.status_id == 3; end
-  def rejected?;  self.status_id == 4; end
+  def pending?;   self.status_id == WebRequestStatus::PENDING; end
+  def processed?; self.status_id == WebRequestStatus::PROCESSED; end
+  def imported?;  self.status_id == WebRequestStatus::ALLOCATED; end
+  def rejected?;  self.status_id == WebRequestStatus::REJECTED; end
 
   # Helpers for handling old and new types of request: (Only old requests will have email_text, migrated from old database Sep 2010)
   def legacy?;    !self.email_text.blank?; end
@@ -257,7 +274,44 @@ class WebRequest
     return @@webrequests_log
     
   end	
+	
+  
+  # Helper to build a new brochure request using the details in the current web_request:
+  # Note this is only possible since we added a mandatory consultent picklist when processing a web request.
+  def generate_brochure_request(notes = nil)
+    
+    @brochure_request = nil
+      
+    case
+      when !self.valid? then
+        puts "Unable to generate brochure_request from web_request #{ self.id } because it is not valid"
+      when self.user_id.blank? then
+        puts "Unable to generate brochure_request from web_request #{ self.id } because user is blank"
+      when self.company_id.blank? then
+        puts "Unable to generate brochure_request from web_request #{ self.id } because company is blank"
+      when self.client_id.blank? then
+        puts "Unable to generate brochure_request from web_request #{ self.id } because client is blank"
+      else
+        
+        @brochure_request = BrochureRequest.new(
+          :notes => notes ||= 'Generated automatically when web request was processed',
+          :user_id    => self.user_id,
+          :client_id  => self.client.id,
+          :company_id => self.company.id 
+          # :document_template_file is also required but it will assume default for company if we don't set it.
+        )
 
+    end
+    
+    return @brochure_request
+    
+  end
+
+  # As above but this also saves the generated brochure_request:
+  def generate_brochure_request!(notes = nil)
+    brochure = self.generate_brochure_request(notes)
+    brochure.save unless brochure.nil?
+  end
 
 private
 
@@ -273,7 +327,7 @@ private
 		return node ? node.text : ''
 		
 	end
-	
+  
 
 #  # Helper to read a field value from the web service response xml:
 #	def parse_field( field_name, from_xml )

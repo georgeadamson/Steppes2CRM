@@ -1,0 +1,89 @@
+<div id="monthly-bookings-results">
+<%
+
+	filters = {}
+	filters[:month_offset] = params[:month_offset] || 0  # 0 = This month, -1 = Last month
+	filters[:week_offset]  = params[:week_offset]  || 0
+
+	# Refresh from database if cached data looks stale:
+	unless $cached[:monthly_bookings] &&
+		$cached[:monthly_bookings][filters.to_s] &&
+		$cached[:monthly_bookings][filters.to_s][:expiry] &&
+		$cached[:monthly_bookings][filters.to_s][:expiry] > Time.now
+		
+		# Prepare custom sql statement:
+		sql_statement = "EXEC usp_dashboard_monthly_bookings ?"									
+		bookings = repository(:default).adapter.select( sql_statement, filters[:month_offset].to_i )
+		
+		$cached[:monthly_bookings]                      ||= {}
+		$cached[:monthly_bookings][filters.to_s]        ||= {}
+		$cached[:monthly_bookings][filters.to_s][:data]   = bookings
+		$cached[:monthly_bookings][filters.to_s][:expiry] = 10.minutes.since Time.now
+		
+	end
+
+bookings = $cached[:monthly_bookings][filters.to_s][:data]
+expiry   = $cached[:monthly_bookings][filters.to_s][:expiry]
+
+%>
+	
+	<br/>
+
+	<form action="/dashboards/monthly_bookings" method="get" data-target="#monthly-bookings-results">
+		<p style="text-align:right">
+
+			<%= orig_select :month_offset, :label=>"Bookings for ", :selected => filters[:month_offset].to_s, :collection => [ [0,'This month'] , [-1,'Last month'] ], :name => 'month_offset', :class => 'auto-submit' %>
+			<input type="submit" value="Refresh" class="ui-priority-secondary ui-state-default"/>
+		
+			<small>
+				(Refresh available at <%= expiry.formatted(:uidatetime) %>) &nbsp;
+			</small>
+			
+			<br/><br/>
+
+		</p>
+	</form>
+				
+<!--
+<%= filters.inspect %>
+<%= Time.now %>
+-->
+
+<% if bookings.first %>
+
+	<% headings = bookings.first.members -%>
+
+	<table style="font-size:0.9em">
+
+		<thead>
+			<tr>
+				<% headings.each do |heading| %>
+					<%= tag :th, heading.capitalize %>
+				<% end %>
+			</tr>
+		</thead>
+		
+		<tbody>
+			<%
+			bookings.each do |booking|
+			%>
+				<tr>
+					<% booking.each_with_index do |field,i| %>
+						<% is_currency_field = field.respond_to?(:to_currency) && ( headings[i] =~ /(cost|price|amount|profit)$/ ) %>
+						<%= tag :td, is_currency_field ? field.to_currency(:US,:unit => "&pound;") : field %>
+					<% end %>
+				</tr>
+			<%
+			end
+			%>
+		</tbody>
+
+	</table>
+
+<% else %>
+
+<p>There are no bookings to report this month</p>
+
+<% end %>
+
+</div>
