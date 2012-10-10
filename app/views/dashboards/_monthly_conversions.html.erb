@@ -1,4 +1,4 @@
-<div id="monthly-bookings-results">
+<div id="monthly-conversions-results">
 <%
 
 	filters = {}
@@ -7,30 +7,30 @@
 
 	# Refresh from database if cached data looks stale:
 	unless !params[:force] &&
-		$cached[:monthly_bookings] &&
-		$cached[:monthly_bookings][filters.to_s] &&
-		$cached[:monthly_bookings][filters.to_s][:expiry] &&
-		$cached[:monthly_bookings][filters.to_s][:expiry] > Time.now
+		$cached[:monthly_conversions] &&
+		$cached[:monthly_conversions][filters.to_s] &&
+		$cached[:monthly_conversions][filters.to_s][:expiry] &&
+		$cached[:monthly_conversions][filters.to_s][:expiry] > Time.now
 		
 		# Prepare custom sql statement:
-		sql_statement = "EXEC usp_dashboard_monthly_bookings ?"									
-		bookings = repository(:default).adapter.select( sql_statement, filters[:month_offset].to_i )
+		sql_statement = "EXEC usp_dashboard_monthly_conversions ?"									
+		conversions = repository(:default).adapter.select( sql_statement, filters[:month_offset].to_i )
 		
-		$cached[:monthly_bookings]                      ||= {}
-		$cached[:monthly_bookings][filters.to_s]        ||= {}
-		$cached[:monthly_bookings][filters.to_s][:data]   = bookings
-		$cached[:monthly_bookings][filters.to_s][:expiry] = 10.minutes.since Time.now
+		$cached[:monthly_conversions]                      ||= {}
+		$cached[:monthly_conversions][filters.to_s]        ||= {}
+		$cached[:monthly_conversions][filters.to_s][:data]   = conversions
+		$cached[:monthly_conversions][filters.to_s][:expiry] = 10.minutes.since Time.now
 		
 	end
 
-	bookings = $cached[:monthly_bookings][filters.to_s][:data]
-	expiry   = $cached[:monthly_bookings][filters.to_s][:expiry]
+	conversions = $cached[:monthly_conversions][filters.to_s][:data]
+	expiry   = $cached[:monthly_conversions][filters.to_s][:expiry]
 
 %>
 	
 	<br/>
 
-	<form action="/dashboards/monthly_bookings" method="get" data-target="#monthly-bookings-results">
+	<form action="/dashboards/monthly_conversions" method="get" data-target="#monthly-conversions-results">
 		<p style="text-align:right">
 
 			<%= orig_select :month_offset, :label=>"Bookings for ", :selected => filters[:month_offset].to_s, :collection => [ [0,'This month'] , [-1,'Last month'] ], :name => 'month_offset', :class => 'auto-submit' %>
@@ -50,9 +50,9 @@
 <%= Time.now %>
 -->
 
-<% if bookings.first %>
+<% if conversions.first %>
 
-	<% headings = bookings.first.members -%>
+	<% headings = conversions.first.members -%>
 
 	<table style="font-size:0.9em">
 
@@ -66,7 +66,7 @@
 		
 		<tbody>
 			<%
-			bookings.each do |booking|
+			conversions.each do |booking|
 			%>
 				<tr>
 					<% booking.each_with_index do |field,i| %>
@@ -83,7 +83,7 @@
 
 <% else %>
 
-<p>There are no bookings to report</p>
+<p>There are no conversions to report</p>
 
 <% end %>
 
