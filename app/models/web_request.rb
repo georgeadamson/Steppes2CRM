@@ -145,8 +145,8 @@ class WebRequest
 		path					= "services/DataAccess.asmx/GetForms"
 		limit					= 50
 
-    host = 'http://www.the-traveller.co.uk'
-    path = 'Cms/ReportXml'
+    #host = 'http://www.the-traveller.co.uk'
+    #path = 'Cms/ReportXml'
     
     options     ||= {}
 		web_requests	= []
