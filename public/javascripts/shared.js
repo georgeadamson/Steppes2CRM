@@ -300,6 +300,12 @@ jQuery(function($) {
 			//$('FORM.edit-client').live('form:success', Client.onEditSuccess)
 			//$('FORM.create-tour').live('form:success', Tour.onCreateSuccess)
 
+			// Dashboards (reports on homepage)
+			// Eg: '/dashboards/monthly_bookings?month_offset=-1'
+			Layout.match(/dashboards\/([^\?]+)/).on('success').to(Dashboard.initCopyToClipboard);
+
+
+
 		},
 
 		// Trigger ajax and handlers for the specified path:
@@ -4326,7 +4332,16 @@ function initTripInvoiceFormTotals(){
 	};
 
 
-
+	var Dashboard = {
+	
+		initCopyToClipboard: function(){
+		
+			// Initialise clipboard links:
+			initCopyToClipboardLinks();
+		
+		}
+	
+	}
 
 
 
@@ -4490,5 +4505,39 @@ function numVal(selector, $fields, defaultAlternative) {
 		}
 
 	};
+
+
+	// Helper to turn any element into a clickable copy-to-clipboard element:
+	function initCopyToClipboardLinks(){
+
+		$('[data-clipboard-copy-onclick]').each(function(){
+
+			var source = $(this).attr('data-clipboard-source');
+			console.log('source',source)
+			
+			var textToCopy = source ? $(source).outerHtml() : $(this).attr('data-clipboard-copy-onclick');
+
+			// Wire up clickable clipboard links using an Adobe Flash hack to copy the text: http://www.steamdev.com/zclip
+			$(this).zclip({
+				path: '/javascripts/clipboard/ZeroClipboard.swf',
+				copy: decodeURI(textToCopy)
+				// Easier to make do with the default message because zclip does not pass text to custom handler :(
+				// afterCopy: function(client,text){console.log(client,text)}
+			});
+
+		});
+
+	}
+
+	// Initialise clipboard links immediately:
+	//initCopyToClipboardLinks();
+
+
+	$(document).bind('path:success', function(){
+	
+		console.log('test!',arguments)
+	
+	})
+
 
 });	// End of jQuery ready handler.

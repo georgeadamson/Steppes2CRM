@@ -39,8 +39,9 @@
 			<small>
 				(Refresh available at <%= expiry.formatted(:uidatetime) %>) &nbsp;
 			</small>
-			
-			<br/><br/>
+
+			<%= partial 'dashboards/clipboard_link', :clipboard_source => '#monthly-conversions-results-table' if conversions.first %>
+			<br/>
 
 		</p>
 	</form>
@@ -54,7 +55,7 @@
 
 	<% headings = conversions.first.members -%>
 
-	<table style="font-size:0.9em">
+	<table id="monthly-conversions-results-table" style="font-size:0.9em">
 
 		<thead>
 			<tr>
@@ -83,7 +84,7 @@
 
 <% else %>
 
-<p>There are no conversions to report</p>
+	<p>There are no conversions to report</p>
 
 <% end %>
 
