@@ -50,36 +50,51 @@ class WebRequest
       brochure = self.generate_brochure_request!
     end
   end
-  
+
   # Web Service API settings:
-	@@form_names		= ['Steppes Contact Form', 'Steppes Newsletter Signup', 'Steppes Brochure Request', 'Discovery Contact Form', 'Discovery Newsletter Signup', 'Discovery Brochure Request']
-	@@username			= 'george'
+  @@username			= 'george'
 	@@password			= 'george371'
 	@@recent_paths	= []          # Useful for noting which Web Service API calls have been made so far.
-
+  @@servers		  = [
+    {
+      :host => 'http://www.steppestravel.co.uk',
+      :path => 'services/DataAccess.asmx/GetForms',
+      :username => 'george',
+      :password => 'george371',
+      :forms => ['Steppes Contact Form', 'Steppes Newsletter Signup', 'Steppes Brochure Request', 'Discovery Contact Form', 'Discovery Newsletter Signup', 'Discovery Brochure Request']
+	  },
+    {
+      :host => 'http://www.the-traveller.co.uk',
+      :path => 'Cms/ReportXml',
+      :username => 'george',
+      :password => 'george371',
+      :forms => ['Traveller Enquiry', 'Enquiry']  # The 'Enquiry' form is due to be renamed 'Traveller Enquiry' and can be removed from here.
+    }
+  ]
+  
   # brochure_request (instance variable) is only available immediately after processing a web_request:
   attr_reader :brochure_request
-
+  
   def pending?;   self.status_id == WebRequestStatus::PENDING; end
   def processed?; self.status_id == WebRequestStatus::PROCESSED; end
   def imported?;  self.status_id == WebRequestStatus::ALLOCATED; end
   def rejected?;  self.status_id == WebRequestStatus::REJECTED; end
-
+  
   # Helpers for handling old and new types of request: (Only old requests will have email_text, migrated from old database Sep 2010)
   def legacy?;    !self.email_text.blank?; end
   def raw_text;   !self.email_text.blank? ? self.email_text : self.xml_text; end
-
+  
   def client_name
     return "#{ self.field(:FirstName) } #{ self.field(:Surname) }"
   end
-
-
+  
+  
   # Helper to read meta data from the web service response xml FormEntry nodes:
 	# Eg: <ArrayOfFormEntry><FormEntry><ID>123</ID>
 	def parse_meta( field_name, xml_node = nil )
 		return parse_node( "//FormEntry[ID][Fields]/#{ field_name }']", xml_node )
 	end
-
+  
 	
   # Helper to read a field value from the web service response xml FormEntry/Fields nodes:
 	# Eg: <ArrayOfFormEntry><FormEntry><Fields><FormField><Field>Email</Field><Value>a@b.com</Value>...
@@ -88,15 +103,15 @@ class WebRequest
 		return parse_node( "//FormEntry[ID][Fields]/Fields/FormField[Field='#{ field_name }']/Value", xml_node )
 	end
   alias field parse_field
-
-
+  
+  
   # Helper to derive properties from the raw xml:
   def set_attributes_from_xml()
-
+    
     if self.xml_text.blank?
-
+      
       return false
-
+      
     else
       
       self.attributes = {
@@ -108,78 +123,95 @@ class WebRequest
         :first_page							=> self.parse_meta(:FirstPage),
         :where_from							=> self.parse_meta(:WhereFrom)
       }
- 
+      
       # Attempt to derive the web_request_type_id from the web form name:
       web_request_type = WebRequestType.first( :form_name => self.name )
       self.type_id = web_request_type.id unless web_request_type.nil?
-
+      
     end
-
+    
   end
-
-
-
+  
+  
+  
   # Helper for creating a new web_request object from the xml returned by a web-service:
   def self.first_or_new_from_xml(xml)
-
+    
     # Make a new web_request object and set it's raw xml so other properties can then be derived:
     new_req = WebRequest.new( :xml_text => xml.to_s )
     new_req.set_attributes_from_xml()
-
+    
     old_req = WebRequest.first( :origin_web_request_id => new_req.origin_web_request_id )
-
+    
     return old_req || new_req
     
   end
-
-
-
+  
 	# Call remote web services to fetch web_requests. Return an array of WebRequest objects:
 	# By default all :old web_requests will be filtered out (ie those already in the database).
-	# form_name can be :all or one of the names defined in the @@form_names array.
+	# form_name can be :all or one of the names defined in the @@servers array.
 	def self.fetch_latest_web_requests( options = {} )
+    
+    web_requests = []
+    
+    @@servers.each do |server|
+        web_requests.concat self.fetch_latest_web_requests_from_server(server, options)
+    end
+    
+    return web_requests
+    
+  end
+  
+  
+	# Call remote web services to fetch web_requests from specified server. Return an array of WebRequest objects:
+	# By default all :old web_requests will be filtered out (ie those already in the database).
+	# form_name can be :all or one of the names defined in the @@servers array.
+	def self.fetch_latest_web_requests_from_server( server, options = {} )
 
     # Details of the web service address:
     # TODO: Move these to app_settings instead of hard coding them?
-		host					= 'http://www.steppestravel.co.uk'
-		path					= "services/DataAccess.asmx/GetForms"
+		host	        = server[:host]
+		path	        = server[:path]
+    forms         = server[:forms]
+    username      = server[:username]
+    password      = server[:password]
 		limit					= 50
-
+    
     options     ||= {}
-		web_requests	= []
+		web_requests	= [] # Will be the results
 		form_name		  = options[:form_name] || :all
 		filter			  = options[:filter]    || :new
-		from_date		  = options[:from_date] || WebRequest.max(:requested_date) || 1.month.ago
+		#from_date		= options[:from_date] || WebRequest.max(:requested_date) || 1.month.ago # See below. Now derived on a per-form basis.
 		to_date			  = options[:to_date]   || 1.day.from_now
 
 		if form_name == :all
 
       @@recent_paths = []
+      from_date = options[:from_date] || nil
       
       # Call this method recursively for each type of form:
-			@@form_names.each do |specific_form|
+			forms.each do |specific_form|
         opts = options.merge( :form_name => specific_form )
-				web_requests.concat( fetch_latest_web_requests(opts) ) unless specific_form == :all  # The unless-condition should help avoid recursive loops of death!
+				web_requests.concat( fetch_latest_web_requests_from_server(server,opts) ) unless specific_form == :all  # The unless-condition should help avoid recursive loops of death!
 			end
 	
 		else
 			
+      form_name ||= forms.first
+      from_date = options[:from_date] || WebRequest.max(:requested_date, :name => form_name ) || 1.month.ago
+      
       # Set up the url parameters required by the web service:
-      params        = {
-
-        :formName => ( form_name ||= @@form_names.first ),
-        :username => @@username,
-        :password => @@password,
+      params = {
+        :formName => form_name,
+        :username => username,
+        :password => password,
         :fromDate => from_date.formatted(:date),
         :toDate   => to_date.formatted(:date),
         :type     => 0
-
       }.to_query
 
 
 			# Assemble the parts of the web-service url:
-			#params				= "?username=#{ u(@@username) }&password=#{ u(@@password) }&type=0&fromDate=#{ from_date.formatted(:date) }&toDate=#{  }&formName=#{ u(form_name) }"
-			#url					= URI.parse(host)
       uri           = URI.parse( host / "#{ path }?#{ params }" )
 			node_count		= 0
 
@@ -206,7 +238,16 @@ class WebRequest
 
         begin
 
-			    @xml = REXML::Document.new(response.body)
+          # At time or writing, The Traveller data had wrong xml headers, so replace them to be same as Steppes data:
+          raw_xml = response.body.sub(
+            '<?xml version="1.0" encoding="utf-16"?>',
+            '<?xml version="1.0" encoding="utf-8"?>'
+          ).sub(
+            '<ArrayOfFormEntry>',
+            '<ArrayOfFormEntry xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.the-traveller.co.uk/">'
+          )
+          
+			    @xml = REXML::Document.new(raw_xml)
 
 			  rescue Exception => reason
 
@@ -214,7 +255,6 @@ class WebRequest
           WebRequest.logger.error! "Error: Could not parse response.body xml: \n Url: #{ uri } \n Reason: #{ reason } \n Details: #{ response.inspect }"
 
         else
-
 			    # Create a new web_request object for every <FormEntry> in the xml response:
 			    @xml.elements.each("//FormEntry[position() <= #{ limit }]") do |xml|
 
@@ -284,13 +324,13 @@ class WebRequest
       
     case
       when !self.valid? then
-        puts "Unable to generate brochure_request from web_request #{ self.id } because it is not valid"
+        WebRequest.logger.error! "Unable to generate brochure_request from web_request #{ self.id } because it is not valid"
       when self.user_id.blank? then
-        puts "Unable to generate brochure_request from web_request #{ self.id } because user is blank"
+        WebRequest.logger.error! "Unable to generate brochure_request from web_request #{ self.id } because user is blank"
       when self.company_id.blank? then
-        puts "Unable to generate brochure_request from web_request #{ self.id } because company is blank"
+        WebRequest.logger.error! "Unable to generate brochure_request from web_request #{ self.id } because company is blank"
       when self.client_id.blank? then
-        puts "Unable to generate brochure_request from web_request #{ self.id } because client is blank"
+        WebRequest.logger.error! "Unable to generate brochure_request from web_request #{ self.id } because client is blank"
       else
         
         @brochure_request = BrochureRequest.new(
