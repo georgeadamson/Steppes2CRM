@@ -13,42 +13,45 @@
 		$cached[:monthly_conversions_by_invoice][filters.to_s][:expiry] > Time.now
 		
 		# Prepare custom sql statement:
-		sql_statement = "EXEC usp_dashboard_monthly_conversions_by_invoice ?"									
-		conversions = repository(:default).adapter.select( sql_statement, filters[:month_offset].to_i )
-		
-		$cached[:monthly_conversions_by_invoice]                      ||= {}
-		$cached[:monthly_conversions_by_invoice][filters.to_s]        ||= {}
-		$cached[:monthly_conversions_by_invoice][filters.to_s][:data]   = conversions
-		$cached[:monthly_conversions_by_invoice][filters.to_s][:expiry] = 10.minutes.since Time.now
-		
-	end
+sql_statement = "EXEC usp_dashboard_monthly_conversions_by_invoice ?"									
+conversions = repository(:default).adapter.select( sql_statement, filters[:month_offset].to_i )
 
-	conversions = $cached[:monthly_conversions_by_invoice][filters.to_s][:data]
-	expiry   = $cached[:monthly_conversions_by_invoice][filters.to_s][:expiry]
+$cached[:monthly_conversions_by_invoice]                      ||= {}
+$cached[:monthly_conversions_by_invoice][filters.to_s]        ||= {}
+$cached[:monthly_conversions_by_invoice][filters.to_s][:data]   = conversions
+$cached[:monthly_conversions_by_invoice][filters.to_s][:expiry] = 10.minutes.since Time.now
+
+end
+
+conversions = $cached[:monthly_conversions_by_invoice][filters.to_s][:data]
+expiry   = $cached[:monthly_conversions_by_invoice][filters.to_s][:expiry]
 
 %>
+
+<br/>
+
+<form action="/dashboards/monthly_conversions_by_invoice" method="get" data-target="#monthly-conversions-by-invoice-results">
+<p style="text-align:right">
+
+<%=
+	# See the stored procedure for info about the offset param. (A value of 1 causes month offset to be ignored)
+	orig_select :month_offset, :label=>"Bookings for ", :selected => filters[:month_offset].to_s, :collection => [ [0,'This month'], [-1,'Last month'], ['1:','This year'] ], :name => 'month_offset', :class => 'auto-submit'
+%>
+<input type="submit" value="Refresh" class="ui-priority-secondary ui-state-default"/>
 	
-	<br/>
-
-	<form action="/dashboards/monthly_conversions_by_invoice" method="get" data-target="#monthly-conversions-by-invoice-results">
-		<p style="text-align:right">
-
-			<%= orig_select :month_offset, :label=>"Bookings for ", :selected => filters[:month_offset].to_s, :collection => [ [0,'This month'] , [-1,'Last month'] ], :name => 'month_offset', :class => 'auto-submit' %>
-			<input type="submit" value="Refresh" class="ui-priority-secondary ui-state-default"/>
-		
-			<small>
-				(Refresh available at <%= expiry.formatted(:uidatetime) %>) &nbsp;
+	<small>
+	(Refresh available at <%= expiry.formatted(:uidatetime) %>) &nbsp;
 			</small>
 
-			<%= partial 'dashboards/clipboard_link', :clipboard_source => '#monthly-conversions-by-invoice-results-table' if conversions.first %>
-			<br/>
-
+	<%= partial 'dashboards/clipboard_link', :clipboard_source => '#monthly-conversions-by-invoice-results-table' if conversions.first %>
+	<br/>
+	
 		</p>
 	</form>
-				
-<!--
-<%= filters.inspect %>
-<%= Time.now %>
+	
+	<!--
+	<%= filters.inspect %>
+	<%= Time.now %>
 -->
 
 <% if conversions.first %>
