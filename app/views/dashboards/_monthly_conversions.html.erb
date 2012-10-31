@@ -33,7 +33,10 @@
 	<form action="/dashboards/monthly_conversions" method="get" data-target="#monthly-conversions-results">
 		<p style="text-align:right">
 
-			<%= orig_select :month_offset, :label=>"Bookings for ", :selected => filters[:month_offset].to_s, :collection => [ [0,'This month'] , [-1,'Last month'] ], :name => 'month_offset', :class => 'auto-submit' %>
+			<%=
+				# See the stored procedure for info about the offset param. (A value of 1 causes month offset to be ignored)
+				orig_select :month_offset, :label=>"Bookings for ", :selected => filters[:month_offset].to_s, :collection => [ [0,'This month'] , [-1,'Last month'] , ['1:','This year'] ], :name => 'month_offset', :class => 'auto-submit'
+			%>
 			<input type="submit" value="Refresh" class="ui-priority-secondary ui-state-default"/>
 		
 			<small>

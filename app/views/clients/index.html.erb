@@ -73,7 +73,8 @@
 								<!--<li><a href="#user-followups">My followups</a></li>-->
 								<li><a href="#monthly-bookings-tab-content">Monthly bookings</a></li>
 								<li><a href="#weekly-enquiries-tab-content">Weekly enquiries</a></li>
-								<li><a href="#monthly-conversions-tab-content">Monthly conversions</a></li>
+								<li><a href="#monthly-conversions-tab-content">Conversions (by Enquiry date)</a></li>
+								<li><a href="#monthly-conversions-by-invoice-tab-content">Conversions (by Invoice date)</a></li>
 							</ul>
 						</div>
 
@@ -93,6 +94,10 @@
 						
 						<div id="monthly-conversions-tab-content" class="ajaxPanel sectionBody">
 							<%= partial "dashboards/monthly_conversions" %>
+						</div>
+						
+						<div id="monthly-conversions-by-invoice-tab-content" class="ajaxPanel sectionBody">
+							<%= partial "dashboards/monthly_conversions_by_invoice" %>
 						</div>
 						
 					</div>
