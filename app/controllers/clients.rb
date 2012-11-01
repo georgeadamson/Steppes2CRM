@@ -40,9 +40,9 @@ class Clients < Application
     prev_word	= nil
 
 		# If the user provided any '*' wildcards then swap them for valid sql '%' wildcards:
-		# Insert sql '%' wildcard after each word: (unless user provided their own wildcards)
 		phrase = ( params[:q].to_s.strip.gsub(/\*/, '%') + ' ' ) || ''
-		phrase.gsub!( /\b /, '% ' ).strip! unless phrase.include? '%'
+		# Insert sql '%' wildcard after each word: (unless user provided their own wildcards)
+		#phrase.gsub!( /\b /, '% ' ).strip! unless phrase.include? '%'
 
 		# Prepare custom sql statement: (We rely on datamapper to handle escaping of dodgy charaters such as ')
 		sql_statement = "EXEC usp_client_search ?, ?, ?"

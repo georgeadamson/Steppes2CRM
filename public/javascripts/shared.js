@@ -64,7 +64,7 @@ jQuery(function($) {
 		AJAX_TIMEOUT					= 60000,			// Milliseconds.
 
 		// Settings for client-search:
-		CLIENT_SEARCH_MAX_ROWS			= 20,				// Will be sent as &limit=n parameter when searching for clients via ajax.
+		CLIENT_SEARCH_MAX_ROWS			= 50,				// Will be sent as &limit=n parameter when searching for clients via ajax.
 		CLIENT_SEARCH_DELAY_BEFORE_AJAX	= 500,				// Milliseconds delay before searching for the keywords being typed in client search box.
 
 		// Settings for postcode-lookup:
