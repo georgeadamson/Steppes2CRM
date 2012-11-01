@@ -290,13 +290,13 @@ TABLE.flightSchedule {
 		.noticeMessage {
 			background-color:#FFEF89;
 			border:solid 1px #fff;
-			font-size:1.2em;
-			padding:0.5em;
+			font-size:1.1em;
+			padding:0.2em;
 			text-align:center;
+			font-weight: normal;
 			-moz-box-shadow: #555 5px 5px 5px;
 			-webkit-box-shadow: #555 5px 5px 5px;
 		}
-
 
 
 
