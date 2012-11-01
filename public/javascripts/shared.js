@@ -64,7 +64,7 @@ jQuery(function($) {
 		AJAX_TIMEOUT					= 60000,			// Milliseconds.
 
 		// Settings for client-search:
-		CLIENT_SEARCH_MAX_ROWS			= 20,				// Will be sent as &limit=n parameter when searching for clients via ajax.
+		CLIENT_SEARCH_MAX_ROWS			= 50,				// Will be sent as &limit=n parameter when searching for clients via ajax.
 		CLIENT_SEARCH_DELAY_BEFORE_AJAX	= 500,				// Milliseconds delay before searching for the keywords being typed in client search box.
 
 		// Settings for postcode-lookup:
@@ -87,9 +87,9 @@ jQuery(function($) {
 
 		// Settings for displaying notices and error messages:
 		DELAY_BEFORE_MESSAGE_SHOW		= 1000,				// Wait before showing messages from server.
-		DELAY_BEFORE_MESSAGE_HIDE		= 3000,				// Wait before hiding messages from server, after showing them.
+		DELAY_BEFORE_MESSAGE_HIDE		= 2000,				// Wait before hiding messages from server, after showing them.
 		DURATION_OF_MESSAGE_SHOW		= 250,				// Animation speed when showing messages.
-		DURATION_OF_MESSAGE_HIDE		= 2000,				// Animation speed when hiding messages.
+		DURATION_OF_MESSAGE_HIDE		= 1000,				// Animation speed when hiding messages.
 
 		$messages						= $('H2.noticeMessage, H2.errorMessage, H2.warningMessage'),	// See showMessage() function.
 
