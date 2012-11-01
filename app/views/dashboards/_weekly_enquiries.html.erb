@@ -39,7 +39,8 @@
 			(Refresh available at <%= expiry.formatted(:uidatetime) %>) &nbsp;
 		</small>
 		
-		<br/><br/>
+		<%= partial 'dashboards/clipboard_link', :clipboard_source => '#weekly-enquiries-results-table' if enquiries.first %>
+		<br/>
 
 	</p>
 </form>
@@ -53,7 +54,7 @@
 
 	<% headings = enquiries.first.members -%>
 
-	<table style="font-size:0.9em">
+	<table id="weekly-enquiries-results-table" style="font-size:0.9em">
 
 		<thead>
 			<tr>
@@ -79,10 +80,10 @@
 		</tbody>
 
 	</table>
-
+	
 <% else %>
 
-<p>There are no enquiries to report</p>
+	<p>There are no enquiries to report</p>
 
 <% end %>
 

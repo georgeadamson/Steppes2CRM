@@ -1,0 +1,15 @@
+<%
+	# Because a limitation of the zclip clipboard plugin, it seems we cannot activate clipboard links until they're visible, 
+	# so we must detect whether report is being refreshed via the Dashboards controller:
+%>
+<br/>
+<small>
+	<% if request.controller.to_s == 'Dashboards' %>
+		<a href="#" data-clipboard-copy-onclick="true" data-clipboard-source="<%= clipboard_source %>">
+			Copy to clipboard
+		</a>
+	<% else %>
+		Refresh this report if you need to copy it to the clipboard<br/>
+	<% end %>
+</small>
+&nbsp;
