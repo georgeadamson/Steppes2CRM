@@ -680,7 +680,7 @@ DIV.fieldset {
 
 		DIV.fieldset.withHeading DL.fields DD {
 			-ms-box-sizing:padding-box; -moz-box-sizing:padding-box; -webkit-box-sizing:padding-box; -o-box-sizing:padding-box;
-			padding-left:6em;
+			margin-left:6em;
 			margin-bottom:0.3em;
 			text-shadow:0 0 1px #999;
 			width:100%;

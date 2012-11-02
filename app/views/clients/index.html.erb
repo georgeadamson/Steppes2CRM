@@ -70,19 +70,20 @@
 
 						<div class="sectionHead ui-tabs ui-widget ui-widget-content ui-corner-all">
 							<ul class="tripPageTabsNav ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all">
-								<!--<li><a href="#user-followups">My followups</a></li>-->
+								<li><a href="#user-followups">My followups</a></li>
 								<li><a href="#monthly-bookings-tab-content">Monthly bookings</a></li>
 								<li><a href="#weekly-enquiries-tab-content">Weekly enquiries</a></li>
-								<li><a href="#monthly-conversions-tab-content">Conversions (by Enquiry date)</a></li>
+								<li><a href="#monthly-conversions-tab-content">Conversions (all enquiries)</a></li>
+								<li><a href="#monthly-conversions-by-trip-tab-content">Conversions (all trips)</a></li>
+								<!--
 								<li><a href="#monthly-conversions-by-invoice-tab-content">Conversions (by Invoice date)</a></li>
+								-->
 							</ul>
 						</div>
 
-						<!--
 						<div id="user-followups" class="sectionBody">
-							<%#= partial 'tasks/index' %>
+							<%= partial 'tasks/index' %>
 						</div>
-						-->
 
 						<div id="monthly-bookings-tab-content" class="ajaxPanel sectionBody">
 							<%= partial 'dashboards/monthly_bookings' %>
@@ -96,9 +97,15 @@
 							<%= partial "dashboards/monthly_conversions" %>
 						</div>
 						
-						<div id="monthly-conversions-by-invoice-tab-content" class="ajaxPanel sectionBody">
-							<%= partial "dashboards/monthly_conversions_by_invoice" %>
+						<div id="monthly-conversions-by-trip-tab-content" class="ajaxPanel sectionBody">
+							<%= partial "dashboards/monthly_conversions_by_trip" %>
 						</div>
+						
+						<!--
+						<div id="monthly-conversions-by-invoice-tab-content" class="ajaxPanel sectionBody">
+							<%#= partial "dashboards/monthly_conversions_by_invoice" %>
+						</div>
+						-->
 						
 					</div>
 

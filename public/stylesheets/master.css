@@ -306,6 +306,7 @@ TABLE.flightSchedule {
   DIV.ellipsis,
   SPAN.ellipsis,
   P.ellipsis,
+  DD.ellipsis,
   DL.ellipsis > DD > SPAN,
   DL.ellipsis > DD > A,
   UL.ellipsis > LI > A,

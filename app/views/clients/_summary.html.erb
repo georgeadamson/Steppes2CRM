@@ -110,7 +110,7 @@
         <% if !client.tel_work.blank? %><dt>Work</dt><dd><%= client.tel_work %></dd><% end %>
         <% if !client.tel_mobile1.blank? %><dt>Mobile</dt><dd><%= client.tel_mobile1 %></dd><% end %>
         <% if !client.tel_mobile2.blank? %><dt>Mobile</dt><dd><%= client.tel_mobile2 %></dd><% end %>
-        <% if !client.email1.blank? %><dt>Email</dt><dd><%= link_to client.email1, "mailto:#{ client.email1 + mail_params }", :title => client.email1 %></dd><% end %>
+        <% if !client.email1.blank? %><dt>Email</dt><dd><small><%= link_to client.email1, "mailto:#{ client.email1 + mail_params }", :title => client.email1 %></small></dd><% end %>
         <% if !client.email2.blank? %><dt>Other email</dt><dd><%= link_to client.email2, "mailto:#{ client.email2 + mail_params }", :title => client.email2 %></dd><% end %>
      </dl>
     </div>
