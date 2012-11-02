@@ -13,18 +13,18 @@
 		$cached[:monthly_conversions_by_trip][filters.to_s][:expiry] > Time.now
 		
 		# Prepare custom sql statement:
-sql_statement = "EXEC usp_dashboard_monthly_conversions_by_trip ?"									
-conversions = repository(:default).adapter.select( sql_statement, filters[:month_offset].to_i )
+		sql_statement = "EXEC usp_dashboard_monthly_conversions_by_trip ?"									
+		conversions = repository(:default).adapter.select( sql_statement, filters[:month_offset].to_i )
 
-$cached[:monthly_conversions_by_trip]                      ||= {}
-$cached[:monthly_conversions_by_trip][filters.to_s]        ||= {}
-$cached[:monthly_conversions_by_trip][filters.to_s][:data]   = conversions
-$cached[:monthly_conversions_by_trip][filters.to_s][:expiry] = 30.minutes.since Time.now
+		$cached[:monthly_conversions_by_trip]                      ||= {}
+		$cached[:monthly_conversions_by_trip][filters.to_s]        ||= {}
+		$cached[:monthly_conversions_by_trip][filters.to_s][:data]   = conversions
+		$cached[:monthly_conversions_by_trip][filters.to_s][:expiry] = 30.minutes.since Time.now
 
-end
+	end
 
-conversions = $cached[:monthly_conversions_by_trip][filters.to_s][:data]
-expiry   = $cached[:monthly_conversions_by_trip][filters.to_s][:expiry]
+	conversions = $cached[:monthly_conversions_by_trip][filters.to_s][:data]
+	expiry   = $cached[:monthly_conversions_by_trip][filters.to_s][:expiry]
 
 %>
 
