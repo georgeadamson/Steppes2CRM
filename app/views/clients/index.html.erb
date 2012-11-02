@@ -73,9 +73,9 @@
 								<li><a href="#user-followups">My followups</a></li>
 								<li><a href="#monthly-bookings-tab-content">Monthly bookings</a></li>
 								<li><a href="#weekly-enquiries-tab-content">Weekly enquiries</a></li>
-								<li><a href="#monthly-conversions-by-trip-tab-content">Conversions (by Trip date)</a></li>
+								<li><a href="#monthly-conversions-tab-content">Conversions (all enquiries)</a></li>
+								<li><a href="#monthly-conversions-by-trip-tab-content">Conversions (all trips)</a></li>
 								<!--
-								<li><a href="#monthly-conversions-tab-content">Conversions (by Enquiry date)</a></li>
 								<li><a href="#monthly-conversions-by-invoice-tab-content">Conversions (by Invoice date)</a></li>
 								-->
 							</ul>
@@ -93,15 +93,15 @@
 							<%= partial "dashboards/weekly_enquiries" %>
 						</div>
 						
+						<div id="monthly-conversions-tab-content" class="ajaxPanel sectionBody">
+							<%= partial "dashboards/monthly_conversions" %>
+						</div>
+						
 						<div id="monthly-conversions-by-trip-tab-content" class="ajaxPanel sectionBody">
 							<%= partial "dashboards/monthly_conversions_by_trip" %>
 						</div>
 						
 						<!--
-						<div id="monthly-conversions-tab-content" class="ajaxPanel sectionBody">
-							<%#= partial "dashboards/monthly_conversions" %>
-						</div>
-						
 						<div id="monthly-conversions-by-invoice-tab-content" class="ajaxPanel sectionBody">
 							<%#= partial "dashboards/monthly_conversions_by_invoice" %>
 						</div>
