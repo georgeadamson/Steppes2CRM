@@ -19,7 +19,7 @@ conversions = repository(:default).adapter.select( sql_statement, filters[:month
 $cached[:monthly_conversions_by_trip]                      ||= {}
 $cached[:monthly_conversions_by_trip][filters.to_s]        ||= {}
 $cached[:monthly_conversions_by_trip][filters.to_s][:data]   = conversions
-$cached[:monthly_conversions_by_trip][filters.to_s][:expiry] = 10.minutes.since Time.now
+$cached[:monthly_conversions_by_trip][filters.to_s][:expiry] = 30.minutes.since Time.now
 
 end
 
@@ -40,7 +40,7 @@ expiry   = $cached[:monthly_conversions_by_trip][filters.to_s][:expiry]
 <input type="submit" value="Refresh" class="ui-priority-secondary ui-state-default"/>
 	
 	<small>
-	(Refresh available at <%= expiry.formatted(:uidatetime) %> - May take a minute!) &nbsp;
+	(Refresh available at <%= expiry.formatted(:uidatetime) %> - Beware, it's slow!) &nbsp;
 	</small>
 
 	<%= partial 'dashboards/clipboard_link', :clipboard_source => '#monthly-conversions-by-trip-results-table' if conversions.first %>

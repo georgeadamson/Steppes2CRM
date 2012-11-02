@@ -9,7 +9,7 @@ class Tasks < Application
     @user   ||= session.user                          unless @client
 
     @tasks  = Task.all
-    @tasks  = @tasks.all( :user   => @user   )        if @user
+    #@tasks  = @tasks.all( :user   => @user   )       if @user  # This filter has been delegated to whichever view is displaying the results.
     @tasks  = @tasks.all( :client => @client )        if @client
     @tasks  = @tasks.all( :limit  => params[:limit] ) if params[:limit].to_i > 0
 
@@ -56,7 +56,7 @@ class Tasks < Application
     accept_valid_date_fields_for task, [ :due_date, :closed_date ]
 
     if @task.update(task)
-       redirect resource(@task), :message => {:notice => "Followup was updated successfully"}
+       redirect resource(@task), :message => {:notice => "Followup was updated successfully :)"}
     else
       message[:error] = error_messages_for( @task, :header => 'Followup failed to be updated because' )
       display @task, :edit
