@@ -142,6 +142,7 @@ class WebRequest
     new_req.set_attributes_from_xml()
     
     old_req = WebRequest.first( :origin_web_request_id => new_req.origin_web_request_id )
+    puts "origin_web_request_id #{ new_req.origin_web_request_id }, Old: #{ old_req.id if old_req } #{ old_req.requested_date.to_s if old_req } #{ old_req.name if old_req }, New: #{ new_req.id } #{ new_req.requested_date.to_s } #{ new_req.name }"
     
     return old_req || new_req
     
@@ -175,7 +176,7 @@ class WebRequest
     forms         = server[:forms]
     username      = server[:username]
     password      = server[:password]
-		limit					= 50
+		limit					= 200
     
     options     ||= {}
 		web_requests	= [] # Will be the results
@@ -197,8 +198,10 @@ class WebRequest
 	
 		else
 			
+      #puts server, options.inspect
       form_name ||= forms.first
-      from_date = options[:from_date] || WebRequest.max(:requested_date, :name => form_name ) || 1.month.ago
+      from_date = options[:from_date] || 1.month.ago || WebRequest.max(:requested_date, :name => form_name ) || 1.month.ago
+      puts "Deriving from_date for #{ form_name }: #{ from_date } = #{ options[:from_date] || 'nil' } || #{ WebRequest.max(:requested_date, :name => form_name ) } || #{ 1.month.ago }"
       
       # Set up the url parameters required by the web service:
       params = {
@@ -255,6 +258,9 @@ class WebRequest
           WebRequest.logger.error! "Error: Could not parse response.body xml: \n Url: #{ uri } \n Reason: #{ reason } \n Details: #{ response.inspect }"
 
         else
+          
+          #puts "Received #{ @xml.elements.each("//FormEntry").length } request in the xml"
+          
 			    # Create a new web_request object for every <FormEntry> in the xml response:
 			    @xml.elements.each("//FormEntry[position() <= #{ limit }]") do |xml|
 
@@ -268,16 +274,18 @@ class WebRequest
       end
 
 			WebRequest.logger.info! "Downloaded #{ node_count } WebRequests: '#{ form_name }' from url #{ uri }"
+		
+		  # Discard web_requests that do not match our filter:
+		  web_requests.delete_if{|req|  req.new? } if filter == :old
+		  web_requests.delete_if{|req| !req.new? } if filter == :new
+  		
+    puts "Downloaded #{ node_count } Imported #{ web_requests.length } new requests from #{ server.inspect } params: #{ params.inspect }"
 			
 		end
-		
-		# Discard web_requests that do not match our filter:
-		web_requests.delete_if{|req|  req.new? } if filter == :old
-		web_requests.delete_if{|req| !req.new? } if filter == :new
-		
+    
 		return web_requests
 		
-	end	
+	end
 
 
 
