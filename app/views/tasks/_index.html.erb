@@ -14,9 +14,10 @@
 	user   = User.get( params[:user_id] ) if params[:user_id]
 	user ||= request.session.user         unless client
 
-	tasks ||= Task.all( :due_date => (Date.today-5 .. Date.today+5), :type_id.not => TaskType::NOTE )
+	tasks ||= Task.all
+	#tasks = tasks.all( :due_date => (Date.today-5 .. Date.today+5), :type_id.not => TaskType::NOTE ) if user && !client
 	
-  if user
+  if user && !client
 		tasks = tasks.all( :user   => user )  # unless || user.id == 99
 		tasks = tasks.all( :status_id => TaskStatus::OPEN, :type_id => TaskType::BROCHURE_FOLLOWUP )	# 0=Open, 4=Brochure Followup
   end
