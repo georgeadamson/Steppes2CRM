@@ -1,4 +1,10 @@
-<table class="tasks">
+<!-- This table is displayed in:
+   - The Followups secion of each Client page. (Filtered by client)
+	 - The Followups tab on the Dashboard Home page. (Filtered by user)
+-->
+<% user ||= @user ||= current_user %>
+
+<table class="tasks" id="user-followups-table">
 	<tbody>
 		<% tasks.each do |task| %>
 			
@@ -18,8 +24,17 @@
 			<tr>
 				<%= tag :td, task.due_date.formatted(:uidate) %>
 				<%= tag :td, "#{ status_icon } #{ link_to(task_type, task_url) }", :class => 'nowrap' %>
-				<%= tag :td, ( task.user && task.user.fullname ) %>
-				<%= tag :td, tag(:small,task.notes) %>
+				<%= tag :td, ( task.user && task.user.preferred_name ) %>
+				<%= tag :td, "#{ link_to task.client.name, resource(task.client) unless client } #{ tag(:small,task.notes) }" %>
+				<% if @client.nil? %>
+					<%= tag :td do %>
+						<%= form_for( task, :action => resource(task.client,task, :redirect_to => resource(user,:tasks) ), :'data-target' => '#user-followups-table' ) do %>
+							<button type="submit" class="ui-priority-secondary ui-state-default"><%= icon :check %> Actioned</button>
+							<%= hidden_field :status_id, :value => 1 %><!-- 1=Actioned -->
+							<%= hidden_field :due_date,  :value => task.due_date.formatted(:uidate) %>
+						<% end =%>
+					<% end =%>
+				<% end %>
 			</tr>
 		<% end %>
 	</tbody>

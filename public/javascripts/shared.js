@@ -280,7 +280,7 @@ jQuery(function($) {
 			Layout.livePath('click',    new RegExp('/tasks/new'),						Task.openNew );
 			Layout.livePath('success',	new RegExp('/tasks/([0-9]+)/edit'),				Task.initForm, initDatepickers );
 			Layout.livePath('success',  new RegExp('/tasks/new'),						Task.initForm, initDatepickers );
-			//Layout.livePath('success',  new RegExp('tasks'),						Task.initIndex );	// Refresh list of tasks.
+			//Layout.livePath('success',  new RegExp('tasks'),							Task.initIndex );	// Refresh list of tasks.
 			Layout.liveForm('success',  'tasks:create',									Task.onCreateSuccess );
 			Layout.liveForm('success',  'tasks:update',									Task.onCreateSuccess );
 			Layout.match(/tasks/)													.on('success').to(Task.initIndex);
@@ -4177,8 +4177,6 @@ function initTripInvoiceFormTotals(){
 		},
 
 		initIndex : function(ui){
-
-			
 			
 			console.log('Task.initIndex',ui)
 		},
