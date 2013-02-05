@@ -1,26 +1,46 @@
-<table class="tasks">
+<!-- This table is displayed in:
+   - The Followups secion of each Client page. (Filtered by client)
+	 - The Followups tab on the Dashboard Home page. (Filtered by user)
+-->
+<%
+	user ||= @user ||= current_user
+%>
+
+<table class="tasks" id="user-followups-table">
 	<tbody>
 		<% tasks.each do |task| %>
-			
+
 			<%
+				
+			  task_date     = task.open? ? task.due_date : task.closed_date
+				task_date_tip = "#{ task.status.name }#{ task.open? ? ". Due" : '' } on #{ task_date.formatted(:uidate) }"
+				task_type     = task.type.name || '(Unspecified reminder)'
+				task_url      = resource(task.client, task, :edit)
 			
 				status_icon = case task.status_id
-					when TaskStatus::COMPLETED then icon(:check, :title => "Status: #{ task.status.name }")
-					when TaskStatus::ABANDONED then icon(:trash, :title => "Status: #{ task.status.name }")
-					else                            icon(:clock, :title => "Status: #{ task.status.name }")
+					when TaskStatus::COMPLETED then icon :check
+					when TaskStatus::ABANDONED then icon :trash
+					else                            icon :clock
 				end
 				
-				task_type = task.type.name || '(Unspecified reminder)'
-
-				task_url  = resource(task.client, task, :edit)
 			-%>
 
 			<tr>
-				<%= tag :td, task.due_date.formatted(:uidate) %>
-				<%= tag :td, "#{ status_icon } #{ link_to(task_type, task_url) }", :class => 'nowrap' %>
-				<%= tag :td, ( task.user && task.user.fullname ) %>
-				<%= tag :td, tag(:small,task.notes) %>
+				<%= tag :td, "#{ status_icon } #{ task_date.formatted(:uidate) }", :title => task_date_tip %>
+				<%= tag :td, link_to(task_type, task_url), :class => 'nowrap' %>
+				<%= tag :td, ( task.user && task.user.preferred_name ) %>
+				<%= tag :td, "#{ link_to task.client.name, resource(task.client) unless client } #{ tag(:small,task.notes) }" %>
+				<% if @client.nil? %>
+					<%= tag :td do %>
+						<%= form_for( task, :action => resource(task.client,task, :redirect_to => resource(user,:tasks) ), :'data-target' => '#user-followups-table' ) do %>
+							<button type="submit" class="ui-priority-secondary ui-state-default"><%= icon :check %> Actioned</button>
+							<%= hidden_field :status_id, :value => 1 %><!-- 1=Actioned -->
+							<%= hidden_field :due_date,  :value => task.due_date.formatted(:uidate) %>
+						<% end =%>
+					<% end =%>
+				<% end %>
 			</tr>
+
 		<% end %>
 	</tbody>
 </table>

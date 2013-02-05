@@ -65,14 +65,19 @@ class Tasks < Application
   end
 
   def destroy(id)
+    
     @task = Task.get(id)
     raise NotFound unless @task
+    
+    next_page = params[:redirect_to] || resource(:tasks)
+    
     if @task.destroy
-      redirect resource(:tasks), :message => {:notice => "Followup was deleted successfully"}
+      redirect next_page, :message => {:notice => "Followup was deleted successfully"}
     else
       message[:error] = error_messages_for( @task, :header => 'Followup could not be deleted because' )
       #raise InternalServerError
     end
+    
   end
 
 end # Tasks

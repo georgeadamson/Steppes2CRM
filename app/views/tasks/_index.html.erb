@@ -1,28 +1,53 @@
 <%
 
+	# Followups are displayed in:
+	# - The Followups secion of each Client page. (Filtered by client)
+	# - The Followups tab on the Dashboard Home page. (Filtered by user)
+
 	# TODO: Discard these filters if they're all already applied by the controller:
 
 	client ||= nil
-	user   ||= @user
+	user   ||= @user || current_user
 	#limit  ||= params[:limit].to_i > 0 ? params[:limit].to_i : 200
 
 	# Filter by user if specified, otherwise only default to current user if there's no client filter:
 	user   = User.get( params[:user_id] ) if params[:user_id]
 	user ||= request.session.user         unless client
 
-	tasks ||= Task.all( :due_date => (Date.today-5 .. Date.today+5), :type_id.not => TaskType::NOTE )
-	tasks   = tasks.all( :user => user )  if user && user.id != 99
+	tasks ||= Task.all
+	#tasks = tasks.all( :due_date => (Date.today-5 .. Date.today+5), :type_id.not => TaskType::NOTE ) if user && !client
 	
+  if user && !client
+		tasks = tasks.all( :user   => user )  # unless || user.id == 99
+		tasks = tasks.all( :status_id => TaskStatus::OPEN, :type_id => TaskType::BROCHURE_FOLLOWUP )	# 0=Open, 4=Brochure Followup
+  end
+	
+	# Prepare consultants pick list and ensure task.user is on it even if they're inactive:
+	user_list = User.all( :is_active => true, :order=>[:forename, :name] )
+	user_list << user
+		
 %>
 <div class="sectionContainer noSectionHead <%= 'noSectionFoot' unless client %>">
 
 	<div class="sectionBody">
 		
-		<br/><br/>
-		<h4>(Work in progress. Please ignore this page for now)</h4>
-		<br/><br/>
+		<!-- Only show heading and refresh button when on dashboard home page: -->
+		<% if user && !client %>
+			<br/><br/>
+			<%#= form_for :tasks, :action => resource(user,:tasks) %>
+			<h4>My followups
+				<%= link_to "#{ icon :refresh } Refresh", resource(user,:tasks), :'data-target' => '#user-followups-table', :class => 'ui-priority-secondary ui-state-default' %>
+				<%#= select	:user_id,	:label => 'Followups for', :selected => user.id.to_s, :collection => user_list, :value_method => :id, :text_method => :display_name, :prompt => 'Everyone', :class => 'auto-submit' %>
+			</h4>
+			<%# end =%>
+			<br/>
+		<% end %>
 		
-		<%= partial 'tasks/list', :tasks => tasks %>
+    <%= if tasks.length > 0
+			partial 'tasks/list', :tasks => tasks, :client => client
+		else
+			"No followups to show here #{ 'for ' + user.preferred_name if user.preferred_name }."
+    end %>
 
 	</div>
 	
