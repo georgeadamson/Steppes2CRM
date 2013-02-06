@@ -576,31 +576,45 @@ end
           #obj.model.relationships.each do | name, association |    # Older versions of DM
           obj.model.relationships.each do | association |
 
-            name = association.name
+            #puts 'association', association.inspect, association.class, association.methods.sort.inspect
+            
+            # Allow for when accociation is an array of associations: (Eg: When it's a ManyToMany)
+            for assoc in ( defined?(association.name) ? [association] : association ) do
+            
+              #puts 'defined?(association.name)', defined?(association.name), association.inspect
+              #puts 'defined?(assoc.name)', defined?(assoc.name), assoc.inspect
+                            
+              begin
 
-            begin
+                name = assoc.name
+                
+                if obj.respond_to?(name)
+                  
+                  if ( rel = obj.method(name).call ) && rel.respond_to?(:dirty?) && rel.dirty?
+                    
+                    Merb.logger.debug "Collecting errors from #{name}"
+                    
+                    if rel.respond_to?(:each)
+                      collect_error_messages_for obj, name.to_sym
+                    else
+                      collect_child_error_messages_for obj, rel
+                    end
+                    
+                  end #if
+                  
+                end #if
+                
+              rescue Exception => reason
 
-              if obj.respond_to?(name)
-
-                if ( rel = obj.method(name).call ) #&& rel.respond_to?(:dirty?) && rel.dirty?
-
-                  Merb.logger.debug "Collecting errors from #{name}"
-
-                  if rel.respond_to?(:each)
-                    collect_error_messages_for obj, name.to_sym
-                  else
-                    collect_child_error_messages_for obj, rel
-                  end
-
-                end
+                whoopsie = "ERROR during collect_error_messages_for #{ obj.inspect } #{ reason }"
+                puts whoopsie
+                Merb.logger.error whoopsie
 
               end
 
-            rescue Exception => reason
-              Merb.logger.error "ERROR during collect_error_messages_for #{ obj.inspect } #{ reason }"
-            end
-
-          end
+            end #for
+            
+          end #each
 
           Merb.logger.debug "#{ obj.class } now has #{ obj.errors.length } errors"
 
@@ -610,7 +624,7 @@ end
             collect_child_error_messages_for( obj, a, context )
           } if obj.respond_to? association_name
         
-        end
+        end #if
 
 			  return obj.errors
         

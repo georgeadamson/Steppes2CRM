@@ -1,4 +1,4 @@
-<div class="sectionContainer noSectionHead">
+<div class="sectionContainer noSectionHead noSectionFoot">
 
 	<%
 		# Important: @brochure_request.client & company are required to create a new brochure_request!
@@ -16,6 +16,7 @@
 			
 		</div>
 
+		<!-- DEPRECATED: -->
 		<%= partial 'shared/sectionFoot_with_buttons',
 				:save_caption		=> 'Save new request',
 				:cancel_caption => 'Cancel without saving',

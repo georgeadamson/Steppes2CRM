@@ -10,7 +10,7 @@
 	
 %>
 	
-<div class="sectionContainer <%= save_space ? 'noSectionHead' : '' %>">
+<div class="sectionContainer <%= save_space ? 'noSectionHead' : '' %> noSectionFoot">
 
 	<% unless save_space %>
 		
@@ -28,7 +28,7 @@
 
 			</div>
 
-			<!-- sectionFoot: -->
+			<!-- DEPRECATED: -->
 			<%= partial 'shared/sectionFoot_with_buttons',
 					:save						=> !readonly,
 					:save_caption		=> 'Save my changes',
