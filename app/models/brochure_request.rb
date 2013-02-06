@@ -36,19 +36,38 @@ class BrochureRequest
   alias name notes
   alias description custom_text
 
+  # Allow new brochure_request form to set Area of Interest and Source:
+  attr_accessor :client_source_id
+  attr_accessor :client_country_id
+  
   # Hard-coded doc type id!
   attr_accessor :document_type_id
 
   # Flags to prevent immediate document generation: (Or switch it off completely when testing)
   attr_accessor :generate_doc_later   # For future enhancement? (Because run_later only applies in controllers and views)
   attr_accessor :skip_doc_generation  # Useful when testing. Doc gen will go through the motions without actually generating.
-   
+  
+  # Allow new brochure_request form to set Area of Interest and Source:
+  # accepts_nested_attributes_for :client
 
   before :valid? do
     # If necessary, attempt to choose a template for the current brochure.company:
     self.document_template_file ||= self.default_template_file_name
   end
-   
+  
+  after :create do
+    
+    if self.client_source_id
+      self.client.update!( :source_id => self.client_source_id )
+    end
+        
+    if self.client_country_id
+      self.client.client_interests.destroy!
+      self.client.client_interests.create( :country_id => self.client_country_id )
+    end
+        
+  end
+  
   before :update do
     self.status_id = PENDING   if self.doc_file_should_exist? && !self.doc_file_exists?
     self.status_id = GENERATED if self.status_id == PENDING   &&  self.doc_file_exists?

@@ -134,7 +134,7 @@ jQuery(function($) {
 // ***** Experimental event-driven code. Work in progress, being introduced gradually:
 // ***** For more info, google for "building evented single page applications".
 
-	var Layout = {
+	window.Layout = {
 
 		// Experimental new router matching syntax: (To replace livePath & eventually liveForm)
 		// Eg: Layout.match(/clients\/new/).on('success').to(Client.openNew)
@@ -286,6 +286,11 @@ jQuery(function($) {
 			Layout.match(/tasks/)													.on('success').to(Task.initIndex);
 
 			window.setTimeout( Task.loadIndex, 5000 );
+
+			// Brochure Requests (AKA Enquiries)
+			Layout.livePath('click',    new RegExp('/brochure_requests/new'),			Brochure.openNew );
+			Layout.livePath('click',	new RegExp('/brochure_requests/([0-9]+)/edit'),	Brochure.openEdit );
+			Layout.livePath('success',  new RegExp('/brochure_requests/new'),			Brochure.initForm, initDatepickers );
 
 			// AutoText:
 			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
@@ -4116,6 +4121,9 @@ function initTripInvoiceFormTotals(){
 	}
 
 
+	// var Brochure = SEE brochure_requests.js
+
+
 	var Task = {
 
 		openNew : function(options){
@@ -4351,7 +4359,7 @@ function Url(path){
 
 // Helper for generating the markup required for a standard icon:
 // TODO: Refactor using html template?
-function icon(name){
+window.icon = function(name){
 	return '<span class="ui-icon ui-icon-{name}"></span>'.replace('{name}',name,'g');
 }
 
@@ -4533,7 +4541,7 @@ function numVal(selector, $fields, defaultAlternative) {
 
 	$(document).bind('path:success', function(){
 	
-		console.log('test!',arguments)
+		//console.log('test!',arguments)
 	
 	})
 
