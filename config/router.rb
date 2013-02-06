@@ -70,6 +70,9 @@ Merb::Router.prepare do
   resources :client_interests
   resources :client_marketings
   resources :users
+  resources :users do |user|
+    user.resources :tasks
+  end
 
   # Trip Elements grid builder:
   match('/clients/:client_id/trips/:trip_id/trip_elements/grid').to(:controller => 'trip_elements', :action => 'grid')

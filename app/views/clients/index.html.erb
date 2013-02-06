@@ -18,6 +18,7 @@
 	# Find out which client was in active tab last time the user used this app:
 	selected_client = session.user.most_recent_client	#open_clients.first( UserClient.is_selected => true )
 	select_id       = selected_client ? selected_client.id : 0
+
 -%>
 
 <%= error_messages_for :post %>
@@ -28,7 +29,7 @@
       <ul id="pageTabsNav" class="primaryTabs ellipsis">
 
         <!-- Dashboard tab: -->
-        <li class="dashboard-tab"><a href="#tabDashboard">Home page</a></li>
+        <li class="dashboard-tab ui-tabs-selected"><a href="#tabDashboard">Home page</a></li>
 
         <!-- Tours tab: -->
         <li class="tours-tab"><%= link_to tag(:span,'Groups'), resource(:tours) %></li>
@@ -38,7 +39,7 @@
 
         <!-- One tab for each open client: -->
         <% open_clients.each do |client| %>
-          <li class="<%= 'ui-tabs-selected' if client.id == select_id %>">
+          <li class="<%#= 'ui-tabs-selected' if client.id == select_id %>">
 						<%= link_to client.shortname, resource(client) %>
 						<%= link_to "x", "#{resource(client)}/close", :class => "close-tab", :title => "Close this client tab" %>
 						<%# Note: The close-tab html must also be defined in the tabTemplate for #pageTabs in shared.js 
