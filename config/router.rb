@@ -169,6 +169,7 @@ Merb::Router.prepare do
   # Client search:
   match('/search').to(:controller => 'clients', :action => 'search' )
   match('/clients/:id/summary'    ).to(:controller => 'clients',   :action => 'summary' )
+  match('/clients/:id/summary/marketing').to(:controller => 'clients',   :action => 'summary_marketing' )
   match('/clients/:id/select'     ).to(:controller => 'clients',   :action => 'select_tab' )
   match('/clients/:id/close'      ).to(:controller => 'clients',   :action => 'close_tab' )
   match('/clients/:client_id/documents'  ).to(:controller => 'documents', :action => 'index' )	# action expects client_id in params.

@@ -291,6 +291,8 @@ jQuery(function($) {
 			Layout.livePath('click',    new RegExp('/brochure_requests/new'),			Brochure.openNew );
 			Layout.livePath('click',	new RegExp('/brochure_requests/([0-9]+)/edit'),	Brochure.openEdit );
 			Layout.livePath('success',  new RegExp('/brochure_requests/new'),			Brochure.initForm, initDatepickers );
+			Layout.liveForm('success',  'brochure_requests:create',						Brochure.onCreateSuccess );
+			Layout.liveForm('success',  'brochure_requests:update',						Brochure.onCreateSuccess );
 
 			// AutoText:
 			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
@@ -4217,7 +4219,7 @@ function initTripInvoiceFormTotals(){
 
 				// Refresh the list of the client's tasks:
 				ui.url		= Url('clients', ui.form.client_id, 'tasks');	// Eg: "/clients/1234/tasks"
-				ui.target	= '#' + ui.url.replace('/','','g');				// Eg: "#clients1234tasks"
+				ui.target	= '#' + ui.url.split('/').join('');				// Eg: "#clients1234tasks"
 
 				// No need to use Layout.load(ui.url,ui) here, just go ahead and refresh the content;
 				$(ui.target).load(ui.url);				// Reload client's custom list of tasks.
@@ -4353,7 +4355,7 @@ function initTripInvoiceFormTotals(){
 
 
 // Helper for assembling a url from several arguments: (Eg: Url('clients',client_id,'tasks') => "/clients/1234/tasks")
-function Url(path){
+window.Url = function(path){
 	return '/' + Array.prototype.slice.call(arguments).join('/');
 }
 

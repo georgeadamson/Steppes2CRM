@@ -53,4 +53,26 @@ var Brochure = {
 
 	},
 	
+	onCreateSuccess : function(ui){
+
+		// Close all dialogs: (TODO: Can we be more specific?!)
+		$('DIV.ui-dialog-content').dialog('close').remove();
+
+		if(ui && ui.form && ui.form.client_id){
+
+			// Refresh the list of the client's brochure_requests:
+			// No need to use Layout.load(ui.url,ui) here, just go ahead and refresh the content;
+			ui.url		= Url('clients', ui.form.client_id, 'brochure_requests');	// Eg: "/clients/1234/brochure_requests"
+			ui.target	= '#' + ui.url.split('/').join('');								// Eg: "#clients1234brochure_requests"
+			$(ui.target).load(ui.url);												// Reload client's custom list of brochure_requests.
+
+			ui.url     = Url('clients', ui.form.client_id, 'summary', 'marketing')
+			ui.target  = '#' + ui.url.split('/').join('');
+			$(ui.target).load(ui.url);													// Reload client summary page.
+
+
+
+		}
+	}
+
 }

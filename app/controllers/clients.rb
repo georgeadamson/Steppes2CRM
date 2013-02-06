@@ -63,6 +63,13 @@ class Clients < Application
     display @client
   end
 
+  def summary_marketing(id)
+    # Client marketing panel in summary page
+    @client = Client.get(id)
+    raise NotFound unless @client
+    display @client
+  end
+  
   def show(id)
 
     # Entire Client page with tabs for Details / Documents / Payments / Trips
