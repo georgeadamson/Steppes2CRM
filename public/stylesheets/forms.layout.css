@@ -187,6 +187,7 @@ FORM {
 	}	
 		.formField LABEL SMALL {
 			color:#999;
+			font-weight:normal;
 		}
 
 		.formField.noemphasis LABEL {

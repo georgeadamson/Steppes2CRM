@@ -16,8 +16,8 @@
 	<div id="messages" class="ui-widget">
 		<%# This custom comment tag is a workaround allowing us to parse the messages out of the server response when Firefox on Windows occasionally receives entire page in ajax response! %>
 		<!--<MESSAGES>-->
-		<h2 class="noticeMessage ui-state-highlight ui-corner-all" style="display:none"><%= message[:notice].gsub(/\n/,'<br/>') if message[:notice] %></h2>
-		<h2 class="errorMessage ui-state-highlight ui-corner-all"  style="display:none"><%= message[:error ].gsub(/\n/,'<br/>') if message[:error]  %></h2>
+		<h2 class="noticeMessage ui-state-highlight ui-corner-all" style="display:none"><%= message[:notice].gsub('\n','<br/>') if message[:notice] %></h2>
+		<h2 class="errorMessage ui-state-highlight ui-corner-all"  style="display:none"><%= message[:error ].gsub('\n','<br/>') if message[:error]  %></h2>
 		<!--</MESSAGES>-->
 	</div>
 

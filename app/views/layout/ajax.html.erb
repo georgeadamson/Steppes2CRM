@@ -11,11 +11,11 @@
 	# Include any nortices or error messages in the ajax response:
 
 	if message[:notice] 
-		%><h2 class="noticeMessage ui-state-highlight ui-corner-all" style="display:none"><%= message[:notice].gsub(/\n/,'<br/>') %></h2><%
+		%><h2 class="noticeMessage ui-state-highlight ui-corner-all" style="display:none"><%= message[:notice].gsub('\n','<br/>') %></h2><%
 	end
 
 	if message[:error]
-		%><h2 class="errorMessage ui-state-highlight ui-corner-all" style="display:none"><%=  message[:error].gsub(/\n/,'<br/>')  %></h2><%
+		%><h2 class="errorMessage ui-state-highlight ui-corner-all" style="display:none"><%=  message[:error].gsub('\n','<br/>')  %></h2><%
 	end
 
 

@@ -212,6 +212,35 @@ class Client
 
   before :valid? do
 
+    self.birth_date = nil           if self.birth_date == ''
+    self.passport_issue_date = nil  if self.passport_issue_date == ''
+    self.passport_expiry_date = nil if self.passport_expiry_date == ''
+
+    #puts 'COUNTRIES', self.countries_ids.inspect, self.countries.inspect
+    #self.client_interests.each do |client_interest|
+    #  puts 'before', client_interest.inspect, client_interest.country.id
+    #end
+    #puts 'self.countries.dirty?', self.countries.dirty?
+    
+    countries1 = self.countries.nil?        ? [] : self.countries.map{|c|c.id}
+    countries2 = self.client_interests.nil? ? [] : self.client_interests.map{|c|c.country_id}
+    
+    #if self.countries.dirty? && self.client_interests.count{|ci| return !ci.client_id.nil? } > 0
+    if countries1.length != countries2.length ||
+       countries1.sort.inspect != countries2.sort.inspect
+      
+      #self.client_interests.destroy!
+      
+      self.countries.each do |country|
+        self.client_interests.new( :country_id => country.id )
+      end
+      
+    end
+    
+    #self.client_interests.each do |client_interest|
+    #  puts 'after', client_interest.inspect, client_interest.country.id
+    #end
+    
     # Unfortunately the conversion of fields to uk-date format has to be done in the
     # controller action otherwise datamapper makes it's own assumptions about us-dates
     # See accept_valid_date_fields_for() in the create and update actions.

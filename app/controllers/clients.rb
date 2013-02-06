@@ -228,8 +228,8 @@ class Clients < Application
 		accept_new_address_unless_blank( client[:addresses_attributes] )
     primary_address_id_before_save  = @client.primary_address.id
     addresses_ids_before_save       = @client.addresses_ids
-    warning_message                 = ''
-
+    message[:notice]              ||= ''
+      
     # Look out for user setting a primary address and trying to delete it at the same time!
     # Solve the conflict by removing the _delete field and notifying the user:
     client[:addresses_attributes].each do |addr|
@@ -239,7 +239,7 @@ class Clients < Application
 
       if addr[:_delete] && addr[:id] == client[:primary_address_id]
         addr.delete(:_delete)
-        warning_message = "Oh good grief, you can't set a primary address and delete it at the same time. Muppet."
+        message[:notice] << "Oh good grief, you can't set a primary address and delete it at the same time. Muppet.\n"
       end
 
     end 
@@ -247,30 +247,31 @@ class Clients < Application
     # Prevent the search keywords table from being updated right now: (We'll use run_later instead)
     client[:auto_refresh_search_keywords_after_save] = false
 
+    # Manually set attributes instead of relying on update(). (See saved_ok below)
+    @client.attributes = client
+    
     # Unsuccessful attempt to overcome overzealous deep validation errors by doing things manually:
     # Temporary fix. Kinda works but cannot handle address _delete.
-    @client.attributes = client
-
-    saved_ok = @client.valid? && 
+    saved_ok = @client.valid? &&
               @client.client_interests.select{|obj| !obj.valid? }.empty? &&
               @client.client_addresses.select{|obj| !obj.valid? }.empty? &&
               @client.client_addresses.addresses.select{|obj| !obj.valid? }.empty? &&
               @client.client_interests.save! &&
               @client.client_addresses.save! &&
-              @client.client_addresses.addresses.save! &&
+              @client.interests.save! &&
+              @client.addresses.save! &&
               @client.save!
 
-
-    if saved_ok       
+    puts "saved_ok #{ saved_ok } #{ message[:notice] }"
 
     #if @client.update(client)
+    if saved_ok       
+
       
       @client.reload
       number_of_addresses_added   = ( @client.addresses_ids - addresses_ids_before_save ).length
       number_of_addresses_removed = ( addresses_ids_before_save - @client.addresses_ids ).length
       
-      message[:notice] ||= ''
-      message[:notice] << "#{ warning_message }\n" if warning_message
       message[:notice] << "Client details were updated successfully"
       message[:notice] << "\n The primary address has been changed to \"#{ @client.primary_address.name }\""  if primary_address_id_before_save != @client.primary_address.id
       message[:notice] << "\n and #{ number_of_addresses_added   } new address has been added"                if number_of_addresses_added   > 0
@@ -296,8 +297,11 @@ class Clients < Application
       
     else
       collect_error_messages_for @client
-      #collect_error_messages_for @client, :interests
-      #collect_error_messages_for @client, :addresses
+      collect_error_messages_for @client, :countries # AKA interests
+      collect_error_messages_for @client, :client_interests
+      collect_error_messages_for @client, :addresses
+      collect_error_messages_for @client, :client_addresses
+      collect_error_messages_for @client, :client_marketing_divisions
       message[:error] = "Uh oh, could not update client details because \n" + @client.errors.full_messages.join('\n')
       display @client, :edit
     end
