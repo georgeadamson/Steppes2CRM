@@ -8,7 +8,7 @@ var Brochure = {
 
 		$('<div>').html('Opening...').dialog({
 			//autoOpen: false,
-			title		: 'Log an Enquiry or Request a Brochure',
+			title		: 'Log an Enquiry and request a Brochure',
 			minHeight	: 300,
 			width		: 550,
 			open		: function(e,ui){
@@ -32,7 +32,7 @@ var Brochure = {
 		var $dialog = $('<div>').html('Opening...').dialog({
 			//autoOpen: false,
 			modal		: true,
-			title		: 'Modify Enquiry or Brochure Request',
+			title		: 'Modify Enquiry and Brochure Request',
 			minHeight	: 320,
 			width		: 550,
 			open		: function(e,ui){
