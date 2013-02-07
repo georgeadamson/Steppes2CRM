@@ -160,7 +160,7 @@ class Client
 
   # These are used for adding and removing existing objects to/from the collection:
 	accepts_ids_for :trips
-	accepts_ids_for :countries	# AKA :interests
+	accepts_ids_for :countries	# AKA :interests # IMPORTANT: See custom "def countries_ids=" below
 	accepts_ids_for :addresses
 	accepts_ids_for :companies
   
@@ -222,21 +222,22 @@ class Client
     #end
     #puts 'self.countries.dirty?', self.countries.dirty?
     
-    countries1 = self.countries.nil?        ? [] : self.countries.map{|c|c.id}
-    countries2 = self.client_interests.nil? ? [] : self.client_interests.map{|c|c.country_id}
-    
-    #if self.countries.dirty? && self.client_interests.count{|ci| return !ci.client_id.nil? } > 0
-    if countries1.length != countries2.length ||
-       countries1.sort.inspect != countries2.sort.inspect
-      
-      #self.client_interests.destroy!
-      
-      self.countries.each do |country|
-        self.client_interests.new( :country_id => country.id )
-      end
-      
-    end
-    
+    # Deprecated: An attempt to fix the Client-save bug where Countries of Interest caused save to fail for no apparent reason :(
+    # See custom def countries_ids= below
+    #countries1 = self.countries.nil?        ? [] : self.countries.map{|c|c.id}
+    #countries2 = self.client_interests.nil? ? [] : self.client_interests.map{|c|c.country_id}
+    ##if self.countries.dirty? && self.client_interests.count{|ci| return !ci.client_id.nil? } > 0
+    #if countries1.length != countries2.length ||
+    #   countries1.sort.inspect != countries2.sort.inspect
+    #  
+    #  #self.client_interests.destroy!
+    #  
+    #  self.countries.each do |country|
+    #    self.client_interests.new( :country_id => country.id )
+    #  end
+    #  
+    #end
+
     #self.client_interests.each do |client_interest|
     #  puts 'after', client_interest.inspect, client_interest.country.id
     #end
@@ -311,7 +312,20 @@ class Client
     self.refresh_search_keywords() if self.auto_refresh_search_keywords_after_save
 
   end
+  
+  
+  # Hack to apply countries of interest from Client form:
+  # For some reason the standard "accepts_ids_for :countries" was failing and preventing client form saving
+  def countries_ids=(ids)
     
+    if ids
+      self.client_interests.destroy!
+      ids.each do |id|
+        self.client_interests.new( :country_id => id )
+      end
+    end
+    
+  end
 
 
   # Safer alternative to the DESTROY method. (Updates the deleted_at field without actually destroying the row)
