@@ -319,7 +319,7 @@ class Client
   def countries_ids=(ids)
     
     if ids
-      self.client_interests.destroy!
+      self.client_interests.destroy! unless self.new? # TODO: Find a better way that only empties the collection instead of deleting records
       ids.each do |id|
         self.client_interests.new( :country_id => id )
       end
