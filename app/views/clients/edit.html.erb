@@ -19,7 +19,8 @@
 	
 		:ui_target				=> :auto, 
 		
-		:cancel_url				=> resource(@client) + "/summary", 
+		:cancel_url				=> resource(@client) + "/summary",
+		:cancel_caption		=> '&nbsp; Close &nbsp;',
 		:save_caption			=> 'Save changes',
 		
 		:label_for_delete	=> true, #!@client.archived?,	# Show "Delete" button unless client is already "deleted"
