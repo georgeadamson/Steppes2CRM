@@ -8,16 +8,18 @@
 
 	client ||= nil
 	user   ||= @user || current_user
-	#limit  ||= params[:limit].to_i > 0 ? params[:limit].to_i : 200
+	limit  ||= params[:limit].to_i > 0 ? params[:limit].to_i : 500
 
 	# Filter by user if specified, otherwise only default to current user if there's no client filter:
-	user   = User.get( params[:user_id] ) if params[:user_id]
-	user ||= request.session.user         unless client
+	user     = User.get( params[:user_id] ) if params[:user_id]
+	user   ||= request.session.user         unless client
 
-	tasks ||= Task.all
-	#tasks = tasks.all( :due_date => (Date.today-5 .. Date.today+5), :type_id.not => TaskType::NOTE ) if user && !client
+	tasks  ||= Task.all
+	tasks    = tasks.all( :limit => limit )
 	
   if user && !client
+		#tasks = tasks.all( :due_date => (Date.today-5 .. Date.today+5), :type_id.not => TaskType::NOTE )
+		tasks = tasks.all( :due_date.lte => Date.today+3 )
 		tasks = tasks.all( :user   => user )  # unless || user.id == 99
 		tasks = tasks.all( :status_id => TaskStatus::OPEN, :type_id => TaskType::BROCHURE_FOLLOWUP )	# 0=Open, 4=Brochure Followup
   end

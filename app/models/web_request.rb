@@ -9,7 +9,7 @@ class WebRequest
   property :requested_date,       DateTime, :required => true,  :default => lambda{ |w,prop| DateTime.now }   # Used for legacy WebRequests only.
   property :received_date,        DateTime, :required => true,  :default => Time.now
   property :processed_date,       DateTime, :required => false
-  property :xml_text,             Text,     :required => true   #,  :lazy => :raw_data  # Only required for NEW web requests, not legacy ones.
+  property :xml_text,             Text                          # See conditional validation below,  :lazy => :raw_data  # Only required for NEW web requests, not legacy ones.
   property :email_text,           Text,     :required => false  #s, :lazy => :raw_data  # Used for LEGACY WebRequests only.
   property :user_id,              Integer,  :required => false
   property :client_id,            Integer,  :required => false
@@ -26,6 +26,9 @@ class WebRequest
   belongs_to :company
 
 	accepts_nested_attributes_for :client
+  
+  # Only validate new web_requests: (Otherwise we get error when saving old clients etc)
+  validates_present :xml_text, :if => :new?
   
   # Bit of a hack! The controller#update action sets this before updating the webrequest:
   attr_accessor :status_id_before_save

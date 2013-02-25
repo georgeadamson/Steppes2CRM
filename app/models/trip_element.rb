@@ -39,7 +39,7 @@ class TripElement
   property :singles,							Integer,		:default	=> 0
 
   property :margin_type,					String,			:length		=> 1,			:default	=> '%'							# Apply margin as percent? (Or fixed amount)
-  property :margin,								BigDecimal, :required	=> true,  :precision=> 6, :scale	=> 2,	:default	=> lambda{ |elem,prop| CRM[:default_margin] || 24 }	# Number representing a fixed amount or percent.
+  property :margin,								BigDecimal, :required	=> true,  :precision=> 6, :scale	=> 2,	:default	=> lambda{ |elem,prop| elem.default_margin }	# Number representing a fixed amount or percent.
   property :exchange_rate,				BigDecimal, :required	=> true,  :precision=> 6, :scale	=> 2,	:default	=> 1
   property :cost_per_adult,				BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2  # LOCAL cost per adult per day
   property :cost_per_child,				BigDecimal, :default	=> 0,			:precision=> 9, :scale	=> 2  # LOCAL cost per child per day
@@ -69,7 +69,7 @@ class TripElement
   property :biz_supp_per_adult,		BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
   property :biz_supp_per_child,		BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
   property :biz_supp_per_infant,	BigDecimal, :precision=> 6,	:scale		=> 2, :default => 0
-  property :biz_supp_margin,			BigDecimal, :precision=> 6, :scale	  => 2,	:default => lambda{ |elem,prop| CRM[:default_margin] || 24 }, :required	=> true
+  property :biz_supp_margin,			BigDecimal, :precision=> 6, :scale	  => 2,	:default => lambda{ |elem,prop| elem.default_margin }, :required	=> true
   property :biz_supp_margin_type, String,     :length		=> 1,			            :default => '%'
   
   property :is_subgroup,					Boolean,		:default	=> false							# Only set when number of adults/children/infants must differ from main trip.
@@ -311,6 +311,12 @@ class TripElement
     
   end
   
+  
+  def default_margin
+    common_default = CRM[:default_margin] || 24
+    flight_default = CRM[:default_margin_for_flights] || common_default
+    return self.flight? ? flight_default : common_default
+  end
   
   # Helper to derive the margin multipler if applicable, otherwise just return 1:
   def margin_multiplier

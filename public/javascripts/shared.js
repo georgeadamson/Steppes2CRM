@@ -134,7 +134,7 @@ jQuery(function($) {
 // ***** Experimental event-driven code. Work in progress, being introduced gradually:
 // ***** For more info, google for "building evented single page applications".
 
-	var Layout = {
+	window.Layout = {
 
 		// Experimental new router matching syntax: (To replace livePath & eventually liveForm)
 		// Eg: Layout.match(/clients\/new/).on('success').to(Client.openNew)
@@ -286,6 +286,13 @@ jQuery(function($) {
 			Layout.match(/tasks/)													.on('success').to(Task.initIndex);
 
 			window.setTimeout( Task.loadIndex, 5000 );
+
+			// Brochure Requests (AKA Enquiries)
+			Layout.livePath('click',    new RegExp('/brochure_requests/new'),			Brochure.openNew );
+			Layout.livePath('click',	new RegExp('/brochure_requests/([0-9]+)/edit'),	Brochure.openEdit );
+			Layout.livePath('success',  new RegExp('/brochure_requests/new'),			Brochure.initForm, initDatepickers );
+			Layout.liveForm('success',  'brochure_requests:create',						Brochure.onCreateSuccess );
+			Layout.liveForm('success',  'brochure_requests:update',						Brochure.onCreateSuccess );
 
 			// AutoText:
 			Layout.livePath('success', /\/countries\?autotext/,							Autotext.showCountries );	// Eg: '/countries?autotext&company_id={value}&list=option'
@@ -4116,6 +4123,9 @@ function initTripInvoiceFormTotals(){
 	}
 
 
+	// var Brochure = SEE brochure_requests.js
+
+
 	var Task = {
 
 		openNew : function(options){
@@ -4209,7 +4219,7 @@ function initTripInvoiceFormTotals(){
 
 				// Refresh the list of the client's tasks:
 				ui.url		= Url('clients', ui.form.client_id, 'tasks');	// Eg: "/clients/1234/tasks"
-				ui.target	= '#' + ui.url.replace('/','','g');				// Eg: "#clients1234tasks"
+				ui.target	= '#' + ui.url.split('/').join('');				// Eg: "#clients1234tasks"
 
 				// No need to use Layout.load(ui.url,ui) here, just go ahead and refresh the content;
 				$(ui.target).load(ui.url);				// Reload client's custom list of tasks.
@@ -4345,13 +4355,13 @@ function initTripInvoiceFormTotals(){
 
 
 // Helper for assembling a url from several arguments: (Eg: Url('clients',client_id,'tasks') => "/clients/1234/tasks")
-function Url(path){
+window.Url = function(path){
 	return '/' + Array.prototype.slice.call(arguments).join('/');
 }
 
 // Helper for generating the markup required for a standard icon:
 // TODO: Refactor using html template?
-function icon(name){
+window.icon = function(name){
 	return '<span class="ui-icon ui-icon-{name}"></span>'.replace('{name}',name,'g');
 }
 
@@ -4533,7 +4543,7 @@ function numVal(selector, $fields, defaultAlternative) {
 
 	$(document).bind('path:success', function(){
 	
-		console.log('test!',arguments)
+		//console.log('test!',arguments)
 	
 	})
 

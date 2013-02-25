@@ -6,3 +6,19 @@
 	line-height:1.8em;	/* Prevent word wrapping.
 	padding:0.5em;		/* This will not be necessary if we place text in <a> tags within each header */
 }
+
+
+
+.ui-dialog-content 
+{
+	position: relative;
+}
+
+.ui-dialog-content > .sectionContainer 
+{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+}
