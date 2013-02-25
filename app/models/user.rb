@@ -18,11 +18,11 @@ class User
   property :is_active,			Boolean,:required => true, :default => true
 
   property :preferred_name,	String, :required => true, :default => 'New user'
-  property :email,					String, :lazy => [:slow], :default => 'user@steppestravel.co.uk'
-  property :job_title,			String, :lazy => [:slow], :default => ''
-  property :profile,				String, :lazy => [:slow], :default => '', :length => 2000, :unique => true
-  property :signature_file,	String, :lazy => [:slow], :default => 'signature.jpg'
-  property :portrait_file,	String, :lazy => [:slow], :default => 'portrait.jpg'
+  property :email,					String, :default => 'user@steppestravel.co.uk'           #, :lazy => [:slow]
+  property :job_title,			String, :default => ''                                   #, :lazy => [:slow]
+  property :profile,				String, :default => '', :length => 2000, :unique => true #, :lazy => [:slow]
+  property :signature_file,	String, :default => 'signature.jpg'                      #, :lazy => [:slow]
+  property :portrait_file,	String, :default => 'portrait.jpg'                       #, :lazy => [:slow]
 
   belongs_to :company   # Formerly known as Consultant.PrimaryCompanyId
   
