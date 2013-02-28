@@ -40,6 +40,9 @@
       <small>
          <%= trip.summary %>
       </small>
+			<small>
+				<%= link_to 'Open in Virtual Cabinet', "#{ resource( client_or_tour, trip ) }/virtual_cabinets/open", :rel => 'who-cares' %>
+			</small>
     </h3>
 
 		<!-- These fields are used by javascript to identify specific attributes of the trip: -->

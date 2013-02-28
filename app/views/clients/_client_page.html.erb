@@ -19,6 +19,9 @@
 				<small>
 					Trips: <%= client.trips_statement %>
 				</small>
+				<small>
+					<%= link_to 'Open in Virtual Cabinet', "#{ resource( client ) }/virtual_cabinets/open", :rel => 'who-cares' %>
+				</small>
 			</h2>
 
 			<!-- Fields used by client-side script: -->
