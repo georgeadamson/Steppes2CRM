@@ -20,7 +20,7 @@
 					Trips: <%= client.trips_statement %>
 				</small>
 				<small>
-					<%= link_to 'Open in Virtual Cabinet', "#{ resource( client ) }/virtual_cabinets/open", :rel => 'who-cares' %>
+					- <%= link_to '<span class="ui-icon ui-icon-virtualcabinet"></span> Open client docs in Virtual Cabinet', "#{ resource( client ) }/virtual_cabinets/open", :rel => '#dummy', :class => 'ui-priority-secondary ui-state-default right' %>
 				</small>
 			</h2>
 

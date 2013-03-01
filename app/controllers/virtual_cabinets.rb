@@ -14,7 +14,13 @@ class VirtualCabinets < Application
     
     raise NotFound if client_id.nil?
     
-    return VirtualCabinet.create user_id, client_id, trip_id
+    result =  VirtualCabinet.create user_id, client_id, trip_id
+    
+    client      = Client.get(client_id)
+    
+    message[:notice] = "I've politely asked Virtual Cabinet to open docs #{ client.nil? ? '' : "for #{client.fullname}" } <br> <small>(Geeky stuff: #{result.to_s})</small>"
+    
+    render :show
     
   end
   
