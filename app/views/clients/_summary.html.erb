@@ -4,7 +4,7 @@
   
 	client			||= @client
   address				= client.address
-  mail_params   = '?subject=Your trip with Steppes travel&body=Dear ' + (client.salutation || client.addressee) + ',%0A%0A'
+  mail_params   = '?subject=Your trip with Steppes Travel&body=Dear ' + (client.salutation || client.addressee) + ',%0A%0A'
 	
 	# Define and serialise parameters for generating client letter documents:
 	# Note: Because we are explicitly specifying document_template_file it will not need to be derived from document_type_id.
