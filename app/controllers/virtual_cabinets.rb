@@ -10,7 +10,9 @@ class VirtualCabinets < Application
     client_id ||= params[:client_id]
     trip_id     = params[:trip_id]
     
-    puts user_id.inspect, client_id.inspect, trip_id.inspect
+    info = "Generating Virtual Cabinet Command File for user_id #{ user_id.inspect }, client_id #{ client_id.inspect}, trip_id #{ trip_id.inspect }"
+    puts info
+    Merb.logger.info info
     
     raise NotFound if client_id.nil?
     
