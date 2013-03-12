@@ -9,13 +9,13 @@ class Client
   property :fullname,			String, :default => ""									# Derived from other fields if blank.
 
   property :known_as,			String, :default => ""
-  property :salutation,		String, :default => "", 				:lazy => [:all]
-  property :addressee,		String, :default => "", 				:lazy => [:all]
-
-  property :tel_work,			String, :default => "", 				:lazy => [:all]
-  property :fax_work,			String, :default => "", 				:lazy => [:all]
-  property :tel_mobile1,	String, :default => "", 				:lazy => [:all]
-  property :tel_mobile2,	String, :default => "", 				:lazy => [:all]
+  property :salutation,		String, :default => ""                                                                                                                                                        , :lazy => [:all]
+  property :addressee,		String, :default => ""                                                                                                                                                        , :lazy => [:all]
+  
+  property :tel_work,			String, :default => ""                                                                                                                                                        , :lazy => [:all]
+  property :fax_work,			String, :default => ""                                                                                                                                                        , :lazy => [:all]
+  property :tel_mobile1,	String, :default => ""                                                                                                                                                        , :lazy => [:all]
+  property :tel_mobile2,	String, :default => ""                                                                                                                                                        , :lazy => [:all]
   
   property :email1,				String, :length => 60, :default => "", :format => :email_address, :messages => { :format => "The client's primary email address does not appear to be a valid address" }
 	property :email2,				String, :length => 60, :default => "", :format => :email_address, :messages => { :format => "The client's alternative email address does not appear to be a valid address" }
@@ -25,33 +25,34 @@ class Client
   #property :recentSource, Integer
   #property :clientType, Integer
   
-  property :birth_date,		Date,														:lazy => [:all], :message => "Date of birth needs to be like 'dd/mm/yyyy' (or leave it blank)"
-  property :birth_place,	String, :default => "", 				:lazy => [:all]
-  property :nationality,	String, :default => "", 				:lazy => [:all]
-  property :occupation,		String, :default => "",					:lazy => [:all]
+  property :birth_date,		Date,														:message => "Date of birth needs to be like 'dd/mm/yyyy' (or leave it blank)"                                                                 #, :lazy => [:all]
+  property :birth_place,	String, :default => "" 				                                                                                                                                                #, :lazy => [:all]
+  property :nationality,	String, :default => "" 				                                                                                                                                                #, :lazy => [:all]
+  property :occupation,		String, :default => "" 					                                                                                                                                              #, :lazy => [:all]
   
-  property :passport_name,				String, :default => "", :lazy => [:all]
-  property :passport_number,			String, :default => "", :lazy => [:all]
-  property :passport_issue_place,	String, :default => "", :lazy => [:all]
-  property :passport_issue_date,	Date,										:lazy => [:all], :message => "Passport issue date needs to be like 'dd/mm/yyyy' (or leave it blank)"
-  property :passport_expiry_date, Date,										:lazy => [:all], :message => "Passport expiry date needs to be like 'dd/mm/yyyy' (or leave it blank)"
+  property :passport_name,				String, :default => ""                                                                                                                                               #, :lazy => [:all]
+  property :passport_number,			String, :default => ""                                                                                                                                               #, :lazy => [:all]
+  property :passport_issue_place,	String, :default => ""                                                                                                                                               #, :lazy => [:all]
+  property :passport_issue_date,	Date,										:message => "Passport issue date needs to be like 'dd/mm/yyyy' (or leave it blank)"                                                           #, :lazy => [:all]
+  property :passport_expiry_date, Date,										:message => "Passport expiry date needs to be like 'dd/mm/yyyy' (or leave it blank)"                                                          #, :lazy => [:all]
   
-  property :notes_frequent_flyer, String, :default => "", :lazy => [:all], :length => 255
-  property :notes_airline,				String, :default => "", :lazy => [:all], :length => 255
-  property :notes_seating,				String, :default => "", :lazy => [:all], :length => 255
-  property :notes_food,						String, :default => "", :lazy => [:all], :length => 255
-  property :notes_general,				String, :default => "", :lazy => [:all], :length => 255	# Depricated. Use notes collection instead.
+  property :notes_frequent_flyer, String, :default => "", :length => 255                                                                                                                                , :lazy => [:all]
+  property :notes_airline,				String, :default => "", :length => 255                                                                                                                                , :lazy => [:all]
+  property :notes_seating,				String, :default => "", :length => 255                                                                                                                                , :lazy => [:all]
+  property :notes_food,						String, :default => "", :length => 255                                                                                                                                , :lazy => [:all]
+  property :notes_general,				String, :default => "", :length => 255	                                                                                                                              , :lazy => [:all]
+  # Depricated notes_general. Use notes collection instead.
   
-  property :total_spend,					Integer, :default => 0, :lazy => [:all]
-
-  # Defaults for the belongs_to fields below:
-  property :marketing_id,					Integer, :default => 1, :lazy => [:all], :required => true		# Marketing preferences (email, post etc)
-  property :type_id,							Integer, :default => 2, :lazy => [:all], :required => true    #(Default to ClientType.first(:name=>"Client").id)
-  property :original_source_id,		Integer, :default => 1, :lazy => [:all], :required => true
-  property :source_id,						Integer,                :lazy => [:all]
+  property :total_spend,					Integer, :default => 0                                                                                                                                                #, :lazy => [:all]
+  
+  # Defaults for the belongs_to fields below:                                                                                                                                                           
+  property :marketing_id,					Integer, :default => 1, :required => true		# Marketing preferences (email, post etc)                                                                                 #, :lazy => [:all]
+  property :type_id,							Integer, :default => 2, :required => true    #(Default to ClientType.first(:name=>"Client").id)                                                                       #, :lazy => [:all]
+  property :original_source_id,		Integer, :default => 1, :required => true                                                                                                                             #, :lazy => [:all]
+  property :source_id,						Integer                                                                                                                                                               #, :lazy => [:all]
 
   property :address_client_id,		Integer, :required => false
-  property :legacy_contactid,			Integer,								:lazy => [:all]
+  property :legacy_contactid,			Integer,								      :lazy => [:all]
 
   property :original_company_id,  Integer   # The company who first added the client to the database.
   property :created_at,           DateTime
@@ -63,7 +64,7 @@ class Client
   property :deleted_by,           String,   :required => false, :lazy => [:all]
   
   belongs_to :titlename,        :model => "Title",            :child_key => [:title_id]
-  #belongs_to :type,             :model => "ClientType",       :child_key => [:type_id]
+  #belongs_to :type,            :model => "ClientType",       :child_key => [:type_id]
   belongs_to :client_type,      :model => "ClientType",       :child_key => [:type_id]
   belongs_to :source,           :model => "ClientSource",     :child_key => [:source_id]
   belongs_to :original_source,  :model => "ClientSource",     :child_key => [:original_source_id]
