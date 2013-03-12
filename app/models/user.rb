@@ -82,4 +82,11 @@ class User
   end
   alias recent_client most_recent_client
 
+  # Helper to trigger creation of a VirtualCabinet Command File for this user:
+  def open_virtual_cabinet( client_id, trip_id = nil )
+    return VirtualCabinet.create self.id, client_id, trip_id
+  end
+  
+  
+  
 end
