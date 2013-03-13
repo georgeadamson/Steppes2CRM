@@ -1687,13 +1687,13 @@ class Trip
   def self.all_ready_to_complete( today = nil )
 
     today ||= Date.today
-    #everything_other_than_tour_template = TripType.all( :id.not => TripType::TOUR_TEMPLATE ).map{|tt|tt.id}
-    everything_other_than_tour_template = [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP, TripType::FIXED_DEP ]
+    #everything_other_than_tour_template = [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP, TripType::FIXED_DEP ]
     
-    active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :type_id => everything_other_than_tour_template, :end_date.lt => today )
+    active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :type_id.not => TripType::TOUR_TEMPLATE, :end_date.lt => today )
     other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+    puts "Trips: all_ready_to_complete: #{ active_versions.map{|t|t.id}.inspect }"
 
-    return active_versions + other_versions
+    return active_versions #+ other_versions
 
   end
   
