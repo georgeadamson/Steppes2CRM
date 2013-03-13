@@ -269,7 +269,7 @@
 
 	<tr><td>&nbsp;</td></tr>
 
-	<tr class="tableRow"><!-- Net costs per traveller: -->
+	<tr class="tableRow"><!-- Costs per Adult: -->
 
 		<td>
 			<div class="formField twoFields">
@@ -281,35 +281,28 @@
 				</select>
 			</div>
 		</td>
-		<td><%= text_field :cost_per_adult,  :label => 'Cost per adult',  :maxlength => 7, :class => "tableCell whenAdults   spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
-		<td><%= text_field :cost_per_child,  :label => 'Cost per child',  :maxlength => 7, :class => "tableCell whenChildren spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
-		<td><%= text_field :cost_per_infant, :label => 'Cost per infant', :maxlength => 7, :class => "tableCell whenInfants  spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
-
+		<td><%= text_field :cost_per_adult,  :label => 'Net per adult',  :maxlength => 7, :class => "tableCell whenAdults spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
+		<td><%= text_field :gross_per_adult, :label => 'Rack per adult',:maxlength => 7, :class => "tableCell whenAdults spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
+		<td><%= text_field :biz_supp_per_adult,  :label => 'Adult biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenAdults   spinbox spinboxMax money positive' if element.flight? %></td>
 	</tr>
 
-	<tr class="tableRow whenFlight whenAccomm"><!-- Business supplements: -->
-		<td>
-			<div class="formField twoFields whenFlight">
-				<%= orig_text_field :biz_supp_margin, :label => 'Biz supp margin',  :class => 'widthHalfField spinbox spinboxMin spinboxMax spinboxStep0.1 spinboxBigStep10' %>
-				<%= orig_select     :biz_supp_margin_type, :readonly => 'readonly', :class => 'widthHalfField', :collection => ['%'] %>
-				<!--<select name="trip_element[biz_supp_margin_type]" id="trip_element_biz_supp_margin_type" readonly="readonly" disabled="disabled" class="widthHalfField">
-					<option value="%" selected="selected">%</option>
-				</select>-->
-			</div>
-		</td>
-		<td>
-			<%= text_field :biz_supp_per_adult,  :label => 'Adult biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenAdults   spinbox spinboxMax money positive' %>
-		</td>
-		<td>
-			<%= text_field :biz_supp_per_child,  :label => 'Child biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenChildren spinbox spinboxMax money positive' %>
-		</td>
-		<td>
-			<%= text_field :biz_supp_per_infant, :label => 'Infant biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenInfants  spinbox spinboxMax money positive' %>
-		</td>
-		<!--<td><div class="formField hidden">
-			<%#= orig_text_field :name=>"averageBizSuppPP", :label=>"Average Biz Supp pp", :class=>"tableCell whenFlight widthHalfField money" %>
-		</div></td>-->
+	<% if element.trip.children? %>
+	<tr class="tableRow"><!-- Costs per child: -->
+		<td></td>
+		<td><%= text_field :cost_per_child,  :label => 'Net per child',  :maxlength => 7, :class => "tableCell whenChildren spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
+		<td><%= text_field :gross_per_child, :label => 'Rack per child',:maxlength => 7, :class => "tableCell whenChildren spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
+		<td><%= text_field :biz_supp_per_child,  :label => 'Child biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenChildren spinbox spinboxMax money positive' if element.flight? %></td>
 	</tr>
+	<% end %>
+
+	<% if element.trip.infants? %>
+	<tr class="tableRow"><!-- Costs per Infant: -->
+		<td></td>
+		<td><%= text_field :cost_per_infant, :label => 'Net per infant',  :maxlength => 7, :class => "tableCell whenInfants  spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
+		<td><%= text_field :gross_per_infant,:label => 'Rack per infant',:maxlength => 7, :class => "tableCell whenInfants  spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
+		<td><%= text_field :biz_supp_per_infant, :label => 'Infant biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenInfants  spinbox spinboxMax money positive' if element.flight? %></td>
+	</tr>
+	<% end %>
 
 	<tr class="tableRow"><!-- Currency, exchange rate, taxes and SINGLE SUPP: -->
 		<td><div class="formField">
@@ -322,11 +315,18 @@
 			<%= text_field :taxes,							 :label => 'Taxes/fees pp<small><br/>Margin n/a</small>', :class => 'widthHalfField exchange_rate money positive' %>
 		</td>
 		<td>
-			<%= text_field :single_supp,				 :label => "Single supp #{ tag :small, single_supp_info }<small><br/>Additional amount</small>", :class => 'tableCell whenAccomm whenGround widthHalfField spinbox spinboxMax money positive', :maxlength=>7 %>
+			<% if element.flight? %>
+			<div class="formField twoFields whenFlight">
+				<%= orig_text_field :biz_supp_margin, :label => 'Biz supp margin',  :class => 'widthHalfField spinbox spinboxMin spinboxMax spinboxStep0.1 spinboxBigStep10' %>
+				<%= orig_select     :biz_supp_margin_type, :readonly => 'readonly', :class => 'widthHalfField', :collection => ['%'] %>
+				<!--<select name="trip_element[biz_supp_margin_type]" id="trip_element_biz_supp_margin_type" readonly="readonly" disabled="disabled" class="widthHalfField">
+					<option value="%" selected="selected">%</option>
+				</select>-->
+			</div>
+			<% else %>
+				<%= text_field :single_supp,				:label => "Single supp #{ tag :small, single_supp_info }<small><br/>Additional amount</small>", :class => 'tableCell whenAccomm whenGround widthHalfField spinbox spinboxMax money positive', :maxlength=>7 %>
+			<% end %>
 		</td>
-		<!--<td><div class="xformField whenAllTravellers link">
-			<label for="<%= nested_resource(element,true) %>is_subgroup">Define a subgroup</label>
-		</div></td>-->
 	</tr>
 
 	<!-- Gross prices per traveller: -->
