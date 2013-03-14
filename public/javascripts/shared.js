@@ -236,9 +236,10 @@ jQuery(function($) {
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)$/)								.on('success').to(Trip.initShow);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/edit/)						.on('success').to(Trip.initForm);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/builder/)						.on('success').to(Trip.initTimeline);
-			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy/)						.on('click'  ).to(Trip.showSearch);
-			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/)				.on('success').to(Trip.showSearchResults);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/costings/)					.on('success').to(Trip.initCostsheet);
+			
+			Layout.match(/(tours|clients)\/([0-9]+)\/trips\/([0-9]+)\/copy/)						.on('click'  ).to(Trip.showSearch);
+			Layout.match(/(tours|clients)\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/)				.on('success').to(Trip.showSearchResults);
 
 			// TripElements:
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.openGrid );

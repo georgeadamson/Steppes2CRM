@@ -96,6 +96,11 @@ BODY * {
 			position:relative; top:0em;	/* Necessary to allow for splitter functionality */
 		}
 
+    /* When sectionBody is loaded into dialog: */
+    .ui-dialog-content > .sectionBody {
+      top: 0.5em;
+      bottom: 0;
+    }
 
 
 	/* <DIV class="sectionHead" > */
