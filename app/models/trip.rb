@@ -370,7 +370,7 @@ class Trip
     }
     
     new_task = {
-      :name             => "Send final docs: #{ client.nil? ? 'client' : client.fullname } to #{ self.title } ",
+      :name             => "Send final docs for #{ client.nil? ? 'client' : client.fullname } - #{ self.title } ",
       :status_id        => TaskStatus::OPEN,
       :type_id          => TaskType::SEND_FINALS,
       :due_date         => due_date,
@@ -407,7 +407,7 @@ class Trip
     }
     
     new_task = {
-      :name             => "Post-travel followup: #{ client.nil? ? 'client' : client.fullname } to #{ self.title } ",
+      :name             => "Post-travel followup for #{ client.nil? ? 'client' : client.fullname } - #{ self.title } ",
       :status_id        => TaskStatus::OPEN,
       :type_id          => TaskType::TRIP_FOLLOWUP,
       :due_date         => due_date,
