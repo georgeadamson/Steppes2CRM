@@ -14,12 +14,14 @@ class Task
   property :client_id,          Integer,:required => true  # Formerly ClientID.
   property :contact_client_id,  Integer,:required => true, :default => lambda{ |task,prop| task.client_id }  # Formerly ContactID.
   property :user_id,            Integer,:required => true  # Formerly ConsultantID.
+  property :trip_id,            Integer,:required => false
   property :trip_element_id,    Integer,:required => false # Formerly LinkedID.
   property :brochure_request_id,Integer,:required => false # Formerly LinkedID.
   property :closed_date,        Date,   :required => false # Formerly DateTimeClosed.
   property :closed_by_user_id,  Integer,:required => false # Formerly ClosedByConsultantID.
   property :closed_notes,       String, :required => false, :length => 500 # Formerly ClosingNotes.
-  property :created_on,         Date
+  property :created_at,         DateTime
+  property :updated_at,         DateTime
 
   belongs_to :status, :model => "TaskStatus", :child_key => [:status_id]
   belongs_to :contact_client, :model => "Client", :child_key => [:contact_client_id]
@@ -29,12 +31,14 @@ class Task
   belongs_to :task_type,   :model => "TaskType",   :child_key => [:type_id]
   alias type task_type
 
-  # Context-specific relationships:
+  # Context-specific relationships: (Typically only one of these may apply to a task)
+  belongs_to :trip
   belongs_to :trip_element
   belongs_to :brochure_request
   
   alias notes  name
   alias notes= name=
+  alias created_on created_at # Just belt and braces to play nicely with some legacy code
 
   # Set the default sort order:
   default_scope(:default).update( :limit => 1000, :order => [:status_id, :due_date.desc, :closed_date.desc] )
@@ -49,6 +53,14 @@ class Task
     self.closed_date        ||= Date.today unless self.status_id == TaskStatus::OPEN
     self.contact_client_id  ||= self.client_id
 
+  end
+
+  before :create do
+    self.created_at = DateTime.now
+  end
+  
+  before :update do
+    self.updated_at = DateTime.now
   end
 
 end

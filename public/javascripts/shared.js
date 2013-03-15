@@ -236,9 +236,10 @@ jQuery(function($) {
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)$/)								.on('success').to(Trip.initShow);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/edit/)						.on('success').to(Trip.initForm);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/builder/)						.on('success').to(Trip.initTimeline);
-			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy/)						.on('click'  ).to(Trip.showSearch);
-			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/)				.on('success').to(Trip.showSearchResults);
 			Layout.match(/clients\/([0-9]+)\/trips\/([0-9]+)\/costings/)					.on('success').to(Trip.initCostsheet);
+			
+			Layout.match(/(tours|clients)\/([0-9]+)\/trips\/([0-9]+)\/copy/)						.on('click'  ).to(Trip.showSearch);
+			Layout.match(/(tours|clients)\/([0-9]+)\/trips\/([0-9]+)\/copy.*search/)				.on('success').to(Trip.showSearchResults);
 
 			// TripElements:
 			Layout.livePath('click',   new RegExp('trips/([0-9]+)/trip_elements/grid'),				TripElement.openGrid );
@@ -3115,9 +3116,21 @@ function initKeyPressFilters(){
 
 
 
-
 	// Called to update TripElement totals whenever user makes changes in TripElement form: (And each time it is loaded by ajax)
 	function onTripElementFieldChange(){
+
+		// Helper to calculate margin amount from cost and margin percent (or value):
+		var marginCalc = function ( cost, margin, margin_type ){
+			var multiplier = ( 100 - margin ) / 100;	// Eg: 24% means "(100-24)/100" => 0.76
+			return (margin_type === '%') ? (cost / multiplier) - cost : margin
+		}
+
+		// Helper to derive margin percent (or value) from cost and gross:
+		var marginCalcReverse = function ( cost, gross, margin_type ){
+			var multiplier = cost / gross
+			  , margin     = (margin_type === '%') ? ( 100 - ( multiplier * 100 ) ) : ( gross - cost )
+			return ( isFinite(margin) && !isNaN(margin) ) ? margin : 0
+		}
 
 		// Cache elements for better query performance:
 		var $elem           = $(this),
@@ -3131,6 +3144,15 @@ function initKeyPressFilters(){
 			ACCOMM			= 4,											// element type_id 4 = Accommodation
 			element_type_id = $fields.filter('#trip_element_type_id').val();
 
+		var $std_margin       = $texts.filter("[name='trip_element[margin]']"),
+		    $biz_margin       = $texts.filter("[name='trip_element[biz_supp_margin]']"),
+		    $margin_type      = $lists.filter("[name='trip_element[margin_type]']"),
+		    $gross_per_adult  = $texts.filter("[name='trip_element[gross_per_adult]']" ),
+			$gross_per_child  = $texts.filter("[name='trip_element[gross_per_child]']" ),
+			$gross_per_infant = $texts.filter("[name='trip_element[gross_per_infant]']"),
+		    gross_per_adult,
+			gross_per_child,
+			gross_per_infant
 
 		var currencyBeforeChange = $currencyField.val();
 
@@ -3153,24 +3175,24 @@ function initKeyPressFilters(){
 			children			= numVal("[name='trip_element[children]']", $texts),
 			infants				= numVal("[name='trip_element[infants]']", $texts),
 			singles				= numVal("[name='trip_element[singles]']", $texts),
+			pax					= adults + children + infants,
 			cost_per_adult		= numVal("[name='trip_element[cost_per_adult]']", $texts),
 			cost_per_child		= numVal("[name='trip_element[cost_per_child]']", $texts),
 			cost_per_infant		= numVal("[name='trip_element[cost_per_infant]']", $texts),
 			single_supp			= numVal("[name='trip_element[single_supp]']", $texts),
 			exchange_rate		= numVal("[name='trip_element[exchange_rate]']", $texts) || 1,	// Allow for rates accidentally set to zero.
 			taxes				= numVal("[name='trip_element[taxes]']", $texts),
-			std_margin			= numVal("[name='trip_element[margin]']", $texts),
-			biz_margin			= numVal("[name='trip_element[biz_supp_margin]']", $texts),
-			margin_type			= $lists.filter("[name='trip_element[margin_type]']").val(),
 			biz_supp_per_adult	= numVal("[name='trip_element[biz_supp_per_adult]']", $texts),
 			biz_supp_per_child	= numVal("[name='trip_element[biz_supp_per_child]']", $texts),
 			biz_supp_per_infant	= numVal("[name='trip_element[biz_supp_per_infant]']", $texts),
-			biz_supp_margin		= numVal("[name='biz_supp_margin']", $texts),
-			biz_supp_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val();
+			//biz_supp_margin		= numVal("[name='biz_supp_margin']", $texts),
+			biz_margin_type= $lists.filter("[name='trip_element[biz_supp_margin_type]']").val(),
+			margin_type			= $margin_type.val(),	// % or absolute.
+		    isPercentMargin     = ( margin_type === '%' )
 
 		// Calculate basic costs: (in local currency)
-		var std_margin_mult		= ( 100 - std_margin ) / 100,	// Eg: 24% means "(100-24)/100" => 0.76
-			biz_margin_mult		= ( 100 - biz_margin ) / 100,	// (See margin notes below)
+		var //std_margin_mult		= ( 100 - std_margin ) / 100,	// Eg: 24% means "(100-24)/100" => 0.76
+			//biz_margin_mult		= ( 100 - biz_margin ) / 100,	// (See margin notes below)
 			travellers			= adults + children + infants,
 			total_adult_cost	= adults   * cost_per_adult,
 			total_child_cost	= children * cost_per_child,
@@ -3179,45 +3201,87 @@ function initKeyPressFilters(){
 			total_std_cost		= total_adult_cost + total_child_cost + total_infant_cost + total_sgl_supp,
 			total_biz_cost		= adults * biz_supp_per_adult + children * biz_supp_per_child + infants * biz_supp_per_infant;
 
+		// Reverse-calculations to derive margin from Gross "Rack" fields: (gross_per_adult, gross_per_child, gross_per_infant)
+		if( $elem.is("[name^='trip_element[gross_per_']" ) ){
+
+			gross_per_adult  = numVal($gross_per_adult)
+			gross_per_child  = numVal($gross_per_child)
+			gross_per_infant = numVal($gross_per_infant)
+
+			var cost_per_x,
+				gross_per_x,
+				margin_per_x
+
+			if( $elem.is('[name*=adult]')  ){ cost_per_x = cost_per_adult;  gross_per_x = numVal($gross_per_adult)  } else
+			if( $elem.is('[name*=child]')  ){ cost_per_x = cost_per_child;  gross_per_x = numVal($gross_per_child)  } else
+			if( $elem.is('[name*=infant]') ){ cost_per_x = cost_per_infant; gross_per_x = numVal($gross_per_infant) }
+
+			margin_per_x = marginCalcReverse( cost_per_x, gross_per_x, margin_type )
+
+			// Set derived margin and switch margin type to %:
+			$std_margin.val( round(margin_per_x) )
+			$margin_type.val('%')
+
+		}
+		
+		var std_margin			 = numVal($std_margin),	// Typically 24%
+			biz_margin			 = numVal($biz_margin),	// Typically 10%
+			margin_per_pax_exact = marginCalc( total_std_cost, std_margin, margin_type ) / pax; // Total margin divided by number of travellers
+
+		var margin_per_adult     = marginCalc( cost_per_adult,  std_margin, margin_type ),
+		    margin_per_child     = marginCalc( cost_per_child,  std_margin, margin_type ),
+		    margin_per_infant    = marginCalc( cost_per_infant, std_margin, margin_type )
+
+		// Calculate per person gross prices:
+		gross_per_adult     = cost_per_adult  + ( isPercentMargin ? margin_per_adult  : margin_per_pax_exact ),
+		gross_per_child     = cost_per_child  + ( isPercentMargin ? margin_per_child  : margin_per_pax_exact ),
+		gross_per_infant    = cost_per_infant + ( isPercentMargin ? margin_per_infant : margin_per_pax_exact )
+
 		// Calculate margins, taxes and price: (in local currency)
 		// Important: We're calulating Margin and not Markup. There's a difference apparently :P
 		// Margin is derived by calculating Gross using "Cost / margin-multipler". Eg: £100 / 0.76 => £131.6 (then subtract Cost to get Margin)
 		// (Markup would be derived as a percentage of Cost. Eg: 24% on £100 => £124 (then subtract Cost to get Margin)
-		var total_std_margin	= ( (margin_type          == '%') ? (total_std_cost / std_margin_mult) : std_margin      ) - total_std_cost,	// Typically 24%
-			total_biz_margin	= ( (biz_supp_margin_type == '%') ? (total_biz_cost / biz_margin_mult) : biz_supp_margin ) - total_biz_cost,	// Typically 10%
+		var total_std_margin	= marginCalc( total_std_cost, std_margin, margin_type ),	 // Typically based on 24%
+			total_biz_margin	= marginCalc( total_biz_cost, biz_margin, biz_margin_type ), // Typically based on 10%
 			total_margin		= total_std_margin + total_biz_margin,
 			total_taxes			= taxes * travellers,
 			total_cost			= total_std_cost + total_biz_cost + total_taxes,
 			total_price			= total_cost + total_margin;
 
 		// Calculate prices: (in GBP) (Using tiny decimal avoids divide-by-zero error)
-		var ZERO                = 0.0001,
+		var ZERO                = 0.00001,
 			total_margin_gbp	= total_margin / Math.max(exchange_rate, ZERO),
 			total_cost_gbp		= total_cost   / Math.max(exchange_rate, ZERO),
 			total_price_gbp		= total_price  / Math.max(exchange_rate, ZERO);
 
 		// For better display, round and format currency values to 2 decimal places:
-		total_margin			= round(total_margin);
-		total_cost				= round(total_cost);
-		total_price				= round(total_price);
-		total_margin_gbp		= round(total_margin_gbp);
-		total_cost_gbp			= round(total_cost_gbp);
-		total_price_gbp			= round(total_price_gbp);
+		total_margin			= round(total_margin)
+		total_cost				= round(total_cost)
+		total_price				= round(total_price)
+		total_margin_gbp		= round(total_margin_gbp)
+		total_cost_gbp			= round(total_cost_gbp)
+		total_price_gbp			= round(total_price_gbp)
+		gross_per_adult			= round(gross_per_adult)
+		gross_per_child			= round(gross_per_child)
+		gross_per_infant		= round(gross_per_infant)
 
 		// Update fields with new totals etc:
-		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers").filter("INPUT").val(travellers);
+		$totals.filter(".trip-element-travellers, [name='trip_element[travellers]'], #trip_element_travellers").filter("INPUT").val(travellers)
 
 		// BEWARE! total_margin field is actually total_margin_gbp!
-		$totals.filter("[name='trip_element[total_margin]'], #trip_element_total_margin").filter("INPUT").val(total_margin_gbp);
+		$totals.filter("[name='trip_element[total_margin]'], #trip_element_total_margin").filter("INPUT").val(total_margin_gbp)
 
 		// BEWARE! total_cost field is actually total_cost_gbp!
-		$totals.filter("[name='trip_element[total_cost]']").filter("INPUT").val(total_cost_gbp);
+		$totals.filter("[name='trip_element[total_cost]']").filter("INPUT").val(total_cost_gbp)
 
-		$totals.filter("[name='trip_element[total_price]']").filter("INPUT").val(total_price);
+		$totals.filter("[name='trip_element[total_price]']").filter("INPUT").val(total_price)
 
-		$totals.filter("[name='total_price_gbp']").filter("INPUT").val(total_price_gbp);
+		$totals.filter("[name='total_price_gbp']").filter("INPUT").val(total_price_gbp)
 
-
+		// Update calculated Gross-per-person "Rack" fields, unless the user is typing in them:
+		$gross_per_adult .not(this).val(gross_per_adult)
+		$gross_per_child .not(this).val(gross_per_child)
+		$gross_per_infant.not(this).val(gross_per_infant)
 		
 
 		// Update ROOM TYPE and MEAL PLAN when user changes ACCOMMODATION:
@@ -3276,8 +3340,8 @@ function initKeyPressFilters(){
 		// Warning: If you change this code, verify that the form initialisation still works: See TripElement.initForm
 		// By testing for general name likeness first, we waste less cpu time when event is triggered on unrelated fields:
 		$( "INPUT[name ^= 'trip_element'], SELECT[name ^= 'trip_element']" ).live( 'change keyup', function(e){
-			if( $(this).is("SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name='trip_element[cost_per_adult]'], INPUT[name='trip_element[cost_per_child]'], INPUT[name='trip_element[cost_per_infant]'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_per_adult]'], INPUT[name='trip_element[biz_supp_per_child]'], INPUT[name='trip_element[biz_supp_per_infant]']") ){
-				onTripElementFieldChange.call(this,e);
+			if( $(this).is("SELECT[name='trip_element[supplier_id]'], INPUT[name='trip_element[adults]'], INPUT[name='trip_element[children]'], INPUT[name='trip_element[infants]'], INPUT[name^='trip_element[cost_per_'], INPUT[name='trip_element[single_supp]'], INPUT[name='trip_element[exchange_rate]'], INPUT[name='trip_element[taxes]'], INPUT[name='trip_element[margin]'], SELECT[name='trip_element[margin_type]'], INPUT[name='trip_element[biz_supp_margin]'], INPUT[name^='trip_element[biz_supp_per_'], INPUT[name^='trip_element[gross_per_']") ){
+				onTripElementFieldChange.call(this,e)
 			}
 		});
 		// The following equivalent code was slower becaue it required jQuery to check many names every time event was triggered.
@@ -3286,7 +3350,6 @@ function initKeyPressFilters(){
 		//	;
 
 	}
-
 
 
 
@@ -4476,7 +4539,7 @@ function escapeHTML(html){
 
 // Private helper for ensuring .val() returns a usable number from a form element:
 function numVal(selector, $fields, defaultAlternative) {
-	//return parseFloat( $($fields).find(selector).andSelf().filter(selector).val() ) || defaultAlternative || 0;
+	if( typeof $fields !== 'object' ){ defaultAlternative = $fields; $fields = selector, selector = '*' }	// Selector argument is optional
 	return parseFloat( $fields.filter(selector).val() ) || defaultAlternative || 0;
 };
 

@@ -33,6 +33,7 @@
 			</div>
 
 			<div class="fieldset widthHalf">
+			  <!--
 				<h4>
 					<span class="ui-icon ui-icon-trip"></span>
 					Trips
@@ -44,9 +45,10 @@
 						end if @client.active_trips.length > max_trips_to_show
 					%>
 
-					<%= partial 'trips/trips_summary', :client => @client, :trips => @client.active_trips.all( :limit => max_trips_to_show ) %>
+					<%#= partial 'trips/trips_summary', :client => @client, :trips => @client.active_trips.all( :limit => max_trips_to_show ) %>
 
 				</div>
+			  -->
 			</div>
 
 		</div>

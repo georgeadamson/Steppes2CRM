@@ -89,6 +89,8 @@ class Trip
   has n, :money_ins         # AKA Invoices
   has n, :money_outs        # AKA SupplierPaymentRequests
   
+  has n, :tasks 		        # For some tasks, such as "Send Final docs".
+  
   belongs_to  :version_of_trip,  :model => "Trip",:child_key => [:version_of_trip_id]
   has n,      :version_of_trips, :model => "Trip",:child_key => [:version_of_trip_id] #, :via => :version_of_trip
   alias orig_version_of_trip version_of_trip
@@ -178,9 +180,9 @@ class Trip
   before :valid? do
     
     # Convert blank string to nil on fields that expect IDs:
-    self.user_id    = nil if self.user_id.blank?
-    self.type_id    = nil if self.type_id.blank?
-    self.company_id = nil if self.company_id.blank?
+    self.user_id    = nil if !self.user_id.nil?    && self.user_id.blank?
+    self.type_id    = nil if !self.type_id.nil?    && self.type_id.blank?
+    self.company_id = nil if !self.company_id.nil? && self.company_id.blank?
     
     self.name								||= "Untitled trip"
     self.status_id					||= Trip::UNCONFIRMED
@@ -248,6 +250,7 @@ class Trip
     # TODO: Make this work: (Intended to detect when pnr numbers have been changed so we can speed up trip save)
     @pnr_numbers_have_changed     ||= self.pnrs.dirty? || self.trip_pnrs.dirty?
     @orig_pnr_numbers_before_save   = self.pnr_numbers
+    @status_id_before_save          = self.status_id
     
   end
   
@@ -333,20 +336,99 @@ class Trip
       
     end
     
-    
-    # Create flight followups if the trip is now confirmed:
-    # Note: Followups will not be created again if they already exist.
-    if self.confirmed?
-      self.flights.each{ |flight| flight.create_task() }
+    # Do more stuff when trip has become CONFIRMED:
+    # TODO: Find a way to detect self.attribute_dirty?(:status_id) in the after:save hook!
+    if self.confirmed? && self.status_id != @status_id_before_save
+
+      create_flight_followups
+      create_pre_trip_reminders  if self.start_date > Date.today
+      create_post_trip_reminders if self.end_date   > Date.today
+
     end
-    
     
     @avoid_triggering_after_save_hook_recursively = false
     
-    #end
-    
   end
   
+  # Create flight followups if the trip is now confirmed:
+  # Note: Followups will not be created again if they already exist.
+  def create_flight_followups
+    self.flights.each{ |flight| flight.create_task() }
+  end
+  
+  # Create "Send out Final Docs" reminder task:
+  def create_pre_trip_reminders
+
+    #trip_client      = self.trip_clients.first( :is_primary => true, :order => [ :is_invoicable.desc ] ) || self.trip_clients.first( :is_invoicable => true )
+    client           = self.main_client_for_reminders
+    default_due_date = self.start_date - ( self.company.finals_followup_days || 30 ) #days
+    due_date         = ( Date.today < default_due_date ) ? default_due_date : Date.today
+    
+    existing_task = {
+      :type_id => TaskType::SEND_FINALS,
+      :trip    => self
+    }
+    
+    new_task = {
+      :name             => "Send final docs for #{ client.nil? ? 'client' : client.fullname } - #{ self.title } ",
+      :status_id        => TaskStatus::OPEN,
+      :type_id          => TaskType::SEND_FINALS,
+      :due_date         => due_date,
+      :user             => self.user,
+      :client           => client,
+      :trip             => self
+    }
+    
+    # Automatically create or update a followup task for "Send out finals":
+    task = Task.first(existing_task) || Task.new(new_task)
+    
+    if task.save!
+      self.tasks.reload
+    else
+      # For debugging:
+      task.valid?
+      error_details = "ERROR: Failed to create Finals followup automatically because: #{ task.errors.inspect }"
+      puts error_details
+      Merb.logger.error error_details
+    end
+
+  end
+  
+  # Create "Ring pax on return from trip" reminder task:
+  def create_post_trip_reminders
+    
+    client           = self.main_client_for_reminders
+    default_due_date = self.end_date + ( self.company.post_trip_followup_days || 2 ) #days
+    due_date         = ( Date.today < default_due_date ) ? default_due_date : Date.today
+    
+    existing_task = {
+      :type_id => TaskType::TRIP_FOLLOWUP,
+      :trip    => self
+    }
+    
+    new_task = {
+      :name             => "Post-travel followup for #{ client.nil? ? 'client' : client.fullname } - #{ self.title } ",
+      :status_id        => TaskStatus::OPEN,
+      :type_id          => TaskType::TRIP_FOLLOWUP,
+      :due_date         => due_date,
+      :user             => self.user,
+      :client           => client,
+      :trip             => self
+    }
+    
+    # Automatically create or update a followup task for "Send out finals":
+    task = Task.first(existing_task) || Task.new(new_task)
+    
+    if task.save!
+      self.tasks.reload
+    else
+      # For debugging:
+      task.valid?
+      error_details = "ERROR: Failed to create Trip followup automatically because: #{ task.errors.inspect }"
+      puts error_details
+      Merb.logger.error error_details
+    end
+  end
   
   after :destroy do
     
@@ -373,13 +455,15 @@ class Trip
   
   def leaders;			return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_leader			=> true ); end
   def invoicables;	return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_invoicable	=> true ); end
-  
   def primaries
     
+    # Assume invoceable primaries are more important and should be top of list (helpful for deriving main_client_for_reminders)
+    # primaries = self.trip_clients.all( :is_primary => true, :order => [ :is_invoicable.desc ] ).clients
+    # TODO: Figure out how to sort Clients by trip_clients.invoiceable first! Eg: :order => [ Client.trip_clients.is_invoicable.desc ]
     primaries = self.clients.all( Client.trip_clients.is_primary => true )
     
     # Attempt to correct trip with no primary client!
-    if primaries.empty? && ( first_trip_client = self.trip_clients.first( :order => [:id] ) )
+    if primaries.empty? && ( first_trip_client = self.trip_clients.first( :order => [ :is_invoicable.desc, :id] ) )
       first_trip_client.is_primary = true
       first_trip_client.save! unless self.new?
       primaries.reload        unless self.new?
@@ -387,6 +471,12 @@ class Trip
     
     return primaries
     
+  end
+  
+  # Helper to take a punt at who's the main client on the trip who should be named on Trip Reminders etc for the Consultant:
+  def main_client_for_reminders
+    # Was: trip_client = self.trip_clients.first( :is_primary => true, :order => [ :is_invoicable.desc ] ) || self.trip_clients.first( :is_invoicable => true )
+    return self.primaries.first || self.invoicables.first || self.leaders.first
   end
   
   #def secondaries
@@ -1687,13 +1777,13 @@ class Trip
   def self.all_ready_to_complete( today = nil )
 
     today ||= Date.today
-    #everything_other_than_tour_template = TripType.all( :id.not => TripType::TOUR_TEMPLATE ).map{|tt|tt.id}
-    everything_other_than_tour_template = [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP, TripType::FIXED_DEP ]
+    #everything_other_than_tour_template = [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP, TripType::FIXED_DEP ]
     
-    active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :type_id => everything_other_than_tour_template, :end_date.lt => today )
+    active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :type_id.not => TripType::TOUR_TEMPLATE, :end_date.lt => today )
     other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
+    puts "Trips: all_ready_to_complete: #{ active_versions.map{|t|t.id}.inspect }"
 
-    return active_versions + other_versions
+    return active_versions #+ other_versions
 
   end
   

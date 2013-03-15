@@ -1150,7 +1150,14 @@ class TripElement
   #	def total_gross_per_child_actual;  return self.calc( :total, :actual, :gross, :per, :child ); end
   #	def total_gross_per_infant_actual; return self.calc( :total, :actual, :gross, :per, :infant); end
   
+  def gross_per_adult;  return self.calc( :total, :actual, :gross, :per, :adult );  end
+  def gross_per_child;  return self.calc( :total, :actual, :gross, :per, :child );  end
+  def gross_per_infant; return self.calc( :total, :actual, :gross, :per, :infant ); end
   
+  def gross_per_adult=(value);  end
+  def gross_per_child=(value);  end
+  def gross_per_infant=(value); end
+      
   
   #  def initialize(*)
   #    

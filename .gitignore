@@ -32,3 +32,6 @@ scripts/documents/doc_builder/sdb.ini
 .gems
 gemfile.lock
 
+# To speed up GIT file scans:
+dm-accepts-nested-attributes/*
+
