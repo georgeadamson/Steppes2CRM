@@ -6,6 +6,8 @@
 
 	# TODO: Discard these filters if they're all already applied by the controller:
 
+  dashboard_task_types = [ TaskType::BROCHURE_FOLLOWUP, TaskType::SEND_FINALS, TaskType::TRIP_FOLLOWUP ]
+
 	client ||= nil
 	user   ||= @user || current_user
 	limit  ||= params[:limit].to_i > 0 ? params[:limit].to_i : 500
@@ -21,7 +23,7 @@
 		#tasks = tasks.all( :due_date => (Date.today-5 .. Date.today+5), :type_id.not => TaskType::NOTE )
 		tasks = tasks.all( :due_date.lte => Date.today+3 )
 		tasks = tasks.all( :user   => user )  # unless || user.id == 99
-		tasks = tasks.all( :status_id => TaskStatus::OPEN, :type_id => TaskType::BROCHURE_FOLLOWUP )	# 0=Open, 4=Brochure Followup
+		tasks = tasks.all( :status_id => TaskStatus::OPEN, :type_id => dashboard_task_types )	# TaskStatus::OPEN = 0
   end
 	
 	# Prepare consultants pick list and ensure task.user is on it even if they're inactive:
