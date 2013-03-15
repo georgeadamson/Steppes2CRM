@@ -24,6 +24,7 @@
 
 		<div class="fieldsetRow">
 
+      <!-- LHS -->
 			<div class="fieldset widthHalf">
 				<h4>
 					<span class="ui-icon ui-icon-date"></span>
@@ -32,7 +33,13 @@
 				<%= partial 'clients/history', :client => @client %>
 			</div>
 
-			<div class="fieldset widthHalf">
+      <!-- RHS -->
+			<div class="fieldset widthHalf" style="height:200px;">
+
+			  <div id="<%= "#{ nested_resource(@client,true) }notes" %>" class="ajaxPanel sectionContainer noSectionHead">
+  				<%= partial 'notes/index', :notes => @client.notes %>
+  			</div>			  
+
 			  <!--
 				<h4>
 					<span class="ui-icon ui-icon-trip"></span>
