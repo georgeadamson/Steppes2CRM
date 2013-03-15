@@ -199,3 +199,9 @@ A.mailto, A[href ^= mailto] {
 		background-image:url(/images/icons/icon.word.gif);
 		background-position:0 0;
 	}
+
+	SPAN.ui-icon.ui-icon-virtualcabinet {
+		background-image:url(/images/virtual-cabinet/vclogo.16x16.png);
+		background-position:0 0;
+		margin-top: 2px;
+	}
