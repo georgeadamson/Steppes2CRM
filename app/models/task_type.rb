@@ -6,7 +6,8 @@ class TaskType
   FLIGHT_REMINDER       = 5 unless defined? FLIGHT_REMINDER     # "Flight Ticket Deadline"
   BROCHURE_FOLLOWUP     = 4 unless defined? BROCHURE_FOLLOWUP   # "Brochure Followup"
   SEND_FINALS           = 7 unless defined? SEND_FINALS         # "Send final docs"
-  TRIP_FOLLOWUP         = 8 unless defined? TRIP_FOLLOWUP       # "Ring pax 2 days after return"
+  POST_TRIP_FOLLOWUP    = 8 unless defined? POST_TRIP_FOLLOWUP  # "Ring pax before departure"
+  PRE_TRIP_FOLLOWUP     = 9 unless defined? PRE_TRIP_FOLLOWUP   # "Ring pax after return"
   
   property :id,   Serial
   property :name, String, :required => true, :unique => true
