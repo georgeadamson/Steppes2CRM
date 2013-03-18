@@ -83,6 +83,7 @@ Dim strImagePath
 Dim strSignaturePath
 Dim strPortraitPath
 Dim strMapImagePath
+Dim strCountryImagePath
 
 Dim strScriptFolder
 Dim strTemplateFilePath
@@ -262,7 +263,9 @@ Sub ReadIniFile
 	strPortraitPath			= GetIniFileKey(strIniFileContents, "PortraitPath")
 	ReportProgress(" - portrait path: " & IIf(strPortraitPath = "", "n/a", strPortraitPath))
 	strMapImagePath			= GetIniFileKey(strIniFileContents, "MapImagePath")
-	ReportProgress(" - map image path: " & IIf(strImagePath = "", "n/a", strMapImagePath))
+	ReportProgress(" - map image path: " & IIf(strMapImagePath = "", "n/a", strMapImagePath))
+	strCountryImagePath	= GetIniFileKey(strIniFileContents, "CountryImagePath")
+	ReportProgress(" - country image path: " & IIf(strCountryImagePath = "", "n/a", strCountryImagePath))
 	
 	CheckError "Unable to get INI file settings", False
 	
@@ -284,6 +287,8 @@ Sub ReadIniFile
 	If Not objFSO.FolderExists(strSignaturePath) Then Err.Raise 53, "ReadIniFile", "Signature path is invalid " & strSignaturePath
 	CheckError "Invalid INI file settings", True
 	If Not objFSO.FolderExists(strMapImagePath)  Then Err.Raise 53, "ReadIniFile", "Map Image path is invalid " & strMapImagePath
+	CheckError "Invalid INI file settings", True
+	If Not objFSO.FolderExists(strCountryImagePath) Then Err.Raise 53, "ReadIniFile", "Country Image path is invalid " & strCountryImagePath
 	CheckError "Invalid INI file settings", True
 
 End Sub
@@ -831,23 +836,27 @@ Sub FindAndReplaceFields(strTagType, objFields, boolIsList, boolIgnoreDateField)
 
 			strFieldData = ""
 			InsertImage strPortraitPath, objFields.Item(strTagName & "_file")
-			
+
 		ElseIf Instr(strTagName, "image") > 0 Then
 
 			strFieldData = ""
 			InsertImage strImagePath, objFields.Item(strTagName & "_file")
-		
+
 		ElseIf Instr(strTagName, "signature") > 0 Then
 				
 			strFieldData = ""
 			InsertImage strSignaturePath, objFields.Item(strTagName & "_file")
 			
-		ElseIf strTagName = "countries_and" _
-					Or strTagName = "client_names_and" Then 'replace last comma with "and" (cant do easily in SQL)
-			
-			strFieldData = objFields.Item(Replace(strTagName, "_and", ""))
-			strFieldData = Trim(StrReverse(Replace(StrReverse(strFieldData), ",", "dna ", 1, 1))) 'better than & in a letter
-		
+		ElseIf Instr(strTagName, "countries_covers") > 0 Then 'Splash image for the main country
+
+  		strFieldData = ""
+  	  strFieldName = Replace(strTagName, "_covers", "")
+      csvFieldData = Split( objFields.Item(strFieldName), "," )
+
+  	  For Each strImageFilename In csvFieldData
+  		  InsertImage strCountryImagePath, Trim(strImageFilename) & ".jpg"
+  		Next
+
 		ElseIf strTagName = "countries_maps" Then
 
 			strFieldData = ""
@@ -857,13 +866,20 @@ Sub FindAndReplaceFields(strTagType, objFields, boolIsList, boolIgnoreDateField)
 		  For Each strImageFilename In csvFieldData
   		  InsertImage strMapImagePath, Trim(strImageFilename) & ".jpg"
   		Next
+			
+		ElseIf strTagName = "countries_and" _
+					Or strTagName = "client_names_and" Then 'replace last comma with "and" (cant do easily in SQL)
+
+      strFieldName = Replace(strTagName, "_and", "")
+			strFieldData = objFields.Item(strFieldName)
+			strFieldData = Trim(StrReverse(Replace(StrReverse(strFieldData), ",", "dna ", 1, 1))) 'better than & in a letter
 
 		ElseIf strTagName = "countries" _
 			  Or strTagName = "client_names" Then 'replace last comma with "and" (cant do easily in SQL)
-			
+
 			strFieldData = objFields.Item(strTagName)
 			strFieldData = Trim(StrReverse(Replace(StrReverse(strFieldData), ",", "& ", 1, 1)))
-		
+
 		ElseIf InStr(strTagName, "_time") > 0 Then ' NOTE that _time tags are derived from _date fields
 		
 			strFieldData = objFields.Item(Replace(strTagName, "_time", "_date")) 
