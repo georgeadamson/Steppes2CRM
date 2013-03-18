@@ -91,6 +91,25 @@ class Notes < Application
     end
   end
 
+  def favourite()
+    
+    @note   = Note.get( params[:note_id] )
+    raise NotFound unless @note
+
+    fave    = !params[:unfavourite]
+    @client = @note.client || Client.get(params[:client_id])
+    @notes  = @client.notes.all
+    
+    if @note.update!( :is_favourite => fave )
+      message[:notice] = "Note #{ fave ? 'favourited' : 'unfavourited' }"
+    else
+      message[:error] = "Failed to #{ fave ? 'favourite' : 'unfavourite' } Note"
+    end
+    
+    render :index
+
+  end
+
   def destroy(id)
     @note = Note.get(id)
     raise NotFound unless @note

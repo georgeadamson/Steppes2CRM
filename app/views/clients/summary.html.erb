@@ -35,7 +35,13 @@
 
       <!-- RHS -->
 			<div class="fieldset widthHalf" style="height:200px;">
-		  
+				<h4>
+					<span class="ui-icon ui-icon-comment"></span>
+					Notes
+				</h4>
+			  <div class="client-notes ajaxPanel sectionContainer noSectionHead" id="<%= "#{ nested_resource(@client,true) }notes" %>">
+  				<%= partial 'notes/index', :notes => @client.notes %>
+  			</div>			  
 
 			  <!--
 				<h4>
@@ -44,7 +50,7 @@
 				</h4>
 				<div id="<%= nested_resource(@client,:trips,true) %>summary">
 
-					<%= tag :small, :class => 'labelAboveAccordion' do
+					<%#= tag :small, :class => 'labelAboveAccordion' do
 							link_to "show all #{ @client.active_trips.length } trips here", resource(@client, :trips), :rel => '#'+nested_resource(@client,:trips,true)+'summary'
 						end if @client.active_trips.length > max_trips_to_show
 					%>
