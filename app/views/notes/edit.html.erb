@@ -5,6 +5,9 @@
 	field_prefix ||= 'client' unless @client.nil?
 	ui_target    ||= "##{ nested_resource(@client,true) }notes"
 
+	# Define a uid to relate the hidden delete button to its visible buttony-label:
+	delete_button_id = "#{ nested_resource(@client,@note,true) }_delete"
+  
 %>
 <%= form_for @note, :action => url_for_submit do %>
 
@@ -14,6 +17,10 @@
 	</div>
 
 	<!-- sectionFoot: -->
-	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => ui_target, :cancel_url => url_for_cancel, :save_caption => 'Save my note' %>
+	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => ui_target, :cancel_url => url_for_cancel, :save_caption => 'Save my note', :label_for_delete => true, :delete_id => delete_button_id, :delete_class => 'left' %>
 
 <% end =%>
+
+<!-- Important: This delete button is HIDDEN and exists in it's own little form.
+     It has an associated <label> defined above that can be clicked in the preceeding sectionFoot! -->
+<%= delete_button url_for_submit, 'Delete', :class => "hidden", :id => delete_button_id, :rel => ui_target %>
