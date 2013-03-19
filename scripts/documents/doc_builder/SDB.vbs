@@ -34,6 +34,7 @@
 ' 0.5 - Removed array containing named lists and replaced with list_of_* wild card search. Fixed bug reporting errors when inserting images.
 ' 0.6 - Added checks for existence of folders. Changed ERROR output to WARNING for less severe errors. Saving document using file_name instead of name
 ' 0.7 - Feb 2011 - Prevented overnight flights from creating row on second day. Added more explicit garbage collection.
+' 0.7 - Mar 2013 - Added support for Country Map images
 
 Option Explicit 
 
@@ -81,6 +82,8 @@ Dim strDocumentPath
 Dim strImagePath
 Dim strSignaturePath
 Dim strPortraitPath
+Dim strMapImagePath
+Dim strCountryImagePath
 
 Dim strScriptFolder
 Dim strTemplateFilePath
@@ -259,6 +262,10 @@ Sub ReadIniFile
 	ReportProgress(" - signature path: " & IIf(strSignaturePath = "", "n/a", strSignaturePath))
 	strPortraitPath			= GetIniFileKey(strIniFileContents, "PortraitPath")
 	ReportProgress(" - portrait path: " & IIf(strPortraitPath = "", "n/a", strPortraitPath))
+	strMapImagePath			= GetIniFileKey(strIniFileContents, "MapImagePath")
+	ReportProgress(" - map image path: " & IIf(strMapImagePath = "", "n/a", strMapImagePath))
+	strCountryImagePath	= GetIniFileKey(strIniFileContents, "CountryImagePath")
+	ReportProgress(" - country image path: " & IIf(strCountryImagePath = "", "n/a", strCountryImagePath))
 	
 	CheckError "Unable to get INI file settings", False
 	
@@ -279,7 +286,11 @@ Sub ReadIniFile
 	CheckError "Invalid INI file settings", True
 	If Not objFSO.FolderExists(strSignaturePath) Then Err.Raise 53, "ReadIniFile", "Signature path is invalid " & strSignaturePath
 	CheckError "Invalid INI file settings", True
-	
+	If Not objFSO.FolderExists(strMapImagePath)  Then Err.Raise 53, "ReadIniFile", "Map Image path is invalid " & strMapImagePath
+	CheckError "Invalid INI file settings", True
+	If Not objFSO.FolderExists(strCountryImagePath) Then Err.Raise 53, "ReadIniFile", "Country Image path is invalid " & strCountryImagePath
+	CheckError "Invalid INI file settings", True
+
 End Sub
 
 
@@ -755,6 +766,7 @@ Sub InsertImage(strImagePath, strImageFile)
 		strFullImagePath = strImagePath & "\" & strImageFile
 
 		If objFSO.FileExists(strFullImagePath) Then
+
 			Set objWordPicture = objSelection.InlineShapes.AddPicture(strFullImagePath, False, True) 
 
 			'size image to table cell
@@ -787,7 +799,10 @@ End Sub
 Sub FindAndReplaceFields(strTagType, objFields, boolIsList, boolIgnoreDateField)
 
 	Dim strTagName
+	Dim strFieldName
 	Dim strFieldData
+	Dim csvFieldData
+	Dim strImageFilename
 	Dim loopLimit
 	loopLimit = 50
 	
@@ -821,29 +836,50 @@ Sub FindAndReplaceFields(strTagType, objFields, boolIsList, boolIgnoreDateField)
 
 			strFieldData = ""
 			InsertImage strPortraitPath, objFields.Item(strTagName & "_file")
-			
+
 		ElseIf Instr(strTagName, "image") > 0 Then
 
 			strFieldData = ""
 			InsertImage strImagePath, objFields.Item(strTagName & "_file")
-		
+
 		ElseIf Instr(strTagName, "signature") > 0 Then
 				
 			strFieldData = ""
 			InsertImage strSignaturePath, objFields.Item(strTagName & "_file")
 			
-		ElseIf strTagName = "countries_and" _
-					Or strTagName = "client_names_and" Then 'replace last comma with AND (cant do easily in SQL
+		ElseIf Instr(strTagName, "countries_covers") > 0 Then 'Splash image for the main country
+
+  		strFieldData = ""
+  	  strFieldName = Replace(strTagName, "_covers", "")
+      csvFieldData = Split( objFields.Item(strFieldName), "," )
+
+  	  For Each strImageFilename In csvFieldData
+  		  InsertImage strCountryImagePath, Trim(strImageFilename) & ".jpg"
+  		Next
+
+		ElseIf strTagName = "countries_maps" Then
+
+			strFieldData = ""
+		  strFieldName = Replace(strTagName, "_maps", "")
+      csvFieldData = Split( objFields.Item(strFieldName), "," )
+		  
+		  For Each strImageFilename In csvFieldData
+  		  InsertImage strMapImagePath, Trim(strImageFilename) & ".jpg"
+  		Next
 			
-			strFieldData = objFields.Item(Replace(strTagName, "_and", ""))
+		ElseIf strTagName = "countries_and" _
+					Or strTagName = "client_names_and" Then 'replace last comma with "and" (cant do easily in SQL)
+
+      strFieldName = Replace(strTagName, "_and", "")
+			strFieldData = objFields.Item(strFieldName)
 			strFieldData = Trim(StrReverse(Replace(StrReverse(strFieldData), ",", "dna ", 1, 1))) 'better than & in a letter
 
 		ElseIf strTagName = "countries" _
-					Or strTagName = "client_names" Then 'replace last comma with AND (cant do easily in SQL
-			
+			  Or strTagName = "client_names" Then 'replace last comma with "and" (cant do easily in SQL)
+
 			strFieldData = objFields.Item(strTagName)
 			strFieldData = Trim(StrReverse(Replace(StrReverse(strFieldData), ",", "& ", 1, 1)))
-				
+
 		ElseIf InStr(strTagName, "_time") > 0 Then ' NOTE that _time tags are derived from _date fields
 		
 			strFieldData = objFields.Item(Replace(strTagName, "_time", "_date")) 

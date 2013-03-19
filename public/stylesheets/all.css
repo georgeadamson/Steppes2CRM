@@ -18,6 +18,7 @@
 
 /* The following are not required immediately: (They're used on content that is a few clicks away) */
 
+  @import url(/stylesheets/notes.css);
 	@import url(/javascripts/jquery-spinbox/jquery.spinbox.css);
 	@import url(/javascripts/jquery-textarearesizer/jquery.textareaResizer.css);
 	@import url(/stylesheets/sysadmin.css);

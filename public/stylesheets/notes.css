@@ -1,0 +1,29 @@
+
+.client-notes,
+.client-notes .buttonBar {
+  background-color: #fff;
+}
+
+.client-notes A {
+  outline: 0;
+}
+
+.client-notes .favourite .note-text {
+  font-weight: bold;
+}
+
+.client-notes .note-text A {
+  text-decoration: none;
+}
+
+.client-notes .note-text A:hover {
+  text-decoration: underline;
+}
+
+.client-notes .not-favourite A .ui-icon {
+  opacity: 0.5;
+}
+
+.client-notes .not-favourite A:hover .ui-icon {
+  opacity: 1;
+}

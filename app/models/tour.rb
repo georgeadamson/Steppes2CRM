@@ -12,7 +12,7 @@ class Tour
   # These aliases just simplify common code that was originally written to handle client model:
   alias shortname    name
   alias display_name name
-
+  alias fullname     name
 
   def create_trip_from_template( template_trip )
 
@@ -23,6 +23,10 @@ class Tour
     
   end
 
+  # Helper to trigger creation of a VirtualCabinet Command File for this user: (For GROUP TOUR only, not for a Client)
+  # def open_virtual_cabinet( user, trip_id = nil )
+  #   return VirtualCabinet.create user, self, trip_id
+  # end
 
 end
 

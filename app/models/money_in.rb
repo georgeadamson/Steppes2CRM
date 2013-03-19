@@ -215,11 +215,8 @@ class MoneyIn
       # Update the status of the trip and it's clients:
       trip = self.trip
       trip.update! :status_id => Trip::CONFIRMED
-      #trip.trip_clients.each{ |c| c.update!( :status_id => TripClientStatus::CONFIRMED ) }
       trip.trip_clients.update! :status_id => TripClientStatus::CONFIRMED
-      trip.create_flight_followups
-      trip.create_pre_trip_reminders
-      trip.create_post_trip_reminders
+      trip.create_confirmed_trip_reminders  # Invoke this explicitly because we used update! which does not trigger hooks
 
       # Update the status of the same clients on the Group Template if applicable:
       # Important: trips are linked to master trips through their elements (via slave_element.master_element.trip)

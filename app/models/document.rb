@@ -1013,6 +1013,8 @@ class Document
       "\nImagePath=#{ CRM[:images_folder_path].gsub('/','\\') }" +
       "\nSignaturePath=#{ CRM[:signatures_folder_path].gsub('/','\\') }" +
       "\nPortraitPath=#{ CRM[:portraits_folder_path].gsub('/','\\') }" +
+      "\nMapImagePath=#{ CRM[:maps_folder_path].gsub('/','\\') }" +
+      "\nCountryImagePath=#{ CRM[:countries_folder_path].gsub('/','\\') }" +
       "\n"
 
     # Use doc_builder_settings_path: (after making it absolute if necessary)

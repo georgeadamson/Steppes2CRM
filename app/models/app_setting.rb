@@ -9,6 +9,9 @@ class AppSetting
   property :description,String, :required => true,	:length => 100, :unique => true,:default => 'Tell us what this setting is for...'
 
 	# In theory value_type could use this instead of String: Enum[ :String, :Integer, :Decimal ]
+
+  # Default to sort by name:
+  default_scope(:default).update(:order => [:name])
 	
 	validates_is_number :value, :unless => Proc.new {|setting| setting.value_type.to_sym == :String }
 

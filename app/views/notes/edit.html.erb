@@ -9,11 +9,11 @@
 <%= form_for @note, :action => url_for_submit do %>
 
 	<div class="sectionBody">
-		<h4>Edit this note:</h4>
+	  <br/><br/>
 		<%= partial 'notes/form', :note => @note, :ui_target => ui_target %>
 	</div>
 
 	<!-- sectionFoot: -->
-	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => ui_target, :cancel_url => url_for_cancel, :save_caption => 'Save my new note' %>
+	<%= partial 'shared/sectionFoot_with_buttons', :ui_target => ui_target, :cancel_url => url_for_cancel, :save_caption => 'Save my note' %>
 
 <% end =%>

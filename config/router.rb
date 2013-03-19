@@ -60,7 +60,7 @@ Merb::Router.prepare do
   # TODO: Find out why merb reports an error during app boot "Could not find resource model TimelineStyle"
   resources :timeline_styles
 
-  resources :notes
+  resources :notes  
   resources :company_suppliers
   resources :addresses
   resources :touchdowns
@@ -88,7 +88,12 @@ Merb::Router.prepare do
   
   # /clients/
   resources :clients do |client|
-    client.resources :notes
+    
+    client.resources :notes do |note|
+      note.match('/favourite'  ).to(:controller => 'notes', :action => 'favourite' )
+      note.match('/unfavourite').to(:controller => 'notes', :action => 'favourite', :unfavourite => true )
+    end
+    
     client.resources :tasks
     client.resources :brochure_requests
     client.resources :documents
@@ -100,11 +105,14 @@ Merb::Router.prepare do
       trip.resources :trip_elements
       # match('/summary').to(:controller => 'trips', :action => 'summary')
       # Could not get this to work so used match('/clients/:client_id/trips/:id/summary') instead. See below.
-      # To trigger generation of VirtualCabinet Command File for specified user: (With optional ?trip_id=xxx param)
+      
+      # To trigger generation of VirtualCabinet Command File for specified TRIP: (With optional ?trip_id=xxx param)
       match('/virtual_cabinets/open').to(:controller => 'virtual_cabinets', :action => 'open' )
     end
-    # To trigger generation of VirtualCabinet Command File for specified user: (With optional ?trip_id=xxx param)
+    
+    # To trigger generation of VirtualCabinet Command File for specified CLIENT: (With optional ?trip_id=xxx param)
     match('/virtual_cabinets/open').to(:controller => 'virtual_cabinets', :action => 'open' )
+    
   end
   #match('/clients/:client_id/trips/:trip_id/trip_elements/:id/delete').to(:controller => 'trip_elements', :action => 'destroy' )
 
@@ -116,7 +124,13 @@ Merb::Router.prepare do
       trip.resources :trip_elements
       trip.resources :money_outs
       trip.resources :documents
+      # To trigger generation of VirtualCabinet Command File for specified TRIP:
+      match('/virtual_cabinets/open').to(:controller => 'virtual_cabinets', :action => 'open' )
     end
+    
+    # To trigger generation of VirtualCabinet Command File for specified GROUP TOUR: (With optional ?trip_id=xxx param)
+    match('/virtual_cabinets/open').to(:controller => 'virtual_cabinets', :action => 'open' )
+    
   end
  
 
