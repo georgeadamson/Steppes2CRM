@@ -576,7 +576,7 @@ jQuery(function($) {
 
 				// The source argument will only be present when triggered by SELECT.auto-submit:
 				var $form		= $(this),
-					$button		= $(source || e.originalEvent && e.originalEvent.explicitOriginalTarget);
+					$button		= $(source || ( e.originalEvent && e.originalEvent.explicitOriginalTarget ) || $form.find(':submit') );
 
 					// When a <label> is clicked, explicitOriginalTarget will be the text node within the label:
 					if( $button.parent().is('LABEL') ){

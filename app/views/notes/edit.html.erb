@@ -9,7 +9,7 @@
 	delete_button_id = "#{ nested_resource(@client,@note,true) }_delete"
   
 %>
-<%= form_for @note, :action => url_for_submit do %>
+<%= form_for @note, :action => url_for_submit, 'data-target' => ui_target do %>
 
 	<div class="sectionBody">
 	  <br/><br/>
@@ -23,4 +23,4 @@
 
 <!-- Important: This delete button is HIDDEN and exists in it's own little form.
      It has an associated <label> defined above that can be clicked in the preceeding sectionFoot! -->
-<%= delete_button url_for_submit, 'Delete', :class => "hidden", :id => delete_button_id, :rel => ui_target %>
+<%= delete_button url_for_submit, 'Delete', :class => "hidden", :id => delete_button_id, 'data-target' => ui_target %>
