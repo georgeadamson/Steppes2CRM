@@ -281,7 +281,7 @@
 			</div>
 		</td>
 		<td><%= text_field :cost_per_adult,  :label => 'Net per adult',  :maxlength => 7, :class => "tableCell whenAdults spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
-		<td><%= text_field :gross_per_adult, :label => 'Pub. per adult',:maxlength => 7, :class => "tableCell whenAdults spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }", :title => 'Published per adult' %></td>
+		<td><%= text_field :gross_per_adult, :label => 'Pub. per adult',:maxlength => 7, :class => "tableCell whenAdults spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }", :title => 'Published per adult' if element.flight? %></td>
 		<td><%= text_field :biz_supp_per_adult,  :label => 'Adult biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenAdults   spinbox spinboxMax money positive' if element.flight? %></td>
 	</tr>
 
@@ -289,7 +289,7 @@
 	<tr class="tableRow"><!-- Costs per child: -->
 		<td></td>
 		<td><%= text_field :cost_per_child,  :label => 'Net per child',  :maxlength => 7, :class => "tableCell whenChildren spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
-		<td><%= text_field :gross_per_child, :label => 'Pub. per child',:maxlength => 7, :class => "tableCell whenChildren spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }", :title => 'Published per child' %></td>
+		<td><%= text_field :gross_per_child, :label => 'Pub. per child',:maxlength => 7, :class => "tableCell whenChildren spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }", :title => 'Published per child' if element.flight? %></td>
 		<td><%= text_field :biz_supp_per_child,  :label => 'Child biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenChildren spinbox spinboxMax money positive' if element.flight? %></td>
 	</tr>
 	<% end %>
@@ -298,7 +298,7 @@
 	<tr class="tableRow"><!-- Costs per Infant: -->
 		<td></td>
 		<td><%= text_field :cost_per_infant, :label => 'Net per infant',  :maxlength => 7, :class => "tableCell whenInfants  spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }" %></td>
-		<td><%= text_field :gross_per_infant,:label => 'Pub. per infant',:maxlength => 7, :class => "tableCell whenInfants  spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }", :title => 'Published per infant' %></td>
+		<td><%= text_field :gross_per_infant,:label => 'Pub. per infant',:maxlength => 7, :class => "tableCell whenInfants  spinbox spinboxMax spinboxScale2 money #{ element.misc? ? 'spinboxMin-999999' : 'positive' }", :title => 'Published per infant' if element.flight? %></td>
 		<td><%= text_field :biz_supp_per_infant, :label => 'Infant biz supp',	:maxlength => 7, :class => 'tableCell whenFlight whenInfants  spinbox spinboxMax money positive' if element.flight? %></td>
 	</tr>
 	<% end %>
