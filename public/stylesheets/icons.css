@@ -205,3 +205,26 @@ A.mailto, A[href ^= mailto] {
 		background-position:0 0;
 		margin-top: 2px;
 	}
+
+
+
+/* Icons borrowed from Bootstrap: */
+
+.client-notes .ui-icon,
+.ui-icon.ui-icon-star,
+.ui-icon.ui-icon-star-empty {
+  background-image: url(/images/icons/glyphicons-halflings.png);
+  background-repeat: no-repeat;
+}
+
+.client-notes .not-favourite .ui-icon,
+.ui-icon.ui-icon-star-empty {
+  background-position: -144px 0;
+}
+
+.client-notes .favourite .ui-icon,
+.ui-icon.ui-icon-star {
+  background-position: -120px 0;
+}
+
+

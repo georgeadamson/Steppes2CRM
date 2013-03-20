@@ -13,8 +13,9 @@ class Company
   property :cc_sup,									BigDecimal,	:required => true,	:default => 2,    :precision=>6, :scale=>2
   property :booking_fee,						Integer,	  :required => true,	:default => 51
   property :brochure_followup_days,	Integer,	  :required => true,	:default => 7
-  property :finals_followup_days,   Integer,	  :required => true,	:default => 30
-  property :post_trip_followup_days,Integer,	  :required => true,	:default => 2
+  property :finals_followup_days,   Integer,	  :required => true,	:default => 30  # Reminder to send Final Documents
+  property :pre_trip_followup_days, Integer,	  :required => true,	:default => 5   # Reminder to call client a few days before departure
+  property :post_trip_followup_days,Integer,	  :required => true,	:default => 2   # Reminder to call client a few days after return
   property :default_deposit,				String,		  :required => true,	:length => 4,			:default => 300
   property :is_active,							Boolean,	  :required => true,	:default => true
 

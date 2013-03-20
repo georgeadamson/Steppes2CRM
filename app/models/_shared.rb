@@ -697,7 +697,16 @@ class Hash
 
 end
 
-
+# Fix <=> comparison of True/False values: (Fixes Datamapper sort on Boolean columns)
+# More info: http://grosser.it/2010/07/30/ruby-true-false-comparison-with/
+module TrueFalseComparison
+  def <=>(other)
+    raise ArgumentError unless [TrueClass, FalseClass].include?(other.class)
+    other ? (self ? 0 : -1) : (self ? 1 : 0)
+  end
+end
+TrueClass.send(:include, TrueFalseComparison)
+FalseClass.send(:include, TrueFalseComparison)
 
 
 

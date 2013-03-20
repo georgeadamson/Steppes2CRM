@@ -340,14 +340,19 @@ class Trip
     # TODO: Find a way to detect self.attribute_dirty?(:status_id) in the after:save hook!
     if self.confirmed? && self.status_id != @status_id_before_save
 
-      create_flight_followups
-      create_pre_trip_reminders  if self.start_date > Date.today
-      create_post_trip_reminders if self.end_date   > Date.today
+      create_confirmed_trip_reminders
 
     end
     
     @avoid_triggering_after_save_hook_recursively = false
     
+  end
+  
+  def create_confirmed_trip_reminders
+    create_flight_followups
+    create_final_docs_reminder if self.start_date > Date.today
+    create_pre_trip_reminder   if self.start_date > Date.today
+    create_post_trip_reminder  if self.end_date   > Date.today
   end
   
   # Create flight followups if the trip is now confirmed:
@@ -357,59 +362,37 @@ class Trip
   end
   
   # Create "Send out Final Docs" reminder task:
-  def create_pre_trip_reminders
-
-    #trip_client      = self.trip_clients.first( :is_primary => true, :order => [ :is_invoicable.desc ] ) || self.trip_clients.first( :is_invoicable => true )
-    client           = self.main_client_for_reminders
-    default_due_date = self.start_date - ( self.company.finals_followup_days || 30 ) #days
-    due_date         = ( Date.today < default_due_date ) ? default_due_date : Date.today
-    
-    existing_task = {
-      :type_id => TaskType::SEND_FINALS,
-      :trip    => self
-    }
-    
-    new_task = {
-      :name             => "Send final docs for #{ client.nil? ? 'client' : client.fullname } - #{ self.title } ",
-      :status_id        => TaskStatus::OPEN,
-      :type_id          => TaskType::SEND_FINALS,
-      :due_date         => due_date,
-      :user             => self.user,
-      :client           => client,
-      :trip             => self
-    }
-    
-    # Automatically create or update a followup task for "Send out finals":
-    task = Task.first(existing_task) || Task.new(new_task)
-    
-    if task.save!
-      self.tasks.reload
-    else
-      # For debugging:
-      task.valid?
-      error_details = "ERROR: Failed to create Finals followup automatically because: #{ task.errors.inspect }"
-      puts error_details
-      Merb.logger.error error_details
-    end
-
+  def create_final_docs_reminder
+    return create_reminder_for TaskType::SEND_FINALS, -( self.company.finals_followup_days || 30 ), 'Send final docs for'
+  end
+  
+  # Create "Ring pax before departure" reminder task:
+  def create_pre_trip_reminder
+    return create_reminder_for TaskType::PRE_TRIP_FOLLOWUP, -( self.company.pre_trip_followup_days || 5 ), 'Pre-travel followup for'
   end
   
   # Create "Ring pax on return from trip" reminder task:
-  def create_post_trip_reminders
+  def create_post_trip_reminder
+    return create_reminder_for TaskType::POST_TRIP_FOLLOWUP, self.company.post_trip_followup_days || 2, 'Post-travel followup for'
+  end
+  
+  
+  # Create reminder task:
+  def create_reminder_for( type_id, days, caption )
     
     client           = self.main_client_for_reminders
-    default_due_date = self.end_date + ( self.company.post_trip_followup_days || 2 ) #days
+    default_due_date = self.end_date + days
     due_date         = ( Date.today < default_due_date ) ? default_due_date : Date.today
     
     existing_task = {
-      :type_id => TaskType::TRIP_FOLLOWUP,
+      :type_id => type_id,
       :trip    => self
     }
     
     new_task = {
-      :name             => "Post-travel followup for #{ client.nil? ? 'client' : client.fullname } - #{ self.title } ",
+      :name             => "#{ caption } #{ client.nil? ? 'client' : client.fullname } - #{ self.title } ",
       :status_id        => TaskStatus::OPEN,
-      :type_id          => TaskType::TRIP_FOLLOWUP,
+      :type_id          => type_id,
       :due_date         => due_date,
       :user             => self.user,
       :client           => client,
@@ -417,7 +400,8 @@ class Trip
     }
     
     # Automatically create or update a followup task for "Send out finals":
-    task = Task.first(existing_task) || Task.new(new_task)
+    task = Task.first(existing_task) || Task.new
+    task.attributes = new_task
     
     if task.save!
       self.tasks.reload
@@ -428,6 +412,7 @@ class Trip
       puts error_details
       Merb.logger.error error_details
     end
+    
   end
   
   after :destroy do

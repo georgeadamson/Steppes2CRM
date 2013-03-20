@@ -646,6 +646,14 @@ class Client
 
 
 
+  # Helper to trigger creation of a VirtualCabinet Command File for this user: (For CLIENT only, not a GROUP TOUR)
+  # def open_virtual_cabinet( user, trip_id = nil )
+  #   return VirtualCabinet.create user, self, trip_id
+  # end
+
+
+
+
 # Private methods:
 
 private

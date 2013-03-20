@@ -23,7 +23,8 @@ CRM = {
   :letter_templates_path  => 'C:/SteppesCRM/steppes2dev/scripts/documents/doc_builder/(Sample Templates)/Letters',           # Root folder for documents.
   :images_folder_path     => '//selsvr01/documents/',               # Root folder for supplier images etc.
   :signatures_folder_path => '//selsvr01/documents/',               # Root folder for signature images.
-  :portraits_folder_path  => '//selsvr01/documents/'                # Root folder for users' photos.
+  :portraits_folder_path  => '//selsvr01/documents/',               # Root folder for users' photos.
+  :maps_folder_path       => '//selfs/documents/Map-Images'         # Root folder for country map images.
 
 }
 
