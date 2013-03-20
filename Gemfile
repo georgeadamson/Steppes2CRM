@@ -55,3 +55,6 @@ gem "rspec", "1.3.2"	# Stick with rspec v1.x for now.
                         # For more info see https://www.relishapp.com/rspec/rspec-core/v/2-4/docs/upgrade
 
 gem "webrat"			# Added to fix error. See http://groups.google.com/group/merb/browse_thread/thread/ab4dcc2309f12d12
+
+gem "wkhtmltopdf"
+gem "pdfkit"
