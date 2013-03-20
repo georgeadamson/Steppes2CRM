@@ -22,7 +22,7 @@ class VirtualCabinets < Application
     Merb.logger.info info
 
     result =  VirtualCabinet.create user, client_or_tour, trip_id
-    message[:notice] = "I've politely asked Virtual Cabinet to open docs #{ client_or_tour_name } <br> <small>(Geeky stuff: #{ result.to_s })</small>"
+    #message[:notice] = "I've politely asked Virtual Cabinet to open docs #{ client_or_tour_name } <br> <small>(Geeky stuff: #{ result.to_s })</small>"
 
     render :show
 
