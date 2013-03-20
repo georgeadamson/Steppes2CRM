@@ -6,10 +6,48 @@
 		Steppes CRM Database
 		<%= " (#{ Merb.environment })" unless Merb.environment == 'production' %>
 	</title>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-	<link rel="icon" href="/images/icons/icon.trip.png" type="image/x-icon" />
-	<link rel="shortcut icon" href="/images/icons/icon.trip.png" type="image/x-icon" />
-	<link rel="stylesheet" href="/stylesheets/all.css" type="text/css" media="all" charset="utf-8" />
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<link rel="icon" href="/images/icons/icon.trip.png" type="image/x-icon"/>
+	<link rel="shortcut icon" href="/images/icons/icon.trip.png" type="image/x-icon"/>
+
+  <!-- Load all the required stylesheets: -->
+
+  	<link rel="stylesheet" href="/stylesheets/master.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/search.css" type="text/css"/>
+  	<link rel="stylesheet" href="/javascripts/jquery-daterangepicker/css/ui.daterangepicker.css" type="text/css"/>
+  	<link rel="stylesheet" href="/javascripts/jquery-ui/css/custom-theme/jquery-ui-1.7.2.custom.css" type="text/css" media="screen"/><%# This upsets wkhtmltopdf.exe so skip it for PDF (print-media-type) %>
+  	<link rel="stylesheet" href="/stylesheets/jquery-ui.overrides.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/forms.layout.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/forms.colour.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/page.layout.css" type="text/css" media="screen"/><%# This upsets wkhtmltopdf.exe so skip it for PDF (print-media-type) %>
+  	<link rel="stylesheet" href="/stylesheets/page.colour.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/tabs.layout.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/tabs.colour.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/accordions.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/icons.css" type="text/css"/>
+
+  <!-- The following are not required immediately: (They're used on content that is a few clicks away) -->
+
+    <link rel="stylesheet" href="/stylesheets/notes.css" type="text/css"/>
+  	<link rel="stylesheet" href="/javascripts/jquery-spinbox/jquery.spinbox.css" type="text/css"/>
+  	<link rel="stylesheet" href="/javascripts/jquery-textarearesizer/jquery.textareaResizer.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/sysadmin.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/images.css" type="text/css"/>			  <%# Used by admin pages where photos are managed %>
+  	<link rel="stylesheet" href="/stylesheets/documents.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/money_out.css" type="text/css"/>		<%# Supplier payments page (invoice to suppliers) %>
+  	<link rel="stylesheet" href="/stylesheets/timeline.css" type="text/css"/>			<%# This in turn loads url("/timeline_styles.css") which is dynamically generated css for timeline element classnames %>
+  	<link rel="stylesheet" href="/stylesheets/trip.itinerary.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/trip.costings.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/trip.flights.grid.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/reports.css" type="text/css"/>
+  	<link rel="stylesheet" href="/stylesheets/tour.css" type="text/css"/>
+
+
+  <!-- These are only used during development and testing: -->
+
+  	<link rel="stylesheet" href="/javascripts/testing/qunit.css" type="text/css"/>
+	
+	
 </head>
 <body class="sectionContainer noSectionFoot nojs">
 
@@ -98,7 +136,8 @@
 	<script type="text/javascript" src="/javascripts/jquery-form/jquery.form.js"></script><!-- http://malsup.com/jquery/form -->
 	<script type="text/javascript" src="/javascripts/jquery-mvc/jquery-mvc.js"></script>
 	<script type="text/javascript" src="/javascripts/jquery-textarearesizer/jquery.textarearesizer.min.js"></script>
-	<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery-tmpl/jquery.tmpl.min.js"></script>
+	<!--<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>-->
 
 	<script type="text/javascript" src="/javascripts/brochure_requests.js"></script>
 	<script type="text/javascript" src="/javascripts/shared.js"></script>
@@ -108,7 +147,7 @@
 	<script type="text/javascript" src="/javascripts/jquery-checkboxlist/checkboxList.jquery.js" async="true" defer="defer"></script>
 	<script type="text/javascript" src="/javascripts/jquery-qtip/jquery.qtip-1.0.0-rc3.min.js" async="true" defer="defer"></script><!-- http://craigsworks.com/projects/qtip -->
 	<script type="text/javascript" src="/javascripts/jquery-imgsize/jquery.imgsize.js" async="true" defer="defer"></script>
-	<script type="text/javascript" src="http://jqueryui.com/themeroller/themeswitchertool/" async="true" defer="defer"></script>
+	<!--<script type="text/javascript" src="http://jqueryui.com/themeroller/themeswitchertool/" async="true" defer="defer"></script>-->
 	<script type="text/javascript" src="/javascripts/clipboard/jquery.zclip.min.js" async="true" defer="defer"></script>
 
 	<% if Merb.environment == 'development' %>
