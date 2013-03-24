@@ -114,8 +114,10 @@ class Notes < Application
     @note = Note.get(id)
     raise NotFound unless @note
     if @note.destroy
+      message[:notice] = "Note deleted"
       redirect resource(:notes)
     else
+      message[:error] = "Failed to delete note :("
       raise InternalServerError
     end
   end
