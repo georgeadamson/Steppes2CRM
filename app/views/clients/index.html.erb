@@ -1,22 +1,22 @@
 <%
 
 	# Unsuccessful experiments to sort by user_clients.updated_at: (See http://groups.google.com/group/datamapper/browse_thread/thread/1aa927f47e31113a)
-	#@clients = @clients.all( Client.users.id => session.user.id ) #if params[:recent]
-	#@clients = session.user.clients.all( :order => [ '' ] )
-	#@clients = session.user.clients.all( :order => [ Client.user_clients.updated_at ] )
+	#@clients = @clients.all( Client.users.id => current_user.id ) #if params[:recent]
+	#@clients = current_user.clients.all( :order => [ '' ] )
+	#@clients = current_user.clients.all( :order => [ Client.user_clients.updated_at ] )
 	#@clients = Client.all( :order => [ DataMapper::Query::Direction.new( UserClient.properties[:updated_at] ) ], :links => [:user_client] )
-	#@clients = session.user.clients.all( :limit => 1000 ) if params[:recent]
+	#@clients = current_user.clients.all( :limit => 1000 ) if params[:recent]
 	
 	# When url parameter ?list=option is set then return custom list:
 	return partial( 'shared/list', :collection => @clients ) if params[:list]
 
 	
 	
-  #open_clients = session.user.recent_clients.all( UserClient.is_open => true, :limit => 10 )
-  open_clients = session.user.open_clients.all( :limit => 10 )
+  #open_clients = current_user.recent_clients.all( UserClient.is_open => true, :limit => 10 )
+  open_clients = current_user.open_clients.all( :limit => 10 )
 	
 	# Find out which client was in active tab last time the user used this app:
-	selected_client = session.user.most_recent_client	#open_clients.first( UserClient.is_selected => true )
+	selected_client = current_user.most_recent_client	#open_clients.first( UserClient.is_selected => true )
 	select_id       = selected_client ? selected_client.id : 0
 
 -%>
@@ -119,7 +119,7 @@
 
 						<!--<div id="myRecentClients">
 							<ul class="clients">
-								<%# clients = session.user.clients.all( :limit => 10 ) %>
+								<%# clients = current_user.clients.all( :limit => 10 ) %>
 								<%#= partial( 'shared/list', :collection => clients, :list_type => :li_link, :link_params => {:label=>:shortname} ) %>
 							</ul>
 						</div>-->
@@ -147,7 +147,7 @@
 						<dt>My recent clients</dt>
 						<dd>
 							<ul class="clients">
-								<%# clients = session.user.clients.all( :limit => 10 ) %>
+								<%# clients = current_user.clients.all( :limit => 10 ) %>
 								<%#= partial( 'shared/list', :collection => clients, :list_type => :li_link, :link_params => {:label=>:shortname} ) %>
 							</ul>
 						</dd>

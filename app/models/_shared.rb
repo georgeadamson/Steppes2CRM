@@ -670,6 +670,11 @@ class String
 		return ''
 	end
 	
+	# Monkeypatch for pdfkit because it assumes response body is an array, but it ain't in Merb:
+	def join(delimiter=nil)
+	  return self
+	end
+	
 end
 
 class Hash
