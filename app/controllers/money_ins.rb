@@ -71,6 +71,7 @@ class MoneyIns < Application
       end
 
       # Generate PDF SNAPSHOT of Costing Sheet:
+      # WARNING: Will fail if you make DocumentType name longer than 8 characters in document_types table! (Seems to be a limitation of PDFKit :(
       run_later do
         @money_in.trip.generate_costing_sheet_snapshot_pdf @money_in.client_id, current_user.id, request.host
       end
