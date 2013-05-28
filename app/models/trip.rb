@@ -1351,6 +1351,7 @@ class Trip
   end
   
   
+  # WARNING: Will fail if you make DocumentType name longer than 8 characters in document_types table! (Seems to be a limitation of PDFKit :(
   def generate_costing_sheet_snapshot_pdf( client_id, user_id, host = 'database:80' )
 
     trip    = self
