@@ -127,6 +127,9 @@ class Document
   # Method for custom validations:
   def validate_document_template_file
 
+    # Skip template file validation when simply saving a document record for a Costing Sheet Snapshot PDF:
+    return true if self.document_type_id == DocumentType::COSTING_SHEET
+    
     if [ DocumentType::LETTER, DocumentType::BROCHURE ].include? self.document_type_id
       template_path = Document.doc_builder_letter_templates_path / self.document_template_file
     else
@@ -836,18 +839,19 @@ class Document
   # Itinerary-Audette-L28421-Kate Burnell.03.02.2010 16.11.20.doc
   def default_file_name( args = {} )
     
-    type    = args[:document_type_name] || self.document_type.name
-    client  = args[:client_name]        || self.client && self.client.name         || ''
-    ref     = args[:booking_ref]        || self.trip   && self.trip.booking_ref    || ''
-    user    = args[:user_name]          || self.user   && self.user.preferred_name || ''
-    date    = args[:date]               || Time.now.formatted(:filedatetime)
+    type      = args[:document_type_name] || self.document_type.name
+    client    = args[:client_name]        || self.client && self.client.name         || ''
+    ref       = args[:booking_ref]        || self.trip   && self.trip.booking_ref    || ''
+    user      = args[:user_name]          || self.user   && self.user.preferred_name || ''
+    date      = args[:date]               || Time.now.formatted(:filedatetime)
+    extension = args[:extension]          || 'doc'
 
     # Special naming convention for letters:
     if self.document_type.id == DocumentType::LETTER && args[:document_type_name].blank? && !self.document_template_file.blank?
       type = self.document_template_file.split(/\/|\\/).pop.slice(/(.*)(.doc)/, 1)
     end
 
-    file_name = "#{ type }-#{ client }#{ "-#{ref}" unless ref.blank? }-#{ user }-#{ date }.doc"
+    file_name = "#{ type }-#{ client }#{ "-#{ref}" unless ref.blank? }-#{ user }-#{ date }.#{ extension }"
     
     return self.sub_folder / file_name
     

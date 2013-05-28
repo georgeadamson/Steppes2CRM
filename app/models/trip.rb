@@ -1351,6 +1351,63 @@ class Trip
   end
   
   
+  def generate_costing_sheet_snapshot_pdf( client_id, user_id, host = 'database:80' )
+
+    trip    = self
+    user    = User.get(user_id)
+    client  = Client.get(client_id)
+    
+    begin
+      
+      raise IOError, 'Missing user_id'   if user.nil?
+      raise IOError, 'Missing client_id' if client.nil?
+    
+      @doc = Document.new(
+        :name                      => 'Costing Sheet Snapshot',
+        :document_type_id          => DocumentType::COSTING_SHEET,
+        :client_id                 => client.id,
+        :trip_id                   => trip.id,
+        :user_id                   => user.id,
+        :created_by                => user.name,
+        :generate_doc_later        => false,
+        :generate_doc_after_create => false
+      )
+      
+      # Override default filename generation to ensure it is given a .pdf extension:
+      @doc.file_name = @doc.default_file_name( :extension => :pdf )
+      
+      if @doc.save
+
+        source = "http://#{ host }/clients/#{ client.id }/trips/#{ trip.id }/costings"
+
+        target_root = CRM[:doc_folder_path]
+        target_path = @doc.file_name
+        target      = "#{ target_root }/#{ target_path }".gsub('\\','/')
+
+        Document.logger.info "generate_costing_sheet_snapshot_pdf source: #{ source } -> target: #{ target }"
+        pdf = PDFKit.new(source)
+        pdf.to_file(target)
+  
+        return File.exist?(target)
+
+      else
+         
+        raise IOError, "Failed to save new document record because #{ @doc.errors.full_messages }"
+        
+      end
+
+    rescue Exception => reason
+
+      err_msg = "ERROR: generate_costing_sheet_snapshot_pdf: #{ reason }"
+      puts err_msg
+      Document.logger.error err_msg
+      return false
+      
+    end
+
+  end
+  
+  
   
   # Helper for re-calculating the trip.total_price property: (Formerly known as total_spend)
   # Warning: Don't forget this includes both price_per_x and price_per_x_biz_supp

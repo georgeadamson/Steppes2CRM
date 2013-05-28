@@ -70,7 +70,7 @@ Extlib::Inflection.plural_word 'status', 'statuses' # This does not seem to fix 
 # To make this work in Merb/Windows we had to hack the code a little:
 # See changes in 
 # - C:\jruby-1.6.4\lib\ruby\gems\1.8\gems\pdfkit-0.5.3\lib\pdfkit\pdfkit.rb
-# - C:\jruby-1.6.4\lib\ruby\gems\1.8\gems\pdfkit-0.5.3\lib\pdfkit\middleware.rb
+# - C:\jruby-1.6.4\lib\ruby\gems\1.8\gems\pdfkit-0.5.3\lib\pdfkit\middleware.rb  <-- This handles ?pdf parameter on the url.
 # Useful commands/syntax for debugging:
 # p=PDFKit.new("<html><body>test</body></html>",{})
 # IO.popen "\"D:/SteppesCRM/wkhtmltopdf/wkhtmltopdf.exe\""

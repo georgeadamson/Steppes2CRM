@@ -26,12 +26,15 @@ class MoneyIns < Application
     message[:error] << "\n Before invoicing, the numbers of adults, children &amp; infants must match clients on this trip." if @trip && @trip.travellers != @trip.clients.length
     message[:error] << "\n No destinations have been provided for this trip. Please choose at least one country before attempting to create an invoice." if @trip && @trip.countries.empty?
 
+    trip_id   = params[:trip_id].to_i
+    client_id = params[:client_id].to_i
+    
     money_in = {
-      :trip_id    => params[:trip_id],
-      :client_id  => params[:client_id]
+      :trip_id    => trip_id,
+      :client_id  => client_id
     }
 
-    @money_in = MoneyIn.new(money_in)
+    @money_in = MoneyIn.new(money_in)    
     display @money_in
 
   end
@@ -53,7 +56,7 @@ class MoneyIns < Application
 
     #if @money_in.save || @money_in.save # HACK: Save may succeed but something is preventing it from returning true first time! (GA 07 Oct 2011)
     if @money_in.save
-      
+
       message[:notice] = "Invoice record was created successfully"
 
       if @money_in.generate_doc_later
@@ -64,14 +67,15 @@ class MoneyIns < Application
         end
 
         message[:notice] << "\nThe document is being generated. It will appear on the documents page shortly"
-        
+
       end
 
-      #if request.ajax?
-        render :new
-      #else
-      #  redirect resource( @money_in.client, @money_in.trip, :money_ins, :new ), :message => message
-      #end
+      # Generate PDF SNAPSHOT of Costing Sheet:
+      run_later do
+        @money_in.trip.generate_costing_sheet_snapshot_pdf @money_in.client_id, current_user.id, request.host
+      end
+ 
+      render :new
 
     else
       #collect_error_messages_for @money_in, :clients
