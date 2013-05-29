@@ -94,7 +94,7 @@
 													<td style="padding-left:2em">
 														<%= icon :trip %><span class="trip-name">
 														<%= trip.title %></span>
-														<br/><div class="summary">&nbsp; &nbsp; &nbsp; <%= trip.countries_names.join(', ') %></div>
+														<br/><div class="summary">&nbsp; &nbsp; &nbsp; <%= trip.countries_names.join(', ') %> - <%= trip.user.preferred_name %></div>
 														<!--<small class="summary"> <%#= trip.summary(true) %></small>-->
 													</td>
 													<td class="nowrap"><%= trip.start_date.formatted(:uidisplay) %><br><%= trip.duration %> days</td>
