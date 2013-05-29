@@ -50,7 +50,7 @@
 
 				<div class="sectionBody">
 
-					<dl class="tours-list <%= 'hide-old-trips' unless params[:show_old] %>">
+					<table class="tours-list <%= 'hide-old-trips' unless params[:show_old] %>">
 
 						<% @tours.each do |tour| %>
 
@@ -67,46 +67,71 @@
 
 								<% number_of_tours_shown += 1 %>
 
-								<dt class="tour <%= 'tour-has-no-trips' if tour_has_no_trips %> <%= 'tour-is-old' unless tour_is_relevant %>">
-									<%= icon :group %>
-									<%= link_to tour.name, resource( tour ), :class => 'tour-name' %>
-									<small class = "tour-notes"><%= tour.notes %></small>
-								</dt>
+								<tr>
+								
+									<td colspan="5" class="tour <%= 'tour-has-no-trips' if tour_has_no_trips %> <%= 'tour-is-old' unless tour_is_relevant %>">
+										<%= icon :group %>
+										<%= link_to tour.name, resource( tour ), :class => 'tour-name' %>
+										<small class = "tour-notes"><%= tour.notes %></small>
+									</td>
+									
+								</tr>
 
-								<dd class="<%= 'tour-has-no-trips' if tour_has_no_trips %> <%= 'tour-is-old' unless tour_is_relevant %>">
 
-									<% if tour_trips.empty? %>
+									<% if tour_has_no_trips %>
 
-										<p class="no-trips">No trips have been created for this tour</p>
+										<tr class="<%= 'tour-has-no-trips' if tour_has_no_trips %> <%= 'tour-is-old' unless tour_is_relevant %>">
+											<td colspan="5" class="no-trips">No trips have been created for this tour</td>
+										</tr>
 
 									<% else %>
 
-									<ul class="trips-list">
-
 										<% tour_trips.each do |trip| -%>
 
-											<% if params[:show_old] || trip.unconfirmed? || trip.confirmed? %>
+											<% if trip.unconfirmed? || trip.confirmed? || params[:show_old] %>
 
-												<li class="trip trip-<%= trip.status_code %>">
-													<%= icon :trip %><span class="trip-name"><%= trip.title %></span>
-													<small class="summary"> <%= trip.summary(true) %></small>
-												</li>
+												<tr class="trips-list trip trip-<%= trip.status_code %>">
+													<td style="padding-left:2em">
+														<%= icon :trip %><span class="trip-name">
+														<%= trip.title %></span>
+														<br/><div class="summary">&nbsp; &nbsp; &nbsp; <%= trip.countries_names.join(', ') %></div>
+														<!--<small class="summary"> <%#= trip.summary(true) %></small>-->
+													</td>
+													<td class="nowrap"><%= trip.start_date.formatted(:uidisplay) %><br><%= trip.duration %> days</td>
+													<td class="nowrap"><%= trip.travellers %> places<br><%= trip.spaces > 0 ? "<strong>#{trip.spaces} spaces</strong>" : 'Full' %></td>
+													<td class="nowrap">
+														<%= trip.confirmeds.count %> confirmed<br>
+														<% if trip.unconfirmeds.count > 0 %>
+															<strong><%= trip.unconfirmeds.count %> unconfirmed</strong>
+														<% else %>
+															<%= trip.unconfirmeds.count %> unconfirmed
+														<% end %>
+														</td>
+													<td>
+														<%= trip.trip_clients.map{ |trip_client|
 
+															if trip_client.is_confirmed
+																link_to "<span title=\"Confirmed\">#{ trip_client.client.name }</span>"
+                              else
+																link_to "<strong title=\"Unconfirmed\">#{ trip_client.client.name }</strong>", resource(trip_client.client)
+                              end
+
+                            }.join(', ') %>
+													</td>
+
+												</tr>
+													
 											<% end -%>
 
 										<% end -%>
 
-									</ul>
-
 									<% end %>
-
-								</dd>
 
 							<% end %>
 
 						<% end %>
 
-					</dl>
+					</table>
 
 					<% if number_of_tours_shown == 0 %>
 

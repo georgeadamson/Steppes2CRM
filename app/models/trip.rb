@@ -438,25 +438,31 @@ class Trip
   
   # Derived properties and helpers...
   
-  def leaders;			return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_leader			=> true ); end
-  def invoicables;	return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_invoicable	=> true ); end
+  def confirmeds;   return self.clients.all( Client.trip_clients.status_id     => TripClientStatus::CONFIRMED ); end
+  def unconfirmeds; return self.clients.all( Client.trip_clients.status_id     => TripClientStatus::UNCONFIRMED ); end
+  def leaders;			return self.clients.all( Client.trip_clients.is_leader		 => true ); end
+  def invoicables;	return self.clients.all( Client.trip_clients.is_invoicable => true ); end
+  def spaces;       return self.travellers - self.trip_clients.count; end
+
   def primaries
-    
+
     # Assume invoceable primaries are more important and should be top of list (helpful for deriving main_client_for_reminders)
     # primaries = self.trip_clients.all( :is_primary => true, :order => [ :is_invoicable.desc ] ).clients
     # TODO: Figure out how to sort Clients by trip_clients.invoiceable first! Eg: :order => [ Client.trip_clients.is_invoicable.desc ]
     primaries = self.clients.all( Client.trip_clients.is_primary => true )
-    
+
     # Attempt to correct trip with no primary client!
     if primaries.empty? && ( first_trip_client = self.trip_clients.first( :order => [ :is_invoicable.desc, :id] ) )
       first_trip_client.is_primary = true
       first_trip_client.save! unless self.new?
       primaries.reload        unless self.new?
     end
-    
+
     return primaries
-    
+
   end
+  
+  
   
   # Helper to take a punt at who's the main client on the trip who should be named on Trip Reminders etc for the Consultant:
   def main_client_for_reminders
@@ -479,7 +485,7 @@ class Trip
     return self.version_of_trip_id || self.id
   end
   
-  # DEPRICATED:
+
   # Calculate duration of trip in days: (When overrun is true, we include any trip elements that are not within trip dates!)
   def duration(overrun = false)
     if overrun || overrun == :with_overrun
@@ -496,7 +502,7 @@ class Trip
     overrun		||= (overrun == :with_overrun)  # True to include elements that lie outside trip dates.
     result			= []
     first_date	= overrun ? self.first_element.start_date.to_date : self.start_date
-    last_date		= overrun ? self.last_element.start_date.to_date  : self.end_date
+    last_date		= overrun ? self.last_element.end_date.to_date  : self.end_date
     total_days	= last_date.jd - first_date.jd + 1		# jd returns julian date number
     
     # Dummy loop to encourage datamapper to load all the trip_elements: (Thereby preventing multiple queries later)
