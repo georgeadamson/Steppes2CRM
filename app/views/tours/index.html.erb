@@ -98,7 +98,7 @@
 														<!--<small class="summary"> <%#= trip.summary(true) %></small>-->
 													</td>
 													<td class="nowrap"><%= trip.start_date.formatted(:uidisplay) %><br><%= trip.duration %> days</td>
-													<td class="nowrap"><%= trip.travellers %> places<br><%= trip.spaces > 0 ? "<strong>#{trip.spaces} spaces</strong>" : 'Full' %></td>
+													<td class="nowrap"><%= trip.travellers %> places<br><%= trip.spaces_not_confirmed > 0 ? "<strong>#{trip.spaces_not_confirmed} spaces</strong>" : 'Full' %></td>
 													<td class="nowrap">
 														<%= trip.confirmeds.count %> confirmed<br>
 														<% if trip.unconfirmeds.count > 0 %>
@@ -111,7 +111,7 @@
 														<%= trip.trip_clients.map{ |trip_client|
 
 															if trip_client.is_confirmed
-																link_to "<span title=\"Confirmed\">#{ trip_client.client.name }</span>"
+																link_to "<span title=\"Confirmed\">#{ trip_client.client.name }</span>", resource(trip_client.client)
                               else
 																link_to "<strong title=\"Unconfirmed\">#{ trip_client.client.name }</strong>", resource(trip_client.client)
                               end

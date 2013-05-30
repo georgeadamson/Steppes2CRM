@@ -420,29 +420,30 @@ class Trip
     if self == self.version_of_trip
       
       # TODO: Also delete all versions of this trip!
-      
+
     elsif self.is_active_version
-      
+
       # Make the original version the active version:
       self.version_of_trip.update!( :is_active_version => true )
       self.version_of_trip.make_other_versions_inactive!
-      
+
     end
-    
+
     # Delete associated trip_elements too:
     TripElement.all( :trip_id => self.id ).destroy
-    
+
   end
-  
-  
-  
+
+
+
   # Derived properties and helpers...
-  
-  def confirmeds;   return self.clients.all( Client.trip_clients.status_id     => TripClientStatus::CONFIRMED ); end
-  def unconfirmeds; return self.clients.all( Client.trip_clients.status_id     => TripClientStatus::UNCONFIRMED ); end
-  def leaders;			return self.clients.all( Client.trip_clients.is_leader		 => true ); end
-  def invoicables;	return self.clients.all( Client.trip_clients.is_invoicable => true ); end
-  def spaces;       return self.travellers - self.trip_clients.count; end
+
+  def confirmeds;           return self.clients.all( Client.trip_clients.status_id     => TripClientStatus::CONFIRMED ); end
+  def unconfirmeds;         return self.clients.all( Client.trip_clients.status_id     => TripClientStatus::UNCONFIRMED ); end
+  def leaders;			        return self.clients.all( Client.trip_clients.is_leader		 => true ); end
+  def invoicables;	        return self.clients.all( Client.trip_clients.is_invoicable => true ); end
+  def spaces;               return self.travellers - self.trip_clients.count; end
+  def spaces_not_confirmed; return self.travellers - self.confirmeds.count; end
 
   def primaries
 
