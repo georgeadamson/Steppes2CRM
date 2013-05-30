@@ -277,6 +277,7 @@ TABLE.flightSchedule {
 /* ERROR and NOTICE messages: */
 
 	#messages {
+		pointer-events: none; /* Allow user to click *through* the message to tabs etc underneath */
 		position:absolute;
 		margin:0.5em auto 0 50%;
 		left:-30em;	/* Centered using margin, left and width */
