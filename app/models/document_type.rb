@@ -10,6 +10,7 @@ class DocumentType
   LETTER            = 8  unless defined? LETTER
   BROCHURE          = 12 unless defined? BROCHURE
   ATOL_CERTIFICATE  = 13 unless defined? ATOL_CERTIFICATE
+  COSTING_SHEET     = 14 unless defined? COSTING_SHEET
   # TODO: more...? There must be a better way?
 
   property :id,                 Serial

@@ -127,6 +127,9 @@ class Document
   # Method for custom validations:
   def validate_document_template_file
 
+    # Skip template file validation when simply saving a document record for a Costing Sheet Snapshot PDF:
+    return true if self.document_type_id == DocumentType::COSTING_SHEET
+    
     if [ DocumentType::LETTER, DocumentType::BROCHURE ].include? self.document_type_id
       template_path = Document.doc_builder_letter_templates_path / self.document_template_file
     else
@@ -359,6 +362,68 @@ class Document
     
     return Document.delete_file!( file_path, self.id )
     
+  end
+  
+    
+  def self.new_temp_file_path( prefix = 'tmp', temp_folder = 'c:/temp' )
+
+    # Rather tenuous technique to derive a path for a new unique temp file:
+    begin
+      tmp_file = Tempfile.new( prefix, temp_folder )
+      tmp_path = tmp_file.path
+    ensure
+      tmp_file.close
+      tmp_file.delete # AKA unlink
+    end
+
+    return tmp_path
+    
+  end
+
+  
+  def self.copy_file( file_path, to_path, move = false )
+    
+    retries = 0
+    Document.logger.info "Copying generated PDF from: #{ file_path } to #{ to_path }"
+    
+    begin
+      FileUtils.cp file_path, to_path  # Tried using File.rename to do this but it hit a Permission denied error on network folders.
+      has_copied_successfully = File.exist?(to_path)
+    rescue Exception => reason
+      retries += 1
+      err_msg = "ERROR copying file: (Retry #{retries}) #{reason}"
+      puts err_msg; Document.logger.error err_msg
+      retry if retries < 10 && !File.exist?(to_path)
+    end
+    
+    if move && has_copied_successfully
+      begin
+        Document.destroy_file!(file_path)
+      end
+    end
+    
+    return has_copied_successfully || File.exist?(to_path)
+    
+  end
+  
+  # Very basic file delete: (If you need bells & whistles see delete_file! method instead)
+  def self.destroy_file!(file_path)
+ 
+    begin
+
+      if File.exist? file_path
+        File.delete file_path
+      else
+        return true
+      end
+
+    rescue Exception => reason
+      err_msg = "ERROR while atempting to delete file: #{file_path} #{reason}"
+      puts err_msg; Document.logger.error err_msg
+    end
+ 
+    return !File.exist?(file_path)
+
   end
   
   
@@ -836,18 +901,19 @@ class Document
   # Itinerary-Audette-L28421-Kate Burnell.03.02.2010 16.11.20.doc
   def default_file_name( args = {} )
     
-    type    = args[:document_type_name] || self.document_type.name
-    client  = args[:client_name]        || self.client && self.client.name         || ''
-    ref     = args[:booking_ref]        || self.trip   && self.trip.booking_ref    || ''
-    user    = args[:user_name]          || self.user   && self.user.preferred_name || ''
-    date    = args[:date]               || Time.now.formatted(:filedatetime)
+    type      = args[:document_type_name] || self.document_type.name
+    client    = args[:client_name]        || self.client && self.client.name         || ''
+    ref       = args[:booking_ref]        || self.trip   && self.trip.booking_ref    || ''
+    user      = args[:user_name]          || self.user   && self.user.preferred_name || ''
+    date      = args[:date]               || Time.now.formatted(:filedatetime)
+    extension = args[:extension]          || 'doc'
 
     # Special naming convention for letters:
     if self.document_type.id == DocumentType::LETTER && args[:document_type_name].blank? && !self.document_template_file.blank?
       type = self.document_template_file.split(/\/|\\/).pop.slice(/(.*)(.doc)/, 1)
     end
 
-    file_name = "#{ type }-#{ client }#{ "-#{ref}" unless ref.blank? }-#{ user }-#{ date }.doc"
+    file_name = "#{ type }-#{ client }#{ "-#{ref}" unless ref.blank? }-#{ user }-#{ date }.#{ extension }"
     
     return self.sub_folder / file_name
     
