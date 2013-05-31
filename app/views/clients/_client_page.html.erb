@@ -12,9 +12,12 @@
 				<span class="clientName"><%= client.fullname %></span>
 				<%= tag :small, client.postcode unless client.postcode.blank? %>
 				<small>
-					(<span class="clientTotalSpend" title="Total spent" data-bound="true" data-resource="<%= resource(client) %>" data-field="client[total_spend]"><%=
-						client.total_spend.to_currency(:uk)
-					%></span>)
+					<span class="clientTotalSpend" title="Total household spend">
+						<%= client.households_total_spend.to_currency(:uk) %>
+					</span>
+					<span class="clientTotalSpend" title="Total individual spend" data-bound="true" data-resource="<%= resource(client) %>" data-field="client[total_spend]">
+						(<%= client.total_spend.to_currency(:uk) %>)
+					</span>
 				</small>
 				<small>
 					Trips: <%= client.trips_statement %>

@@ -460,12 +460,28 @@ class Client
     return Client.all( :conditions => ["id != ? AND ( address_client_id = ? OR address_client_id = ? )", self.id, self.id, self.address_client.id.to_i ] )
   end
 
-  # All clients who share an address with this client: (AKA Fellow dwellers)
+  
+  # All other clients who share an address with this client: (AKA Fellow dwellers)
   def housemates( address_id = nil )
-    address_id ||= self.primary_address_id
+    address_id ||= self.addresses.map{|a|a.id}
     return Client.all( Client.client_addresses.address_id => address_id, :id.not => self.id )
   end
 
+  
+  # All clients (including self) who share addresses with this client: (AKA Fellow dwellers)
+  def households( address_ids = nil )
+    address_ids ||=  self.addresses.map{|a|a.id}
+    return Client.all( Client.client_addresses.address_id => address_ids )
+  end
+
+  
+  # Combined total_spend of everyone who shares same addresses:
+  # Should be same as self.households.sum(:total_spend) but that seems to add up duplicates :(
+  def households_total_spend( address_ids = nil )
+    return self.households(address_ids).map{|c|c.total_spend}.inject(:+)
+  end
+
+  
   # Simple string summarising the trips: (Eg: "1 unconfirmed, 1 confirmed, 2 completed, 1 canceled, 5 abandoned")
   # For speed, we loop through the trips counting the statuses, not the other way around.
   def trips_statement( trips_list = nil )
