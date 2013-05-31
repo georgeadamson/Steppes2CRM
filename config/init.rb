@@ -80,18 +80,9 @@ Extlib::Inflection.plural_word 'status', 'statuses' # This does not seem to fix 
 PDFKit.configure do |config|
   config.wkhtmltopdf = 'D:/SteppesCRM/wkhtmltopdf/wkhtmltopdf.exe'
   config.default_options = {
-    :page_size => 'Legal',
+    :quiet            => false,
+    :page_size        => 'Legal',
     :print_media_type => true # Necessary for skipping a couple of screen-only css files that seem to upset wkhtmltopdf.
   }
   # config.root_url = "http://localhost" # Use only if your external hostname is unavailable on the server.
 end
-
-#@pdfkit = PDFKit::Middleware.new
-#Merb::Rack::Middleware.new(@pdfkit)
-
-#PDFKit::Middleware::initialize
-#Merb::Config.use PDFKit::Middleware
-#Merb::Rack::Middleware.use PDFKit::Middleware
-#Merb::Rack::Middleware::Config.use do |config|
-#  c.middleware.use PDFKit::Middleware
-#end

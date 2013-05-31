@@ -364,6 +364,68 @@ class Document
     
   end
   
+    
+  def self.new_temp_file_path( prefix = 'tmp', temp_folder = 'c:/temp' )
+
+    # Rather tenuous technique to derive a path for a new unique temp file:
+    begin
+      tmp_file = Tempfile.new( prefix, temp_folder )
+      tmp_path = tmp_file.path
+    ensure
+      tmp_file.close
+      tmp_file.delete # AKA unlink
+    end
+
+    return tmp_path
+    
+  end
+
+  
+  def self.copy_file( file_path, to_path, move = false )
+    
+    retries = 0
+    Document.logger.info "Copying generated PDF from: #{ file_path } to #{ to_path }"
+    
+    begin
+      FileUtils.cp file_path, to_path  # Tried using File.rename to do this but it hit a Permission denied error on network folders.
+      has_copied_successfully = File.exist?(to_path)
+    rescue Exception => reason
+      retries += 1
+      err_msg = "ERROR copying file: (Retry #{retries}) #{reason}"
+      puts err_msg; Document.logger.error err_msg
+      retry if retries < 10 && !File.exist?(to_path)
+    end
+    
+    if move && has_copied_successfully
+      begin
+        Document.destroy_file!(file_path)
+      end
+    end
+    
+    return has_copied_successfully || File.exist?(to_path)
+    
+  end
+  
+  # Very basic file delete: (If you need bells & whistles see delete_file! method instead)
+  def self.destroy_file!(file_path)
+ 
+    begin
+
+      if File.exist? file_path
+        File.delete file_path
+      else
+        return true
+      end
+
+    rescue Exception => reason
+      err_msg = "ERROR while atempting to delete file: #{file_path} #{reason}"
+      puts err_msg; Document.logger.error err_msg
+    end
+ 
+    return !File.exist?(file_path)
+
+  end
+  
   
   # Delete the physical file: (Returns true if successful)
   # Important: Documents are actually MOVED to the /Documents/Deleted folder and not deleted! :o)
