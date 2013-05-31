@@ -13,12 +13,17 @@ describe Client do
     TripClient.all.destroy
     ClientAddress.all.destroy
     
-    @clientA  = @client   = Client.create(valid_client_attributes)
-    @clientB  =             Client.create(valid_client_attributes)
-    @tripA    = @trip     = Trip.create(valid_trip_attributes)
-    @tripB    =             Trip.create(valid_trip_attributes)
-    @addressA = @address  = Address.create(valid_address_attributes)
-    @addressB = Address.create(valid_address_attributes2)
+    @company      = Company.first_or_create( { :initials => valid_company_attributes[:initials] }, valid_company_attributes )
+    @world_region = WorldRegion.first_or_create( { :name => 'Dummy Region' }, { :name => 'Dummy Region' } )
+    @mailing_zone = MailingZone.first_or_create( { :name => 'Dummy Zone'   }, { :name => 'Dummy Zone'   } )
+    @country      = Country.first_or_create( { :code => valid_country_attributes[:code] }, valid_country_attributes )
+
+    @clientA  = @client  = Client.create(valid_client_attributes)
+    @clientB  =            Client.create(valid_client_attributes)
+    @tripA    = @trip    = Trip.create(valid_trip_attributes)
+    @tripB    =            Trip.create(valid_trip_attributes)
+    @addressA = @address = Address.create(valid_address_attributes)
+    @addressB =            Address.create(valid_address_attributes2)
 
     @new_postcode = 'New pcode!'
     
@@ -27,15 +32,21 @@ describe Client do
 
   it 'should be valid' do
 
+    # Just belt and braces to make sure all is well: (Because @client may still look valid even when one of these is not)
+    @company.should be_valid
+    @world_region.should be_valid
+    @mailing_zone.should be_valid
+    @country.should be_valid
+    
     @client.should be_valid
-
+    
     # Just to be sure about our other test data:
     @addressA.should be_valid
     @addressB.should be_valid
     
   end
 
-
+  
   it 'should save new client_address relationship' do
 
     Address.all.count.should        == 2    # @addressA and @addressB only
@@ -54,6 +65,134 @@ describe Client do
     
   end
   
+  
+  it 'should copy address from a companion client' do
+    
+    @clientA.addresses << @addressA
+    @clientB.addresses << @addressB
+    @clientA.save.should be_true
+    @clientB.save.should be_true
+    
+    @addressA.id.should_not == @addressB.id
+    @clientA.addresses.last.should == @addressA
+    @clientB.addresses.last.should == @addressB
+    
+    # Before copy:
+    @clientA.client_addresses.length.should       == 1
+    @clientA.client_addresses.last.address.should == @addressA
+        
+    # Copy address from @clientB:
+    @clientA.copy_companion_details_from @clientB.id
+    
+    # After copy:
+    @clientA.client_addresses.length.should       == 2
+    @clientA.client_addresses.last.address.should == @addressB
+    
+    # Make sure it saves correctly too:
+    # puts @clientA.valid?, @clientA.errors.inspect, @clientA.inspect
+    @clientA.save.should be_true
+    @clientA.reload
+    @clientA.client_addresses.length.should       == 2
+    @clientA.client_addresses.last.address.should == @addressB
+    
+  end
+  
+  
+  it 'should create new client with address shared with companion' do
+    
+    # New address (using real data from database)
+    addressC_attributes = {
+      "address1"=>"Narracott House", 
+      "address2"=>"Ampney Crucis", 
+      "address3"=>"Cirencester", 
+      "address4"=>"Gloucestershire", 
+      "address5"=>"United Kingdom", 
+      "postcode"=>"GL7 5SF", 
+      "country_id"=>Country.first.id.to_s, 
+      "tel_home"=>"01285 850005", 
+      "fax_home"=>""
+    }
+    
+    @addressC = Address.create(addressC_attributes)
+    @addressC.should be_valid
+    @addressC.id.should > 0
+    
+    # Client attributes including address.id: (Defined here from real data submitted by browser)
+    clientC_attributes = {
+      "title_id"=>"1",
+      "forename"=>"Test", 
+      "name"=>"Armitage", 
+      "salutation"=>"Mr Armitage", 
+      "addressee"=>"Mr T Armitage", 
+      "known_as"=>"", 
+      "tel_work"=>"", 
+      "tel_mobile1"=>"", 
+      "tel_mobile2"=>"", 
+      "email1"=>"", 
+      "email2"=>"", 
+      "primary_address_id" => @addressC.id.to_s, 
+      "addresses_attributes"=>{
+        "0" => addressC_attributes.merge( "id" => @addressC.id.to_s ),
+        "new"=>{
+          "address1"=>"Add another...",
+          "address2"=>"", 
+          "address3"=>"", 
+          "address4"=>"", 
+          "address5"=>"", 
+          "postcode"=>"", 
+          "country_id"=>Country.first.id.to_s, 
+          "tel_home"=>"", 
+          "fax_home"=>""
+        }
+      }, 
+      "client_marketing_divisions_attributes"=>{
+        "0"=>{
+          "division_id"=>"1", 
+          "allow_email"=>"1", 
+          "allow_postal"=>"1"
+        }, 
+        "1"=>{
+          "division_id"=>"2", 
+          "allow_email"=>"1", 
+          "allow_postal"=>"1"
+        }, 
+        "2"=>{
+          "division_id"=>"3",
+           "allow_email"=>"1", 
+           "allow_postal"=>"1"
+         }
+       }, 
+       "original_company_id"=>Company.first.id.to_s, 
+       "original_source_id"=>ClientSource.first.id.to_s, 
+       "type_id"=>"2", 
+       "birth_date"=>"", 
+       "birth_place"=>"", 
+       "occupation"=>"", 
+       "nationality"=>"", 
+       "passport_name"=>"", 
+       "passport_number"=>"", 
+       "passport_issue_place"=>"", 
+       "passport_issue_date"=>"", 
+       "passport_expiry_date"=>"", 
+       "notes_frequent_flyer"=>"", 
+       "notes_airline"=>"", 
+       "notes_seating"=>"", 
+       "notes_food"=>""
+     }
+    
+    @clientC = Client.new(clientC_attributes)
+    @clientC.save.should be_true
+    
+    puts @clientC.valid?, @clientC.errors.inspect, @clientC.addresses.inspect
+    
+    @clientC.reload
+    puts @clientC.valid?, @clientC.errors.inspect, @clientC.addresses.inspect
+    @clientC.addresses.first.should == @addressC
+    @clientC.should have(1).addresses
+    
+  end
+  
+=begin
   
   it 'should update address fields through addresses_attributes (using array format)' do
     
@@ -101,7 +240,6 @@ describe Client do
     @addressB.postcode.should   == 'BBBB'
    
   end
-  
   
   
   it 'should update address fields through addresses_attributes (using real data)' do
@@ -172,7 +310,6 @@ describe Client do
   end
 
 
-
   it 'should not affect addresses of clients that share same trip' do
     
     orig_postcode = @addressB.postcode
@@ -209,7 +346,6 @@ describe Client do
   end
 
 
-
   it 'should affect addresses of clients that share same address through one client' do
     
     pending
@@ -241,7 +377,6 @@ describe Client do
     
   end
 
-
   
   it 'should assume a default primary address when none specified' do
     
@@ -272,8 +407,7 @@ describe Client do
 
   end
 
-
-  
+ 
   it 'should allow address to be deleted' do
     
     # Same as previous test but this time using a hash that is more like the data submitted by a form:
@@ -313,4 +447,6 @@ describe Client do
     
   end
 
+=end
+  
 end

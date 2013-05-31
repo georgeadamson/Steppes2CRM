@@ -27,6 +27,7 @@
 				radio_id		= "#{field_prefix}_#{client.id}_active_address_id_#{client_address.id}"
 				radio_label	= i==0 ? 'Primary address' : 'Use this as primary'
 				checkbox_id	= "#{field_prefix}_#{client.id}_delete_address_id_#{client_address.id}"
+				housemates  = client.housemates( client_address.address_id )
 			-%>
 
 			<%= fields_for client do %>
@@ -37,9 +38,19 @@
 
 			<% end =%>
 
+			<!-- Address "Shared with" summary -->
+			<% if housemates.length > 0 %>
+				
+				<div class="formField" title="This address is shared with <%= housemates.map{|chum| chum.fullname }.join(', ') %>">
+					<label style="font-weight:normal">Shared with</label><input type="text" readonly value="<%= housemates.length %> others">
+				</div>
+				
+			<% end %>
+		
 			<%= fields_for client_address.address do %>
 
-				<%= partial 'addresses/form', :address => client_address.address, :field_prefix => "#{ addresses_attributes }[#{i}]", :index => i %>
+				<%# Make address fields readonly for new clients who's address(es) have been copied from another: %>
+				<%= partial 'addresses/form', :address => client_address.address, :field_prefix => "#{ addresses_attributes }[#{i}]", :index => i, :readonly => client.new? %>
 
 				<%= check_box :name => "#{ addresses_attributes }[#{i}][_delete]", :value => 'true', :label => 'Delete this address', :class => "noemphasis #{ "invisible" if i==0 }", :id => checkbox_id unless client.new? %>
 
@@ -63,7 +74,7 @@
 		<div class="formField"></div>
 	<% end =%>
 
-	<!-- Important: New address is saved when any field contains text: (other than address1 and country_id) -->
+	<!-- Important: New address is only saved when any field contains text: (other than address1 and country_id) -->
 	<%= fields_for new_blank_address do |address| %>
 		<%= partial 'addresses/form', :address => address, :field_prefix => "#{ addresses_attributes }[new]", :index => 'new' %>
 	<% end =%>

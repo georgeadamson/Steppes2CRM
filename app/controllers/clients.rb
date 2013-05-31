@@ -197,10 +197,21 @@ class Clients < Application
     @client.created_by          ||= session.user.fullname
     @client.updated_by          ||= session.user.fullname
 
+    # For some reason, when copied from another client, addresses are not being saved so we have to create client_addresses association ourselves:
+    if @client.addresses.length != client[:addresses_attributes].length
+      client[:addresses_attributes].each do |idx,addr|
+        is_primary = ( addr[:id] == client[:primary_address_id] )
+        @client.client_addresses.new( :address_id => addr[:id], :is_active => is_primary )
+      end
+    end
+
     # Prevent the search keywords table from being updated right now:
     @client.auto_refresh_search_keywords_after_save = false
 
     if @client.save
+
+      puts @client.addresses.length, client[:addresses_attributes].length
+
       # Now that new row has an id, make sure we self-reference the client's address if none specified:
 
       message[:notice] = "Client was added successfully"
