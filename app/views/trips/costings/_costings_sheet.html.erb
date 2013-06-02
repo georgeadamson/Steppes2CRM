@@ -206,6 +206,8 @@
 					old_margin = trip.calc( :total, :actual, :percent_margin, :for_all, :travellers, :with_all_extras => true, :final_prices => true, :decimal_places => 1 )
 				%>	
 
+				<%= link_to 'Export to PDF', "#{ resource @client_or_tour, @trip }/costings?pdf", :class => 'ui-priority-secondary ui-state-default noajax', :target => '_blank' %>
+
 				<!-- IMPORTANT! The markup order of these buttons is significant to ensure that pressing Enter submits 'Save' -->
 				<%= submit 'Save price adjustments',		:class => 'ui-priority-primary ui-state-default' %>
 				<!-- User must not update exchange rates on group trips or confirmed/completed trips: -->

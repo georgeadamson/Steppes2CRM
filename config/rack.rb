@@ -7,5 +7,9 @@ end
 # that serves static files
 use Merb::Rack::Static, Merb.dir_for(:public)
 
+# For exporting pages as PDF:
+# See also config/init.rb
+use PDFKit::Middleware
+
 # this is our main merb application
 run Merb::Rack::Application.new

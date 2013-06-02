@@ -5,7 +5,10 @@ $KCODE    = 'u'    # Equivalent to the jruby -Ku switch. Does not seem to make a
   
 require 'rubygems'
 require 'config/dependencies.rb'
- 
+
+# Also see PDFKit.configure (below)
+require 'pdfkit'
+
 use_orm :datamapper
 use_test :rspec
 use_template_engine :erb
@@ -59,3 +62,36 @@ end
 #end
 
 Extlib::Inflection.plural_word 'status', 'statuses' # This does not seem to fix DataMapper "TripStatu" problem :(
+
+
+# For exporting pages as PDF:
+# See also "use PDFKit::Middleware" added to config/rack.rb
+# More info: https://github.com/pdfkit/pdfkit
+# To make this work in Merb/Windows we had to hack the code a little:
+# See changes in 
+# - C:\jruby-1.6.4\lib\ruby\gems\1.8\gems\pdfkit-0.5.3\lib\pdfkit\pdfkit.rb
+# - C:\jruby-1.6.4\lib\ruby\gems\1.8\gems\pdfkit-0.5.3\lib\pdfkit\middleware.rb
+# Useful commands/syntax for debugging:
+# p=PDFKit.new("<html><body>test</body></html>",{})
+# IO.popen "\"D:/SteppesCRM/wkhtmltopdf/wkhtmltopdf.exe\""
+# IO.popen "\"D:/SteppesCRM/wkhtmltopdf/wkhtmltopdf.exe\" \"--page-size\" \"Legal\" \"--print-media-type\" \"--quiet\" \"-\" \"-\""
+# kit = PDFKit.new(File.new('c:\temp\test.html'))
+# kit.to_file('c:\temp\test.pdf')
+PDFKit.configure do |config|
+  config.wkhtmltopdf = 'D:/SteppesCRM/wkhtmltopdf/wkhtmltopdf.exe'
+  config.default_options = {
+    :page_size => 'Legal',
+    :print_media_type => true # Necessary for skipping a couple of screen-only css files that seem to upset wkhtmltopdf.
+  }
+  # config.root_url = "http://localhost" # Use only if your external hostname is unavailable on the server.
+end
+
+#@pdfkit = PDFKit::Middleware.new
+#Merb::Rack::Middleware.new(@pdfkit)
+
+#PDFKit::Middleware::initialize
+#Merb::Config.use PDFKit::Middleware
+#Merb::Rack::Middleware.use PDFKit::Middleware
+#Merb::Rack::Middleware::Config.use do |config|
+#  c.middleware.use PDFKit::Middleware
+#end
