@@ -478,7 +478,7 @@ class Client
   # Combined total_spend of everyone who shares same addresses:
   # Should be same as self.households.sum(:total_spend) but that seems to add up duplicates :(
   def households_total_spend( address_ids = nil )
-    return self.households(address_ids).map{|c|c.total_spend}.inject(:+)
+    return self.households(address_ids).map{|c|c.total_spend}.inject(:+) || 0
   end
 
   
