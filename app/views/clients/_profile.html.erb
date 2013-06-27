@@ -10,10 +10,12 @@
 
 	countries_tooltip = 'Hold down Ctrl to select multiple countries. &#13;(Also try Ctrl + up/down or Spacebar)'
 	
+	client_sources = ClientSource.all_grouped
+	
 %>
 <!-- When creating a client the "Recent source" field is hidden and will default to same as "Original source": -->
 <%= select :original_company_id,   :label=>"Original company", :selected=> client.original_company_id.to_s,   :collection => companies, :value_method => :id, :text_method => :display_name, :disabled => !created_recently %>
-<%= select :original_source_id, :label=>"Original source",		 :selected=> client.original_source_id.to_s, :collection => ClientSource.all(:order=>[:name]), :value_method => :id, :text_method => :name, :prompt => '(Please choose)', :disabled => !created_recently %>
-<%= select :source_id,					:label=>"Recent source",			 :selected=> client.source_id.to_s,					:collection => ClientSource.all(:order=>[:name]), :value_method => :id, :text_method => :name unless client.new? %>
+<%= select :original_source_id, :label=>"Original source",		 :selected=> client.original_source_id.to_s, :collection => client_sources, :value_method => :id, :text_method => :name, :prompt => '(Please choose)', :disabled => !created_recently %>
+<%= select :source_id,					:label=>"Recent source",			 :selected=> client.source_id.to_s,					:collection => client_sources, :value_method => :id, :text_method => :minor unless client.new? %>
 <%= select :type_id,						:label=>"Client type",				 :selected=> client.type_id.to_s,						:collection => ClientType.all(:order=>[:name]), :value_method => :id, :text_method => :name %>
 <%= select :countries,					:label=>"<small>(#{client.interests.length})</small> Areas of interest",	:selected => client.interests_ids.all_to_s, :collection => Country.all( :order => [:name] ), :value_method => :id, :text_method => :name, :multiple => true, :name => 'client[countries_ids][]', :title => countries_tooltip, :class => 'height4Fields' %>
