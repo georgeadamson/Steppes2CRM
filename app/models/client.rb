@@ -434,6 +434,16 @@ class Client
   alias active_address_id   primary_address_id    # TODO: Depricate this.
   #alias active_address_id=  primary_address_id=   # TODO: Depricate this.
 
+  def initial
+    return self.forename.blank? ? '' : self.forename.chars.first
+  end
+  
+  def short_name()
+    initial_prefix = self.forename.blank? ? '' : "#{ self.forename.chars.first } " # Initial followed by a space
+    return "#{ initial_prefix }#{ self.name }"
+  end
+  
+  
 	# primary_address.country:
   def country
 		return self.primary_address && self.primary_address.country
