@@ -68,5 +68,9 @@ class Country
     [ self.id, self.name ]
   end
 
+  
+  def world_region_name
+    return self.world_region.name
+  end
 
 end

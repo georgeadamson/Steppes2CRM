@@ -40,17 +40,21 @@
 	# Prepare a unique id for the templates list field: (So that the ajax data-target does not get muddled between client tabs)
 	templates_list_id = "brochure_request_document_template_file#{ Time.now.to_f.to_s.sub('.','') }"
 	
+	client = brochure.client
+	
+	countries_tooltip = 'Hold down Ctrl to select more than one country. &#13;(Also try Ctrl with up/down or Spacebar)'
+	
 -%>
 <br/>
 <% unless brochure.generated_date.nil? %><small>Tip: This brochure request has already been actioned. (Therefore you won't be able to modify it)</small><br/><br/><% end %>
 <%= hidden_field :client_id %>
-<%= text_field		:name => :client_name,		:readonly => true,												:label => 'Client',						:value => brochure.client.fullname, :class => 'width2Fields' %>
-<%= select				:company_id,							:disabled => !editable,										:label => 'Company',					:selected => brochure.company_id.to_s,				:collection => companies_list, :value_method => :id, :text_method => :display_name, :'data-href' => "#{ resource brochure.client, :documents, :list => :option }&company_id={value}", :'data-target' => "##{ templates_list_id }" %>
-<%= select				:user_id,									:disabled => !editable,										:label => 'Travel Consult.',	    :selected => brochure.user_id.to_s,						:collection => users_list,     :value_method => :id, :text_method => :display_name, :prompt => '(Choose one)' %>
-<%= select				:client_country_id,			  :disabled => !editable || !brochure.new?,	:label => 'Area of interest', :selected => brochure.client_id.to_s,				  :collection => countries_list, :value_method => :id, :text_method => :name %>
-<%= select				:client_source_id,			  :disabled => !editable || !brochure.new?,	:label => 'Recent source',    :selected => brochure.client.source_id.to_s,	:collection => sources_list,   :value_method => :id, :text_method => :name %>
-<%= text_area			:notes,										:disabled => !editable,										:label => 'Notes <br/><small>For staff eyes only</small>',									:class => 'width2Fields height2Fields', :title => 'Notes (For our internal use only)', :placeholder => 'Add your own notes here' %>
+<%= text_field		:name => :client_name,		:readonly => true,												:label => 'Client',						:value => client.fullname, :class => 'width2Fields' %>
+<%= select				:company_id,							:disabled => !editable,										:label => 'Company',					:selected => brochure.company_id.to_s,								:collection => companies_list, :value_method => :id, :text_method => :display_name, :'data-href' => "#{ resource client, :documents, :list => :option }&company_id={value}", :'data-target' => "##{ templates_list_id }" %>
+<%= select				:user_id,									:disabled => !editable,										:label => 'Travel Consult.',	:selected => brochure.user_id.to_s,										:collection => users_list,     :value_method => :id, :text_method => :display_name, :prompt => '(Choose one)' %>
+<%= select				:client_country_ids,			:disabled => !editable || !brochure.new?,	:label => "<small>(#{client.interests.length})</small> Areas of interest", :selected => client.interests_ids.all_to_s,	:collection => countries_list, :value_method => :id, :text_method => :name, :prompt => brochure.new? ? '- Choose country' : nil, :multiple => true, :title => countries_tooltip %>
+<%= select				:client_source_id,			  :disabled => !editable || !brochure.new?,	:label => 'Recent source',    :selected => client.source_id.to_s,					:collection => sources_list,   :value_method => :id, :text_method => :name, :prompt => brochure.new? && client.source_id.nil? ? '- Choose source'  : nil %>
+<%= text_area			:notes,										:disabled => !editable,										:label => 'Notes <br/><small>For staff eyes only</small>',													:class => 'width2Fields height2Fields', :title => 'Notes (For our internal use only)', :placeholder => 'Add your own notes here' %>
 <%= text_area   	:custom_text,							:disabled => !editable,										:label => 'Custom text <br/><small>May appear in client correspondence</small>',	:class => 'width2Fields height3Fields hidden', :title => 'Custom text (May appear in client correspondence)', :placeholder => 'Add your custom text here' %>
-<%= select				:document_template_file,	:disabled => !editable,										:label => 'Letter template',	:selected => brochure.document_template_file, :collection => templates_list, :class => 'width2Fields', :id => templates_list_id %>
+<%= select				:document_template_file,	:disabled => !editable,										:label => 'Letter template',	:selected => brochure.document_template_file,					:collection => templates_list, :class => 'width2Fields', :id => templates_list_id %>
 <%= text_field		:requested_date,					:disabled => true, :readonly => true,			:label => 'Date requested',		:name => :requested_date, :value => brochure.requested_date.formatted(:uidatetime) unless brochure.generated_date %>
 <%= text_field		:generated_date,					:disabled => true, :readonly => true,     :label => 'Date sent',				:name => :generated_date, :value => brochure.generated_date.formatted(:uidatetime) if     brochure.generated_date %>

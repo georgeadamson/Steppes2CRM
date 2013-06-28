@@ -8,7 +8,7 @@
 	companies = Company.all( :order => [ :is_active.desc, :name ] )
 	companies = companies.all( :is_active => true ) if created_recently
 
-	countries_tooltip = 'Hold down Ctrl to select multiple countries. &#13;(Also try Ctrl + up/down or Spacebar)'
+	countries_tooltip = 'Hold down Ctrl to select more than one country. &#13;(Also try Ctrl with up/down or Spacebar)'
 	
 	client_sources = ClientSource.all_grouped
 	
