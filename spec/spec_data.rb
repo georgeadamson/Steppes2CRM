@@ -31,11 +31,9 @@ def valid_country_attributes
     :code          => 'C1',
     :name          => 'Country 1',
     :world_region  => world_region,
-    :mailing_zone  => mailing_zone
-    #:companies     => [company]   # Note: Countries are now linked to companies through company_countries
+    :mailing_zone  => mailing_zone,
+    :companies     => [company]   # Note: Countries are now linked to companies through company_countries
   }
-
-  
 
 end
 
@@ -57,7 +55,7 @@ def valid_client_attributes
     :forename           => 'Test',
     :marketing_id       => 1,
     :type_id            => 1,
-    :original_source_id => 1,
+    :original_source    => ClientSource.first_or_create( { :name => 'Companion' } ),
     :address_client_id  => 1
   }
 end

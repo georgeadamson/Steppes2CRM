@@ -5,7 +5,7 @@
 	users_list				= User.all( :is_active => true, :order => [:forename, :name] )
 	companies_list		= Company.all( :is_active => true, :order => [:name] )
 	countries_list    = Country.all( :order => [:name] )
-	sources_list      = ClientSource.all( :order => [:name] )
+	sources_list      = ClientSource.all_grouped	#ClientSource.all( :order => [:name] )
 	
 	initials					= brochure.company.initials
 	#default_template	= DocumentType.get( DocumentType::BROCHURE )
