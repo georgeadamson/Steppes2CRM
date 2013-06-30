@@ -33,7 +33,7 @@
 		display:inline-block;
 		font-size:1.2em;
 		font-weight:bold;
-		width:20em;
+		/*width:20em;*/
 	}
 
 	.tours-list .tour .tour-notes {
@@ -44,7 +44,7 @@
 
 	.tours-list .no-trips {
 		color:#999;
-		margin:0 0 0 1.5em;
+		text-indent:1.5em;
 	}
 
 

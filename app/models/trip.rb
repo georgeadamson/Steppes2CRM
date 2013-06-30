@@ -339,9 +339,9 @@ class Trip
     # Do more stuff when trip has become CONFIRMED:
     # TODO: Find a way to detect self.attribute_dirty?(:status_id) in the after:save hook!
     if self.confirmed? && self.status_id != @status_id_before_save
-
+      
       create_confirmed_trip_reminders
-
+      
     end
     
     @avoid_triggering_after_save_hook_recursively = false
@@ -438,8 +438,13 @@ class Trip
   
   # Derived properties and helpers...
   
-  def leaders;			return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_leader			=> true ); end
-  def invoicables;	return self.clients.all( Client.trip_clients.trip_id	=> self.id, Client.trip_clients.is_invoicable	=> true ); end
+  def confirmeds;           return self.clients.all( Client.trip_clients.status_id     => TripClientStatus::CONFIRMED ); end
+  def unconfirmeds;         return self.clients.all( Client.trip_clients.status_id     => TripClientStatus::UNCONFIRMED ); end
+  def leaders;			        return self.clients.all( Client.trip_clients.is_leader		 => true ); end
+  def invoicables;	        return self.clients.all( Client.trip_clients.is_invoicable => true ); end
+  def spaces;               return self.travellers - self.trip_clients.count; end
+  def spaces_not_confirmed; return self.travellers - self.confirmeds.count; end
+  
   def primaries
     
     # Assume invoceable primaries are more important and should be top of list (helpful for deriving main_client_for_reminders)
@@ -457,6 +462,8 @@ class Trip
     return primaries
     
   end
+  
+  
   
   # Helper to take a punt at who's the main client on the trip who should be named on Trip Reminders etc for the Consultant:
   def main_client_for_reminders
@@ -479,7 +486,7 @@ class Trip
     return self.version_of_trip_id || self.id
   end
   
-  # DEPRICATED:
+  
   # Calculate duration of trip in days: (When overrun is true, we include any trip elements that are not within trip dates!)
   def duration(overrun = false)
     if overrun || overrun == :with_overrun
@@ -496,7 +503,7 @@ class Trip
     overrun		||= (overrun == :with_overrun)  # True to include elements that lie outside trip dates.
     result			= []
     first_date	= overrun ? self.first_element.start_date.to_date : self.start_date
-    last_date		= overrun ? self.last_element.start_date.to_date  : self.end_date
+    last_date		= overrun ? self.last_element.end_date.to_date  : self.end_date
     total_days	= last_date.jd - first_date.jd + 1		# jd returns julian date number
     
     # Dummy loop to encourage datamapper to load all the trip_elements: (Thereby preventing multiple queries later)
@@ -1351,6 +1358,83 @@ class Trip
   end
   
   
+  # WARNING: Will fail if you make DocumentType name longer than 8 characters in document_types table! (Seems to be a limitation of PDFKit :(
+  # NOTE: To workaround Windows file issues we generate the PDF locally first and then copy it to SELFS.
+  # Trip.get(127951).generate_costing_sheet_snapshot_pdf( 2138590478, 99, 'database:82')
+  def generate_costing_sheet_snapshot_pdf( client_id, user_id, host = 'database:80' )
+
+    require 'tempfile' # http://ruby-doc.org/stdlib-2.0/libdoc/tempfile/rdoc/Tempfile.html
+
+    trip    = self
+    user    = User.get(user_id)
+    client  = Client.get(client_id)
+
+    begin
+
+      raise IOError, 'Missing user_id'   if user.nil?
+      raise IOError, 'Missing client_id' if client.nil?
+
+      @doc = Document.new(
+        :name                      => 'Costing Sheet Snapshot',
+        :document_type_id          => DocumentType::COSTING_SHEET,
+        :client_id                 => client.id,
+        :trip_id                   => trip.id,
+        :user_id                   => user.id,
+        :created_by                => user.name,
+        :generate_doc_later        => false,
+        :generate_doc_after_create => false
+      )
+
+      # Override default filename generation to ensure it is given a .pdf extension:
+      @doc.file_name = @doc.default_file_name( :extension => :pdf )
+
+      if @doc.save
+
+        source = "http://#{ host }/clients/#{ client.id }/trips/#{ trip.id }/costings"
+
+        target_root  = CRM[:doc_folder_path]
+        target_file  = @doc.file_name
+        target_path  = "#{ target_root }/#{ target_file }".gsub('\\','/')
+        #tmp_name    = target_path.gsub('/','|')
+        #tmp_target  = "c:/temp/#{ tmp_name }"
+        tmp_target   = Document.new_temp_file_path( 'costings', 'c:/temp' )
+
+        msg = "generate_costing_sheet_snapshot_pdf source: #{ source } -> tmp_target: #{ tmp_target }"
+        puts msg; Document.logger.info msg
+
+        # Grab snapshot and save PDF to local temp file:
+        pdf = PDFKit.new(source)
+        pdf.to_file(tmp_target)
+
+        raise IOError, "Failed to generate Costing Sheet snapshot PDF to temp file #{ tmp_target }" unless File.exist?(tmp_target)
+
+        # Delete target file if it exists already: (So it's easier to test if the following File Copy step was successful)
+        Document.destroy_file! target_path
+
+        # Move pdf to Documents store:
+        msg = "Copying generated PDF from: #{ tmp_target } to #{ target_path }"
+        puts msg; Document.logger.info msg
+        Document.copy_file tmp_target, target_path, :move
+
+        return File.exist?(target_path)
+
+      else
+
+        raise IOError, "Failed to save new document record because #{ @doc.errors.full_messages }"
+
+      end
+
+    rescue Exception => reason
+
+      err_msg = "ERROR: generate_costing_sheet_snapshot_pdf: #{ reason }"
+      puts err_msg; Document.logger.error err_msg
+      return false
+
+    end
+
+  end
+  
+  
   
   # Helper for re-calculating the trip.total_price property: (Formerly known as total_spend)
   # Warning: Don't forget this includes both price_per_x and price_per_x_biz_supp
@@ -1760,31 +1844,31 @@ class Trip
   # Find all the confirmed trips that ended yesterday: (Used by automated status change in app/controllers/application.rb)
   # SHORT TERM WORKAROUND: Skip TripType::TOUR_TEMPLATE trips until fix allows group templates to become confirmed. GA Nov 2011.
   def self.all_ready_to_complete( today = nil )
-
+    
     today ||= Date.today
     #everything_other_than_tour_template = [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP, TripType::FIXED_DEP ]
     
     active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::CONFIRMED, :type_id.not => TripType::TOUR_TEMPLATE, :end_date.lt => today )
     other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
     puts "Trips: all_ready_to_complete: #{ active_versions.map{|t|t.id}.inspect }"
-
+    
     return active_versions #+ other_versions
-
+    
   end
   
   # Find all the unconfirmed trips that [would have] started yesterday: (Used by automated status change in app/controllers/application.rb)
   # SHORT TERM WORKAROUND: Skip TripType::TOUR_TEMPLATE trips until fix allows group templates to become confirmed. GA Nov 2011.
   def self.all_ready_to_abandon( today = nil )
-
+    
     today ||= Date.today
     #everything_other_than_tour_template = TripType.all( :id.not => TripType::TOUR_TEMPLATE ).map{|tt|tt.id}
     everything_other_than_tour_template = [ TripType::TAILOR_MADE, TripType::PRIVATE_GROUP, TripType::FIXED_DEP ]
-
+    
     active_versions = Trip.all( :is_active_version => true,  :status_id => TripState::UNCONFIRMED, :type_id => everything_other_than_tour_template, :start_date.lt => today, :created_at.lt => today )
     other_versions  = Trip.all( :is_active_version => false, :version_of_trip_id => active_versions.map{|t|t.id} )
-
+    
     return active_versions + other_versions
-
+    
   end
   
   

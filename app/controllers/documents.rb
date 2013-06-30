@@ -82,7 +82,14 @@ class Documents < Application
     
       output_details = {}
 
-      if @document.generate_pdf( output_details )
+      # No need to convert document if its already a pdf:
+      if @document.file_name.end_with? '.pdf'
+      
+        download_name = "Copy of #{ @document.doc_path }"
+        send_file( @document.doc_path, :filename => download_name, :type => 'application/pdf', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
+      
+      # Convert .doc to .pdf:
+      elsif @document.generate_pdf( output_details )
 
         download_name = "Copy of #{ @document.pdf_path }"
         send_file( @document.pdf_path, :filename => download_name, :type => 'application/pdf', :disposition => 'attachment' )	# :disposition => 'attachment'(default) or 'inline'
