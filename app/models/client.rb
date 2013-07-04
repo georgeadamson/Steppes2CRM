@@ -258,6 +258,19 @@ class Client
     # Ensure at least one company is selected for marketing to new client:
     self.companies << self.original_company if self.companies.empty? && self.original_company
     
+    #@new_primary_address_id = id
+
+    #puts self.client_addresses.inspect, self.addresses.inspect, @new_primary_address_id
+    
+    #unless id.blank? || self.new? || self.client_addresses.all( :address_id => id ).empty?
+
+	    #self.client_addresses.each{ |a| puts a.inspect, a.is_active = (a.address_id == id.to_i) }.save!
+
+      #active           = self.client_addresses.first( :is_active => true )
+      #@primary_address = active.nil? ? nil : active.address
+
+    #end
+    
   end
 
   before :save do
@@ -395,7 +408,7 @@ class Client
     end 
 
 	def primary_address_id
-		return self.primary_address.id
+		return self.primary_address && self.primary_address.id
 	end
 
   # SETTER to make one of the client_addresses primary. (Used by the addresses form)
@@ -403,15 +416,17 @@ class Client
   # Important: Syntax could be simpler but this approach queries unsaved data instead of querying sql only.
 	def primary_address_id=(id)
 
+    @new_primary_address_id = id
+
     unless id.blank? || self.new? || self.client_addresses.all( :address_id => id ).empty?
 
 	    self.client_addresses.each{ |a| puts a.inspect, a.is_active = (a.address_id == id.to_i) }.save!
 
-      primary_mapping  = self.client_addresses.first( :is_active => true )
-      @primary_address = primary_mapping && primary_mapping.address || nil
+      active           = self.client_addresses.first( :is_active => true )
+      @primary_address = active.nil? ? nil : active.address
 
     end
-
+    
   end
 
   alias address             primary_address
@@ -419,6 +434,16 @@ class Client
   alias active_address_id   primary_address_id    # TODO: Depricate this.
   #alias active_address_id=  primary_address_id=   # TODO: Depricate this.
 
+  def initial
+    return self.forename.blank? ? '' : self.forename.chars.first
+  end
+  
+  def short_name()
+    initial_prefix = self.forename.blank? ? '' : "#{ self.forename.chars.first } " # Initial followed by a space
+    return "#{ initial_prefix }#{ self.name }"
+  end
+  
+  
 	# primary_address.country:
   def country
 		return self.primary_address && self.primary_address.country
@@ -439,12 +464,34 @@ class Client
 
 
   # All clients who share an address with this client: (AKA Fellow dwellers)
+  # IS THIS USED? Can we deprecate it?
   def cohabiters
     #return Client.all( :address_client_id => address_client.id, :address_client_id.not => nil, :id.not => id )
     return Client.all( :conditions => ["id != ? AND ( address_client_id = ? OR address_client_id = ? )", self.id, self.id, self.address_client.id.to_i ] )
   end
 
+  
+  # All other clients who share an address with this client: (AKA Fellow dwellers)
+  def housemates( address_id = nil )
+    address_id ||= self.addresses.map{|a|a.id}
+    return Client.all( Client.client_addresses.address_id => address_id, :id.not => self.id )
+  end
 
+  
+  # All clients (including self) who share addresses with this client: (AKA Fellow dwellers)
+  def households( address_ids = nil )
+    address_ids ||=  self.addresses.map{|a|a.id}
+    return Client.all( Client.client_addresses.address_id => address_ids )
+  end
+
+  
+  # Combined total_spend of everyone who shares same addresses:
+  # Should be same as self.households.sum(:total_spend) but that seems to add up duplicates :(
+  def households_total_spend( address_ids = nil )
+    return self.households(address_ids).map{|c|c.total_spend}.inject(:+) || 0
+  end
+
+  
   # Simple string summarising the trips: (Eg: "1 unconfirmed, 1 confirmed, 2 completed, 1 canceled, 5 abandoned")
   # For speed, we loop through the trips counting the statuses, not the other way around.
   def trips_statement( trips_list = nil )
@@ -588,6 +635,36 @@ class Client
 		Client.refresh_search_keywords( self.id, do_delete )
   end
 
+  
+  # Helper to copy name and address from another client: (Useful when initialising companion client)
+  def copy_companion_details_from( client_id )
+
+    #attributes_to_copy = [:name, :salutation, :addressee, :known_as, :tel_work, :fax_work, :tel_mobile, :tel_mobile2, :email1, :email2]
+    attributes_to_copy  = [:name]
+    master              = Client.get(client_id)
+
+    unless master.nil?
+
+      attributes        = master.attributes.reject{ |attr,val| !attributes_to_copy.include? attr }
+      self.attributes   = attributes
+
+      # Copy each of the master client's addresses to the new client: (So they share same address id reference)
+      master.client_addresses.each do |addr|
+        self.client_addresses << ClientAddress.new(
+          #:address		=> Address.new( addr.address.attributes.reject{ |attr,val| attr == :id } )
+          :address    => addr.address,
+          :is_active	=> addr.is_active
+        )
+      end
+
+      # Default copied client to NO MARKETING and original_source to COMPANION:
+      self.marketing_id      = 0
+      self.original_source ||= ClientSource.first( :name => 'Companion' ) || master.original_source
+      self.source          ||= self.original_source
+
+    end
+
+  end
 
   
   def initialize(*)

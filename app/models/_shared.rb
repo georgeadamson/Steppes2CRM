@@ -586,23 +586,27 @@ end
                             
               begin
 
-                name = assoc.name
+                #if assoc.respond_to? :name
                 
-                if obj.respond_to?(name)
+                  name = assoc.name
                   
-                  if ( rel = obj.method(name).call ) && rel.respond_to?(:dirty?) && rel.dirty?
+                  if obj.respond_to? name
                     
-                    Merb.logger.debug "Collecting errors from #{name}"
-                    
-                    if rel.respond_to?(:each)
-                      collect_error_messages_for obj, name.to_sym
-                    else
-                      collect_child_error_messages_for obj, rel
+                    if ( rel = obj.method(name).call ) && rel.respond_to?(:dirty?) && rel.dirty?
+                      
+                      Merb.logger.debug "Collecting errors from #{name}"
+                      
+                      if rel.respond_to?(:each)
+                        collect_error_messages_for obj, name.to_sym
+                      else
+                        collect_child_error_messages_for obj, rel
+                      end
+                      
                     end
                     
-                  end #if
+                  end
                   
-                end #if
+                #end
                 
               rescue Exception => reason
 

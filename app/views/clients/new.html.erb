@@ -1,24 +1,32 @@
 <%
 
 	# Copy name and address from another client if specified:
-	if params[:copy_client_id] && master = Client.get(params[:copy_client_id])
-		
-		#attributes_to_copy = [:name, :salutation, :addressee, :known_as, :tel_work, :fax_work, :tel_mobile, :tel_mobile2, :email1, :email2]
-		attributes_to_copy = [:name]
-		attributes         = master.attributes.reject{ |attr,val| !attributes_to_copy.include? attr }
-		@client.attributes = attributes
-				
-		master.client_addresses.each do |addr|
-			@client.client_addresses << ClientAddress.new(
-				:is_active	=> addr.is_active,
-				:address		=> Address.new( addr.address.attributes.reject{ |attr,val| attr == :id } )
-			)
+	if params[:copy_client_id].to_i > 0
+
+		master = Client.get(params[:copy_client_id])
+
+    unless master.nil?
+
+			#attributes_to_copy = [:name, :salutation, :addressee, :known_as, :tel_work, :fax_work, :tel_mobile, :tel_mobile2, :email1, :email2]
+			attributes_to_copy = [:name]
+			attributes         = master.attributes.reject{ |attr,val| !attributes_to_copy.include? attr }
+			@client.attributes = attributes
+
+			# Copy each of the master client's addresses to the new client: (So they share same address id reference)
+			master.client_addresses.each do |addr|
+				@client.client_addresses << ClientAddress.new(
+					#:address		=> Address.new( addr.address.attributes.reject{ |attr,val| attr == :id } )
+					:address    => addr.address,
+					:is_active	=> addr.is_active
+				)
+			end
+
+			# Default copied client to NO MARKETING and original_source to COMPANION:
+			@client.marketing_id = 0
+			@client.original_source = @client.source = ClientSource.first( :name => 'Companion' ) || @client.original_source || master.original_source
+
 		end
-		
-		# Default copied client to NO MARKETING and original_source to COMPANION:
-		@client.marketing_id = 0
-		@client.original_source = @client.source = ClientSource.first( :name => 'Companion' ) || @client.original_source
-		
+
 	end
 
 %>
