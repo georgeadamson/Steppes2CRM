@@ -634,21 +634,26 @@ End Function
 Function GetStandardDate(strDate)
 
 	Dim strFormattedDate
-	
+
 	On Error Resume Next
 
 	If Not IsNull(strDate) Then
-	
-		strFormattedDate = PadDate(Day(strDate),2) & "/" & _ 
-			PadDate(Month(strDate),2) & "/" & _ 
+
+		'strFormattedDate = PadDate(Day(strDate),2) & "/" & _ 
+		'	PadDate(Month(strDate),2) & "/" & _ 
+		'	PadDate(Right(Year(strDate),4),2)
+
+		' --- Remove zero-prefix from dates. Modified by George Adamson 22 July 2013. Requested by James Armitage
+		strFormattedDate = Day(strDate) & "/" & _ 
+			Month(strDate) & "/" & _ 
 			PadDate(Right(Year(strDate),4),2)
-    
+
     End If
 				
 	GetStandardDate = strFormattedDate
 
 	CheckError "Unable to get standard date", True
-        
+
 End Function
 
 
@@ -910,7 +915,8 @@ Sub FindAndReplaceFields(strTagType, objFields, boolIsList, boolIgnoreDateField)
 				Or InStr(strTagName, "_gross") > 0 Then
 		
 			strFieldData = objFields.Item(strTagName)
-			strFieldData = FormatNumber(strFieldData, 2)
+			'strFieldData = FormatNumber(strFieldData, 2)	'2 Decimal places
+			strFieldData = FormatNumber(strFieldData, 0)	'0 Decimal places
 		
 		Else
 		
