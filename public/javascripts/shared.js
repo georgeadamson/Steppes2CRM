@@ -61,7 +61,7 @@ jQuery(function($) {
 		ELEMENT_URL_ATTR				= 'data-ajax-url',
 
 		// Global ajax timeout:
-		AJAX_TIMEOUT					= 60000,			// Milliseconds.
+		AJAX_TIMEOUT					= 90000,			// Milliseconds.
 
 		// Settings for client-search:
 		CLIENT_SEARCH_MAX_ROWS			= 50,				// Will be sent as &limit=n parameter when searching for clients via ajax.
