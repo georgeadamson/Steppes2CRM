@@ -41,7 +41,7 @@
 
 						<%= select			:name => :company_id, :label => 'Show groups by',		:collection => companies_list, :selected => selected_company_id.to_s, :value_method => :id, :text_method => :display_name %>
 						<%= text_field						            :label => 'Quick search',			:value => '', :id => :tour_quick_search %>
-						<%= check_box		:name => :show_old,		:label => 'Show old groups <small>(slow!)</small>',	:checked => params[:show_old], :value => true %>
+						<%= check_box		:name => :show_old,		:label => 'Show old groups <small>(slow!)</small>',	:checked => params[:show_old], :value => true, :title => 'This can be rather slow :(' %>
 						<%= submit			'Refresh' %><!-- Submit button is hidden automatically when in an auto-submit form. -->
 
 					<% end =%>
@@ -59,8 +59,9 @@
 								tour_trips				= tour.trips.all( :is_active_version => true )
 								
 								# Assume tour is old if it only has completed trips:
-								tour_has_no_trips = tour_trips.empty?
-								tour_is_relevant	= params[:show_old] || tour_has_no_trips || tour_trips.all( :end_date.gte => Date.today ).count > 0
+								tour_has_no_trips       = tour_trips.empty?
+								tour_has_upcoming_trips = tour_trips.all( :end_date.gte => Date.today ).count > 0
+								tour_is_relevant	      = params[:show_old] || tour_has_no_trips || tour_has_upcoming_trips
 							%>
 
 							<% if tour_is_relevant %>
@@ -108,21 +109,27 @@
 														<% end %>
 														</td>
 													<td>
-														<%= trip.trip_clients.map{ |trip_client|
+														<% if tour_has_upcoming_trips %><%# The if condition simply makes load time a little faster by skipping client details on old tours %>
 
-															client            = trip_client.client
-															#client_initial    = client.initial.blank? ? '' : "#{ trip_client.client.initial }&nbsp;"
-															#client_short_name = "#{ client_initial } #{ trip_client.client.name }"
-															
-															client_short_name = trip_client.client.short_name.gsub(' ','&nbsp;')
+															<%= trip.trip_clients.map{ |trip_client|
 
-															if trip_client.is_confirmed
-																link_to "<span title=\"Confirmed\">#{ client_short_name }</span>", resource(trip_client.client)
-                              else
-																link_to "<strong title=\"Unconfirmed\">#{ client_short_name }</strong>", resource(trip_client.client)
-                              end
+																client            = trip_client.client
+																#client_initial    = client.initial.blank? ? '' : "#{ trip_client.client.initial }&nbsp;"
+																#client_short_name = "#{ client_initial } #{ trip_client.client.name }"
+																
+																client_short_name = trip_client.client.short_name.gsub(' ','&nbsp;')
 
-                            }.join(', ') %>
+																if trip_client.is_confirmed
+																	link_to "<span title=\"Confirmed\">#{ client_short_name }</span>", resource(trip_client.client)
+																else
+																	link_to "<strong title=\"Unconfirmed\">#{ client_short_name }</strong>", resource(trip_client.client)
+																end
+
+															}.join(', ') %>
+
+														<% else %>
+															(Old group)
+														<% end %>
 													</td>
 
 												</tr>
