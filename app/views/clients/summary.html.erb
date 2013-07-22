@@ -1,6 +1,7 @@
 <%
 	max_trips_to_show   = 4		# Limit view to most recent n trips only.
 	#visible_trips_count = ( max_trips_to_show < @client.active_trips.length ) ? max_trips_to_show : @client.active_trips.length
+	housemates = @client.housemates
 %>
 <div class="sectionContainer clientSummary fieldsetGrid" id="<%= nested_resource(@client,true) %>summary">
 	
@@ -8,11 +9,25 @@
 	<%= hidden_field :'data-resource' => resource(@client), :'data-field' => 'client[total_spend]', :value => @client.total_spend.to_currency(:uk) %>
 
 	<div class="sectionHead">
-		<h3>
-			<span class="ui-icon ui-icon-client"></span>
-			Client details for
-			<%= @client.fullname %>
-			<%= tag :small, "- known as #{ @client.known_as }" unless @client.known_as.blank? %>
+		<!-- Dodgy inline styles to align housemates right but allow them to overflow out of site on narrow screens -->
+		<h3 style="text-align:right;white-space:nowrap;">
+
+			<div style="float:left">
+				<span class="ui-icon ui-icon-client"></span>
+				Client details for
+				<%= @client.fullname %>
+				<%= tag :small, "- known as #{ @client.known_as }" unless @client.known_as.blank? %>
+			</div>
+
+			<% unless housemates.empty? %>
+				<small style="overflow:hidden">
+					&nbsp; Household:
+					<% housemates.each do |housemate| %>
+					<%= link_to housemate.shortname, resource(housemate) %>
+					<% end %>
+				</small>
+			<% end %>
+
 		</h3>
 	</div>
 
