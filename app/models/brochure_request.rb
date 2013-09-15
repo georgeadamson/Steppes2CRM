@@ -39,17 +39,22 @@ class BrochureRequest
   # Allow new brochure_request form to set Area of Interest and Source:
   attr_accessor :client_source_id
   attr_accessor :client_country_id
-  
+  attr_accessor :client_country_ids
+
   # Hard-coded doc type id!
   attr_accessor :document_type_id
 
   # Flags to prevent immediate document generation: (Or switch it off completely when testing)
   attr_accessor :generate_doc_later   # For future enhancement? (Because run_later only applies in controllers and views)
   attr_accessor :skip_doc_generation  # Useful when testing. Doc gen will go through the motions without actually generating.
-  
+
   # Allow new brochure_request form to set Area of Interest and Source:
   # accepts_nested_attributes_for :client
 
+  validates_with_method :client_source_id,   :method => :validate_require_client_source
+  validates_with_method :client_country_ids, :method => :validate_require_client_countries_of_interest
+  
+  
   before :valid? do
     # If necessary, attempt to choose a template for the current brochure.company:
     self.document_template_file ||= self.default_template_file_name
@@ -60,35 +65,64 @@ class BrochureRequest
     if self.client_source_id
       self.client.update!( :source_id => self.client_source_id )
     end
-        
-    if self.client_country_id
-      self.client.client_interests.destroy!
-      self.client.client_interests.create( :country_id => self.client_country_id )
+    
+    interests = self.client.client_interests
+    
+    if self.client_country_ids
+      interests.destroy!
+      self.client_country_ids.each{|id| interests.create!( :country_id => id ) }
+      # Deprecated:
+    elsif self.client_country_id
+      interests.destroy!
+      interests.create!( :country_id => self.client_country_id )
     end
-        
+    
   end
   
   before :update do
     self.status_id = PENDING   if self.doc_file_should_exist? && !self.doc_file_exists?
     self.status_id = GENERATED if self.status_id == PENDING   &&  self.doc_file_exists?
   end
-
+  
   after :update do
-
+    
     if self.status_id == CLEARED
-
+      
       self.document.destroy if self.document
       self.create_task()
-
+      
     end
-
+    
   end
   
   after :destroy do
     self.document.destroy if self.document
   end
   
+  
+  
+  def validate_require_client_source
 
+    # Only require the custom client_source attribute when new an on form that also set client_country_ids:
+    if self.new? && self.client_source_id.blank? && !self.client_country_ids.nil?
+      return [ false, 'Yoiks, you must choose a Client Source' ]
+    else
+      return true
+    end
+    
+  end
+  
+  def validate_require_client_countries_of_interest
+
+    # The custom client_country_ids attribute must be nil or contain at least one id:
+    if self.new? && !self.client_country_ids.nil? && self.client_country_ids.empty?
+      return [ false, 'Hang on a mo, you need to choose at least one Area of Interest' ]
+    else
+      return true
+    end
+    
+  end
+    
 
 
   # Helper to tell us whether we expect the doc file to have been generated:
