@@ -61,7 +61,7 @@ jQuery(function($) {
 		ELEMENT_URL_ATTR				= 'data-ajax-url',
 
 		// Global ajax timeout:
-		AJAX_TIMEOUT					= 60000,			// Milliseconds.
+		AJAX_TIMEOUT					= 90000,			// Milliseconds.
 
 		// Settings for client-search:
 		CLIENT_SEARCH_MAX_ROWS			= 50,				// Will be sent as &limit=n parameter when searching for clients via ajax.
@@ -1822,10 +1822,10 @@ return
 				// Ensure missing fields are at least represented as blanks:
 				// Set up a more friendly alias for active_trips and derive fullname & shortname if not provided in the json:
 				// Note: client.shortname is used later to label the client tabs.
-				if( !client.title		){ client.title		= '' };
-				if( !client.forename	){ client.forename	= '' };
-				if( !client.name		){ client.name		= '(no name)' };
-				if( !client.trips		){ client.trips		= client.active_trips };
+				//if( !client.title		){ client.title		= '' };
+				//if( !client.forename	){ client.forename	= '' };
+				//if( !client.name		){ client.name		= '(no name)' };
+				//if( !client.trips		){ client.trips		= client.active_trips };
 				if( !client.fullname	){ client.fullname  = [ client.title, client.forename, client.name ].join(' ') };
 				if( !client.shortname	){ client.shortname = [ client.title, client.forename.charAt(0), client.name ].join(' ') };
 
@@ -1845,7 +1845,7 @@ return
 			if( addr ){
 
 				// Give postcode field a little extra formatting to stop it splitting across lines: 
-				if( addr.postcode ){ addr.postcode = '<strong>' + addr.postcode.split(/\s+/).join('&nbsp;') + '</strong>' };
+				if( addr.postcode ){ addr.postcode = '<strong>' + addr.postcode.replace(/\s+/,'&nbsp;') + '</strong>' };
 
 				$( 'address1 address2 address3 address4 address5 postcode country'.split(' ') ).each(function(i,field){
 					if( addr[field] ){ address.push( addr[field] ) }
@@ -1860,14 +1860,17 @@ return
 			// Assemble html for the item: (Using native javascript for best performance)
 			var html = [
 				//'<li>',
-					'<div class="name ui-icon ui-icon-client">',	client.fullname,	'</div>',
-					'<div class="address">',						address.join(', '),	'</div>',
-					'<div><small class="email">',					email.join(', '),	'</small></div>',
-					'<div class="trips"><small>',					tripSummary,		'</small></div>'
+					'<div class="name ui-icon ui-icon-client">',	
+						client.fullname,
+						' <i title="Total household spend">&pound;', client.household_spend, '</i>',
+					'</div>',
+					'<div class="address">',		address.join(', '),	'</div>',
+					'<div><small class="email">',	email.join(', '),	'</small></div>',
+					'<div class="trips"><small>',	tripSummary,		'</small></div>'
 				//'</li>'
 			];
 
-			return html.join(' ');
+			return html.join('');
 
 		}
 

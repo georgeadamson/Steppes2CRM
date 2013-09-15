@@ -1063,7 +1063,7 @@ class Document
     
     # TODO: Get config from DataMapper settings!
     config = {
-      :host     => 'seldb',
+      :host     => 'STE-SERV2', #'seldb',
       :database => database,
       :username => 'SteppesCRM',
       :password => 'password'

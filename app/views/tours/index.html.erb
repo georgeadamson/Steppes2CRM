@@ -8,7 +8,7 @@
 	@tours = @tours.all( :order => [ :name, :id.desc ] )
 	@tours = @tours.all( :company_id => selected_company_id ) if selected_company_id
 
-	@cached_trips = Trip.all( :id => @tours.map{|t|t.id}, :order => [ :tour_id.desc, :status_id, :start_date.desc, :created_at.desc ] )
+	# @cached_trips = Trip.all( :id => @tours.map{|t|t.id}, :order => [ :tour_id.desc, :status_id, :start_date.desc, :created_at.desc ] )
 	# The @cached_trips collection was an attempt to speed up loading and prevent DM from querying trips for each tour one by one.
 	# It worked but actually turned out slower because ruby takes longer to find trips by tour_id than sql does.
 	# @cached_trips.map{|t|t.id}
@@ -41,7 +41,7 @@
 
 						<%= select			:name => :company_id, :label => 'Show groups by',		:collection => companies_list, :selected => selected_company_id.to_s, :value_method => :id, :text_method => :display_name %>
 						<%= text_field						            :label => 'Quick search',			:value => '', :id => :tour_quick_search %>
-						<%= check_box		:name => :show_old,		:label => 'Show old groups',	:checked => params[:show_old], :value => true %>
+						<%= check_box		:name => :show_old,		:label => 'Show old groups <small>(slow!)</small>',	:checked => params[:show_old], :value => true, :title => 'This can be rather slow :(' %>
 						<%= submit			'Refresh' %><!-- Submit button is hidden automatically when in an auto-submit form. -->
 
 					<% end =%>
@@ -59,8 +59,9 @@
 								tour_trips				= tour.trips.all( :is_active_version => true )
 								
 								# Assume tour is old if it only has completed trips:
-								tour_has_no_trips = tour_trips.empty?
-								tour_is_relevant	= params[:show_old] || tour_has_no_trips || tour_trips.all( :end_date.gte => Date.today ).count > 0
+								tour_has_no_trips       = tour_trips.empty?
+								tour_has_upcoming_trips = tour_trips.all( :end_date.gte => Date.today ).count > 0
+								tour_is_relevant	      = params[:show_old] || tour_has_no_trips || tour_has_upcoming_trips
 							%>
 
 							<% if tour_is_relevant %>
@@ -94,7 +95,7 @@
 													<td style="padding-left:2em">
 														<%= icon :trip %><span class="trip-name">
 														<%= trip.title %></span>
-														<br/><div class="summary">&nbsp; &nbsp; &nbsp; <%= trip.countries_names.join(', ') %> - <%= trip.user.preferred_name %></div>
+														<br/><div class="summary">&nbsp; &nbsp; &nbsp; <%= trip.countries_names.join(', ') %> - <%= trip.user.preferred_name unless trip.user.nil? %></div>
 														<!--<small class="summary"> = trip.summary(true) </small>-->
 													</td>
 													<td class="nowrap"><%= trip.start_date.formatted(:uidisplay) %><br><%= trip.duration %> days</td>
@@ -108,21 +109,27 @@
 														<% end %>
 														</td>
 													<td>
-														<%= trip.trip_clients.map{ |trip_client|
+														<% if tour_has_upcoming_trips %><%# The if condition simply makes load time a little faster by skipping client details on old tours %>
 
-															client            = trip_client.client
-															#client_initial    = client.initial.blank? ? '' : "#{ trip_client.client.initial }&nbsp;"
-															#client_short_name = "#{ client_initial } #{ trip_client.client.name }"
-															
-															client_short_name = trip_client.client.short_name.gsub(' ','&nbsp;')
+															<%= trip.trip_clients.map{ |trip_client|
 
-															if trip_client.is_confirmed
-																link_to "<span title=\"Confirmed\">#{ client_short_name }</span>", resource(trip_client.client)
-                              else
-																link_to "<strong title=\"Unconfirmed\">#{ client_short_name }</strong>", resource(trip_client.client)
-                              end
+																client            = trip_client.client
+																#client_initial    = client.initial.blank? ? '' : "#{ trip_client.client.initial }&nbsp;"
+																#client_short_name = "#{ client_initial } #{ trip_client.client.name }"
+																
+																client_short_name = trip_client.client.short_name.gsub(' ','&nbsp;')
 
-                            }.join(', ') %>
+																if trip_client.is_confirmed
+																	link_to "<span title=\"Confirmed\">#{ client_short_name }</span>", resource(trip_client.client)
+																else
+																	link_to "<strong title=\"Unconfirmed\">#{ client_short_name }</strong>", resource(trip_client.client)
+																end
+
+															}.join(', ') %>
+
+														<% else %>
+															(Old group)
+														<% end %>
 													</td>
 
 												</tr>
